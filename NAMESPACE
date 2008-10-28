@@ -1,0 +1,6 @@
+#importFrom(MASS, mvrnorm)
+#export(mediation, summary.mediation, print.summary.mediation)
+
+#S3method(summary, mediation)
+#S3method(print, mediation)
+#S3method(print, summary.mediation)
