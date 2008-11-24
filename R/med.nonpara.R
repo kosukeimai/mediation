@@ -1,19 +1,3 @@
-library(foreign)
-
-#setwd("/Users/Luke/Documents/Mediation Analysis/Local/mediation/analysis/example")
-
-setwd("/Users/keele/Documents/Mediation Analysis/Local/mediation/analysis/example")
-
-rm(list=ls())
-kkk <- read.dta("kkk_basic.dta")
-attach(kkk)
-
-med.nonpara(kspeech, ifspeech2, vidcdum)
-med.nonpara(kspeech, idisord2, vidcdum)
-
-med.nonpara(kspeech, ifspeech, vidcdum)
-med.nonpara(kspeech, idisord, vidcdum)
-
 med.nonpara <- function(Y,M,T){
 	
 samp <- data.frame(Y,M,T)
