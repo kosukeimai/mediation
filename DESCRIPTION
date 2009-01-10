@@ -2,8 +2,10 @@ Package: mediation
 Version: 1.0
 Date: 2008-11-01
 Title: R Package for Causal Mediation Analysis
-Author: Kosuke Imai <kimai@princeton.edu>, 
-        Luke Keele <keele.4@polisci.osu.edu>. 
+Author: Luke Keele <keele.4@polisci.osu.edu>,
+        Dustin Tingley <dtingley@princeton.edu>,
+        Teppei Yamamoto <tyamamot@princeton.edu>,
+        Kosuke Imai <kimai@princeton.edu>.
 Maintainer: Luke Keele <keele.4@polisci.osu.edu>
 Depends: R (>= 2.8)
 Description: mediation is a publicly available R package that allows
