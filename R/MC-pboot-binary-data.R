@@ -1,7 +1,7 @@
 
 library(MASS)
 
-med.cont <- function(model.1, model.2, sims=1000){
+med.binary <- function(model.1, model.2, sims=1000){
 	
 	model.m <- model.1
 	model.y <- model.2
@@ -32,10 +32,10 @@ if(n.m != n.y){
 			error <- rnorm(sims, mean.sim, sd=sigma)  
 			PredictM1temp <- as.matrix(apply(MModel, 1, sum))
 			PredictM1  <- matrix(PredictM1temp, n, sims, byrow=TRUE)
-			PredictM1 <- PredictM1 + error
-			PredictM0temp <- MModel[,1]  + error
+			PredictM1 <- PredictM1 #+ error
+			PredictM0temp <- MModel[,1]  #+ error
 			PredictM0 <- matrix(PredictM0temp, n, sims, byrow=TRUE)
-			} else {
+			} else { #With Covariates
 			#Generate Predictions From Mediation Model with Random  Error
 			mean.sim <- mean(apply(MModel, 1, sum))
 			error <- rnorm(sims, mean.sim, sd=sigma)  
@@ -57,8 +57,8 @@ if(n.m != n.y){
        			 	 Prob0[,j] <- TMmodel[j,1] + TMmodel[j,2]*1 + TMmodel[j,3]*PredictM0[,j]
 					}
 			
-				Prob1 <- Prob1
-				Prob0 <- Prob0
+				Prob1 <- apply(Prob1, 2, plogis)
+				Prob0 <- apply(Prob0, 2, plogis)
 				Delta1 <- Prob1 - Prob0 
 				rm(Prob1, Prob0)
 	
@@ -70,8 +70,8 @@ if(n.m != n.y){
        			 	Prob1[,j] <- TMmodel[j,1] + TMmodel[j,2]*0 + TMmodel[j,3]*PredictM1[,j]
         		 	Prob0[,j] <- TMmodel[j,1] + TMmodel[j,2]*0 + TMmodel[j,3]*PredictM0[,j]
 					}
-			Prob1 <- Prob1
-			Prob0 <- Prob0
+			Prob1 <- apply(Prob1, 2, plogis)
+			Prob0 <- apply(Prob0, 2, plogis)
 			Delta0 <- Prob1 - Prob0 
 			rm(Prob1, Prob0)
 			
@@ -84,24 +84,13 @@ if(n.m != n.y){
        			 Prob1_temp[,j] <- TMmodel[j,1] + TMmodel[j,2]*1 + TMmodel[j,3]*PredictM1[,j]  
         		Prob0_temp[,j] <- TMmodel[j,1] + TMmodel[j,2]*0 + TMmodel[j,3]*PredictM0[,j]  
         		}
-			Prob1_temp <- Prob1_temp
-			Prob0_temp <- Prob0_temp
+			Prob1_temp <- apply(Prob1_temp, 2, plogis)
+			Prob0_temp <- apply(Prob0_temp, 2, plogis)
 			Tau <- Prob1_temp - Prob0_temp
 				} else {#Predictions For Covariates
-			TMmodel.1 <- TMmodel[,1:3]
-			TMmodel.2 <- TMmodel[,4:k.y]
-			#ii <- k.y-3
-   			#X <- model.frame(model.y)
-    		#X <- as.matrix(X[,ii:k.y])
-    		#X.pred <- matrix( , n, sims)
-    
-   			 #for (i in 1:ii){
-    		#	for (j in 1:sims) {
-        	#		X.pred[,j] <- TMmodel.2[j,ii]*X[,ii]
-    		#		}
-    		#	}
-    		#X.pred <- apply(X.pred, 1, sum)
-    		ii <- 4
+			TMmodel.1 <- as.matrix(TMmodel[,1:3])
+			TMmodel.2 <- as.matrix(TMmodel[,4:k.y])
+			ii <- 4
    			X <- model.frame(model.y)
     		X <- as.matrix(X[,ii:k.y])
     		X.pred <- matrix( , n, sims)
@@ -111,6 +100,8 @@ if(n.m != n.y){
         			X.pred[,j] <- TMmodel.2[j,i]*X[,i]
     				}
     			}
+    		#X.pred <- apply(X.pred, 1, sum)
+    	
     		#Storage Matrices For Outcome Predictions
 			Prob1 <- matrix(,nrow=n, ncol=sims)
 			Prob0 <- matrix(,nrow=n, ncol=sims)
@@ -123,6 +114,8 @@ if(n.m != n.y){
 			
 			Prob1 <- Prob1 + X.pred
 			Prob0 <- Prob0 + X.pred
+			Prob1 <- apply(Prob1, 2, plogis)
+			Prob0 <- apply(Prob0, 2, plogis)
 			Delta1 <- Prob1 - Prob0 
 			rm(Prob1, Prob0)
 	
@@ -135,7 +128,9 @@ if(n.m != n.y){
         		 Prob0[,j] <- TMmodel.1[j,1] + TMmodel.1[j,2]*0 + TMmodel.1[j,3]*PredictM0[,j]
 				}
 			Prob1 <- Prob1 + X.pred
-			Prob0 <- Prob0 + X.pred	
+			Prob0 <- Prob0 + X.pred
+			Prob1 <- apply(Prob1, 2, plogis)
+			Prob0 <- apply(Prob0, 2, plogis)	
 			Delta0 <- Prob1 - Prob0 
 			rm(Prob1, Prob0)
 			
@@ -150,6 +145,8 @@ if(n.m != n.y){
         		}
 			Prob1_temp <- Prob1_temp + X.pred
 			Prob0_temp <- Prob0_temp + X.pred
+			Prob1_temp <- apply(Prob1_temp, 2, plogis)
+			Prob0_temp <- apply(Prob0_temp, 2, plogis)
 			Tau <- Prob1_temp - Prob0_temp
 			}
 		}
@@ -157,18 +154,17 @@ if(n.m != n.y){
 #Average Across Treatment and Control Predictions
 Avg_Delta1 <- t(as.matrix(apply(Delta1, 2 , mean)))
 Avg_Delta0 <- t(as.matrix(apply(Delta0, 2 , mean)))
-Delta1 <- mean(t(Avg_Delta1))
-Delta0 <- mean(t(Avg_Delta0))
-ci.d1 <- quantile(Avg_Delta1, c(.025,.975), na.rm=TRUE)
-ci.d0 <- quantile(Avg_Delta0, c(.025,.975), na.rm=TRUE) 
 Delta1_Delta0 <- Avg_Delta1 + Avg_Delta0
 Delta1_Delta0 <- Delta1_Delta0/2
 #Average over the i's 
 avg.tau <- t(as.matrix(apply(Tau, 2, mean)))
 #To calcuate proportion mediated we take for each draw j the ratio of 1/2(Delta1+Delta0)/Tau
 med.eff.dist <- Delta1_Delta0 / avg.tau
-med.eff.pct <- abs(mean(t(med.eff.dist)))*100
-out <- list(med.t = Delta1, med.c = Delta0, conf.1 = ci.d1, conf.0 = ci.d0, pct = med.eff.pct, dist=Avg_Delta1)
+med.eff.pct <- median(med.eff.dist)
+pr.med.ci <- quantile(med.eff.dist,c(.025,.975), na.rm=TRUE)
+
+
+out <- list(pr.med = med.eff.pct, ci = pr.med.ci, dist=med.eff.dist)
 }
 		
 

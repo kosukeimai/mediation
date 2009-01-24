@@ -1,8 +1,8 @@
 
 
 #Nonparametric Bootstrap Mediation Function
-med.boot <- function(object.1, object.2, object.3, B=500){
-
+med.bin.boot <- function(object.1, object.2, object.3, B=500){
+	
 	model.m <- object.1
 	model.y.t <- object.2
 	model.y.c <- object.3
@@ -14,7 +14,7 @@ med.boot <- function(object.1, object.2, object.3, B=500){
 if(n.m != n.y){
 	cat("Error: Missing Values Present in Data")
 	} else {
-		n <- n.m
+	n <- n.m
 	k.t <- length(names(model.y.t$coef))
 	k.c <- length(names(model.y.c$coef))
 	k.m <- length(names(model.m$coef))
@@ -131,7 +131,7 @@ if(n.m != n.y){
 		pr.mat <- as.matrix(cbind(pr.1, pr.0))
 		delta.1 <- pr.mat[,1] - pr.mat[,2]
 
-		rm(pred.data.t, pred.data.c, pr.1, pr.0)
+		rm(pred.data.t, pred.data.c, pr.1, pr.0,pr.mat)
 
 		pred.data.t <- data.frame(PredictM1, y.c.data[index,3:k.c])
 		pred.data.c <- data.frame(PredictM0, y.c.data[index,3:k.c])
@@ -143,7 +143,7 @@ if(n.m != n.y){
 		pr.mat <- as.matrix(cbind(pr.1, pr.0))
 		delta.0 <-pr.mat[,1] - pr.mat[,2]
 
-		rm(pred.data.t, pred.data.c, pr.1, pr.0)
+		rm(pred.data.t, pred.data.c, pr.1, pr.0, pr.mat)
 
 		#Calculate Total Effect
 		pred.data.t <- data.frame(1,PredictM1, y.t.data[index,3:k.t])
@@ -158,25 +158,25 @@ if(n.m != n.y){
 
 		rm(pred.data.t, pred.data.c, pr.1, pr.0, PredictM1, PredictM0)
 
-		avg.delta.1[b] <- mean(delta.1)
-		avg.delta.0[b] <- mean(delta.0)
-		med.eff[b] <- (avg.delta.1[b] + avg.delta.0[b])/2
-		avg.tau[b] <- mean(tau)
-		pct.med[b] <- med.eff[b]/avg.tau[b]
-
+		avg.delta.1 <- mean(delta.1)
+		avg.delta.0 <- mean(delta.0)
+		avg.tau <- mean(tau)
+		med.eff[b] <- (avg.delta.1 + avg.delta.0)/2
+		pct.med[b] <- med.eff[b]/avg.tau
+		rm(avg.delta.1, avg.delta.0, avg.tau)
 			}
 		}
-	}
 			
 	#Calculate Quantities of Interest
-	ci.d1 <- quantile(avg.delta.1, c(.025,.975))
-	ci.d0 <- quantile(avg.delta.0, c(.025,.975))
-	Delta1 <- mean(avg.delta.1)
-	Delta0 <- mean(avg.delta.0)
-	med.eff.dist <- med.eff / avg.tau
-	med.eff.pct <- abs(mean(t(med.eff.dist)))*100
+	med.eff.est <- mean(med.eff)
+	med.ci <- quantile(med.eff, c(.025,.975))
+	pct.med.est <- mean(pct.med)
+	pct.med.ci <- quantile(pct.med, c(.025,.975))
+	
 
-	out <- list(med.t = Delta1, med.c = Delta0, conf.1 = ci.d1, conf.0 = ci.d0, pct = med.eff.pct, dist=avg.delta.1)
-
+	out <- list(med.coef = med.eff.est, med.ci=med.ci, pr.med = pct.med.est, pr.ci = pct.med.ci, pr.dist = pct.med)
+	}
 	
 }
+
+
