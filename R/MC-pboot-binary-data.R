@@ -28,23 +28,42 @@ if(n.m != n.y){
 	
 		if(k.m == 2){ #No Covariates in Mediation Model
 			#Generate Predictions From Mediation Model with Random  Error
-			mean.sim <- mean(apply(MModel, 1, sum))
-			error <- rnorm(sims, mean.sim, sd=sigma)  
-			PredictM1temp <- as.matrix(apply(MModel, 1, sum))
-			PredictM1  <- matrix(PredictM1temp, n, sims, byrow=TRUE)
-			PredictM1 <- PredictM1 #+ error
-			PredictM0temp <- MModel[,1]  #+ error
-			PredictM0 <- matrix(PredictM0temp, n, sims, byrow=TRUE)
+			error <- matrix(,nrow=n, ncol=sims)
+			mean <- apply(MModel, 1, sum)
+			for (j in 1:sims) {
+        		error[,j] <- rnorm(n, mean[j], sd=sigma)
+ 				}		
+ 			PredictM1 <- mean + error
+ 			PredictM0 <- MModel[,1] + error		
+			 #PredictM1 <- matrix(,nrow=n, ncol=sims)
+ 			 #PredictM0 <- matrix(,nrow=n, ncol=sims)
+			#	for (j in 1:sims) {
+			#	mean <- MModel[j,1] + MModel[j,2]
+    		#	error <- mvrnorm(n, mu=mean, Sigma=sigma)  
+        	#	#PredictM1[,j] <- MModel[j,1] + MModel[j,2] + error
+        #		PredictM0[,j] <- MModel[j,1] + error  
+ 		#		}
 			} else { #With Covariates
 			#Generate Predictions From Mediation Model with Random  Error
-			mean.sim <- mean(apply(MModel, 1, sum))
-			error <- rnorm(sims, mean.sim, sd=sigma)  
-			PredictM1temp <- as.matrix(apply(cbind(MModel, error), 1, sum))
-			PredictM1  <- matrix(PredictM1temp, n, sims, byrow=TRUE)
-			PredictM1 <- PredictM1
-			PredictM0temp <- cbind(MModel[,1], MModel[,3:k.m], error)  
- 			PredictM0temp <- as.matrix(apply(PredictM0temp, 1, sum))
- 			PredictM0 <- matrix(PredictM0temp, n, sims, byrow=TRUE)
+			#mean.sim <- mean(apply(MModel, 1, sum))
+			#error <- rnorm(sims, mean.sim, sd=sigma)  
+			#PredictM1temp <- as.matrix(apply(cbind(MModel, error), 1, sum))
+			#PredictM1  <- matrix(PredictM1temp, n, sims, byrow=TRUE)
+			#PredictM1 <- PredictM1
+			#PredictM0temp <- cbind(MModel[,1], MModel[,3:k.m], error)  
+ 			#PredictM0temp <- as.matrix(apply(PredictM0temp, 1, sum))
+ 			#PredictM0 <- matrix(PredictM0temp, n, sims, byrow=TRUE)
+ 			
+ 			error <- matrix(,nrow=n, ncol=sims)
+			mean <- apply(MModel, 1, sum)
+			for (j in 1:sims) {
+        		error[,j] <- rnorm(n, mean[j], sd=sigma)
+ 				}
+ 				
+ 			PredictM1 <- mean + error
+ 			meanM0 <- cbind(MModel[,1], MModel[,3:k.m]) 
+ 			meanM0 <- apply(meanM0, 1, sum)
+ 			PredictM0 <- meanM0 + error
 			}
 			if(k.y==3){ #No Covariates
 				#Storage Matrices For Outcome Predictions
