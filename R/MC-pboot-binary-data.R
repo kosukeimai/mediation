@@ -76,8 +76,8 @@ if(n.m != n.y){
        			 	 Prob0[,j] <- TMmodel[j,1] + TMmodel[j,2]*1 + TMmodel[j,3]*PredictM0[,j]
 					}
 			
-				Prob1 <- apply(Prob1, 2, plogis)
-				Prob0 <- apply(Prob0, 2, plogis)
+				Prob1 <- apply(Prob1, 2, pnorm)
+				Prob0 <- apply(Prob0, 2, pnorm)
 				Delta1 <- Prob1 - Prob0 
 				rm(Prob1, Prob0)
 	
@@ -89,8 +89,8 @@ if(n.m != n.y){
        			 	Prob1[,j] <- TMmodel[j,1] + TMmodel[j,2]*0 + TMmodel[j,3]*PredictM1[,j]
         		 	Prob0[,j] <- TMmodel[j,1] + TMmodel[j,2]*0 + TMmodel[j,3]*PredictM0[,j]
 					}
-			Prob1 <- apply(Prob1, 2, plogis)
-			Prob0 <- apply(Prob0, 2, plogis)
+			Prob1 <- apply(Prob1, 2, pnorm)
+			Prob0 <- apply(Prob0, 2, pnorm)
 			Delta0 <- Prob1 - Prob0 
 			rm(Prob1, Prob0)
 			
@@ -103,8 +103,8 @@ if(n.m != n.y){
        			 Prob1_temp[,j] <- TMmodel[j,1] + TMmodel[j,2]*1 + TMmodel[j,3]*PredictM1[,j]  
         		Prob0_temp[,j] <- TMmodel[j,1] + TMmodel[j,2]*0 + TMmodel[j,3]*PredictM0[,j]  
         		}
-			Prob1_temp <- apply(Prob1_temp, 2, plogis)
-			Prob0_temp <- apply(Prob0_temp, 2, plogis)
+			Prob1_temp <- apply(Prob1_temp, 2, pnorm)
+			Prob0_temp <- apply(Prob0_temp, 2, pnorm)
 			Tau <- Prob1_temp - Prob0_temp
 				} else {#Predictions For Covariates
 			TMmodel.1 <- as.matrix(TMmodel[,1:3])
@@ -133,8 +133,8 @@ if(n.m != n.y){
 			
 			Prob1 <- Prob1 + X.pred
 			Prob0 <- Prob0 + X.pred
-			Prob1 <- apply(Prob1, 2, plogis)
-			Prob0 <- apply(Prob0, 2, plogis)
+			Prob1 <- apply(Prob1, 2, pnorm)
+			Prob0 <- apply(Prob0, 2, pnorm)
 			Delta1 <- Prob1 - Prob0 
 			rm(Prob1, Prob0)
 	
@@ -148,8 +148,8 @@ if(n.m != n.y){
 				}
 			Prob1 <- Prob1 + X.pred
 			Prob0 <- Prob0 + X.pred
-			Prob1 <- apply(Prob1, 2, plogis)
-			Prob0 <- apply(Prob0, 2, plogis)	
+			Prob1 <- apply(Prob1, 2, pnorm)
+			Prob0 <- apply(Prob0, 2, pnorm)	
 			Delta0 <- Prob1 - Prob0 
 			rm(Prob1, Prob0)
 			
@@ -164,8 +164,8 @@ if(n.m != n.y){
         		}
 			Prob1_temp <- Prob1_temp + X.pred
 			Prob0_temp <- Prob0_temp + X.pred
-			Prob1_temp <- apply(Prob1_temp, 2, plogis)
-			Prob0_temp <- apply(Prob0_temp, 2, plogis)
+			Prob1_temp <- apply(Prob1_temp, 2, pnorm)
+			Prob0_temp <- apply(Prob0_temp, 2, pnorm)
 			Tau <- Prob1_temp - Prob0_temp
 			}
 		}
@@ -179,7 +179,7 @@ Delta1_Delta0 <- Delta1_Delta0/2
 avg.tau <- t(as.matrix(apply(Tau, 2, mean)))
 #To calcuate proportion mediated we take for each draw j the ratio of 1/2(Delta1+Delta0)/Tau
 med.eff.dist <- Delta1_Delta0 / avg.tau
-med.eff.pct <- median(med.eff.dist)
+med.eff.pct <- mean(med.eff.dist)
 pr.med.ci <- quantile(med.eff.dist,c(.025,.975), na.rm=TRUE)
 
 

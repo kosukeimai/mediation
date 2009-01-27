@@ -61,6 +61,8 @@ if(n.m != n.y){
 
 		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
 		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
+		#pr.1 <- pnorm(predict(new.fit.t, newdata=pred.data.t))
+		#pr.0 <- pnorm(predict(new.fit.t, newdata=pred.data.c))
 		pr.mat <- as.matrix(cbind(pr.1, pr.0))
 		delta.1 <- pr.mat[,1] - pr.mat[,2]
 
@@ -73,6 +75,8 @@ if(n.m != n.y){
 
 		pr.1 <- predict(new.fit.c, type="response", newdata=pred.data.t)
 		pr.0 <- predict(new.fit.c, type="response", newdata=pred.data.c)
+		#pr.1 <- pnorm(predict(new.fit.c, newdata=pred.data.t))
+		#pr.0 <- pnorm(predict(new.fit.c, newdata=pred.data.c))
 		pr.mat <- as.matrix(na.omit(cbind(pr.1, pr.0)))
 		delta.0 <-pr.mat[,1] - pr.mat[,2]
 
@@ -82,10 +86,12 @@ if(n.m != n.y){
 		pred.data.t <- data.frame(1,PredictM1)
 		names(pred.data.t) <- names(model.y.t$coef[2:k.t])
 		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
-
+		#pr.1 <- pnorm(predict(new.fit.t, newdata=pred.data.t))
+		
 		pred.data.c <- data.frame(PredictM0)
 		names(pred.data.c) <- names(model.y.c$coef[2:k.c])
 		pr.0 <- predict(new.fit.c, type="response", newdata=pred.data.c)
+		#pr.0 <- pnorm(predict(new.fit.c, newdata=pred.data.c))
 		pr.mat <- as.matrix(na.omit(cbind(pr.1, pr.0)))
 		tau <- pr.mat[,1] - pr.mat[,2]
 
@@ -128,6 +134,8 @@ if(n.m != n.y){
 
 		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
 		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
+		#pr.1 <- pnorm(predict(new.fit.t, newdata=pred.data.t))
+		#pr.0 <- pnorm(predict(new.fit.t, newdata=pred.data.c))
 		pr.mat <- as.matrix(cbind(pr.1, pr.0))
 		delta.1 <- pr.mat[,1] - pr.mat[,2]
 
@@ -140,6 +148,8 @@ if(n.m != n.y){
 
 		pr.1 <- predict(new.fit.c, type="response", newdata=pred.data.t)
 		pr.0 <- predict(new.fit.c, type="response", newdata=pred.data.c)
+		#pr.1 <- pnorm(predict(new.fit.c, newdata=pred.data.t))
+		#pr.0 <- pnorm(predict(new.fit.c, newdata=pred.data.c))
 		pr.mat <- as.matrix(cbind(pr.1, pr.0))
 		delta.0 <-pr.mat[,1] - pr.mat[,2]
 
@@ -149,10 +159,12 @@ if(n.m != n.y){
 		pred.data.t <- data.frame(1,PredictM1, y.t.data[index,3:k.t])
 		names(pred.data.t) <- names(model.y.t$coef[2:k.t])
 		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
+		#pr.1 <- pnorm(predict(new.fit.t, newdata=pred.data.t))
 
 		pred.data.c <- data.frame(PredictM0, y.c.data[index,3:k.c])
 		names(pred.data.c) <- names(model.y.c$coef[2:k.c])
 		pr.0 <- predict(new.fit.c, type="response", newdata=pred.data.c)
+		#pr.0 <- pnorm(predict(new.fit.c, newdata=pred.data.c))
 		pr.mat <- as.matrix(cbind(pr.1, pr.0))
 		tau <- pr.mat[,1] - pr.mat[,2]
 
@@ -170,7 +182,7 @@ if(n.m != n.y){
 	#Calculate Quantities of Interest
 	med.eff.est <- mean(med.eff)
 	med.ci <- quantile(med.eff, c(.025,.975))
-	pct.med.est <- mean(pct.med)
+	pct.med.est <- median(pct.med)
 	pct.med.ci <- quantile(pct.med, c(.025,.975))
 	
 
