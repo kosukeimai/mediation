@@ -1,11 +1,10 @@
 
 
 #Nonparametric Bootstrap Mediation Function
-med.bin.boot <- function(object.1, object.2, object.3, B=500){
+med.bin.boot <- function(object.1, object.2, B=500){
 	
 	model.m <- object.1
 	model.y.t <- object.2
-	model.y.c <- object.3
 	n.m <- model.frame(model.m)
 	n.y <- model.frame(model.y.t)	
 	n.m <- length(n.m[,1])
@@ -16,14 +15,11 @@ if(n.m != n.y){
 	} else {
 	n <- n.m
 	k.t <- length(names(model.y.t$coef))
-	k.c <- length(names(model.y.c$coef))
 	k.m <- length(names(model.m$coef))
 	Call.M <- model.m$call
 	Call.Y.t <- model.y.t$call
-	Call.Y.c <- model.y.c$call
 	m.data <- model.frame(model.m)
     y.t.data <- model.frame(model.y.t)
-    y.c.data <- model.frame(model.y.c)
 	#Storage
 	avg.delta.1 <- matrix(NA, B, 1)
 	avg.delta.0 <- matrix(NA, B, 1)
@@ -37,12 +33,10 @@ if(n.m != n.y){
 		index <- sample(1:n,n, repl=TRUE)
 		Call.M$data <- m.data[index,]
 		Call.Y.t$data <- y.t.data[index,]
-		Call.Y.c$data <- y.c.data[index,]
 
 		#Refit Models with Resampled Data
 		new.fit.M <- eval.parent(Call.M)
 		new.fit.t <- eval.parent(Call.Y.t)
-		new.fit.c <- eval.parent(Call.Y.c)
 
 		#Generate Mediation Model Predictions
 		sigma <- summary(new.fit.M)$sigma
@@ -55,7 +49,6 @@ if(n.m != n.y){
 		#Treatment Predictions
 		pred.data.t <- data.frame(1,PredictM1)
 		pred.data.c <- data.frame(1,PredictM0)
-
 		names(pred.data.t) <- names(model.y.t$coef[2:k.t])
 		names(pred.data.c) <- names(model.y.t$coef[2:k.t])
 
@@ -68,13 +61,13 @@ if(n.m != n.y){
 
 		rm(pred.data.t, pred.data.c, pr.1, pr.0)
 
-		pred.data.t <- data.frame(PredictM1)
-		pred.data.c <- data.frame(PredictM0)
-		names(pred.data.t) <- names(model.y.c$coef[2:k.c])
-		names(pred.data.c) <- names(model.y.c$coef[2:k.c])
+		pred.data.t <- data.frame(0,PredictM1)
+		pred.data.c <- data.frame(0,PredictM0)
+		names(pred.data.t) <- names(model.y.t$coef[2:k.t])
+		names(pred.data.c) <- names(model.y.t$coef[2:k.t])
 
-		pr.1 <- predict(new.fit.c, type="response", newdata=pred.data.t)
-		pr.0 <- predict(new.fit.c, type="response", newdata=pred.data.c)
+		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
+		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
 		#pr.1 <- pnorm(predict(new.fit.c, newdata=pred.data.t))
 		#pr.0 <- pnorm(predict(new.fit.c, newdata=pred.data.c))
 		pr.mat <- as.matrix(na.omit(cbind(pr.1, pr.0)))
@@ -84,19 +77,19 @@ if(n.m != n.y){
 
 		#Calculate Total Effect
 		pred.data.t <- data.frame(1,PredictM1)
+		pred.data.c <- data.frame(0,PredictM0)
 		names(pred.data.t) <- names(model.y.t$coef[2:k.t])
-		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
-		#pr.1 <- pnorm(predict(new.fit.t, newdata=pred.data.t))
+		names(pred.data.c) <- names(model.y.t$coef[2:k.t])
 		
-		pred.data.c <- data.frame(PredictM0)
-		names(pred.data.c) <- names(model.y.c$coef[2:k.c])
-		pr.0 <- predict(new.fit.c, type="response", newdata=pred.data.c)
+		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
+		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
+		#pr.1 <- pnorm(predict(new.fit.t, newdata=pred.data.t))
 		#pr.0 <- pnorm(predict(new.fit.c, newdata=pred.data.c))
 		pr.mat <- as.matrix(na.omit(cbind(pr.1, pr.0)))
 		tau <- pr.mat[,1] - pr.mat[,2]
 
 		rm(pred.data.t, pred.data.c, pr.1, pr.0, PredictM1, PredictM0)
-
+		
 		avg.delta.1[b] <- mean(delta.1)
 		avg.delta.0[b] <- mean(delta.0)
 		med.eff[b] <- (avg.delta.1[b] + avg.delta.0[b])/2
@@ -110,19 +103,16 @@ if(n.m != n.y){
 		index <- sample(1:n,n, repl=TRUE)
 		Call.M$data <- m.data[index,]
 		Call.Y.t$data <- y.t.data[index,]
-		Call.Y.c$data <- y.c.data[index,]
 
 		#Refit Models with Resampled Data
 		new.fit.M <- eval.parent(Call.M)
 		new.fit.t <- eval.parent(Call.Y.t)
-		new.fit.c <- eval.parent(Call.Y.c)
 
 		#Generate Mediation Model Predictions
 		sigma <- summary(new.fit.M)$sigma
 		mean.sim <- sum(new.fit.M$coef[1:k.m])
 		error <- rnorm(n, mean.sim, sd=sigma) 
 		PredictM1 <- sum(new.fit.M$coef[1:k.m]) + error
-		#Without Covariattes
 		PredictM0 <- new.fit.M$coef[1] + sum(new.fit.M$coef[3:k.m]) + error 
 
 		#Treatment Predictions
@@ -134,22 +124,18 @@ if(n.m != n.y){
 
 		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
 		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
-		#pr.1 <- pnorm(predict(new.fit.t, newdata=pred.data.t))
-		#pr.0 <- pnorm(predict(new.fit.t, newdata=pred.data.c))
 		pr.mat <- as.matrix(cbind(pr.1, pr.0))
 		delta.1 <- pr.mat[,1] - pr.mat[,2]
 
 		rm(pred.data.t, pred.data.c, pr.1, pr.0,pr.mat)
 
-		pred.data.t <- data.frame(PredictM1, y.c.data[index,3:k.c])
-		pred.data.c <- data.frame(PredictM0, y.c.data[index,3:k.c])
-		names(pred.data.t) <- names(model.y.c$coef[2:k.c])
-		names(pred.data.c) <- names(model.y.c$coef[2:k.c])
+		pred.data.t <- data.frame(0,PredictM1, y.t.data[index,3:k.t])
+		pred.data.c <- data.frame(0,PredictM0, y.t.data[index,3:k.t])
+		names(pred.data.t) <- names(model.y.t$coef[2:k.t])
+		names(pred.data.c) <- names(model.y.t$coef[2:k.t])
 
-		pr.1 <- predict(new.fit.c, type="response", newdata=pred.data.t)
-		pr.0 <- predict(new.fit.c, type="response", newdata=pred.data.c)
-		#pr.1 <- pnorm(predict(new.fit.c, newdata=pred.data.t))
-		#pr.0 <- pnorm(predict(new.fit.c, newdata=pred.data.c))
+		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
+		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
 		pr.mat <- as.matrix(cbind(pr.1, pr.0))
 		delta.0 <-pr.mat[,1] - pr.mat[,2]
 
@@ -157,15 +143,13 @@ if(n.m != n.y){
 
 		#Calculate Total Effect
 		pred.data.t <- data.frame(1,PredictM1, y.t.data[index,3:k.t])
+		pred.data.c <- data.frame(0,PredictM0, y.t.data[index,3:k.t])
 		names(pred.data.t) <- names(model.y.t$coef[2:k.t])
+		names(pred.data.c) <- names(model.y.t$coef[2:k.t])
+		
 		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
-		#pr.1 <- pnorm(predict(new.fit.t, newdata=pred.data.t))
-
-		pred.data.c <- data.frame(PredictM0, y.c.data[index,3:k.c])
-		names(pred.data.c) <- names(model.y.c$coef[2:k.c])
-		pr.0 <- predict(new.fit.c, type="response", newdata=pred.data.c)
-		#pr.0 <- pnorm(predict(new.fit.c, newdata=pred.data.c))
-		pr.mat <- as.matrix(cbind(pr.1, pr.0))
+		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
+		pr.mat <- as.matrix(na.omit(cbind(pr.1, pr.0)))
 		tau <- pr.mat[,1] - pr.mat[,2]
 
 		rm(pred.data.t, pred.data.c, pr.1, pr.0, PredictM1, PredictM0)
@@ -181,9 +165,9 @@ if(n.m != n.y){
 			
 	#Calculate Quantities of Interest
 	med.eff.est <- mean(med.eff)
-	med.ci <- quantile(med.eff, c(.025,.975))
+	med.ci <- quantile(med.eff, c(.025,.975), na.rm=TRUE)
 	pct.med.est <- median(pct.med)
-	pct.med.ci <- quantile(pct.med, c(.025,.975))
+	pct.med.ci <- quantile(pct.med, c(.025,.975), na.rm=TRUE)
 	
 
 	out <- list(med.coef = med.eff.est, med.ci=med.ci, pr.med = pct.med.est, pr.ci = pct.med.ci, pr.dist = pct.med)
