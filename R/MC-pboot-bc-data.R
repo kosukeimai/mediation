@@ -165,7 +165,7 @@ avg.tau <- t(as.matrix(apply(Tau, 2, mean)))
 med.eff.dist <- Delta1_Delta0 / avg.tau
 med.eff.pct <- mean(med.eff.dist)
 pr.med.ci <- quantile(med.eff.dist,c(.025,.975), na.rm=TRUE)
-out <- list(pr.med = med.eff.pct, ci = pr.med.ci, dist=med.eff.dist, p.est=Delta1, d.ci=delta.ci)
+out <- list(pr.med = med.eff.pct, ci = pr.med.ci, dist=med.eff.dist, p.est=Delta1, d.ci=delta.ci, tau=avg.tau)
 }
 
  

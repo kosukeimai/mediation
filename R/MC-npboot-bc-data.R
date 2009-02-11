@@ -159,7 +159,7 @@ med.cont.boot <- function(object.1, object.2, B=500){
 	pct.med.ci <- quantile(pct.med, c(.025,.975), na.rm=TRUE)
 	
 
-	out <- list(med.coef = med.eff.est, med.ci=med.ci, pr.med = pct.med.est, pr.ci = pct.med.ci, pr.dist = pct.med)
+	out <- list(med.coef = med.eff.est, med.ci=med.ci, pr.med = pct.med.est, pr.ci = pct.med.ci, pr.dist = pct.med, tau=avg.tau)
 	}
 	
 }
