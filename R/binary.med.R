@@ -1,6 +1,10 @@
-
-binary.med <- function(model.m, model.y, sims=1000, boot=FALSE){
+mediate.binary <- function(z, ...){
+	UseMethod("mediate.binary", z)
+	}
+	
+mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE){
 	B <- sims
+	model.m <- z
 	model.y.t <- model.y
 	n.m <- model.frame(model.m)
 	n.y <- model.frame(model.y)	
@@ -583,10 +587,33 @@ binary.med <- function(model.m, model.y, sims=1000, boot=FALSE){
 
 	
 }
-out <- list(d0=d0, d1=d1, d0.ci=d0.ci, pct.coef=pct.coef, pct.ci=pct.ci, tau.coef=tau.coef, tau.ci=tau.ci)
+out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci, pct.coef=pct.coef, pct.ci=pct.ci, tau.coef=tau.coef, tau.ci=tau.ci, boot=boot)
+class(out) <- "my.mediate"
+out
+
 }
 
+print.my.mediate <- function(x, ...){
+	print(unlist(x[1:5]))
+	invisible(x)
+	}
 
-
+summary.my.mediate <- function(object)
+	structure(object, class = c("sum.my.mediate", class(object)))
+ 
+print.sum.my.mediate <- function(x, ...){
+	cat("\n Test For Mediation Effect \n\n")
+	cat("Delta_0: ", format(x$d0, digits=4), "95% CI ", format(x$d0.ci, digits=4), "\n")
+	cat("Delta_1: ", format(x$d1, digits=4), "95% CI ", format(x$d1.ci, digits=4), "\n\n")
+	cat("Proportion of Total Effect via Mediation: ", format(x$pct.coef, digits=4), "\n")
+	cat("95% Confidence Interval: ", format(x$pct.ci, digits=4), "\n \n")
+	if(x$boot==TRUE){
+		cat("Confidence Intervals Based on Nonparametric Bootstrap")
+		} else {
+		cat("Confidence Intervals Based on Parametric Bootstrap")
+		}
+	invisible(x)
+	}
+	
 
 
