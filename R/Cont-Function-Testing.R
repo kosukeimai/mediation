@@ -47,7 +47,7 @@ Y <-  alpha.3 + beta.3*T + gamma*M + kappa*T*M + rnorm(n)
 mmodel <- lm(M ~ T)
 ymodel <- lm(Y ~ T + M + T:M)
 
-mod.1 <- mediate.cont(mmodel, ymodel, sims=1000, boot=TRUE, INT=TRUE)
+mod.1 <- mediate.cont(mmodel, ymodel, sims=100, boot=TRUE, INT=TRUE)
 mod.2 <- mediate.cont(mmodel, ymodel, sims=1000, INT=TRUE)
 
 summary(mod.1)
@@ -79,13 +79,13 @@ kappa <- .25
 #Treatment Indicator
 T <- round(runif(n), 0)
 X.1 <- rnorm(n)
-X.2 <- rnorm(n)
+X.2 <- round(runif(n, 1, 4), 0)
 
 M <- alpha.2 + beta.2*T + beta.2*X.1 + beta.2*X.2 + rnorm(n)
 Y <- alpha.3 + beta.3*T + gamma*M + beta.2*X.1 + beta.2*X.2 + rnorm(n)
 
 mmodel <- lm(M ~ T + X.1 + X.2)
-ymodel <- lm(Y ~ T + M + X.1 + X.2)
+ymodel <- lm(Y ~ T + M + X.1 + as.factor(X.2))
 
 mod.1 <- mediate.cont(mmodel, ymodel, sims=1000, boot=TRUE)
 mod.2 <- mediate.cont(mmodel, ymodel, sims=1000)

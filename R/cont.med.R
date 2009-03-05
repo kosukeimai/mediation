@@ -125,15 +125,15 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE){
 					if(INT==TRUE){
 			#Predictions For Covariates Without No Interaction Assumption
 			TMmodel.1 <- as.matrix(TMmodel[,1:4])
-			TMmodel.2 <- as.matrix(TMmodel[,5:k.y])
-			ii <- 5
+			TMmodel.2 <- as.matrix(TMmodel[,5:(k.y+1)])
+			ii <- 4
    			X <- model.frame(model.y)
     		X <- as.matrix(X[,ii:k.y])
     		X.pred <- matrix( , n, sims)
     		k.x <- ncol(X)
    			 for (i in 1:k.x){
     			for (j in 1:sims) {
-        			X.pred[,j] <- TMmodel.2[j,i]*X[,i]
+        			X.pred[,j] <- TMmodel.2[j,i]*as.numeric(X[,i])
     				}
     			}
     			#Storage Matrices For Outcome Predictions
@@ -185,7 +185,7 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE){
     		k.x <- ncol(X)
    			 for (i in 1:k.x){
     			for (j in 1:sims) {
-        			X.pred[,j] <- TMmodel.2[j,i]*X[,i]
+        			X.pred[,j] <- TMmodel.2[j,i]*as.numeric(X[,i])
     				}
     			}
     	
@@ -236,13 +236,13 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE){
 			tau <- t(as.matrix(apply(tau.tmp, 2, mean)))
 			} else { #@@@@@@@@@@@@@@Nonparametric Bootstrap@@@@@@@@@@@@@@@@@@@
 	n <- n.m
-	k.t <- length(names(model.y.t$coef))
-	k.t.t <- k.t - 1
-	k.m <- length(names(model.m$coef))
 	Call.M <- model.m$call
 	Call.Y.t <- model.y.t$call
 	m.data <- model.frame(model.m)
     y.t.data <- model.frame(model.y.t)
+    k.t <- ncol(y.t.data)
+	k.t.t <- k.t - 1
+	k.m <- ncol(m.data)
 	#Storage
 	delta.1 <- matrix(NA, B, 1)
 	delta.0 <- matrix(NA, B, 1)
