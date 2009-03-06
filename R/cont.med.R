@@ -2,7 +2,7 @@ mediate.cont <- function(z, ...){
 	UseMethod("mediate.cont", z)
 	}
 	
-mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE){
+mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T="treat.name", M="med.name"){
 	B <- sims
 	model.m <- z
 	model.y.t <- model.y
@@ -238,19 +238,26 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE){
 	n <- n.m
 	Call.M <- model.m$call
 	Call.Y.t <- model.y.t$call
-	m.data <- model.frame(model.m)
-    y.t.data <- model.frame(model.y.t)
-    k.t <- ncol(y.t.data)
-	k.t.t <- k.t - 1
+	m.data <- model.frame(model.m)  #Call.M$data
+    y.t.data <- model.frame(model.y.t) #Call.Y$data
 	k.m <- ncol(m.data)
+	
+	if(is.factor(y.t.data[,T])==TRUE){
+
+		cat.0 <- levels(y.t.data[,T])[1]
+		cat.1 <- levels(y.t.data[,T])[2]
+		} else {
+		
+		cat.0 <- 0
+		cat.1 <- 1
+		}
+	
 	#Storage
 	delta.1 <- matrix(NA, B, 1)
 	delta.0 <- matrix(NA, B, 1)
 	tau <- matrix(NA, B, 1)
 	
-	if(k.m == 2){ #No Covariates in Mediation Model
-		for (b in 1:B) {
-		#Resample Data
+	for(b in 1:B){
 		index <- sample(1:n,n, repl=TRUE)
 		Call.M$data <- m.data[index,]
 		Call.Y.t$data <- y.t.data[index,]
@@ -263,112 +270,22 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE){
 		sigma <- summary(new.fit.M)$sigma
 		mean.sim <- sum(new.fit.M$coef[1:k.m])
 		error <- rnorm(n, mean.sim, sd=sigma) 
-		PredictM1 <- sum(new.fit.M$coef[1:k.m]) + error
-		PredictM0 <- new.fit.M$coef[1] + error 
-		if(INT==TRUE){
-		#Treatment Predictions
-		pred.data.t <- data.frame(1,PredictM1, PredictM1*1)
-		pred.data.c <- data.frame(1,PredictM0, PredictM0*1)
-		names(pred.data.t) <- names(model.y.t$coef[2:k.t])
-		names(pred.data.c) <- names(model.y.t$coef[2:k.t])
-
-		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
-		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
-		pr.mat <- as.matrix(cbind(pr.1, pr.0))
-		delta.1.tmp <- pr.mat[,1] - pr.mat[,2]
-
-		rm(pred.data.t, pred.data.c, pr.1, pr.0)
-
-		pred.data.t <- data.frame(0,PredictM1, PredictM1*0)
-		pred.data.c <- data.frame(0,PredictM0, PredictM1*0)
-		names(pred.data.t) <- names(model.y.t$coef[2:k.t])
-		names(pred.data.c) <- names(model.y.t$coef[2:k.t])
-
-		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
-		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
-		pr.mat <- as.matrix(na.omit(cbind(pr.1, pr.0)))
-		delta.0.tmp <-pr.mat[,1] - pr.mat[,2]
-
-		rm(pred.data.t, pred.data.c, pr.1, pr.0)
-
-		#Calculate Total Effect
-		pred.data.t <- data.frame(1,PredictM1, PredictM1*1)
-		pred.data.c <- data.frame(0,PredictM0, PredictM0*0)
-		names(pred.data.t) <- names(model.y.t$coef[2:k.t])
-		names(pred.data.c) <- names(model.y.t$coef[2:k.t])
+		PredictM1 <- mean.sim + error
 		
-		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
-		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
-		pr.mat <- as.matrix(na.omit(cbind(pr.1, pr.0)))
-		tau.tmp <- pr.mat[,1] - pr.mat[,2]
+		
+		if(is.factor(y.t.data[,T])==TRUE){
+			PredictM0 <- sum(as.numeric(names(new.fit.M$coef) != paste(T,cat.1,sep="")) * new.fit.M$coef) + error
 		} else {
-		#Treatment Predictions
-		pred.data.t <- data.frame(1,PredictM1)
-		pred.data.c <- data.frame(1,PredictM0)
-		names(pred.data.t) <- names(model.y.t$coef[2:k.t])
-		names(pred.data.c) <- names(model.y.t$coef[2:k.t])
-
-		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
-		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
-		pr.mat <- as.matrix(cbind(pr.1, pr.0))
-		delta.1.tmp <- pr.mat[,1] - pr.mat[,2]
-
-		rm(pred.data.t, pred.data.c, pr.1, pr.0)
-
-		pred.data.t <- data.frame(0,PredictM1)
-		pred.data.c <- data.frame(0,PredictM0)
-		names(pred.data.t) <- names(model.y.t$coef[2:k.t])
-		names(pred.data.c) <- names(model.y.t$coef[2:k.t])
-
-		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
-		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
-		pr.mat <- as.matrix(na.omit(cbind(pr.1, pr.0)))
-		delta.0.tmp <-pr.mat[,1] - pr.mat[,2]
-
-		rm(pred.data.t, pred.data.c, pr.1, pr.0)
-
-		#Calculate Total Effect
-		pred.data.t <- data.frame(1,PredictM1)
-		pred.data.c <- data.frame(0,PredictM0)
-		names(pred.data.t) <- names(model.y.t$coef[2:k.t])
-		names(pred.data.c) <- names(model.y.t$coef[2:k.t])
-		
-		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
-		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
-		pr.mat <- as.matrix(na.omit(cbind(pr.1, pr.0)))
-		tau.tmp <- pr.mat[,1] - pr.mat[,2]
-}
-		rm(pred.data.t, pred.data.c, pr.1, pr.0, PredictM1, PredictM0)
-		
-		delta.1[b] <- mean(delta.1.tmp)
-		delta.0[b] <- mean(delta.0.tmp)
-		tau[b] <- mean(tau.tmp)
-		
+			PredictM0 <- sum(as.numeric(names(new.fit.M$coef) != paste(T)) * new.fit.M$coef) + error
 		}
-	} else {
-	#With Covariates
-	for (b in 1:B) {
-		index <- sample(1:n,n, repl=TRUE)
-		Call.M$data <- m.data[index,]
-		Call.Y.t$data <- y.t.data[index,]
 
-		#Refit Models with Resampled Data
-		new.fit.M <- eval.parent(Call.M)
-		new.fit.t <- eval.parent(Call.Y.t)
-
-		#Generate Mediation Model Predictions
-		sigma <- summary(new.fit.M)$sigma
-		mean.sim <- sum(new.fit.M$coef[1:k.m])
-		error <- rnorm(n, mean.sim, sd=sigma) 
-		PredictM1 <- sum(new.fit.M$coef[1:k.m]) + error
-		PredictM0 <- new.fit.M$coef[1] + sum(new.fit.M$coef[3:k.m]) + error 
-		if(INT==TRUE){	
 		#Treatment Predictions
-		pred.data.t <- data.frame(1,PredictM1, PredictM1*1, y.t.data[index,4:k.t.t])
-		pred.data.c <- data.frame(1,PredictM0, PredictM0*1, y.t.data[index,4:k.t.t])
-		names(pred.data.t) <- names(model.y.t$coef[2:k.t.t])
-		names(pred.data.c) <- names(model.y.t$coef[2:k.t.t])
-
+		pred.data.t <- y.t.data
+		pred.data.t[,T] <- cat.1
+		pred.data.t[,M] <- PredictM1
+		pred.data.c <- y.t.data
+		pred.data.c[,T] <- cat.1
+		pred.data.c[,M] <- PredictM0
 		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
 		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
 		pr.mat <- as.matrix(cbind(pr.1, pr.0))
@@ -376,75 +293,40 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE){
 
 		rm(pred.data.t, pred.data.c, pr.1, pr.0,pr.mat)
 
-		pred.data.t <- data.frame(0,PredictM1, PredictM1*0, y.t.data[index,4:k.t.t])
-		pred.data.c <- data.frame(0,PredictM0, PredictM0*0, y.t.data[index,4:k.t.t])
-		names(pred.data.t) <- names(model.y.t$coef[2:k.t.t])
-		names(pred.data.c) <- names(model.y.t$coef[2:k.t.t])
-
+		#Control Predictions
+		pred.data.t <- y.t.data
+		pred.data.t[,T] <- cat.0
+		pred.data.t[,M] <- PredictM1
+		pred.data.c <- y.t.data
+		pred.data.c[,T] <- cat.0
+		pred.data.c[,M] <- PredictM0
 		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
 		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
 		pr.mat <- as.matrix(cbind(pr.1, pr.0))
 		delta.0.tmp <-pr.mat[,1] - pr.mat[,2]
 
 		rm(pred.data.t, pred.data.c, pr.1, pr.0, pr.mat)
-
+		
 		#Calculate Total Effect
-		pred.data.t <- data.frame(1,PredictM1, PredictM1*1, y.t.data[index,4:k.t.t])
-		pred.data.c <- data.frame(0,PredictM0, PredictM0*0, y.t.data[index,4:k.t.t])
-		names(pred.data.t) <- names(model.y.t$coef[2:k.t.t])
-		names(pred.data.c) <- names(model.y.t$coef[2:k.t.t])
+		pred.data.t <- y.t.data
+		pred.data.t[,T] <- cat.1
+		pred.data.t[,M] <- PredictM1
+		pred.data.c <- y.t.data
+		pred.data.c[,T] <- cat.0
+		pred.data.c[,M] <- PredictM0
 		
 		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
 		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
 		pr.mat <- as.matrix(na.omit(cbind(pr.1, pr.0)))
 		tau.tmp <- pr.mat[,1] - pr.mat[,2]
-		} else {
-		#Treatment Predictions
-		pred.data.t <- data.frame(1,PredictM1, y.t.data[index,3:k.t.t])
-		pred.data.c <- data.frame(1,PredictM0, y.t.data[index,3:k.t.t])
-
-		names(pred.data.t) <- names(model.y.t$coef[2:k.t.t])
-		names(pred.data.c) <- names(model.y.t$coef[2:k.t.t])
-
-		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
-		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
-		pr.mat <- as.matrix(cbind(pr.1, pr.0))
-		delta.1.tmp <- pr.mat[,1] - pr.mat[,2]
-
-		rm(pred.data.t, pred.data.c, pr.1, pr.0,pr.mat)
-
-		pred.data.t <- data.frame(0,PredictM1, y.t.data[index,3:k.t])
-		pred.data.c <- data.frame(0,PredictM0, y.t.data[index,3:k.t])
-		names(pred.data.t) <- names(model.y.t$coef[2:k.t])
-		names(pred.data.c) <- names(model.y.t$coef[2:k.t])
-
-		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
-		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
-		pr.mat <- as.matrix(cbind(pr.1, pr.0))
-		delta.0.tmp <-pr.mat[,1] - pr.mat[,2]
-
-		rm(pred.data.t, pred.data.c, pr.1, pr.0, pr.mat)
-
-		#Calculate Total Effect
-		pred.data.t <- data.frame(1,PredictM1, y.t.data[index,3:k.t])
-		pred.data.c <- data.frame(0,PredictM0, y.t.data[index,3:k.t])
-		names(pred.data.t) <- names(model.y.t$coef[2:k.t])
-		names(pred.data.c) <- names(model.y.t$coef[2:k.t])
 		
-		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
-		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
-		pr.mat <- as.matrix(na.omit(cbind(pr.1, pr.0)))
-		tau.tmp <- pr.mat[,1] - pr.mat[,2]
-			}
-		rm(pred.data.t, pred.data.c, pr.1, pr.0, PredictM1, PredictM0)
-
+				rm(pred.data.t, pred.data.c, pr.1, pr.0, PredictM1, PredictM0)
+		
 		delta.1[b] <- mean(delta.1.tmp)
 		delta.0[b] <- mean(delta.0.tmp)
 		tau[b] <- mean(tau.tmp)
-		} #boostrap loop
-				
-	  }#covariate branch
-
+		
+		} #bootstrap loop
 	} #nonpara boot branch
 	d0 <- mean(delta.0)
 	d1 <- mean(delta.1)
@@ -474,28 +356,27 @@ summary.my.mediate <- function(object)
  
 print.sum.my.mediate <- function(x, ...){
 	if(x$INT==TRUE){
-	cat("\n Test For Mediation Effect \n\n")
+		cat("\n Test For Mediation Effect \n\n")
+	if(x$boot==TRUE){
+		cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
+		} else {
+		cat("Confidence Intervals Based on Parametric Bootstrap\n\n")
+		}
 	cat("Delta_0: ", format(x$d0, digits=4), "95% CI ", format(x$d0.ci, digits=4), "\n")
 	cat("Delta_1: ", format(x$d1, digits=4), "95% CI ", format(x$d1.ci, digits=4), "\n\n")
 	cat("Proportion of Total Effect via Mediation: ", format(x$pct.coef, digits=4), "\n")
 	cat("95% Confidence Interval: ", format(x$pct.ci, digits=4), "\n \n")
-	if(x$boot==TRUE){
-		cat("Confidence Intervals Based on Nonparametric Bootstrap")
-		} else {
-		cat("Confidence Intervals Based on Parametric Bootstrap")
-		}
 		} else {
 			cat("\n Test For Mediation Effect \n\n")
+			if(x$boot==TRUE){
+		cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
+		} else {
+		cat("Confidence Intervals Based on Parametric Bootstrap\n\n")
+		}
 	cat("Delta(t): ", format(x$d0, digits=4), "95% CI ", format(x$d0.ci, digits=4), "\n")
 	cat("Proportion of Total Effect via Mediation: ", format(x$pct.coef, digits=4), "\n")
 	cat("95% Confidence Interval: ", format(x$pct.ci, digits=4), "\n \n")
-	if(x$boot==TRUE){
-		cat("Confidence Intervals Based on Nonparametric Bootstrap")
-		} else {
-		cat("Confidence Intervals Based on Parametric Bootstrap")
-		}
-
-			}
+				}
 	invisible(x)
 	}
 	

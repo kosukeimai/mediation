@@ -28,7 +28,7 @@ mmodel <- lm(M ~ T)
 beta2.est <- mmodel$coef[2]
 
 
-mod.1 <- mediate.cont(mmodel, ymodel, sims=1000, boot=TRUE)
+mod.1 <- mediate.cont(mmodel, ymodel, sims=1000, boot=TRUE, T="T", M="M")
 mod.2 <- mediate.cont(mmodel, ymodel, sims=1000)
 
 summary(mod.1)
@@ -87,7 +87,7 @@ Y <- alpha.3 + beta.3*T + gamma*M + beta.2*X.1 + beta.2*X.2 + rnorm(n)
 mmodel <- lm(M ~ T + X.1 + X.2)
 ymodel <- lm(Y ~ T + M + X.1 + as.factor(X.2))
 
-mod.1 <- mediate.cont(mmodel, ymodel, sims=1000, boot=TRUE)
+mod.1 <- mediate.cont(mmodel, ymodel, sims=1000, boot=TRUE, T="T", M="M")
 mod.2 <- mediate.cont(mmodel, ymodel, sims=1000)
 
 summary(mod.1)
@@ -101,7 +101,7 @@ Y <-  alpha.3 + beta.3*T + gamma*M + kappa*T*M + beta.2*X.1 + beta.2*X.2 + rnorm
 mmodel <- lm(M ~ T + X.1 + X.2)
 ymodel <- lm(Y ~ T + M + T:M + X.1 + X.2)
 
-mod.1 <- mediate.cont(mmodel, ymodel, sims=1000, boot=TRUE, INT=TRUE)
+mod.1 <- mediate.cont(mmodel, ymodel, sims=1000, boot=TRUE, INT=TRUE, T="T", M="M")
 mod.2 <- mediate.cont(mmodel, ymodel, sims=1000, INT=TRUE)
 
 summary(mod.1)
