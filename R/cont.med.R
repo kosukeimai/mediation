@@ -240,6 +240,7 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 	Call.Y.t <- model.y.t$call
 	m.data <- model.frame(model.m)  #Call.M$data
     y.t.data <- model.frame(model.y.t) #Call.Y$data
+    k.t <- ncol(y.t.data)
 	k.m <- ncol(m.data)
 	
 	if(is.factor(y.t.data[,T])==TRUE){
@@ -268,16 +269,14 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 
 		#Generate Mediation Model Predictions
 		sigma <- summary(new.fit.M)$sigma
-		mean.sim <- sum(new.fit.M$coef[1:k.m])
+		if(is.factor(y.t.data[,T])==TRUE){
+			mean.sim <- new.fit.M$coef[1] + new.fit.M$coef[ paste(T,cat.1,sep="")]
+		} else {
+			mean.sim <- new.fit.M$coef[1] + new.fit.M$coef[paste(T)]
+		}
 		error <- rnorm(n, mean.sim, sd=sigma) 
 		PredictM1 <- mean.sim + error
-		
-		
-		if(is.factor(y.t.data[,T])==TRUE){
-			PredictM0 <- sum(as.numeric(names(new.fit.M$coef) != paste(T,cat.1,sep="")) * new.fit.M$coef) + error
-		} else {
-			PredictM0 <- sum(as.numeric(names(new.fit.M$coef) != paste(T)) * new.fit.M$coef) + error
-		}
+		PredictM0 <- new.fit.M$coef[1] + error
 
 		#Treatment Predictions Data
 		if(INT==TRUE){
@@ -304,10 +303,10 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 			
 		if(is.factor(y.t.data[,T])==TRUE){
 		pred.data.t[,T] <- as.factor(pred.data.t[,T])
-		pred.data.c[,T] <- as.factor(pred.data.t[,T])
+		pred.data.c[,T] <- as.factor(pred.data.c[,T])
 		} else { 
 		pred.data.t[,T] <- as.numeric(pred.data.t[,T])
-		pred.data.c[,T] <- as.numeric(pred.data.t[,T])
+		pred.data.c[,T] <- as.numeric(pred.data.c[,T])
 		}
 		
 		#Treatment Predications	
@@ -343,10 +342,10 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 			
 		if(is.factor(y.t.data[,T])==TRUE){
 		pred.data.t[,T] <- as.factor(pred.data.t[,T])
-		pred.data.c[,T] <- as.factor(pred.data.t[,T])
+		pred.data.c[,T] <- as.factor(pred.data.c[,T])
 		} else { 
 		pred.data.t[,T] <- as.numeric(pred.data.t[,T])
-		pred.data.c[,T] <- as.numeric(pred.data.t[,T])
+		pred.data.c[,T] <- as.numeric(pred.data.c[,T])
 		} 
 		
 		#Control Predictions	
@@ -382,10 +381,10 @@ if(INT==TRUE){
 			
 		if(is.factor(y.t.data[,T])==TRUE){
 		pred.data.t[,T] <- as.factor(pred.data.t[,T])
-		pred.data.c[,T] <- as.factor(pred.data.t[,T])
+		pred.data.c[,T] <- as.factor(pred.data.c[,T])
 		} else { 
 		pred.data.t[,T] <- as.numeric(pred.data.t[,T])
-		pred.data.c[,T] <- as.numeric(pred.data.t[,T])
+		pred.data.c[,T] <- as.numeric(pred.data.c[,T])
 		}
 				
 		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
@@ -420,7 +419,7 @@ out
 }
 
 print.my.mediate <- function(x, ...){
-	print(unlist(x[1:5]))
+	print(unlist(x[1:8]))
 	invisible(x)
 	}
 
@@ -436,7 +435,8 @@ print.sum.my.mediate <- function(x, ...){
 		cat("Confidence Intervals Based on Parametric Bootstrap\n\n")
 		}
 	cat("Delta_0: ", format(x$d0, digits=4), "95% CI ", format(x$d0.ci, digits=4), "\n")
-	cat("Delta_1: ", format(x$d1, digits=4), "95% CI ", format(x$d1.ci, digits=4), "\n\n")
+	cat("Delta_1: ", format(x$d1, digits=4), "95% CI ", format(x$d1.ci, digits=4), "\n")
+	cat("Tau: ", format(x$tau.coef, digits=4), "95% CI ", format(x$tau.ci, digits=4), "\n\n")
 	cat("Proportion of Total Effect via Mediation: ", format(x$pct.coef, digits=4), "\n")
 	cat("95% Confidence Interval: ", format(x$pct.ci, digits=4), "\n \n")
 		} else {
@@ -447,6 +447,7 @@ print.sum.my.mediate <- function(x, ...){
 		cat("Confidence Intervals Based on Parametric Bootstrap\n\n")
 		}
 	cat("Delta(t): ", format(x$d0, digits=4), "95% CI ", format(x$d0.ci, digits=4), "\n")
+	cat("Tau: ", format(x$tau.coef, digits=4), "95% CI ", format(x$tau.ci, digits=4), "\n\n")
 	cat("Proportion of Total Effect via Mediation: ", format(x$pct.coef, digits=4), "\n")
 	cat("95% Confidence Interval: ", format(x$pct.ci, digits=4), "\n \n")
 				}
