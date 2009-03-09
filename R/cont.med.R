@@ -279,17 +279,21 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 			PredictM0 <- sum(as.numeric(names(new.fit.M$coef) != paste(T)) * new.fit.M$coef) + error
 		}
 
+		#Treatment Predictions Data
+		if(INT==TRUE){
 		#Treatment Predictions
-if(is.factor(y.t.data[,T])==TRUE){
 		pred.data.t <- y.t.data
 		pred.data.t[,T] <- cat.1
-		pred.data.t[,T] <- as.factor(pred.data.t[,T])
 		pred.data.t[,M] <- PredictM1
+		pred.data.t$int <- PredictM1*1
+		names(pred.data.t)[(k.t+1)] <- paste(T,M,sep=":") 
+		
 		pred.data.c <- y.t.data
 		pred.data.c[,T] <- cat.1
-		pred.data.c[,T] <- as.factor(pred.data.t[,T])
 		pred.data.c[,M] <- PredictM0
-		} else{ 
+		pred.data.c$int <- PredictM0*1
+		names(pred.data.c)[(k.t+1)] <- paste(T,M,sep=":") 
+			} else { 
 		pred.data.t <- y.t.data
 		pred.data.t[,T] <- cat.1
 		pred.data.t[,M] <- PredictM1
@@ -297,6 +301,16 @@ if(is.factor(y.t.data[,T])==TRUE){
 		pred.data.c[,T] <- cat.1
 		pred.data.c[,M] <- PredictM0
 		}
+			
+		if(is.factor(y.t.data[,T])==TRUE){
+		pred.data.t[,T] <- as.factor(pred.data.t[,T])
+		pred.data.c[,T] <- as.factor(pred.data.t[,T])
+		} else { 
+		pred.data.t[,T] <- as.numeric(pred.data.t[,T])
+		pred.data.c[,T] <- as.numeric(pred.data.t[,T])
+		}
+		
+		#Treatment Predications	
 		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
 		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
 		pr.mat <- as.matrix(cbind(pr.1, pr.0))
@@ -304,24 +318,38 @@ if(is.factor(y.t.data[,T])==TRUE){
 
 		rm(pred.data.t, pred.data.c, pr.1, pr.0,pr.mat)
 
-		#Control Predictions
+		#Control Predictions Data
+		if(INT==TRUE){
+		#Treatment Predictions
+		pred.data.t <- y.t.data
+		pred.data.t[,T] <- cat.0
+		pred.data.t[,M] <- PredictM1
+		pred.data.t$int <- PredictM1*0
+		names(pred.data.t)[(k.t+1)] <- paste(T,M,sep=":") 
+		
+		pred.data.c <- y.t.data
+		pred.data.c[,T] <- cat.0
+		pred.data.c[,M] <- PredictM0
+		pred.data.c$int <- PredictM0*0
+		names(pred.data.c)[(k.t+1)] <- paste(T,M,sep=":") 
+			} else { 
+		pred.data.t <- y.t.data
+		pred.data.t[,T] <- cat.0
+		pred.data.t[,M] <- PredictM1
+		pred.data.c <- y.t.data
+		pred.data.c[,T] <- cat.0
+		pred.data.c[,M] <- PredictM0
+		}
+			
 		if(is.factor(y.t.data[,T])==TRUE){
-		pred.data.t <- y.t.data
-		pred.data.t[,T] <- cat.1
 		pred.data.t[,T] <- as.factor(pred.data.t[,T])
-		pred.data.t[,M] <- PredictM1
-		pred.data.c <- y.t.data
-		pred.data.c[,T] <- cat.1
 		pred.data.c[,T] <- as.factor(pred.data.t[,T])
-		pred.data.c[,M] <- PredictM0
-		} else{ 
-		pred.data.t <- y.t.data
-		pred.data.t[,T] <- cat.1
-		pred.data.t[,M] <- PredictM1
-		pred.data.c <- y.t.data
-		pred.data.c[,T] <- cat.1
-		pred.data.c[,M] <- PredictM0
-		}		
+		} else { 
+		pred.data.t[,T] <- as.numeric(pred.data.t[,T])
+		pred.data.c[,T] <- as.numeric(pred.data.t[,T])
+		} 
+		
+		#Control Predictions	
 		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
 		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
 		pr.mat <- as.matrix(cbind(pr.1, pr.0))
@@ -330,23 +358,36 @@ if(is.factor(y.t.data[,T])==TRUE){
 		rm(pred.data.t, pred.data.c, pr.1, pr.0, pr.mat)
 		
 		#Calculate Total Effect
+if(INT==TRUE){
+		#Treatment Predictions
+		pred.data.t <- y.t.data
+		pred.data.t[,T] <- cat.1
+		pred.data.t[,M] <- PredictM1
+		pred.data.t$int <- PredictM1*1
+		names(pred.data.t)[(k.t+1)] <- paste(T,M,sep=":") 
+		
+		pred.data.c <- y.t.data
+		pred.data.c[,T] <- cat.0
+		pred.data.c[,M] <- PredictM0
+		pred.data.c$int <- PredictM0*0
+		names(pred.data.c)[(k.t+1)] <- paste(T,M,sep=":") 
+			} else { 
+		pred.data.t <- y.t.data
+		pred.data.t[,T] <- cat.1
+		pred.data.t[,M] <- PredictM1
+		pred.data.c <- y.t.data
+		pred.data.c[,T] <- cat.0
+		pred.data.c[,M] <- PredictM0
+		}
+			
 		if(is.factor(y.t.data[,T])==TRUE){
-		pred.data.t <- y.t.data
-		pred.data.t[,T] <- cat.1
 		pred.data.t[,T] <- as.factor(pred.data.t[,T])
-		pred.data.t[,M] <- PredictM1
-		pred.data.c <- y.t.data
-		pred.data.c[,T] <- cat.1
 		pred.data.c[,T] <- as.factor(pred.data.t[,T])
-		pred.data.c[,M] <- PredictM0
-		} else{ 
-		pred.data.t <- y.t.data
-		pred.data.t[,T] <- cat.1
-		pred.data.t[,M] <- PredictM1
-		pred.data.c <- y.t.data
-		pred.data.c[,T] <- cat.1
-		pred.data.c[,M] <- PredictM0
-		}		
+		} else { 
+		pred.data.t[,T] <- as.numeric(pred.data.t[,T])
+		pred.data.c[,T] <- as.numeric(pred.data.t[,T])
+		}
+				
 		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
 		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
 		pr.mat <- as.matrix(na.omit(cbind(pr.1, pr.0)))
