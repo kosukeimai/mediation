@@ -3,7 +3,7 @@ library(MASS)
 ###########################################
 #          With Covariates                #
 ##########################################
-
+library(MASS)
 rm(list=ls())
 set.seed(3)
 setwd("~/Documents/Mediation Analysis/Local/mediation/mediation/R")
@@ -26,6 +26,7 @@ Y <- alpha.3 + beta.3*T + gamma*M + beta.2*X.1 + beta.2*X.2 + rnorm(n)
 
 mmodel <- lm(M ~ T + X.1 + X.2)
 model.y <- lm(Y ~ T + M + X.1 + X.2)
+lm(Y ~ T + X.1 + X.2)
 
 mod.1 <- mediate.cont(mmodel, model.y, sims=1000, boot=TRUE, T="T", M="M")
 mod.2 <- mediate.cont(mmodel, model.y, sims=1000, T="T", M="M")
@@ -42,6 +43,14 @@ mmodel$coef[2]*model.y$coef[3] + model.y$coef[2]
 #Proportion
 (mmodel$coef[2]*model.y$coef[3])/(mmodel$coef[2]*model.y$coef[3] + model.y$coef[2])
 
+#Population Values
+#Indirect
+beta.2*gamma
+#Direct
+beta.3
+#Total
+beta.3 + beta.2*gamma
+
 
 #Test Relaxing No Interaction Assumption
 T <- round(runif(n), 0)
@@ -50,6 +59,7 @@ Y <-  alpha.3 + beta.3*T + gamma*M + kappa*T*M + beta.2*X.1 + beta.2*X.2 + rnorm
 
 mmodel <- lm(M ~ T + X.1 + X.2)
 model.y <- lm(Y ~ T + M + T:M + X.1 + X.2)
+ lm(Y ~ T + X.1 + X.2)
 
 mod.1 <- mediate.cont(mmodel, model.y, sims=1000, boot=TRUE, INT=TRUE, T="T", M="M")
 mod.2 <- mediate.cont(mmodel, model.y, sims=1000, INT=TRUE, T="T", M="M")
@@ -69,8 +79,17 @@ mmodel$coef[2]*model.y$coef[3] + model.y$coef[2] + model.y$coef[6]*(mmodel$coef[
 mean(c(d0,d1))/(mmodel$coef[2]*model.y$coef[3] + model.y$coef[2] + model.y$coef[6]*(mmodel$coef[1] + mmodel$coef[2]))
 
 #Pop Values
+#Indirect Effects
+#Delta_0
 beta.2*gamma
-beta.2*(beta.3 + kappa)
+#Delta_1
+beta.2*(gamma + kappa)
+#Zeta_0
+beta.3 + kappa*(alpha.2)
+#Zeta_1
+beta.3 + kappa*(alpha.2 + beta.2)
+#Tau
+beta.2*gamma + beta.3 + kappa*(alpha.2 + beta.2)
 
 
 ############################################################
