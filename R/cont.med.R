@@ -6,242 +6,163 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 	B <- sims
 	model.m <- z
 	model.y.t <- model.y
+	m.data <- model.frame(model.m)  #Call.M$data
+    y.t.data <- model.frame(model.y.t) #Call.Y$data
+    k.t <- ncol(y.t.data)
+	k.m <- ncol(m.data)
 	n.m <- model.frame(model.m)
 	n.y <- model.frame(model.y)	
 	k.y <- ncol(n.y)
 	k.m <- ncol(n.m)
 	k <- k.y + k.m
-	n.m <- length(n.m[,1])
-	n.y <- length(n.y[,1])
-	n <- n.m
+	n.m <- length(m.data[,1])
+	n.y <- length(y.t.data[,1])
+	n <- length(y.t.data[,1])
 	sigma <- summary(model.m)$sigma
+	if(is.factor(y.t.data[,paste(T)])==TRUE){
+				cat.c <- levels(y.t.data[,T])[1] 
+				cat.t <- levels(y.t.data[,T])[2]
+				T.cat <- paste(T,cat.t, sep="") 
+			} else {
+				cat.c <- NULL
+				cat.t <- NULL
+				T.cat <- paste(T,cat.t, sep="")
+				}
+
 	if(n.m != n.y){
 	cat("Error: Missing Values Present in Data")
 	} else {
+	if(boot == FALSE){ 
+	cat.0 <- 0
+	cat.1 <- 1
 
-			if(boot == FALSE){ #Parametric Bootstrap
-			#Draw From Posterior of Each Model
-			MModel.coef <- model.m$coef
-			MModel.var.cov <- vcov(model.m)
-			TMmodel.coef <- model.y$coef
-			TMmodel.var.cov <- vcov(model.y)
-			MModel <- mvrnorm(sims, mu=MModel.coef, Sigma=MModel.var.cov)
-			TMmodel <- mvrnorm(sims, mu=TMmodel.coef, Sigma=TMmodel.var.cov)
+	MModel.coef <- model.m$coef
+	MModel.var.cov <- vcov(model.m)
+	TMmodel.coef <- model.y$coef
+	TMmodel.var.cov <- vcov(model.y)
+	MModel <- mvrnorm(sims, mu=MModel.coef, Sigma=MModel.var.cov)
+	TMmodel <- mvrnorm(sims, mu=TMmodel.coef, Sigma=TMmodel.var.cov)
 	
-		if(k.m == 2){ #No Covariates in Mediation Model
-			#Generate Predictions From Mediation Model with Random  Error
-			error <- matrix(,nrow=n, ncol=sims)
-			mean <- apply(MModel, 1, sum)
-			for (j in 1:sims) {
-        		error[,j] <- rnorm(n, mean[j], sd=sigma)
- 				}		
- 			PredictM1 <- mean + error
- 			PredictM0 <- MModel[,1] + error		
-			} else { #With Covariates
-			#Generate Predictions From Mediation Model with Random  Error
-			error <- matrix(,nrow=n, ncol=sims)
-			mean <- apply(MModel, 1, sum)
-			for (j in 1:sims) {
-        		error[,j] <- rnorm(n, mean[j], sd=sigma)
- 				}
- 				
- 			PredictM1 <- mean + error
- 			meanM0 <- cbind(MModel[,1], MModel[,3:k.m]) 
- 			meanM0 <- apply(meanM0, 1, sum)
- 			PredictM0 <- meanM0 + error
-			}
-			if(k.y==3){ #@@@@@@@@@@@@@@No Covariates@@@@@@@@@@@@@
-				if(INT == TRUE){
-					Prob1 <- matrix(,nrow=n, ncol=sims)
-				Prob0 <- matrix(,nrow=n, ncol=sims)
-				#Prediction For Outcome Based on Mediation Model Preductions
-				#T=1
-				for (j in 1:sims) {
-       				 Prob1[,j] <- TMmodel[j,1] + TMmodel[j,2]*1 + TMmodel[j,3]*PredictM1[,j] + TMmodel[j,4]*PredictM1[,j]*1
-       			 	 Prob0[,j] <- TMmodel[j,1] + TMmodel[j,2]*1 + TMmodel[j,3]*PredictM0[,j] + TMmodel[j,4]*PredictM0[,j]*1
-					}
-			
-				delta.1.tmp <- Prob1 - Prob0 
-				rm(Prob1, Prob0)
+	#Direct Effect
+	if(is.factor(m.data[,paste(T)])==TRUE){
+	pred.data <- m.data
+	pred.data[,T] <- list(factor(unique(m.data[,T])[1], levels = levels(m.data[,T])))
+	} else {
+	pred.data <- m.data
+	pred.data[,T] <- cat.0	
+		}
+		
+	bmat <- model.matrix(terms(model.m), data=pred.data)
+	Bm.X <- MModel %*% t(bmat)
 	
-				#Storage Matrices
-				Prob1 <- matrix(,nrow=n, ncol=sims)
-				Prob0 <- matrix(,nrow=n, ncol=sims)
-				#T=0
-				for (j in 1:sims) {
-       			 	Prob1[,j] <- TMmodel[j,1] + TMmodel[j,2]*0 + TMmodel[j,3]*PredictM1[,j]
-        		 	Prob0[,j] <- TMmodel[j,1] + TMmodel[j,2]*0 + TMmodel[j,3]*PredictM0[,j]
-					}
-			delta.0.tmp <- Prob1 - Prob0 
-			rm(Prob1, Prob0)
-			
-			#Storage Matrices
-			Prob1_temp <- matrix(,nrow=n, ncol=sims)
-			Prob0_temp <- matrix(,nrow=n, ncol=sims)
-
-			#Calculate Total Effect
-			for (j in 1:sims) {
-       			 Prob1_temp[,j] <- TMmodel[j,1] + TMmodel[j,2]*1 + TMmodel[j,3]*PredictM1[,j] + TMmodel[j,4]*PredictM1[,j]*1  
-        		 Prob0_temp[,j] <- TMmodel[j,1] + TMmodel[j,2]*0 + TMmodel[j,3]*PredictM0[,j] + TMmodel[j,4]*PredictM0[,j]*0 
-        		}
-			tau.tmp <- Prob1_temp - Prob0_temp
-					} else {
-				#Storage Matrices For Outcome Predictions
-				Prob1 <- matrix(,nrow=n, ncol=sims)
-				Prob0 <- matrix(,nrow=n, ncol=sims)
-				#Prediction For Outcome Based on Mediation Model Preductions
-				#T=1
-				for (j in 1:sims) {
-       				 Prob1[,j] <- TMmodel[j,1] + TMmodel[j,2]*1 + TMmodel[j,3]*PredictM1[,j] 
-       			 	 Prob0[,j] <- TMmodel[j,1] + TMmodel[j,2]*1 + TMmodel[j,3]*PredictM0[,j]
-					}
-			
-				delta.1.tmp <- Prob1 - Prob0 
-				rm(Prob1, Prob0)
-	
-				#Storage Matrices
-				Prob1 <- matrix(,nrow=n, ncol=sims)
-				Prob0 <- matrix(,nrow=n, ncol=sims)
-				#T=0
-				for (j in 1:sims) {
-       			 	Prob1[,j] <- TMmodel[j,1] + TMmodel[j,2]*0 + TMmodel[j,3]*PredictM1[,j]
-        		 	Prob0[,j] <- TMmodel[j,1] + TMmodel[j,2]*0 + TMmodel[j,3]*PredictM0[,j]
-					}
-			delta.0.tmp <- Prob1 - Prob0 
-			rm(Prob1, Prob0)
-			
-			#Storage Matrices
-			Prob1_temp <- matrix(,nrow=n, ncol=sims)
-			Prob0_temp <- matrix(,nrow=n, ncol=sims)
-
-			#Calculate Total Effect
-			for (j in 1:sims) {
-       			 Prob1_temp[,j] <- TMmodel[j,1] + TMmodel[j,2]*1 + TMmodel[j,3]*PredictM1[,j]  
-        		Prob0_temp[,j] <- TMmodel[j,1] + TMmodel[j,2]*0 + TMmodel[j,3]*PredictM0[,j]  
-        		}
-			tau.tmp <- Prob1_temp - Prob0_temp
-			}
-				} else {#Predictions For Covariates
-					if(INT==TRUE){
-			#Predictions For Covariates Without No Interaction Assumption
-			TMmodel.1 <- as.matrix(TMmodel[,1:4])
-			TMmodel.2 <- as.matrix(TMmodel[,5:(k.y+1)])
-			ii <- 4
-   			X <- model.frame(model.y)
-    		X <- as.matrix(X[,ii:k.y])
-    		X.pred <- matrix( , n, sims)
-    		k.x <- ncol(X)
-   			 for (i in 1:k.x){
-    			for (j in 1:sims) {
-        			X.pred[,j] <- TMmodel.2[j,i]*as.numeric(X[,i])
-    				}
-    			}
-    			#Storage Matrices For Outcome Predictions
-			Prob1 <- matrix(,nrow=n, ncol=sims)
-			Prob0 <- matrix(,nrow=n, ncol=sims)
-			#Prediction For Outcome Based on Mediation Model Preductions
-			#T=1
-			for (j in 1:sims) {
-       				 Prob1[,j] <- TMmodel[j,1] + TMmodel[j,2]*1 + TMmodel[j,3]*PredictM1[,j] + TMmodel[j,4]*PredictM1[,j]*1
-       			 	 Prob0[,j] <- TMmodel[j,1] + TMmodel[j,2]*1 + TMmodel[j,3]*PredictM0[,j] + TMmodel[j,4]*PredictM0[,j]*1
-					}
-			Prob1 <- Prob1 + X.pred
-			Prob0 <- Prob0 + X.pred
-			delta.1.tmp <- Prob1 - Prob0 
-			rm(Prob1, Prob0)
-	
-			#Storage Matrices
-			Prob1 <- matrix(,nrow=n, ncol=sims)
-			Prob0 <- matrix(,nrow=n, ncol=sims)
-			#T=0
-			for (j in 1:sims) {
-       			 Prob1[,j] <- TMmodel.1[j,1] + TMmodel.1[j,2]*0 + TMmodel.1[j,3]*PredictM1[,j]
-        		 Prob0[,j] <- TMmodel.1[j,1] + TMmodel.1[j,2]*0 + TMmodel.1[j,3]*PredictM0[,j]
+		if (INT==TRUE){
+			zeta.1 <- TMmodel[,paste(T.cat)] + TMmodel[,paste(T.cat,M,sep=":")]*(MModel[,1] + MModel[,T.cat] + mean(Bm.X))
+			zeta.0 <- TMmodel[,paste(T.cat)] + TMmodel[,paste(T.cat,M,sep=":")]*(MModel[,1] + mean(Bm.X))
+			} else {
+			zeta.1 <- TMmodel[,paste(T)]
+			zeta.0 <- TMmodel[,paste(T)] 
 				}
-			Prob1 <- Prob1 + X.pred
-			Prob0 <- Prob0 + X.pred
-			delta.0.tmp <- Prob1 - Prob0 
-			rm(Prob1, Prob0)
-			
-			#Storage Matrices
-			Prob1_temp <- matrix(,nrow=n, ncol=sims)
-			Prob0_temp <- matrix(,nrow=n, ncol=sims)
 
-			#Calculate Total Effect
-			for (j in 1:sims) {
-       			 Prob1_temp[,j] <- TMmodel[j,1] + TMmodel[j,2]*1 + TMmodel[j,3]*PredictM1[,j] + TMmodel[j,4]*PredictM1[,j]*1  
-        		 Prob0_temp[,j] <- TMmodel[j,1] + TMmodel[j,2]*0 + TMmodel[j,3]*PredictM0[,j] + TMmodel[j,4]*PredictM0[,j]*0 
-        		}			
-        	Prob1_temp <- Prob1_temp + X.pred
-			Prob0_temp <- Prob0_temp + X.pred
-			tau.tmp <- Prob1_temp - Prob0_temp
-			} else {#End Int Branch
-			TMmodel.1 <- as.matrix(TMmodel[,1:3])
-			TMmodel.2 <- as.matrix(TMmodel[,4:k.y])
-			ii <- 4
-   			X <- model.frame(model.y)
-    		X <- as.matrix(X[,ii:k.y])
-    		X.pred <- matrix( , n, sims)
-    		k.x <- ncol(X)
-   			 for (i in 1:k.x){
-    			for (j in 1:sims) {
-        			X.pred[,j] <- TMmodel.2[j,i]*as.numeric(X[,i])
-    				}
-    			}
-    	
-    		#Storage Matrices For Outcome Predictions
-			Prob1 <- matrix(,nrow=n, ncol=sims)
-			Prob0 <- matrix(,nrow=n, ncol=sims)
-			#Prediction For Outcome Based on Mediation Model Preductions
-			#T=1
-			for (j in 1:sims) {
-        		Prob1[,j] <- TMmodel.1[j,1] + TMmodel.1[j,2]*1 + TMmodel.1[j,3]*PredictM1[,j] 
-        		Prob0[,j] <- TMmodel.1[j,1] + TMmodel.1[j,2]*1 + TMmodel.1[j,3]*PredictM0[,j]
-				}
-			
-			Prob1 <- Prob1 + X.pred
-			Prob0 <- Prob0 + X.pred
-			delta.1.tmp <- Prob1 - Prob0 
-			rm(Prob1, Prob0)
+	if(is.factor(m.data[,paste(T)])==TRUE){
+	 pred.data.t <- m.data
+	pred.data.t[,T] <- list(factor(unique(m.data[,T])[2], levels = levels(m.data[,T])))
+	pred.data.c <- m.data
+	pred.data.c[,T] <- list(factor(unique(m.data[,T])[1], levels = levels(m.data[,T])))
+	} else {
+	pred.data.t <- m.data
+	pred.data.t[,T] <- cat.1
+	pred.data.c <- m.data
+	pred.data.c[,T] <- cat.0	
+		}
+	mmat.t <- model.matrix(terms(model.m), data=pred.data.t)
+	mmat.c <- model.matrix(terms(model.m), data=pred.data.c)
+    
+	error <- rnorm(n, mean=0, sd=sigma)
+	PredictM1 <- MModel %*% t(mmat.t)
+	PredictM0 <- MModel %*% t(mmat.c)
+	PredictM1 <- PredictM1 + error
+	PredictM0 <- PredictM0 + error
 	
-			#Storage Matrices
-			Prob1 <- matrix(,nrow=n, ncol=sims)
-			Prob0 <- matrix(,nrow=n, ncol=sims)
-			#T=0
-			for (j in 1:sims) {
-       			 Prob1[,j] <- TMmodel.1[j,1] + TMmodel.1[j,2]*0 + TMmodel.1[j,3]*PredictM1[,j]
-        		 Prob0[,j] <- TMmodel.1[j,1] + TMmodel.1[j,2]*0 + TMmodel.1[j,3]*PredictM0[,j]
-				}
-			Prob1 <- Prob1 + X.pred
-			Prob0 <- Prob0 + X.pred
-			delta.0.tmp <- Prob1 - Prob0 
-			rm(Prob1, Prob0)
-			
-			#Storage Matrices
-			Prob1_temp <- matrix(,nrow=n, ncol=sims)
-			Prob0_temp <- matrix(,nrow=n, ncol=sims)
+	#Treatment Predictions Data
+	Pr1 <- matrix(,nrow=n, ncol=sims)
+	Pr0 <- matrix(,nrow=n, ncol=sims)
+	
+	for(j in 1:sims){
+	if(is.factor(y.t.data[,paste(T)])==TRUE){
+	pred.data.t <- y.t.data
+	pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
+	pred.data.t[,M] <- PredictM1[j,]
+	pred.data.c <- y.t.data
+	pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
+	pred.data.c[,M] <- PredictM0[j,]
+			} else {
+	pred.data.t <- y.t.data
+	pred.data.t[,T] <- cat.1
+	pred.data.t[,M] <- PredictM1[j,]
+	pred.data.c <- y.t.data
+	pred.data.c[,T] <- cat.1
+	pred.data.c[,M] <- PredictM0[j,]
 
-			#Calculate Total Effect
-			for (j in 1:sims) {
-        		Prob1_temp[,j] <- TMmodel[j,1] + TMmodel[j,2]*1 + TMmodel[j,3]*PredictM1[,j]  
-        		Prob0_temp[,j] <- TMmodel[j,1] + TMmodel[j,2]*0 + TMmodel[j,3]*PredictM0[,j]  
-        		}
-			Prob1_temp <- Prob1_temp + X.pred
-			Prob0_temp <- Prob0_temp + X.pred
-			tau.tmp <- Prob1_temp - Prob0_temp
-			     }
-			} 
-			delta.1 <- t(as.matrix(apply(delta.1.tmp, 2 , mean)))
-			delta.0 <- t(as.matrix(apply(delta.0.tmp, 2 , mean)))
-			tau <- t(as.matrix(apply(tau.tmp, 2, mean)))
-			} else { #@@@@@@@@@@@@@@Nonparametric Bootstrap@@@@@@@@@@@@@@@@@@@
+	}
+	ymat.t <- model.matrix(terms(model.y), data=pred.data.t) 
+	ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
+	
+	#Treatment Predictions
+	Pr1[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.t)
+	Pr0[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.c)
+	
+	rm(ymat.t, ymat.c, pred.data.t,pred.data.c)
+	}	
+	
+	delta.1.tmp <- Pr1 - Pr0
+	
+	#Control Predictions Data
+	Pr1 <- matrix(,nrow=n, ncol=sims)
+	Pr0 <- matrix(,nrow=n, ncol=sims)
+	
+	for(j in 1:sims){
+	if(is.factor(y.t.data[,paste(T)])==TRUE){
+	pred.data.t <- y.t.data
+	pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
+	pred.data.t[,M] <- PredictM1[j,]
+	pred.data.c <- y.t.data
+	pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
+	pred.data.c[,M] <- PredictM0[j,]
+			} else {
+	pred.data.t <- y.t.data
+	pred.data.t[,T] <- cat.0
+	pred.data.t[,M] <- PredictM1[j,]
+	pred.data.c <- y.t.data
+	pred.data.c[,T] <- cat.0
+	pred.data.c[,M] <- PredictM0[j,]
+	}
+	ymat.t <- model.matrix(terms(model.y), data=pred.data.t) 
+	ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
+
+	#Control Predictions
+	Pr1[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.t)
+	Pr0[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.c)
+	
+	rm(ymat.t, ymat.c)
+	}
+	
+	delta.0.tmp <- Pr1 - Pr0
+	
+	delta.1 <- t(as.matrix(apply(delta.1.tmp, 2, mean)))
+	delta.0 <- t(as.matrix(apply(delta.0.tmp, 2, mean)));
+	
+	if(INT==TRUE){
+		#zeta.1 <- t(as.matrix(apply(zeta.1.tmp, 2, mean)))
+		#zeta.0 <- t(as.matrix(apply(zeta.0.tmp, 2, mean)))
+		tau <- zeta.0 + delta.1
+		} else {
+		tau <- zeta.1 + delta.0	
+		}
+		
+	} else { #@@@@@@@@@@@@@@Nonparametric Bootstrap@@@@@@@@@@@@@@@@@@@
 	n <- n.m
 	Call.M <- model.m$call
 	Call.Y.t <- model.y.t$call
-	m.data <- model.frame(model.m)  #Call.M$data
-    y.t.data <- model.frame(model.y.t) #Call.Y$data
-    k.t <- ncol(y.t.data)
-	k.m <- ncol(m.data)
 	
 	if(is.factor(y.t.data[,T])==TRUE){
 
@@ -252,7 +173,7 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 		cat.0 <- 0
 		cat.1 <- 1
 		}
-	T.cat <- paste(T,cat.1, sep="")
+	
 	#Storage
 	delta.1 <- matrix(NA, B, 1)
 	delta.0 <- matrix(NA, B, 1)
@@ -269,9 +190,19 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 		new.fit.t <- eval.parent(Call.Y.t)
 
 		#Direct Effect
+		#Direct Effect
 		if (INT==TRUE){
-			zeta.0[b] <- new.fit.t$coef[paste(T,cat.1,sep="")] + new.fit.t$coef[paste(T.cat,M,sep=":")]*(new.fit.M$coef[1] + 				new.fit.M$coef[paste(T,cat.1,sep="")]*0)
-			zeta.1[b] <- new.fit.t$coef[paste(T,cat.1,sep="")] + new.fit.t$coef[paste(T.cat,M,sep=":")]*(new.fit.M$coef[1] + 			new.fit.M$coef[paste(T,cat.1,sep="")]*1)			} else {
+		#X-Predictions
+		pred.data <- m.data[index,]
+		pred.data[,T] <- cat.0
+		if(is.factor(m.data[,T])==TRUE){
+		pred.data[,T] <- as.factor(pred.data[,T])
+		} else { 
+		pred.data[,T] <- as.numeric(pred.data[,T])
+		} 
+		Bm.X <- predict(new.fit.M, type="response", newdata=pred.data)
+		zeta.0[b] <- new.fit.t$coef[paste(T.cat)] + new.fit.t$coef[paste(T.cat,M,sep=":")]*(new.fit.M$coef[1] + new.fit.M$coef[paste(T.cat)]*0 + mean(Bm.X))
+		zeta.1[b] <- new.fit.t$coef[paste(T.cat)] + new.fit.t$coef[paste(T.cat,M,sep=":")]*(new.fit.M$coef[1] + new.fit.M$coef[paste(T.cat)]*1 + mean(Bm.X))			} else {
 			zeta.1[b] <- new.fit.t$coef[paste(T)]
 			zeta.0[b] <- new.fit.t$coef[paste(T)] 
 				}
@@ -364,7 +295,7 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 	#pct.coef <- abs(avg.delta/tau.coef)
 	#avg.delta <- (delta.0)/tau
 	#pct.coef <- abs(avg.delta/tau.coef)
-	pct.dist <- delta.0/tau
+	pct.dist <- abs(delta.0/tau)
 	pct.coef <- median(pct.dist)
 	pct.ci <- quantile(pct.dist,c(.025,.975), na.rm=TRUE)
 	z1 <- mean(zeta.1)	

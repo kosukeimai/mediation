@@ -1,4 +1,3 @@
-library(MASS)
 
 ###########################################
 #          With Covariates                #
@@ -6,6 +5,7 @@ library(MASS)
 library(MASS)
 rm(list=ls())
 set.seed(3)
+
 setwd("~/Documents/Mediation Analysis/Local/mediation/mediation/R")
 source("cont.med.R")
 n <-  1000
@@ -95,9 +95,11 @@ beta.2*gamma + beta.3 + kappa*(alpha.2 + beta.2)
 ############################################################
 # Without Covariates
 #############################################################
+library(MASS)
+rm(list=ls())
+set.seed(3)
 
 setwd("~/Documents/Mediation Analysis/Local/mediation/mediation/R")
-source("cont.medv1.R")
 source("cont.med.R")
 
 n <- 1000
@@ -117,21 +119,26 @@ Y <-  alpha.3 + beta.3*T + gamma*M + rnorm(n)
 #Step 1: Fit the model Y=T,M using OLS
 ymodel <- lm(Y ~ T + M)
 gamma.est <- ymodel$coef[3]
+beta3.est <- ymodel$coef[2]
 #Step 2: Fit the model M=T
 mmodel <- lm(M ~ T)
 beta2.est <- mmodel$coef[2]
 
 
 mod.1 <- mediate.cont(mmodel, ymodel, sims=1000, boot=TRUE, T="T", M="M")
-mod.2 <- mediate.cont(mmodel, ymodel, sims=1000)
+mod.2 <- mediate.cont(mmodel, ymodel, sims=1000, T="T", M="M")
 
 summary(mod.1)
 summary(mod.2)
 
 #Now show that this is equal to the product of coefficients
 gamma.est*beta2.est
+beta3.est
+(gamma.est*beta2.est) + beta3.est
 #The DGP estimate is
 gamma*beta.2
+beta.3
+(gamma*beta.2) + beta.3
 
 n <- 1000
 #Test Relaxing No Interaction Assumption
@@ -139,9 +146,9 @@ n <- 1000
 alpha.2 <- .25
 alpha.3 <- .25
 beta.2 <- -.25
-beta.3 <- -.25
-gamma <- -.25
-kappa <- .50
+beta.3 <- .25
+gamma <- .25
+kappa <- .25
 
 T <- round(runif(n), 0)
 M <- alpha.2 + beta.2*T + rnorm(n)
@@ -150,11 +157,8 @@ Y <-  alpha.3 + beta.3*T + gamma*M + kappa*T*M + rnorm(n)
 mmodel <- lm(M ~ T)
 ymodel <- lm(Y ~ T + M + T:M)
 
-mod.1 <- mediate.cont(mmodel, ymodel, sims=1000, boot=TRUE, INT=TRUE)
-mod.2 <- mediate.cont(mmodel, ymodel, sims=1000, INT=TRUE)
-
-summary(mod.1)
-summary(mod.2)
+z <- lm(M ~ T)
+model.y <- lm(Y ~ T + M + T:M)
 
 mod.1 <- mediate.cont(mmodel, ymodel, sims=100, boot=TRUE, INT=TRUE, T="T", M="M")
 mod.2 <- mediate.cont(mmodel, ymodel, sims=1000, INT=TRUE, T="T", M="M")
@@ -166,10 +170,15 @@ summary(mod.2)
 mmodel$coef[2]*ymodel$coef[3] 
 #Mediation Effect Under Treatment
 mmodel$coef[2]*(ymodel$coef[3] + ymodel$coef[4])
+#Direct Effects
+ymodel$coef[2] + ymodel$coef[4]*(mmodel$coef[1] + mmodel$coef[2])
+ymodel$coef[2] + ymodel$coef[4]*(mmodel$coef[1])
+#Total Effect
+(mmodel$coef[2]*ymodel$coef[3]) + (ymodel$coef[2] + ymodel$coef[4]*(mmodel$coef[1] + mmodel$coef[2]))
+(mmodel$coef[2]*(ymodel$coef[3] + ymodel$coef[4])) + (ymodel$coef[2] + ymodel$coef[4]*(mmodel$coef[1]))
 #Pop Values
 beta.2*gamma
 beta.2*(beta.3 + kappa)
 
-
-
+B <- 100
 
