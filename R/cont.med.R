@@ -59,8 +59,8 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 			zeta.1 <- TMmodel[,paste(T.cat)] + TMmodel[,paste(T.cat,M,sep=":")]*(MModel[,1] + MModel[,T.cat] + mean(Bm.X))
 			zeta.0 <- TMmodel[,paste(T.cat)] + TMmodel[,paste(T.cat,M,sep=":")]*(MModel[,1] + mean(Bm.X))
 			} else {
-			zeta.1 <- TMmodel[,paste(T)]
-			zeta.0 <- TMmodel[,paste(T)] 
+			zeta.1 <- TMmodel[,paste(T.cat)]
+			zeta.0 <- TMmodel[,paste(T.cat)] 
 				}
 
 	if(is.factor(m.data[,paste(T)])==TRUE){
