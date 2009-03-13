@@ -53,11 +53,13 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 		}
 		
 	bmat <- model.matrix(terms(model.m), data=pred.data)
-	Bm.X <- MModel %*% t(bmat)
+	bmat[,1] <- 0
+	meanmat <- apply(bmat, 2, mean)
+	Bm.X <- MModel.coef %*% meanmat
 	
 		if (INT==TRUE){
-			zeta.1 <- TMmodel[,paste(T.cat)] + TMmodel[,paste(T.cat,M,sep=":")]*(MModel[,1] + MModel[,T.cat] + mean(Bm.X))
-			zeta.0 <- TMmodel[,paste(T.cat)] + TMmodel[,paste(T.cat,M,sep=":")]*(MModel[,1] + mean(Bm.X))
+			zeta.1 <- TMmodel[,paste(T.cat)] + TMmodel[,paste(T.cat,M,sep=":")]*(MModel[,1] + MModel[,T.cat] + Bm.X)
+			zeta.0 <- TMmodel[,paste(T.cat)] + TMmodel[,paste(T.cat,M,sep=":")]*(MModel[,1] + Bm.X)
 			} else {
 			zeta.1 <- TMmodel[,paste(T.cat)]
 			zeta.0 <- TMmodel[,paste(T.cat)] 
@@ -190,21 +192,28 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 		new.fit.t <- eval.parent(Call.Y.t)
 
 		#Direct Effect
-		#Direct Effect
 		if (INT==TRUE){
+		temp.coef <- new.fit.M$coef	
 		#X-Predictions
-		pred.data <- m.data[index,]
-		pred.data[,T] <- cat.0
-		if(is.factor(m.data[,T])==TRUE){
-		pred.data[,T] <- as.factor(pred.data[,T])
-		} else { 
-		pred.data[,T] <- as.numeric(pred.data[,T])
-		} 
-		Bm.X <- predict(new.fit.M, type="response", newdata=pred.data)
-		zeta.0[b] <- new.fit.t$coef[paste(T.cat)] + new.fit.t$coef[paste(T.cat,M,sep=":")]*(new.fit.M$coef[1] + new.fit.M$coef[paste(T.cat)]*0 + mean(Bm.X))
-		zeta.1[b] <- new.fit.t$coef[paste(T.cat)] + new.fit.t$coef[paste(T.cat,M,sep=":")]*(new.fit.M$coef[1] + new.fit.M$coef[paste(T.cat)]*1 + mean(Bm.X))			} else {
+		temp <- model.matrix(new.fit.M)
+		temp[,1] <- 0
+	   meanmat <- apply(temp, 2, mean)
+	   #new.fit.M$coef[1] <- 0
+	   if(is.factor(y.t.data[,T])==TRUE){
+        temp.coef[paste(T.cat)] <- 0
+        } else {
+        temp.coef[paste(T.cat)] <- 0
+        	}
+        Bm.X <- new.fit.M$coef %*% meanmat
+		zeta.0[b] <- new.fit.t$coef[paste(T.cat)] + new.fit.t$coef[paste(T.cat,M,sep=":")]*(new.fit.M$coef[1] + new.fit.M$coef[paste(T.cat)]*0 + Bm.X)
+		zeta.1[b] <- new.fit.t$coef[paste(T.cat)] + new.fit.t$coef[paste(T.cat,M,sep=":")]*(new.fit.M$coef[1] + new.fit.M$coef[paste(T.cat)]*1 + Bm.X)			} else {
+		if(is.factor(y.t.data[,T])==TRUE){
+			zeta.1[b] <- new.fit.t$coef[paste(T.cat)]
+			zeta.0[b] <- new.fit.t$coef[paste(T.cat)]
+				} else {
 			zeta.1[b] <- new.fit.t$coef[paste(T)]
 			zeta.0[b] <- new.fit.t$coef[paste(T)] 
+			}
 				}
 				
 		#Generate Mediation Model Predictions
