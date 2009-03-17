@@ -34,11 +34,11 @@ mmodel <- glm(M ~ T, family=binomial(link=probit))
 ymodel <- lm(Y ~ T + M)
 
 time.start <- Sys.time()
-mod.1 <- mediate.binary(mmodel, ymodel, sims=1000, boot=TRUE)
+mod.1 <- mediate.binary(mmodel, ymodel, sims=1000, boot=TRUE, T="T", M="M")
 print (round((Sys.time()-time.start),1))
 
 time.start <- Sys.time()
-mod.2 <- mediate.binary(mmodel, ymodel, sims=1000)
+mod.2 <- mediate.binary(mmodel, ymodel, sims=1000, T="T", M="M")
 print (round((Sys.time()-time.start),1))
 
 summary(mod.1)
@@ -78,15 +78,19 @@ Y <- alpha.3 + beta.3*T + gamma*M + beta.2*X.1 + beta.2*X.2 + rnorm(n)
 
 mmodel <- glm(M ~ T + X.1 + X.2, family=binomial(link=probit))
 ymodel <- lm(Y ~ T + M + X.1 + X.2)
+T <- "T"
+M <- "M"
+sims <- 1000
 
 #New Methods
 time.start <- Sys.time()
-mod.1 <- mediate.binary(mmodel, ymodel, sims=1000, boot=TRUE)
+mod.1 <- mediate.binary(mmodel, ymodel, sims=1000, boot=TRUE, T="T", M="M")
 print (round((Sys.time()-time.start),1))
 
 time.start <- Sys.time()
-mod.2 <- mediate.binary(mmodel, ymodel, sims=1000)
+mod.2 <- mediate.binary(mmodel, ymodel, sims=1000, T="T", M="M")
 print (round((Sys.time()-time.start),1))
+
 
 summary(mod.1)
 summary(mod.2)
@@ -128,11 +132,11 @@ ymodel <- glm(Y ~ T + M, family=binomial(link=probit))
 
 #New Methods
 time.start <- Sys.time()
-mod.1 <- mediate.binary(mmodel, ymodel, sims=1000, boot=TRUE)
+mod.1 <- mediate.binary(mmodel, ymodel, sims=1000, boot=TRUE, T="T", M="M")
 print (round((Sys.time()-time.start),1))
 
 time.start <- Sys.time()
-mod.2 <- mediate.binary(mmodel, ymodel, sims=1000)
+mod.2 <- mediate.binary(mmodel, ymodel, sims=1000, T="T", M="M")
 print (round((Sys.time()-time.start),1))
 
 summary(mod.1)
@@ -181,11 +185,11 @@ ymodel <- glm(Y ~ T + M + X.1 + X.2, family=binomial(link=probit))
 
 #New Method
 time.start <- Sys.time()
-mod.1 <- mediate.binary(mmodel, ymodel, sims=1000, boot=TRUE)
+mod.1 <- mediate.binary(mmodel, ymodel, sims=1000, boot=TRUE, INT=TRUE, T="T", M="M")
 print (round((Sys.time()-time.start),1))
 
 time.start <- Sys.time()
-mod.2 <- mediate.binary(mmodel, ymodel, sims=1000)
+mod.2 <- mediate.binary(mmodel, ymodel, sims=1000, INT=TRUE, T="T", M="M")
 print (round((Sys.time()-time.start),1))
 
 summary(mod.1)

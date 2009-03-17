@@ -1,8 +1,8 @@
-mediate.cont <- function(z, ...){
+mediate.binary <- function(z, ...){
 	UseMethod("mediate.binary", z)
 	}
 	
-mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T="treat.name", M="med.name"){
+mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T="treat.name", M="med.name"){
 	B <- sims
 	model.m <- z
 	model.y.t <- model.y
@@ -18,12 +18,11 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 	n.m <- length(m.data[,1])
 	n.y <- length(y.t.data[,1])
 	n <- length(y.t.data[,1])
-	sigma <- summary(model.m)$sigma
 	
 	if(class(model.m[1])=="gam"){
-		test <- class(b)[2]
+		test <- class(model.m)[2]
 		} else {
-		test <- class(b)[1]	
+		test <- class(model.m)[1]	
 			}
 	
 	if(is.factor(y.t.data[,paste(T)])==TRUE){
@@ -48,7 +47,9 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 	TMmodel.var.cov <- vcov(model.y)
 	MModel <- mvrnorm(sims, mu=MModel.coef, Sigma=MModel.var.cov)
 	TMmodel <- mvrnorm(sims, mu=TMmodel.coef, Sigma=TMmodel.var.cov)
-
+#####################################################################################
+##  Mediator Predictions
+#####################################################################################
 	if(is.factor(m.data[,paste(T)])==TRUE){
 	pred.data.t <- m.data
 	pred.data.t[,T] <- list(factor(unique(m.data[,T])[1], levels = levels(m.data[,T])))
@@ -63,23 +64,28 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 	mmat.t <- model.matrix(terms(model.m), data=pred.data.t)
 	mmat.c <- model.matrix(terms(model.m), data=pred.data.c)
 	
-	if(test=="glm") {
-	PredictM1_t <- model.m$family$linkinv(MModel %*% t(mmat.t)}
+	if(test=="glm"){
+	PredictM1 <- matrix(,nrow=sims, ncol=n)
+	PredictM0 <- matrix(,nrow=sims, ncol=n)
+	PredictM1_t <- model.m$family$linkinv(MModel %*% t(mmat.t))
 	PredictM0_t <- model.m$family$linkinv(MModel %*% t(mmat.c))
 	#Binomial Errors
 	for (j in 1:sims) {
         		#error <- runif(n, min=0, max=1)
-        		PredictM1[,j] <- as.numeric(PredictM1_t[,j] > runif(n,min=0, max=1))
-        		PredictM0[,j] <- as.numeric(PredictM0_t[,j] > runif(n,min=0, max=1))
+        		PredictM1[j,] <- as.numeric(PredictM1_t[j,] > runif(n,min=0, max=1))
+        		PredictM0[j,] <- as.numeric(PredictM0_t[j,] > runif(n,min=0, max=1))
  				}
-		
-		} else {	    
+		} else {
+	sigma <- summary(model.m)$sigma			    
 	error <- rnorm(n, mean=0, sd=sigma)
 	PredictM1 <- MModel %*% t(mmat.t)
 	PredictM0 <- MModel %*% t(mmat.c)
 	PredictM1 <- PredictM1 + error
 	PredictM0 <- PredictM0 + error
 	}
+
+########################################################################
+##   Outcome Predictions
 ########################################################################
 	#Treatment Predictions Data
 	Pr1 <- matrix(,nrow=n, ncol=sims)
@@ -112,11 +118,11 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 	rm(ymat.t, ymat.c, pred.data.t,pred.data.c)
 	}	
 	
-	if(test=="lm"){
-		delta.1.tmp <- Pr1 - Pr0
+	if(test=="glm"){
+		delta.1.tmp <- Pr1 - Pr0 #Binary Mediator
 		} else {
-		Pr1 <- apply(Pr1, 2, model.y$family$linkinv)		Pr0 <- apply(Pr1, 2, model.y$family$linkinv)
-		delta.1.tmp <- Pr1 - Pr0
+		Pr1 <- apply(Pr1, 2, model.y$family$linkinv);		Pr0 <- apply(Pr0, 2, model.y$family$linkinv);
+		delta.1.tmp <- Pr1 - Pr0;
 			}
 		
 	#Control Predictions Data
@@ -149,16 +155,48 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 	rm(ymat.t, ymat.c)
 	}
 	
-	if(test=="lm"){
-	delta.1.tmp <- Pr1 - Pr0
-	} else {
-	Pr1 <- apply(Pr1, 2, model.y$family$linkinv)	Pr0 <- apply(Pr1, 2, model.y$family$linkinv)
-	delta.1.tmp <- Pr1 - Pr0
-		}
 	
+	if(test=="glm"){
+		delta.0.tmp <- Pr1 - Pr0 #Binary Mediator
+		} else {
+		Pr1 <- apply(Pr1, 2, model.y$family$linkinv);		Pr0 <- apply(Pr0, 2, model.y$family$linkinv);
+		delta.0.tmp <- Pr1 - Pr0;
+			}
+
 	delta.1 <- t(as.matrix(apply(delta.1.tmp, 2, mean)))
 	delta.0 <- t(as.matrix(apply(delta.0.tmp, 2, mean)));
-			
+####################################################################################
+##  Total Effect
+####################################################################################
+if(test=="glm"){
+	tau <- TMmodel[,T.cat] + delta.1
+	} else {
+		mod.tau <- update(model.y.t, as.formula(paste(".~. -", M)))
+		Tmodel.coef <- mod.tau$coef
+		Tmodel.var.cov <- vcov(mod.tau)
+		Tmodel <- mvrnorm(sims, mu=Tmodel.coef, Sigma=Tmodel.var.cov)
+		tau.data <- model.frame(mod.tau)
+
+	if(is.factor(tau.data[,paste(T)])==TRUE){
+	pred.data <- tau.data
+	pred.data[,T] <- list(factor(unique(tau.data[,T])[1], levels = levels(tau.data[,T])))
+	} else {
+	pred.data <- tau.data
+	pred.data[,T] <- cat.0	
+		}
+		
+	Xmat <- model.matrix(terms(mod.tau), data=pred.data)
+	Xmat[,1] <- 0
+	Bm.X <- Tmodel.coef %*% t(Xmat)
+	tau <- matrix(, n, sims)	
+	for(i in 1:sims){
+	tau[,i] <- mod.tau$family$linkinv(Tmodel[i,1] + Tmodel[i,paste(T.cat)] + Bm.X) - mod.tau$family$linkinv(Tmodel[i,1] + Bm.X)
+		}
+	tau <- apply(tau, 2, mean)				
+		}
+	zeta.1 <- tau - delta.0
+	zeta.0 <- tau - delta.1
+#######################################################################
 	} else { #@@@@@@@@@@@@@@Nonparametric Bootstrap@@@@@@@@@@@@@@@@@@@
 	n <- n.m
 	Call.M <- model.m$call
@@ -189,10 +227,7 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 		new.fit.M <- eval.parent(Call.M)
 		new.fit.t <- eval.parent(Call.Y.t)
 
-
 		#Generate Mediation Model Predictions
-		sigma <- summary(new.fit.M)$sigma
-		error <- rnorm(n, mean=0, sd=sigma) 
 		pred.data.t <- m.data
 		pred.data.t[,T] <- cat.1
 		pred.data.c <- m.data
@@ -211,7 +246,13 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 		PredictM0temp <- predict(new.fit.M, type="response", newdata=pred.data.c)
 		PredictM1 <- as.numeric(PredictM1temp > runif(n, min=0, max=1))
 		PredictM0 <- as.numeric(PredictM0temp > runif(n, min=0, max=1))
-			} else {	    
+			} else {
+		f(class(model.m)[1]=="gam"){
+			sigma <- summary(new.fit.M)$scale
+			} else {
+			sigma <- summary(new.fit.M)$sigma
+				}		
+		error <- rnorm(n, mean=0, sd=sigma)	    
 		PredictM1 <- predict(new.fit.M, type="response", newdata=pred.data.t) + error
 		PredictM0 <- predict(new.fit.M, type="response", newdata=pred.data.c) + error
 	}
@@ -267,7 +308,36 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 				
 		delta.1[b] <- mean(delta.1.tmp)
 		delta.0[b] <- mean(delta.0.tmp)
-				
+		#Total Effects
+		if(test=="glm"){
+			if(is.factor(y.t.data[,T])){
+		tau[b] <-	new.fit.t$coef[T.cat] + delta.1[b]
+		} else {
+		tau[b] <-	new.fit.t$coef[T] + delta.1[b]
+			}
+			} else {
+			new.fit.tau <- update(new.fit.t, as.formula(paste(".~. -", M)))
+			tau.data <- model.frame(new.fit.tau)
+			pred.data.t <- model.frame(new.fit.tau)
+			pred.data.t[,T] <- cat.1
+			pred.data.c <- model.frame(new.fit.tau)
+			pred.data.c[,T] <- cat.0
+
+			if(is.factor(tau.data[,T])==TRUE){
+			pred.data.t[,T] <- as.factor(pred.data.t[,T])
+			pred.data.c[,T] <- as.factor(pred.data.c[,T])
+			} else { 
+			pred.data.t[,T] <- as.numeric(pred.data.t[,T])
+			pred.data.c[,T] <- as.numeric(pred.data.c[,T])
+			}
+		
+			#Total Effects Predictions
+			pr.1 <- predict(new.fit.tau, type="response", newdata=pred.data.t)
+			pr.0 <- predict(new.fit.tau, type="response", newdata=pred.data.c)
+			tau[b] <- mean(pr.1 - pr.0)	
+				}
+		zeta.1[b] <- tau[b] - delta.0[b]
+		zeta.0[b] <- tau[b] - delta.1[b]	
 		} #bootstrap loop
 	} #nonpara boot branch
 	d0 <- mean(delta.0)
