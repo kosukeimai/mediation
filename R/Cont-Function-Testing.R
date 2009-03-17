@@ -59,7 +59,7 @@ Y <-  alpha.3 + beta.3*T + gamma*M + kappa*T*M + beta.2*X.1 + beta.2*X.2 + rnorm
 
 mmodel <- lm(M ~ T + X.1 + X.2)
 model.y <- lm(Y ~ T + M + T:M + X.1 + X.2)
- lm(Y ~ T + X.1 + X.2)
+
 
 mod.1 <- mediate.cont(mmodel, model.y, sims=1000, boot=TRUE, INT=TRUE, T="T", M="M")
 mod.2 <- mediate.cont(mmodel, model.y, sims=1000, INT=TRUE, T="T", M="M")
@@ -69,10 +69,23 @@ summary(mod.2)
 
 #Mediation Effect Under Control
 d0 <- mmodel$coef[2]*model.y$coef[3] 
-d0
 #Mediation Effect Under Treatment
 d1 <- mmodel$coef[2]*(model.y$coef[3] + model.y$coef[4])
+#Direct Effects
+Bm.X <- model.y$coef[4]*mean(X.1) + model.y$coef[5]*mean(X.2)
+
+z0 <- model.y$coef[2] + model.y$coef[6]*(mmodel$coef[1] + Bm.X)
+z1 <- model.y$coef[2] + model.y$coef[6]*(mmodel$coef[1] + mmodel$coef[2] + Bm.X)
+
+
+d0
 d1
+z0
+z1
+z1 + d0
+z0 + d1
+
+
 #Total Effect
 mmodel$coef[2]*model.y$coef[3] + model.y$coef[2] + model.y$coef[6]*(mmodel$coef[1] + mmodel$coef[2])
 

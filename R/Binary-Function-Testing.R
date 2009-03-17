@@ -44,6 +44,12 @@ print (round((Sys.time()-time.start),1))
 summary(mod.1)
 summary(mod.2)
 
+#Answers
+ymodel$coef[3]*(pnorm(mmodel$coef[1] + mmodel$coef[2]) - pnorm(mmodel$coef[1]))
+
+ymodel$coef[2] + ymodel$coef[3]*(pnorm(mmodel$coef[1] + mmodel$coef[2]) - pnorm(mmodel$coef[1]))
+
+
 ####################################################
 #                 With Covariates                  #
 ####################################################
@@ -85,6 +91,12 @@ print (round((Sys.time()-time.start),1))
 summary(mod.1)
 summary(mod.2)
 
+#Answers
+ymodel$coef[3]*(pnorm(mmodel$coef[1] + mmodel$coef[2]) - pnorm(mmodel$coef[1]))
+
+ymodel$coef[2] + ymodel$coef[3]*(pnorm(mmodel$coef[1] + mmodel$coef[2]) - pnorm(mmodel$coef[1]))
+
+
 #############################################
 #             Binary Outcome                #
 #############################################
@@ -109,8 +121,10 @@ Y[latenty <  1] <- 0
 Y[latenty >= 1] <- 1
 
 #Standard Method - Without Covariates
-ymodel <- glm(Y ~ T + M, family=binomial(link=probit))
 mmodel <- lm(M ~ T)
+sigma <- summary(mmodel)$sigma
+ymodel <- glm(Y ~ T + M, family=binomial(link=probit))
+
 
 #New Methods
 time.start <- Sys.time()
@@ -123,6 +137,17 @@ print (round((Sys.time()-time.start),1))
 
 summary(mod.1)
 summary(mod.2)
+
+t <- 0
+pnorm((ymodel$coef[1] + ymodel$coef[2]*t + ymodel$coef[3]*(mmodel$coef[1] + mmodel$coef[2]))/sqrt(sigma^2*ymodel$coef[3] + 1)) - pnorm((ymodel$coef[1] + ymodel$coef[2]*t + ymodel$coef[3]*(mmodel$coef[1]))/sqrt(sigma^2*ymodel$coef[3] + 1))
+
+t <- 1
+pnorm((ymodel$coef[1] + ymodel$coef[2]*t + ymodel$coef[3]*(mmodel$coef[1] + mmodel$coef[2]))/sqrt(sigma^2*ymodel$coef[3] + 1)) - pnorm((ymodel$coef[1] + ymodel$coef[2]*t + ymodel$coef[3]*(mmodel$coef[1]))/sqrt(sigma^2*ymodel$coef[3] + 1))
+
+ymod <- glm(Y ~ T)
+pnorm(ymod$coef[1] + ymod$coef[2]) - pnorm(ymodel$coef[1])
+
+
 
 #############################################################
 #                     With Covariates                       #
@@ -149,8 +174,10 @@ Y <- latenty
 Y[latenty <  1] <- 0
 Y[latenty >= 1] <- 1
 
-ymodel <- glm(Y ~ T + M + X.1 + X.2, family=binomial(link=probit))
 mmodel <- lm(M ~ T + X.1 + X.2)
+sigma <- summary(mmodel)$sigma
+ymodel <- glm(Y ~ T + M + X.1 + X.2, family=binomial(link=probit))
+
 
 #New Method
 time.start <- Sys.time()
@@ -164,3 +191,28 @@ print (round((Sys.time()-time.start),1))
 summary(mod.1)
 summary(mod.2)
 
+pred.data <- model.frame(mmodel)
+pred.data[,1] <- 0
+pred.data[,2] <- 0
+out2 <- predict.lm(mmodel,type="response", newdata=pred.data)
+
+xi.B <- as.vector(mmodel$coef) %*% t(as.matrix(pred.data))
+
+t <- 0
+d0 <- pnorm((ymodel$coef[1] + ymodel$coef[2]*t + xi.B + ymodel$coef[3]*(mmodel$coef[1] + mmodel$coef[2] + xi.B))/sqrt(sigma^2*ymodel$coef[3] + 1)) - pnorm((ymodel$coef[1] + ymodel$coef[2]*t + xi.B + ymodel$coef[3]*(mmodel$coef[1] + xi.B))/sqrt(sigma^2*ymodel$coef[3] + 1))
+mean(d0)
+
+t <- 1
+d1 <- pnorm((ymodel$coef[1] + ymodel$coef[2]*t + xi.B + ymodel$coef[3]*(mmodel$coef[1] + mmodel$coef[2] + xi.B))/sqrt(sigma^2*ymodel$coef[3] + 1)) - pnorm((ymodel$coef[1] + ymodel$coef[2]*t + xi.B + ymodel$coef[3]*(mmodel$coef[1] + xi.B))/sqrt(sigma^2*ymodel$coef[3] + 1))
+mean(d1)
+
+ymod <- glm(Y ~ T + X.1 + X.2, family=binomial(link=probit))
+
+pred.data <- model.frame(ymod)
+pred.data[,1] <- 0
+pred.data[,2] <- 0
+
+xi.B <- as.vector(ymod$coef) %*% t(as.matrix(pred.data))
+
+tau <- pnorm(ymod$coef[1] + ymod$coef[2] + xi.B) - pnorm(ymod$coef[1] + xi.B)
+mean(tau)

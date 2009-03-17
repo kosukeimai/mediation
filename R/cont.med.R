@@ -67,9 +67,9 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 
 	if(is.factor(m.data[,paste(T)])==TRUE){
 	 pred.data.t <- m.data
-	pred.data.t[,T] <- list(factor(unique(m.data[,T])[2], levels = levels(m.data[,T])))
+	pred.data.t[,T] <- list(factor(unique(m.data[,T])[1], levels = levels(m.data[,T])))
 	pred.data.c <- m.data
-	pred.data.c[,T] <- list(factor(unique(m.data[,T])[1], levels = levels(m.data[,T])))
+	pred.data.c[,T] <- list(factor(unique(m.data[,T])[2], levels = levels(m.data[,T])))
 	} else {
 	pred.data.t <- m.data
 	pred.data.t[,T] <- cat.1
@@ -197,9 +197,9 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 		#X-Predictions
 		temp <- model.matrix(new.fit.M)
 		temp[,1] <- 0
-	   meanmat <- apply(temp, 2, mean)
-	   #new.fit.M$coef[1] <- 0
-	   if(is.factor(y.t.data[,T])==TRUE){
+	   	meanmat <- apply(temp, 2, mean)
+	    #new.fit.M$coef[1] <- 0
+	    if(is.factor(y.t.data[,T])==TRUE){
         temp.coef[paste(T.cat)] <- 0
         } else {
         temp.coef[paste(T.cat)] <- 0
@@ -217,7 +217,11 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 				}
 				
 		#Generate Mediation Model Predictions
-		sigma <- summary(new.fit.M)$sigma
+		if(class(model.m)[1]=="gam"){
+			sigma <- summary(new.fit.M)$scale
+			} else {
+			sigma <- summary(new.fit.M)$sigma
+				}
 		error <- rnorm(n, mean=0, sd=sigma) 
 		pred.data.t <- m.data
 		pred.data.t[,T] <- cat.1
