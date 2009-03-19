@@ -51,7 +51,7 @@ ymodel$coef[2] + ymodel$coef[3]*(pnorm(mmodel$coef[1] + mmodel$coef[2]) - pnorm(
 
 
 ####################################################
-#                 With Covariates                  #
+# Binary Mediator With Covariates                  #
 ####################################################
 
 rm(list=ls())
@@ -154,7 +154,7 @@ pnorm(ymod$coef[1] + ymod$coef[2]) - pnorm(ymodel$coef[1])
 
 
 #############################################################
-#                     With Covariates                       #
+# Binary Outcome      With Covariates                       #
 #############################################################
 rm(list=ls())
 set.seed(3)

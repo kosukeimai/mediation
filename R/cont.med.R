@@ -43,28 +43,7 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 	MModel <- mvrnorm(sims, mu=MModel.coef, Sigma=MModel.var.cov)
 	TMmodel <- mvrnorm(sims, mu=TMmodel.coef, Sigma=TMmodel.var.cov)
 	
-	#Direct Effect
-	if(is.factor(m.data[,paste(T)])==TRUE){
-	pred.data <- m.data
-	pred.data[,T] <- list(factor(unique(m.data[,T])[1], levels = levels(m.data[,T])))
-	} else {
-	pred.data <- m.data
-	pred.data[,T] <- cat.0	
-		}
-		
-	bmat <- model.matrix(terms(model.m), data=pred.data)
-	bmat[,1] <- 0
-	meanmat <- apply(bmat, 2, mean)
-	Bm.X <- MModel.coef %*% meanmat
-	
-		if (INT==TRUE){
-			zeta.1 <- TMmodel[,paste(T.cat)] + TMmodel[,paste(T.cat,M,sep=":")]*(MModel[,1] + MModel[,T.cat] + Bm.X)
-			zeta.0 <- TMmodel[,paste(T.cat)] + TMmodel[,paste(T.cat,M,sep=":")]*(MModel[,1] + Bm.X)
-			} else {
-			zeta.1 <- TMmodel[,paste(T.cat)]
-			zeta.0 <- TMmodel[,paste(T.cat)] 
-				}
-
+	#Mediator Predictions
 	if(is.factor(m.data[,paste(T)])==TRUE){
 	 pred.data.t <- m.data
 	pred.data.t[,T] <- list(factor(unique(m.data[,T])[1], levels = levels(m.data[,T])))
@@ -150,12 +129,59 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 	
 	delta.0.tmp <- Pr1 - Pr0
 	
+	#Direct Effects
+	Pr1 <- matrix(,nrow=n, ncol=sims)
+	Pr0 <- matrix(,nrow=n, ncol=sims)
+	
+	for(j in 1:sims){
+	pred.data.t <- y.t.data
+	pred.data.t[,T] <- cat.1
+	pred.data.t[,M] <- PredictM1[j,]
+	pred.data.c <- y.t.data
+	pred.data.c[,T] <- cat.0
+	pred.data.c[,M] <- PredictM1[j,]
+	ymat.t <- model.matrix(terms(model.y), data=pred.data.t) 
+	ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
+	
+	#Direct Predictions
+	Pr1[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.t)
+	Pr0[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.c)
+	
+	rm(ymat.t, ymat.c, pred.data.t,pred.data.c)
+	}	
+	
+	zeta.1.tmp <- Pr1 - Pr0
+	
+	#Zeta-0
+	Pr1 <- matrix(,nrow=n, ncol=sims)
+	Pr0 <- matrix(,nrow=n, ncol=sims)
+	
+	for(j in 1:sims){
+	pred.data.t <- y.t.data
+	pred.data.t[,T] <- cat.1
+	pred.data.t[,M] <- PredictM0[j,]
+	pred.data.c <- y.t.data
+	pred.data.c[,T] <- cat.0
+	pred.data.c[,M] <- PredictM0[j,]
+	ymat.t <- model.matrix(terms(model.y), data=pred.data.t) 
+	ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
+	
+	#Direct Predictions
+	Pr1[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.t)
+	Pr0[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.c)
+	
+	rm(ymat.t, ymat.c, pred.data.t,pred.data.c)
+	}	
+	
+	zeta.0.tmp <- Pr1 - Pr0
+
+	
 	delta.1 <- t(as.matrix(apply(delta.1.tmp, 2, mean)))
 	delta.0 <- t(as.matrix(apply(delta.0.tmp, 2, mean)));
+	zeta.1 <- t(as.matrix(apply(zeta.1.tmp, 2, mean)))
+	zeta.0 <- t(as.matrix(apply(zeta.0.tmp, 2, mean)))
 	
 	if(INT==TRUE){
-		#zeta.1 <- t(as.matrix(apply(zeta.1.tmp, 2, mean)))
-		#zeta.0 <- t(as.matrix(apply(zeta.0.tmp, 2, mean)))
 		tau <- zeta.0 + delta.1
 		} else {
 		tau <- zeta.1 + delta.0	
@@ -287,13 +313,56 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 
 		rm(pred.data.t, pred.data.c, pr.1, pr.0, pr.mat)
 		
-				
+		#Direct Effects
+		pred.data.t <- y.t.data
+		pred.data.t[,T] <- cat.1
+		pred.data.t[,M] <- PredictM1
+		pred.data.c <- y.t.data
+		pred.data.c[,T] <- cat.0
+		pred.data.c[,M] <- PredictM1
+			
+		if(is.factor(y.t.data[,T])==TRUE){
+		pred.data.t[,T] <- as.factor(pred.data.t[,T])
+		pred.data.c[,T] <- as.factor(pred.data.c[,T])
+		} else { 
+		pred.data.t[,T] <- as.numeric(pred.data.t[,T])
+		pred.data.c[,T] <- as.numeric(pred.data.c[,T])
+		}
+		
+		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
+		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
+		pr.mat <- as.matrix(cbind(pr.1, pr.0))
+		zeta.1.tmp <- pr.mat[,1] - pr.mat[,2]
+
+		rm(pred.data.t, pred.data.c, pr.1, pr.0,pr.mat)
+
+		pred.data.t <- y.t.data
+		pred.data.t[,T] <- cat.1
+		pred.data.t[,M] <- PredictM0
+		pred.data.c <- y.t.data
+		pred.data.c[,T] <- cat.0
+		pred.data.c[,M] <- PredictM0
+			
+		if(is.factor(y.t.data[,T])==TRUE){
+		pred.data.t[,T] <- as.factor(pred.data.t[,T])
+		pred.data.c[,T] <- as.factor(pred.data.c[,T])
+		} else { 
+		pred.data.t[,T] <- as.numeric(pred.data.t[,T])
+		pred.data.c[,T] <- as.numeric(pred.data.c[,T])
+		} 	
+		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
+		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
+		pr.mat <- as.matrix(cbind(pr.1, pr.0))
+		zeta.0.tmp <-pr.mat[,1] - pr.mat[,2]
+		
+		zeta.1[b] <- mean(zeta.1.tmp)
+		zeta.0[b] <- mean(zeta.0.tmp)		
 		delta.1[b] <- mean(delta.1.tmp)
 		delta.0[b] <- mean(delta.0.tmp)
 		if(INT==TRUE){
 		tau[b] <- zeta.1[b] + delta.0[b]
 		} else {
-		tau[b] <- zeta.1[b] + mean(delta.0.tmp)	
+		tau[b] <- zeta.1[b] + mean(delta.0.tmp)]	
 			}
 		
 		} #bootstrap loop

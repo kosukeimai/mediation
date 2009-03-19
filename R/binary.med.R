@@ -24,6 +24,12 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 		} else {
 		test <- class(model.m)[1]	
 			}
+			
+	if(class(model.y.t[1])=="gam"){
+		test2 <- class(model.y.t)[2]
+		} else {
+		test2 <- class(model.y.t)[1]	
+			}
 	
 	if(is.factor(y.t.data[,paste(T)])==TRUE){
 				cat.c <- levels(y.t.data[,T])[1] 
@@ -118,13 +124,13 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 	rm(ymat.t, ymat.c, pred.data.t,pred.data.c)
 	}	
 	
-	if(test=="glm"){
-		delta.1.tmp <- Pr1 - Pr0 #Binary Mediator
-		} else {
+	if(test2=="glm"){
 		Pr1 <- apply(Pr1, 2, model.y$family$linkinv);		Pr0 <- apply(Pr0, 2, model.y$family$linkinv);
 		delta.1.tmp <- Pr1 - Pr0;
+		} else {
+		delta.1.tmp <- Pr1 - Pr0 #Binary Mediator
 			}
-		
+			
 	#Control Predictions Data
 	Pr1 <- matrix(,nrow=n, ncol=sims)
 	Pr0 <- matrix(,nrow=n, ncol=sims)
@@ -155,47 +161,76 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 	rm(ymat.t, ymat.c)
 	}
 	
-	
-	if(test=="glm"){
-		delta.0.tmp <- Pr1 - Pr0 #Binary Mediator
-		} else {
+	if(test2=="glm"){
 		Pr1 <- apply(Pr1, 2, model.y$family$linkinv);		Pr0 <- apply(Pr0, 2, model.y$family$linkinv);
 		delta.0.tmp <- Pr1 - Pr0;
+		} else {
+		delta.0.tmp <- Pr1 - Pr0 #Binary Mediator
 			}
 
+#####################################################################
+#Direct Effect
+	#Zeta_1
+    Pr1 <- matrix(,nrow=n, ncol=sims)
+	Pr0 <- matrix(,nrow=n, ncol=sims)
+	
+	for(j in 1:sims){
+	pred.data.t <- y.t.data
+	pred.data.t[,T] <- cat.1
+	pred.data.t[,M] <- PredictM1[j,]
+	pred.data.c <- y.t.data
+	pred.data.c[,T] <- cat.0
+	pred.data.c[,M] <- PredictM1[j,]
+	ymat.t <- model.matrix(terms(model.y), data=pred.data.t) 
+	ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
+	
+	#Direct Predictions
+	Pr1[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.t)
+	Pr0[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.c)
+	
+	rm(ymat.t, ymat.c, pred.data.t,pred.data.c)
+	}	
+	
+	if(test2=="glm"){
+		Pr1 <- apply(Pr1, 2, model.y$family$linkinv);		Pr0 <- apply(Pr0, 2, model.y$family$linkinv);
+		zeta.1.tmp <- Pr1 - Pr0;
+		} else {
+		zeta.1.tmp <- Pr1 - Pr0 #Binary Mediator
+			}
+			
+	#Zeta_0
+	Pr1 <- matrix(,nrow=n, ncol=sims)
+	Pr0 <- matrix(,nrow=n, ncol=sims)
+	
+	for(j in 1:sims){
+	pred.data.t <- y.t.data
+	pred.data.t[,T] <- cat.1
+	pred.data.t[,M] <- PredictM0[j,]
+	pred.data.c <- y.t.data
+	pred.data.c[,T] <- cat.0
+	pred.data.c[,M] <- PredictM0[j,]
+	ymat.t <- model.matrix(terms(model.y), data=pred.data.t) 
+	ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
+	
+	#Direct Predictions
+	Pr1[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.t)
+	Pr0[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.c)
+	
+	rm(ymat.t, ymat.c, pred.data.t,pred.data.c)
+	}	
+	
+	if(test2=="glm"){
+		Pr1 <- apply(Pr1, 2, model.y$family$linkinv);		Pr0 <- apply(Pr0, 2, model.y$family$linkinv);
+		zeta.0.tmp <- Pr1 - Pr0;
+		} else {
+		zeta.0.tmp <- Pr1 - Pr0 #Binary Mediator
+			}
+	zeta.1 <- t(as.matrix(apply(zeta.1.tmp, 2, mean)))
+	zeta.0 <- t(as.matrix(apply(zeta.0.tmp, 2, mean)))
 	delta.1 <- t(as.matrix(apply(delta.1.tmp, 2, mean)))
 	delta.0 <- t(as.matrix(apply(delta.0.tmp, 2, mean)));
-####################################################################################
-##  Total Effect
-####################################################################################
-if(test=="glm"){
-	tau <- TMmodel[,T.cat] + delta.1
-	} else {
-		mod.tau <- update(model.y.t, as.formula(paste(".~. -", M)))
-		Tmodel.coef <- mod.tau$coef
-		Tmodel.var.cov <- vcov(mod.tau)
-		Tmodel <- mvrnorm(sims, mu=Tmodel.coef, Sigma=Tmodel.var.cov)
-		tau.data <- model.frame(mod.tau)
+	tau <- (zeta.1 + delta.1)
 
-	if(is.factor(tau.data[,paste(T)])==TRUE){
-	pred.data <- tau.data
-	pred.data[,T] <- list(factor(unique(tau.data[,T])[1], levels = levels(tau.data[,T])))
-	} else {
-	pred.data <- tau.data
-	pred.data[,T] <- cat.0	
-		}
-		
-	Xmat <- model.matrix(terms(mod.tau), data=pred.data)
-	Xmat[,1] <- 0
-	Bm.X <- Tmodel.coef %*% t(Xmat)
-	tau <- matrix(, n, sims)	
-	for(i in 1:sims){
-	tau[,i] <- mod.tau$family$linkinv(Tmodel[i,1] + Tmodel[i,paste(T.cat)] + Bm.X) - mod.tau$family$linkinv(Tmodel[i,1] + Bm.X)
-		}
-	tau <- apply(tau, 2, mean)				
-		}
-	zeta.1 <- tau - delta.0
-	zeta.0 <- tau - delta.1
 #######################################################################
 	} else { #@@@@@@@@@@@@@@Nonparametric Bootstrap@@@@@@@@@@@@@@@@@@@
 	n <- n.m
@@ -247,7 +282,7 @@ if(test=="glm"){
 		PredictM1 <- as.numeric(PredictM1temp > runif(n, min=0, max=1))
 		PredictM0 <- as.numeric(PredictM0temp > runif(n, min=0, max=1))
 			} else {
-		f(class(model.m)[1]=="gam"){
+		if(class(model.m)[1]=="gam"){
 			sigma <- summary(new.fit.M)$scale
 			} else {
 			sigma <- summary(new.fit.M)$sigma
@@ -255,7 +290,7 @@ if(test=="glm"){
 		error <- rnorm(n, mean=0, sd=sigma)	    
 		PredictM1 <- predict(new.fit.M, type="response", newdata=pred.data.t) + error
 		PredictM0 <- predict(new.fit.M, type="response", newdata=pred.data.c) + error
-	}
+		}
 #####################################################################################		
 		#Treatment Predictions Data
 		pred.data.t <- y.t.data
@@ -305,39 +340,54 @@ if(test=="glm"){
 
 		rm(pred.data.t, pred.data.c, pr.1, pr.0, pr.mat)
 		
-				
+		#Direct Effects
+		pred.data.t <- y.t.data
+		pred.data.t[,T] <- cat.1
+		pred.data.t[,M] <- PredictM1
+		pred.data.c <- y.t.data
+		pred.data.c[,T] <- cat.0
+		pred.data.c[,M] <- PredictM1
+			
+		if(is.factor(y.t.data[,T])==TRUE){
+		pred.data.t[,T] <- as.factor(pred.data.t[,T])
+		pred.data.c[,T] <- as.factor(pred.data.c[,T])
+		} else { 
+		pred.data.t[,T] <- as.numeric(pred.data.t[,T])
+		pred.data.c[,T] <- as.numeric(pred.data.c[,T])
+		}
+		
+		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
+		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
+		pr.mat <- as.matrix(cbind(pr.1, pr.0))
+		zeta.1.tmp <- pr.mat[,1] - pr.mat[,2]
+
+		rm(pred.data.t, pred.data.c, pr.1, pr.0,pr.mat)
+
+		pred.data.t <- y.t.data
+		pred.data.t[,T] <- cat.1
+		pred.data.t[,M] <- PredictM0
+		pred.data.c <- y.t.data
+		pred.data.c[,T] <- cat.0
+		pred.data.c[,M] <- PredictM0
+			
+		if(is.factor(y.t.data[,T])==TRUE){
+		pred.data.t[,T] <- as.factor(pred.data.t[,T])
+		pred.data.c[,T] <- as.factor(pred.data.c[,T])
+		} else { 
+		pred.data.t[,T] <- as.numeric(pred.data.t[,T])
+		pred.data.c[,T] <- as.numeric(pred.data.c[,T])
+		} 	
+		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
+		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
+		pr.mat <- as.matrix(cbind(pr.1, pr.0))
+		zeta.0.tmp <-pr.mat[,1] - pr.mat[,2]
+		
+		zeta.1[b] <- mean(zeta.1.tmp)
+		zeta.0[b] <- mean(zeta.0.tmp)		
 		delta.1[b] <- mean(delta.1.tmp)
 		delta.0[b] <- mean(delta.0.tmp)
-		#Total Effects
-		if(test=="glm"){
-			if(is.factor(y.t.data[,T])){
-		tau[b] <-	new.fit.t$coef[T.cat] + delta.1[b]
-		} else {
-		tau[b] <-	new.fit.t$coef[T] + delta.1[b]
-			}
-			} else {
-			new.fit.tau <- update(new.fit.t, as.formula(paste(".~. -", M)))
-			tau.data <- model.frame(new.fit.tau)
-			pred.data.t <- model.frame(new.fit.tau)
-			pred.data.t[,T] <- cat.1
-			pred.data.c <- model.frame(new.fit.tau)
-			pred.data.c[,T] <- cat.0
-
-			if(is.factor(tau.data[,T])==TRUE){
-			pred.data.t[,T] <- as.factor(pred.data.t[,T])
-			pred.data.c[,T] <- as.factor(pred.data.c[,T])
-			} else { 
-			pred.data.t[,T] <- as.numeric(pred.data.t[,T])
-			pred.data.c[,T] <- as.numeric(pred.data.c[,T])
-			}
+		tau[b] <- (zeta.1[b] + delta.1[b])
 		
-			#Total Effects Predictions
-			pr.1 <- predict(new.fit.tau, type="response", newdata=pred.data.t)
-			pr.0 <- predict(new.fit.tau, type="response", newdata=pred.data.c)
-			tau[b] <- mean(pr.1 - pr.0)	
-				}
-		zeta.1[b] <- tau[b] - delta.0[b]
-		zeta.0[b] <- tau[b] - delta.1[b]	
 		} #bootstrap loop
 	} #nonpara boot branch
 	d0 <- mean(delta.0)
