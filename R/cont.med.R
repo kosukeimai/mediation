@@ -219,31 +219,6 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 		#Refit Models with Resampled Data
 		new.fit.M <- eval.parent(Call.M)
 		new.fit.t <- eval.parent(Call.Y.t)
-
-		#Direct Effect
-		if (INT==TRUE){
-		temp.coef <- new.fit.M$coef	
-		#X-Predictions
-		temp <- model.matrix(new.fit.M)
-		temp[,1] <- 0
-	   	meanmat <- apply(temp, 2, mean)
-	    #new.fit.M$coef[1] <- 0
-	    if(is.factor(y.t.data[,T])==TRUE){
-        temp.coef[paste(T.cat)] <- 0
-        } else {
-        temp.coef[paste(T.cat)] <- 0
-        	}
-        Bm.X <- new.fit.M$coef %*% meanmat
-		zeta.0[b] <- new.fit.t$coef[paste(T.cat)] + new.fit.t$coef[paste(T.cat,M,sep=":")]*(new.fit.M$coef[1] + new.fit.M$coef[paste(T.cat)]*0 + Bm.X)
-		zeta.1[b] <- new.fit.t$coef[paste(T.cat)] + new.fit.t$coef[paste(T.cat,M,sep=":")]*(new.fit.M$coef[1] + new.fit.M$coef[paste(T.cat)]*1 + Bm.X)			} else {
-		if(is.factor(y.t.data[,T])==TRUE){
-			zeta.1[b] <- new.fit.t$coef[paste(T.cat)]
-			zeta.0[b] <- new.fit.t$coef[paste(T.cat)]
-				} else {
-			zeta.1[b] <- new.fit.t$coef[paste(T)]
-			zeta.0[b] <- new.fit.t$coef[paste(T)] 
-			}
-				}
 				
 		#Generate Mediation Model Predictions
 		if(class(model.m)[1]=="gam"){
@@ -251,6 +226,7 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 			} else {
 			sigma <- summary(new.fit.M)$sigma
 				}
+			
 		error <- rnorm(n, mean=0, sd=sigma) 
 		pred.data.t <- m.data
 		pred.data.t[,T] <- cat.1
