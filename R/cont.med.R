@@ -64,6 +64,9 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 	PredictM1 <- PredictM1 + error
 	PredictM0 <- PredictM0 + error
 	
+################################################
+# Outcome Predictions
+###############################################	
 	#Treatment Predictions Data
 	Pr1 <- matrix(,nrow=n, ncol=sims)
 	Pr0 <- matrix(,nrow=n, ncol=sims)
@@ -362,7 +365,7 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 		if(INT==TRUE){
 		tau[b] <- zeta.1[b] + delta.0[b]
 		} else {
-		tau[b] <- zeta.1[b] + mean(delta.0.tmp)]	
+		tau[b] <- zeta.0[b] + delta.1[b]	
 			}
 		
 		} #bootstrap loop
