@@ -71,16 +71,16 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 	mmat.c <- model.matrix(terms(model.m), data=pred.data.c)
 	
 	if(test=="glm"){
-	PredictM1 <- matrix(,nrow=sims, ncol=n)
-	PredictM0 <- matrix(,nrow=sims, ncol=n)
-	PredictM1_t <- model.m$family$linkinv(MModel %*% t(mmat.t))
-	PredictM0_t <- model.m$family$linkinv(MModel %*% t(mmat.c))
+	#PredictM1 <- matrix(,nrow=sims, ncol=n)
+	#PredictM0 <- matrix(,nrow=sims, ncol=n)
+	PredictM1 <- model.m$family$linkinv(MModel %*% t(mmat.t))
+	PredictM0 <- model.m$family$linkinv(MModel %*% t(mmat.c))
 	#Binomial Errors
-	for (j in 1:sims) {
-        		#error <- runif(n, min=0, max=1)
-        		PredictM1[j,] <- as.numeric(PredictM1_t[j,] > runif(n,min=0, max=1))
-        		PredictM0[j,] <- as.numeric(PredictM0_t[j,] > runif(n,min=0, max=1))
- 				}
+	#for (j in 1:sims) {
+    #    		#error <- runif(n, min=0, max=1)
+    #    		PredictM1[j,] <- as.numeric(PredictM1_t[j,] > runif(n,min=0, max=1))
+    #    		PredictM0[j,] <- as.numeric(PredictM0_t[j,] > runif(n,min=0, max=1))
+ 	#			}
 		} else {
 	sigma <- summary(model.m)$sigma			    
 	error <- rnorm(n, mean=0, sd=sigma)
