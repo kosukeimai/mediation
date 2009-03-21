@@ -293,92 +293,112 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 		}
 #####################################################################################		
 		#Treatment Predictions Data
+		if(is.factor(y.t.data[,paste(T)])==TRUE){
+		pred.data.t <- y.t.data
+		pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
+		pred.data.t[,M] <- PredictM1
+		pred.data.c <- y.t.data
+		pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
+		pred.data.c[,M] <- PredictM0
+		} else {
 		pred.data.t <- y.t.data
 		pred.data.t[,T] <- cat.1
 		pred.data.t[,M] <- PredictM1
 		pred.data.c <- y.t.data
 		pred.data.c[,T] <- cat.1
 		pred.data.c[,M] <- PredictM0
+			}
 			
-		if(is.factor(y.t.data[,T])==TRUE){
-		pred.data.t[,T] <- as.factor(pred.data.t[,T])
-		pred.data.c[,T] <- as.factor(pred.data.c[,T])
-		} else { 
-		pred.data.t[,T] <- as.numeric(pred.data.t[,T])
-		pred.data.c[,T] <- as.numeric(pred.data.c[,T])
-		}
-		
-		#Treatment Predications	
+		#Treatment Predictions
+		if(test3=="rq"){
+		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t, interval="none");		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c, interval="none");
+			} else {
 		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
 		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
+				}
 		pr.mat <- as.matrix(cbind(pr.1, pr.0))
 		delta.1.tmp <- pr.mat[,1] - pr.mat[,2]
 
 		rm(pred.data.t, pred.data.c, pr.1, pr.0,pr.mat)
 
 		#Control Predictions Data
+		if(is.factor(y.t.data[,paste(T)])==TRUE){
+		pred.data.t <- y.t.data
+		pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
+		pred.data.t[,M] <- PredictM1
+		pred.data.c <- y.t.data
+		pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
+		pred.data.c[,M] <- PredictM0
+		} else {
 		pred.data.t <- y.t.data
 		pred.data.t[,T] <- cat.0
 		pred.data.t[,M] <- PredictM1
 		pred.data.c <- y.t.data
 		pred.data.c[,T] <- cat.0
 		pred.data.c[,M] <- PredictM0
+			}
 			
-		if(is.factor(y.t.data[,T])==TRUE){
-		pred.data.t[,T] <- as.factor(pred.data.t[,T])
-		pred.data.c[,T] <- as.factor(pred.data.c[,T])
-		} else { 
-		pred.data.t[,T] <- as.numeric(pred.data.t[,T])
-		pred.data.c[,T] <- as.numeric(pred.data.c[,T])
-		} 
-		
-		#Control Predictions	
+		if(test3=="rq"){
+		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t, interval="none");		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c, interval="none");
+			} else {
 		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
 		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
+				}	
 		pr.mat <- as.matrix(cbind(pr.1, pr.0))
 		delta.0.tmp <-pr.mat[,1] - pr.mat[,2]
 
 		rm(pred.data.t, pred.data.c, pr.1, pr.0, pr.mat)
 		
 		#Direct Effects
+		if(is.factor(y.t.data[,paste(T)])==TRUE){
+		pred.data.t <- y.t.data
+		pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
+		pred.data.t[,M] <- PredictM1
+		pred.data.c <- y.t.data
+		pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
+		pred.data.c[,M] <- PredictM1
+		} else {
 		pred.data.t <- y.t.data
 		pred.data.t[,T] <- cat.1
 		pred.data.t[,M] <- PredictM1
 		pred.data.c <- y.t.data
 		pred.data.c[,T] <- cat.0
 		pred.data.c[,M] <- PredictM1
+			}
 			
-		if(is.factor(y.t.data[,T])==TRUE){
-		pred.data.t[,T] <- as.factor(pred.data.t[,T])
-		pred.data.c[,T] <- as.factor(pred.data.c[,T])
-		} else { 
-		pred.data.t[,T] <- as.numeric(pred.data.t[,T])
-		pred.data.c[,T] <- as.numeric(pred.data.c[,T])
-		}
-		
+		if(test3=="rq"){
+		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t, interval="none");		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c, interval="none");
+			} else {
 		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
 		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
+				}
 		pr.mat <- as.matrix(cbind(pr.1, pr.0))
 		zeta.1.tmp <- pr.mat[,1] - pr.mat[,2]
 
 		rm(pred.data.t, pred.data.c, pr.1, pr.0,pr.mat)
 
+		if(is.factor(y.t.data[,paste(T)])==TRUE){
+		pred.data.t <- y.t.data
+		pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
+		pred.data.t[,M] <- PredictM0
+		pred.data.c <- y.t.data
+		pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
+		pred.data.c[,M] <- PredictM0
+		} else {
 		pred.data.t <- y.t.data
 		pred.data.t[,T] <- cat.1
 		pred.data.t[,M] <- PredictM0
 		pred.data.c <- y.t.data
 		pred.data.c[,T] <- cat.0
 		pred.data.c[,M] <- PredictM0
-			
-		if(is.factor(y.t.data[,T])==TRUE){
-		pred.data.t[,T] <- as.factor(pred.data.t[,T])
-		pred.data.c[,T] <- as.factor(pred.data.c[,T])
-		} else { 
-		pred.data.t[,T] <- as.numeric(pred.data.t[,T])
-		pred.data.c[,T] <- as.numeric(pred.data.c[,T])
-		} 	
+			}
+
+		if(test3=="rq"){
+		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t, interval="none");		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c, interval="none");
+			} else {
 		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
 		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
+				}
 		pr.mat <- as.matrix(cbind(pr.1, pr.0))
 		zeta.0.tmp <-pr.mat[,1] - pr.mat[,2]
 		
@@ -386,7 +406,11 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 		zeta.0[b] <- mean(zeta.0.tmp)		
 		delta.1[b] <- mean(delta.1.tmp)
 		delta.0[b] <- mean(delta.0.tmp)
-		tau[b] <- (zeta.1[b] + delta.1[b])
+		if(INT==TRUE){
+		tau[b] <- zeta.1[b] + delta.0[b]
+		} else {
+		tau[b] <- zeta.0[b] + delta.1[b]	
+			}
 		
 		} #bootstrap loop
 	} #nonpara boot branch
