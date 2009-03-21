@@ -6,6 +6,7 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 	B <- sims
 	model.m <- z
 	model.y.t <- model.y
+	test3 <- class(model.y)[1]
 	m.data <- model.frame(model.m)  #Call.M$data
     y.t.data <- model.frame(model.y.t) #Call.Y$data
     k.t <- ncol(y.t.data)
