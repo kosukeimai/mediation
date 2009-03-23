@@ -13,7 +13,7 @@ set.seed(373456)
 setwd("~/Documents/Mediation Analysis/Local/mediation/mediation/R")
 source("binary.med.R")
 
-n <-  1000
+n <-  10000
 #Population Values
 alpha.2 <- .25
 alpha.3 <- .25
@@ -38,7 +38,7 @@ mod.1 <- mediate.binary(mmodel, ymodel, sims=1000, boot=TRUE, T="T", M="M")
 print (round((Sys.time()-time.start),1))
 
 time.start <- Sys.time()
-mod.2 <- mediate.binary(mmodel, ymodel, sims=1000, T="T", M="M")
+mod.2 <- mediate.binary(mmodel, ymodel, sims=5000, T="T", M="M")
 print (round((Sys.time()-time.start),1))
 
 summary(mod.1)

@@ -6,7 +6,7 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 	B <- sims
 	model.m <- z
 	model.y.t <- model.y
-	test3 <- class(model.y)[1]
+	
 	m.data <- model.frame(model.m)  #Call.M$data
     y.t.data <- model.frame(model.y.t) #Call.Y$data
     k.t <- ncol(y.t.data)
@@ -31,7 +31,7 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 		} else {
 		test2 <- class(model.y.t)[1]	
 			}
-	
+	test3 <- class(model.y)[1]
 	if(is.factor(y.t.data[,paste(T)])==TRUE){
 				cat.c <- levels(y.t.data[,T])[1] 
 				cat.t <- levels(y.t.data[,T])[2]
@@ -72,16 +72,8 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 	mmat.c <- model.matrix(terms(model.m), data=pred.data.c)
 	
 	if(test=="glm"){
-	#PredictM1 <- matrix(,nrow=sims, ncol=n)
-	#PredictM0 <- matrix(,nrow=sims, ncol=n)
 	PredictM1 <- model.m$family$linkinv(MModel %*% t(mmat.t))
 	PredictM0 <- model.m$family$linkinv(MModel %*% t(mmat.c))
-	#Binomial Errors
-	#for (j in 1:sims) {
-    #    		#error <- runif(n, min=0, max=1)
-    #    		PredictM1[j,] <- as.numeric(PredictM1_t[j,] > runif(n,min=0, max=1))
-    #    		PredictM0[j,] <- as.numeric(PredictM0_t[j,] > runif(n,min=0, max=1))
- 	#			}
 		} else {
 	sigma <- summary(model.m)$sigma			    
 	error <- rnorm(n, mean=0, sd=sigma)
@@ -89,6 +81,7 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 	PredictM0 <- MModel %*% t(mmat.c)
 	PredictM1 <- PredictM1 + error
 	PredictM0 <- PredictM0 + error
+	rm(error)
 	}
   rm(mmat.t, mmat.c)
 ########################################################################
@@ -168,7 +161,7 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 		} else {
 		delta.0.tmp <- Pr1 - Pr0 #Binary Mediator
 			}
-
+	rm(Pr1, Pr0)
 #####################################################################
 #Direct Effect
 	#Zeta_1
@@ -198,7 +191,7 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 		} else {
 		zeta.1.tmp <- Pr1 - Pr0 #Binary Mediator
 			}
-			
+	rm(Pr1, Pr0)		
 	#Zeta_0
 	Pr1 <- matrix(,nrow=n, ncol=sims)
 	Pr0 <- matrix(,nrow=n, ncol=sims)
@@ -226,10 +219,15 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 		} else {
 		zeta.0.tmp <- Pr1 - Pr0 #Binary Mediator
 			}
+	rm(Pr1, Pr0, PredictM1, PredictM0, TMmodel, MModel)		
 	zeta.1 <- t(as.matrix(apply(zeta.1.tmp, 2, mean)))
+	rm(zeta.1.tmp)
 	zeta.0 <- t(as.matrix(apply(zeta.0.tmp, 2, mean)))
+	rm(zeta.0.tmp)
 	delta.1 <- t(as.matrix(apply(delta.1.tmp, 2, mean)))
+	rm(delta.1.tmp)
 	delta.0 <- t(as.matrix(apply(delta.0.tmp, 2, mean)));
+	rm(delta.0.tmp)
 	tau <- (zeta.1 + delta.1)
 
 #######################################################################
@@ -354,6 +352,10 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 		if(is.null(C)!=TRUE){
 			pred.data.t[,C] <- cat.1
 			pred.data.c[,C] <- cat.1
+		if(is.null(C)!=TRUE){
+			pred.data.t[,C] <- cat.1
+			pred.data.c[,C] <- cat.1
+			}
 			}
 
 			}
