@@ -2,7 +2,7 @@ mediate.binary <- function(z, ...){
 	UseMethod("mediate.binary", z)
 	}
 	
-mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T="treat.name", M="med.name"){
+mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T="treat.name", M="med.name", C=NULL){
 	B <- sims
 	model.m <- z
 	model.y.t <- model.y
@@ -90,7 +90,7 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 	PredictM1 <- PredictM1 + error
 	PredictM0 <- PredictM0 + error
 	}
-
+  rm(mmat.t, mmat.c)
 ########################################################################
 ##   Outcome Predictions
 ########################################################################
@@ -131,7 +131,7 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 		} else {
 		delta.1.tmp <- Pr1 - Pr0 #Binary Mediator
 			}
-			
+	rm(Pr1, Pr0)		
 	#Control Predictions Data
 	Pr1 <- matrix(,nrow=n, ncol=sims)
 	Pr0 <- matrix(,nrow=n, ncol=sims)
@@ -266,8 +266,10 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 		#Generate Mediation Model Predictions
 		pred.data.t <- m.data
 		pred.data.t[,T] <- cat.1
+		#pred.data.t[,C] <- cat.0
 		pred.data.c <- m.data
 		pred.data.c[,T] <- cat.0
+		#pred.data.c[,C] <- cat.1
 		
 		if(is.factor(m.data[,T])==TRUE){
 		pred.data.t[,T] <- as.factor(pred.data.t[,T])
@@ -301,6 +303,10 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 		pred.data.c <- y.t.data
 		pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
 		pred.data.c[,M] <- PredictM0
+		if(is.null(C)!=TRUE){
+			pred.data.t[,C] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
+			pred.data.c[,C] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
+			}
 		} else {
 		pred.data.t <- y.t.data
 		pred.data.t[,T] <- cat.1
@@ -308,6 +314,10 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 		pred.data.c <- y.t.data
 		pred.data.c[,T] <- cat.1
 		pred.data.c[,M] <- PredictM0
+		if(is.null(C)!=TRUE){
+			pred.data.t[,C] <- cat.0
+			pred.data.c[,C] <- cat.0
+			}
 			}
 			
 		#Treatment Predictions
@@ -330,6 +340,10 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 		pred.data.c <- y.t.data
 		pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
 		pred.data.c[,M] <- PredictM0
+		if(is.null(C)!=TRUE){
+			pred.data.t[,C] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
+			pred.data.c[,C] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
+			}
 		} else {
 		pred.data.t <- y.t.data
 		pred.data.t[,T] <- cat.0
@@ -337,8 +351,13 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 		pred.data.c <- y.t.data
 		pred.data.c[,T] <- cat.0
 		pred.data.c[,M] <- PredictM0
+		if(is.null(C)!=TRUE){
+			pred.data.t[,C] <- cat.1
+			pred.data.c[,C] <- cat.1
 			}
-			
+
+			}
+		#Controls Predictions	
 		if(test3=="rq"){
 		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t, interval="none");		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c, interval="none");
 			} else {
@@ -350,13 +369,13 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 
 		rm(pred.data.t, pred.data.c, pr.1, pr.0, pr.mat)
 		
-		#Direct Effects
+		#Direct Effects Zeta.1
 		if(is.factor(y.t.data[,paste(T)])==TRUE){
 		pred.data.t <- y.t.data
-		pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
+		pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
 		pred.data.t[,M] <- PredictM1
 		pred.data.c <- y.t.data
-		pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
+		pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
 		pred.data.c[,M] <- PredictM1
 		} else {
 		pred.data.t <- y.t.data
@@ -365,6 +384,10 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 		pred.data.c <- y.t.data
 		pred.data.c[,T] <- cat.0
 		pred.data.c[,M] <- PredictM1
+		if(is.null(C)!=TRUE){
+			pred.data.t[,C] <- cat.0
+			pred.data.c[,C] <- cat.1
+			}
 			}
 			
 		if(test3=="rq"){
@@ -377,7 +400,7 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 		zeta.1.tmp <- pr.mat[,1] - pr.mat[,2]
 
 		rm(pred.data.t, pred.data.c, pr.1, pr.0,pr.mat)
-
+		#Zeta.0
 		if(is.factor(y.t.data[,paste(T)])==TRUE){
 		pred.data.t <- y.t.data
 		pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
@@ -385,6 +408,10 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 		pred.data.c <- y.t.data
 		pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
 		pred.data.c[,M] <- PredictM0
+		if(is.null(C)!=TRUE){
+			pred.data.t[,C] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
+			pred.data.c[,C] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
+			}
 		} else {
 		pred.data.t <- y.t.data
 		pred.data.t[,T] <- cat.1
@@ -392,6 +419,10 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 		pred.data.c <- y.t.data
 		pred.data.c[,T] <- cat.0
 		pred.data.c[,M] <- PredictM0
+		if(is.null(C)!=TRUE){
+			pred.data.t[,C] <- cat.0
+			pred.data.c[,C] <- cat.1
+			}
 			}
 
 		if(test3=="rq"){
