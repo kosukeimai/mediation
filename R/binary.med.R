@@ -49,7 +49,12 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 	cat.0 <- 0
 	cat.1 <- 1
 	MModel.coef <- model.m$coef
+	if(test=="polr"){
+	k <- length(model.m$coef)
+	MModel.var.cov <- vcov(model.m)[(1:k),(1:k)]
+	} else {
 	MModel.var.cov <- vcov(model.m)
+		}
 	TMmodel.coef <- model.y$coef
 	TMmodel.var.cov <- vcov(model.y)
 	MModel <- mvrnorm(sims, mu=MModel.coef, Sigma=MModel.var.cov)
@@ -74,7 +79,57 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 	if(test=="glm"){
 	PredictM1 <- model.m$family$linkinv(MModel %*% t(mmat.t))
 	PredictM0 <- model.m$family$linkinv(MModel %*% t(mmat.c))
-		} else {
+		} else if(test=="polr"){
+#Handrolled Predictions for polr
+  if(model.m$method=="logit"){
+    linkfn <- plogis
+  	} else {
+  	linkfn <- pnorm
+  	}
+
+indexmax <- function(x){
+    n <- length(x)
+    imax <- (1:n)[(order(x))[n]]
+    imax
+  }
+  
+m <- length(sort(unique(model.frame(model.m)[,1])))
+m.cat <- sort(unique(model.frame(model.m)[,1]))
+lambda <- model.m$zeta
+
+mmat.t <- mmat.t[,-1]
+mmat.c <- mmat.c[,-1]
+
+ystar_m1 <- MModel %*% t(mmat.t) 
+ystar_m0 <- MModel %*% t(mmat.c)
+
+PredictM1 <- matrix(,nrow=sims, ncol=n)
+PredictM0 <- matrix(,nrow=sims, ncol=n)
+		
+for(i in 1:sims){
+        
+  cprobs_m1 <- matrix(NA,n,m)
+  cprobs_m0 <- matrix(NA,n,m)
+  probs_m1 <- matrix(NA,n,m)
+  probs_m0 <- matrix(NA,n,m)
+  
+  for (j in 1:(m-1)) {         # loop to get category-specific probabilities
+  cprobs_m1[,j] <- linkfn(lambda[j]-ystar_m1[i,])
+  cprobs_m0[,j] <- linkfn(lambda[j]-ystar_m0[i,])  # cumulative probabilities
+  probs_m1[,m] <- 1-cprobs_m1[,m-1] # top category 
+  probs_m0[,m] <- 1-cprobs_m0[,m-1] # top category
+  probs_m1[,1] <- cprobs_m1[,1]     # bottom category 
+  probs_m0[,1] <- cprobs_m0[,1]     # bottom category 
+  }
+  
+  for (j in 2:(m-1)){          # middle categories
+    probs_m1[,j] <- cprobs_m1[,j]-cprobs_m1[,j-1]
+    probs_m0[,j] <- cprobs_m0[,j]-cprobs_m0[,j-1]
+    	}
+	PredictM1[i,] <- apply(probs_m1,1,indexmax)
+	PredictM0[i,] <- apply(probs_m0,1,indexmax)
+		}
+	} else {
 	sigma <- summary(model.m)$sigma			    
 	error <- rnorm(n, mean=0, sd=sigma)
 	PredictM1 <- MModel %*% t(mmat.t)
@@ -92,22 +147,24 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 	Pr0 <- matrix(,nrow=n, ncol=sims)
 	
 	for(j in 1:sims){
+		pred.data.t <- y.t.data
+		pred.data.c <- y.t.data
 	if(is.factor(y.t.data[,paste(T)])==TRUE){
-	pred.data.t <- y.t.data
 	pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
-	pred.data.t[,M] <- PredictM1[j,]
-	pred.data.c <- y.t.data
 	pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
-	pred.data.c[,M] <- PredictM0[j,]
-			} else {
-	pred.data.t <- y.t.data
+	} else {
 	pred.data.t[,T] <- cat.1
-	pred.data.t[,M] <- PredictM1[j,]
-	pred.data.c <- y.t.data
 	pred.data.c[,T] <- cat.1
+		}
+	
+	if(is.factor(y.t.data[,paste(M)])==TRUE) {
+		pred.data.t[,M] <- factor(PredictM1[j,], levels = levels(y.t.data[,M]))
+		pred.data.c[,M] <- factor(PredictM0[j,], levels = levels(y.t.data[,M]))
+		} else {
+	pred.data.t[,M] <- PredictM1[j,]
 	pred.data.c[,M] <- PredictM0[j,]
-
 	}
+	
 	ymat.t <- model.matrix(terms(model.y), data=pred.data.t) 
 	ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
 	
@@ -124,27 +181,31 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 		} else {
 		delta.1.tmp <- Pr1 - Pr0 #Binary Mediator
 			}
-	rm(Pr1, Pr0)		
+	rm(Pr1, Pr0)
+			
 	#Control Predictions Data
 	Pr1 <- matrix(,nrow=n, ncol=sims)
 	Pr0 <- matrix(,nrow=n, ncol=sims)
 	
-	for(j in 1:sims){
+		for(j in 1:sims){
+		pred.data.t <- y.t.data
+		pred.data.c <- y.t.data
 	if(is.factor(y.t.data[,paste(T)])==TRUE){
-	pred.data.t <- y.t.data
 	pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
-	pred.data.t[,M] <- PredictM1[j,]
-	pred.data.c <- y.t.data
 	pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
-	pred.data.c[,M] <- PredictM0[j,]
+	} else{
+	pred.data.t[,T] <- cat.0	
+	pred.data.c[,T] <- cat.0	
+		} 
+		
+	if(is.factor(y.t.data[,paste(M)])==TRUE) {
+	pred.data.t[,M] <- factor(PredictM1[j,], levels = levels(y.t.data[,M]))
+	pred.data.c[,M] <- factor(PredictM0[j,], levels = levels(y.t.data[,M]))
 			} else {
-	pred.data.t <- y.t.data
-	pred.data.t[,T] <- cat.0
 	pred.data.t[,M] <- PredictM1[j,]
-	pred.data.c <- y.t.data
-	pred.data.c[,T] <- cat.0
 	pred.data.c[,M] <- PredictM0[j,]
 	}
+
 	ymat.t <- model.matrix(terms(model.y), data=pred.data.t) 
 	ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
 
@@ -163,18 +224,31 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 			}
 	rm(Pr1, Pr0)
 #####################################################################
-#Direct Effect
+#Direct Effects
+#####################################################################
 	#Zeta_1
     Pr1 <- matrix(,nrow=n, ncol=sims)
 	Pr0 <- matrix(,nrow=n, ncol=sims)
 	
 	for(j in 1:sims){
 	pred.data.t <- y.t.data
-	pred.data.t[,T] <- cat.1
-	pred.data.t[,M] <- PredictM1[j,]
 	pred.data.c <- y.t.data
+	#if(is.factor(y.t.data[,paste(T)])==TRUE){
+	#pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
+	#pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
+	#} else {
+	pred.data.t[,T] <- cat.1	
 	pred.data.c[,T] <- cat.0
+	#}
+	
+	if(is.factor(y.t.data[,paste(M)])==TRUE) {
+	pred.data.t[,M] <- factor(PredictM1[j,], levels = levels(y.t.data[,M]))
+	pred.data.c[,M] <- factor(PredictM1[j,], levels = levels(y.t.data[,M]))
+	} else {
+	pred.data.t[,M] <- PredictM1[j,]
 	pred.data.c[,M] <- PredictM1[j,]
+		}
+		
 	ymat.t <- model.matrix(terms(model.y), data=pred.data.t) 
 	ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
 	
@@ -198,14 +272,26 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 	
 	for(j in 1:sims){
 	pred.data.t <- y.t.data
-	pred.data.t[,T] <- cat.1
-	pred.data.t[,M] <- PredictM0[j,]
 	pred.data.c <- y.t.data
-	pred.data.c[,T] <- cat.0
+	#if(is.factor(y.t.data[,paste(T)])==TRUE){
+	#pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
+	#pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
+	#} else {
+	pred.data.t[,T] <- cat.1
+	pred.data.c[,T] <- cat.0	
+	#	}
+	
+	if(is.factor(y.t.data[,paste(M)])==TRUE) {
+	pred.data.t[,M] <- factor(PredictM0[j,], levels = levels(y.t.data[,M]))
+	pred.data.c[,M] <- factor(PredictM0[j,], levels = levels(y.t.data[,M]))
+	} else {
+	pred.data.t[,M] <- PredictM0[j,]
 	pred.data.c[,M] <- PredictM0[j,]
+		}
+		
 	ymat.t <- model.matrix(terms(model.y), data=pred.data.t) 
 	ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
-	
+
 	#Direct Predictions
 	Pr1[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.t)
 	Pr0[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.c)
@@ -277,21 +363,26 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 		pred.data.c[,T] <- as.numeric(pred.data.c[,T])
 		} 
 		
-		if(test=="glm") {
-		PredictM1temp <- predict(new.fit.M, type="response", newdata=pred.data.t)
-		PredictM0temp <- predict(new.fit.M, type="response", newdata=pred.data.c)
-		PredictM1 <- as.numeric(PredictM1temp > runif(n, min=0, max=1))
-		PredictM0 <- as.numeric(PredictM0temp > runif(n, min=0, max=1))
-			} else {
+		if(test=="glm"){
+		PredictM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
+		PredictM0 <- predict(new.fit.M, type="response", newdata=pred.data.c)
+		} else if(test=="polr") {
+		PredictM1 <- predict(new.fit.M, newdata=pred.data.t)
+		PredictM0 <- predict(new.fit.M, newdata=pred.data.c)
+		} else {
 		if(class(model.m)[1]=="gam"){
 			sigma <- summary(new.fit.M)$scale
 			} else {
 			sigma <- summary(new.fit.M)$sigma
 				}		
-		error <- rnorm(n, mean=0, sd=sigma)	    
-		PredictM1 <- predict(new.fit.M, type="response", newdata=pred.data.t) + error
-		PredictM0 <- predict(new.fit.M, type="response", newdata=pred.data.c) + error
+		error <- rnorm(n, mean=0, sd=sigma)
+		PredictM1 <- MModel %*% t(mmat.t)
+		PredictM0 <- MModel %*% t(mmat.c)
+		PredictM1 <- PredictM1 + error
+		PredictM0 <- PredictM0 + error
+		rm(error)
 		}
+		
 #####################################################################################		
 		#Treatment Predictions Data
 		if(is.factor(y.t.data[,paste(T)])==TRUE){
@@ -319,7 +410,7 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 			}
 			
 		#Treatment Predictions
-		if(test3=="rq"){
+		if(test3=="rq"){#Why not test2?
 		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t, interval="none");		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c, interval="none");
 			} else {
 		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
@@ -370,8 +461,10 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 		delta.0.tmp <-pr.mat[,1] - pr.mat[,2]
 
 		rm(pred.data.t, pred.data.c, pr.1, pr.0, pr.mat)
-		
-		#Direct Effects Zeta.1
+########################################################################
+		#Direct Effects 
+########################################################################		
+		#Zeta.1
 		if(is.factor(y.t.data[,paste(T)])==TRUE){
 		pred.data.t <- y.t.data
 		pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
