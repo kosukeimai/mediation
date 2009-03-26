@@ -467,11 +467,15 @@ for(i in 1:sims){
 		#Zeta.1
 		if(is.factor(y.t.data[,paste(T)])==TRUE){
 		pred.data.t <- y.t.data
-		pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
+		pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
 		pred.data.t[,M] <- PredictM1
 		pred.data.c <- y.t.data
-		pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
+		pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
 		pred.data.c[,M] <- PredictM1
+		if(is.null(C)!=TRUE){
+			pred.data.t[,C] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
+			pred.data.c[,C] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
+			}
 		} else {
 		pred.data.t <- y.t.data
 		pred.data.t[,T] <- cat.1
