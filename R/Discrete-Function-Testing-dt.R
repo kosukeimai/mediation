@@ -14,7 +14,7 @@ setwd("~/Documents/Mediation Analysis/Local/mediation/mediation/R")
 setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/R")
 source("binary.med.R")
 
-n <-  1000
+n <-  10000
 #Population Values
 alpha.2 <- .25
 alpha.3 <- .25
@@ -49,6 +49,7 @@ m.control<-predict(mmodel, new=control, type="probs")
 m.def<-m.treat-m.control
 
 #calculate predicted values of the outcome variable under the observed treatment and under the 4 categories of the mediator
+M <- as.factor(M)
 ymodel <- lm(Y ~ T + M + X.1 + X.2)
 
 y.predict.m1<-ymodel$coef["T"]*T+ymodel$coef["X.1"]*X.1+ymodel$coef["X.2"]*X.2
