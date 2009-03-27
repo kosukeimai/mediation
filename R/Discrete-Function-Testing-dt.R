@@ -39,6 +39,7 @@ Y <- alpha.3 + beta.3*T + gamma*M + beta.2*X.1 + beta.2*X.2 + rnorm(n)
 data<-cbind(M,T,X.1,X.2)
 
 #calculated different in probability at mediator level 1-4 under treatment and under control
+
 mmodel <- polr(as.factor(M) ~ T + X.1 + X.2, method="probit", Hess=TRUE, data=data)
 treat<-data
 treat[,2]<-1
@@ -49,7 +50,7 @@ m.control<-predict(mmodel, new=control, type="probs")
 m.def<-m.treat-m.control
 
 #calculate predicted values of the outcome variable under the observed treatment and under the 4 categories of the mediator
-M <- as.factor(M)
+M<-as.factor(M)
 ymodel <- lm(Y ~ T + M + X.1 + X.2)
 
 y.predict.m1<-ymodel$coef["T"]*T+ymodel$coef["X.1"]*X.1+ymodel$coef["X.2"]*X.2
