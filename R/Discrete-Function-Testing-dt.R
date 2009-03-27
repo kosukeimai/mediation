@@ -36,18 +36,21 @@ M[latentm >= .45 & latentm < 1.1] <- 3
 M[latentm >= 1.1] <- 4
 Y <- alpha.3 + beta.3*T + gamma*M + beta.2*X.1 + beta.2*X.2 + rnorm(n)
 
-data<-cbind(M,T,X.1,X.2)
+M <- as.factor(M)
+data<- data.frame(M,T,X.1,X.2)
 
 #calculated different in probability at mediator level 1-4 under treatment and under control
-
+mmodel <- polr(M ~ T + X.1 + X.2, method="probit", Hess=TRUE, data=data)
+treat <- data
+treat[,2] <- 1
 mmodel <- polr(as.factor(M) ~ T + X.1 + X.2, method="probit", Hess=TRUE, data=data)
 treat<-data
 treat[,2]<-1
 m.treat<-predict(mmodel, new=treat, type="probs")
-control<-data
-control[,2]<-0
-m.control<-predict(mmodel, new=control, type="probs")
-m.def<-m.treat-m.control
+control <- data
+control[,2] <- 0
+m.control <- predict(mmodel, new=control, type="probs")
+m.def <- m.treat-m.control
 
 #calculate predicted values of the outcome variable under the observed treatment and under the 4 categories of the mediator
 M<-as.factor(M)
@@ -69,15 +72,8 @@ cme[i,4]<-y.predict.m4[i]*m.def[i,4]
 
 #Average over the rows and then sum across the columns
 acme<-apply(cme,2,mean, na.rm=TRUE)
-delta<-sum(acme)
+delta <- sum(acme)
 delta
-
-
-
-
-
-
-
 
 
 #Simulation Approach
