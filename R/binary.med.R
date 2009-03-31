@@ -19,7 +19,8 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 	n.m <- length(m.data[,1])
 	n.y <- length(y.t.data[,1])
 	n <- length(y.t.data[,1])
-	
+	m <- length(sort(unique(model.frame(model.m)[,1])))
+	m.min <- as.numeric(sort(unique(model.frame(model.m)[,1]))[1])
 	if(class(model.m[1])=="gam"){
 		test <- class(model.m)[2]
 		} else {
@@ -44,6 +45,7 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 
 	if(n.m != n.y){
 	cat("Error: Missing Values Present in Data")
+	stop
 	} else {
 	if(boot == FALSE){ 
 	cat.0 <- 0
@@ -79,8 +81,7 @@ mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE,
 	if(test=="glm"){
 	PredictM1 <- model.m$family$linkinv(MModel %*% t(mmat.t))
 	PredictM0 <- model.m$family$linkinv(MModel %*% t(mmat.c))
-		} else if(test=="polr"){
-#Handrolled Predictions for polr
+		} else if(test=="polr"){ #Handrolled Predictions for polr
   if(model.m$method=="logit"){
     linkfn <- plogis
   	} else {
@@ -93,7 +94,7 @@ indexmax <- function(x){
     imax
   }
   
-m <- length(sort(unique(model.frame(model.m)[,1])))
+
 m.cat <- sort(unique(model.frame(model.m)[,1]))
 lambda <- model.m$zeta
 
@@ -126,8 +127,24 @@ for(i in 1:sims){
     probs_m1[,j] <- cprobs_m1[,j]-cprobs_m1[,j-1]
     probs_m0[,j] <- cprobs_m0[,j]-cprobs_m0[,j-1]
     	}
-	PredictM1[i,] <- apply(probs_m1,1,indexmax)
-	PredictM0[i,] <- apply(probs_m0,1,indexmax)
+#Random Prediction Draws
+    #max.pr_m1 <- apply(probs_m1, 1, max)
+	#max.pr_m0 <- apply(probs_m0, 1, max)
+	#cat.m1 <- apply(probs_m1,1,indexmax)
+	#cat.m0 <- apply(probs_m0,1,indexmax)
+	#draws_m1 <- round(runif(n, 1, m), 0)
+	#draws_m0 <- round(runif(n, 1, m), 0)
+	
+	draws_m1 <- matrix(NA, n, m)
+	draws_m0 <- matrix(NA, n, m)
+
+	for(ii in 1:n){	
+		draws_m1[ii,] <- t(rmultinom(1, 1, prob = probs_m1[ii,]))
+		draws_m0[ii,] <- t(rmultinom(1, 1, prob = probs_m0[ii,]))
+		}
+    
+		PredictM1[i,] <- apply(draws_m1, 1, indexmax)
+		PredictM0[i,] <- apply(draws_m0, 1, indexmax)
 		}
 	} else {
 	sigma <- summary(model.m)$sigma			    
@@ -233,13 +250,13 @@ for(i in 1:sims){
 	for(j in 1:sims){
 	pred.data.t <- y.t.data
 	pred.data.c <- y.t.data
-	#if(is.factor(y.t.data[,paste(T)])==TRUE){
-	#pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
-	#pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
-	#} else {
-	pred.data.t[,T] <- cat.1	
-	pred.data.c[,T] <- cat.0
-	#}
+	if(is.factor(y.t.data[,paste(T)])==TRUE){
+	pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
+	pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
+	} else {
+	pred.data.t[,T] <- cat.1	#Treatment
+	pred.data.c[,T] <- cat.0    #Control
+	}
 	
 	if(is.factor(y.t.data[,paste(M)])==TRUE) {
 	pred.data.t[,M] <- factor(PredictM1[j,], levels = levels(y.t.data[,M]))
@@ -256,16 +273,17 @@ for(i in 1:sims){
 	Pr1[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.t)
 	Pr0[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.c)
 	
-	rm(ymat.t, ymat.c, pred.data.t,pred.data.c)
+	#rm(ymat.t, ymat.c, pred.data.t,pred.data.c)
 	}	
 	
-	if(test2=="glm"){
+		if(test2=="glm"){
 		Pr1 <- apply(Pr1, 2, model.y$family$linkinv);		Pr0 <- apply(Pr0, 2, model.y$family$linkinv);
 		zeta.1.tmp <- Pr1 - Pr0;
 		} else {
 		zeta.1.tmp <- Pr1 - Pr0 #Binary Mediator
 			}
-	rm(Pr1, Pr0)		
+	rm(Pr1, Pr0)	
+		
 	#Zeta_0
 	Pr1 <- matrix(,nrow=n, ncol=sims)
 	Pr0 <- matrix(,nrow=n, ncol=sims)
@@ -273,13 +291,13 @@ for(i in 1:sims){
 	for(j in 1:sims){
 	pred.data.t <- y.t.data
 	pred.data.c <- y.t.data
-	#if(is.factor(y.t.data[,paste(T)])==TRUE){
-	#pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
-	#pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
-	#} else {
+	if(is.factor(y.t.data[,paste(T)])==TRUE){
+	pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
+	pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
+	} else {
 	pred.data.t[,T] <- cat.1
 	pred.data.c[,T] <- cat.0	
-	#	}
+		}
 	
 	if(is.factor(y.t.data[,paste(M)])==TRUE) {
 	pred.data.t[,M] <- factor(PredictM0[j,], levels = levels(y.t.data[,M]))
@@ -311,9 +329,9 @@ for(i in 1:sims){
 	zeta.0 <- t(as.matrix(apply(zeta.0.tmp, 2, mean)))
 	rm(zeta.0.tmp)
 	delta.1 <- t(as.matrix(apply(delta.1.tmp, 2, mean)))
-	rm(delta.1.tmp)
+	#rm(delta.1.tmp)
 	delta.0 <- t(as.matrix(apply(delta.0.tmp, 2, mean)));
-	rm(delta.0.tmp)
+	#rm(delta.0.tmp)
 	tau <- (zeta.1 + delta.1)
 
 #######################################################################
@@ -331,7 +349,13 @@ for(i in 1:sims){
 		cat.0 <- 0
 		cat.1 <- 1
 		}
-	
+		
+	indexmax <- function(x){
+    n <- length(x)
+    imax <- (1:n)[(order(x))[n]]
+    imax
+  	}
+
 	#Storage
 	delta.1 <- matrix(NA, B, 1)
 	delta.0 <- matrix(NA, B, 1)
@@ -342,6 +366,10 @@ for(i in 1:sims){
 		index <- sample(1:n,n, repl=TRUE)
 		Call.M$data <- m.data[index,]
 		Call.Y.t$data <- y.t.data[index,]
+		if(length(unique(y.t.data[index,M]))!=m){
+			cat("Insufficient Variation on Mediator")
+			break
+			}
 
 		#Refit Models with Resampled Data
 		new.fit.M <- eval.parent(Call.M)
@@ -367,8 +395,24 @@ for(i in 1:sims){
 		PredictM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
 		PredictM0 <- predict(new.fit.M, type="response", newdata=pred.data.c)
 		} else if(test=="polr") {
-		PredictM1 <- predict(new.fit.M, newdata=pred.data.t)
-		PredictM0 <- predict(new.fit.M, newdata=pred.data.c)
+		probs_m1 <- predict(new.fit.M, newdata=pred.data.t, type="probs")
+		probs_m0 <- predict(new.fit.M, newdata=pred.data.c, type="probs")
+		draws_m1 <- matrix(NA, n, m)
+		draws_m0 <- matrix(NA, n, m)
+
+		for(ii in 1:n){	
+			draws_m1[ii,] <- t(rmultinom(1, 1, prob = probs_m1[ii,]))
+			draws_m0[ii,] <- t(rmultinom(1, 1, prob = probs_m0[ii,]))
+			}
+		PredictM1 <- apply(draws_m1, 1, indexmax);		PredictM0 <- apply(draws_m0, 1, indexmax);
+		#max.pr_m1 <- apply(probs_m1, 1, max)
+		#max.pr_m0 <- apply(probs_m0, 1, max)
+		#cat.m1 <- predict(new.fit.M, newdata=pred.data.t)
+		#cat.m0 <- predict(new.fit.M, newdata=pred.data.c)
+		#draws_m1 <- round(runif(n, m.min, m), 0)
+		#draws_m0 <- round(runif(n, m.min, m), 0)
+		#PredictM1 <- ifelse(max.pr_m1 > runif(n, 0, .75), draws_m1, cat.m1)
+		#PredictM0 <- ifelse(max.pr_m0 > runif(n, 0, .75), draws_m0, cat.m0)
 		} else {
 		if(class(model.m)[1]=="gam"){
 			sigma <- summary(new.fit.M)$scale
@@ -385,29 +429,33 @@ for(i in 1:sims){
 		
 #####################################################################################		
 		#Treatment Predictions Data
-		if(is.factor(y.t.data[,paste(T)])==TRUE){
 		pred.data.t <- y.t.data
-		pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
-		pred.data.t[,M] <- PredictM1
 		pred.data.c <- y.t.data
-		pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
-		pred.data.c[,M] <- PredictM0
-		if(is.null(C)!=TRUE){
+		
+	if(is.factor(y.t.data[,paste(T)])==TRUE){
+			pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
+			pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
+	if(is.null(C)!=TRUE){
 			pred.data.t[,C] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
 			pred.data.c[,C] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
 			}
-		} else {
-		pred.data.t <- y.t.data
-		pred.data.t[,T] <- cat.1
-		pred.data.t[,M] <- PredictM1
-		pred.data.c <- y.t.data
-		pred.data.c[,T] <- cat.1
-		pred.data.c[,M] <- PredictM0
-		if(is.null(C)!=TRUE){
+		} else{
+			pred.data.t[,T] <- cat.1	
+			pred.data.c[,T] <- cat.1
+			if(is.null(C)!=TRUE){
 			pred.data.t[,C] <- cat.0
 			pred.data.c[,C] <- cat.0
 			}
-			}
+		} 
+		
+	if(is.factor(y.t.data[,paste(M)])==TRUE) {
+			pred.data.t[,M] <- factor(PredictM1, levels = levels(y.t.data[,M]))
+			pred.data.c[,M] <- factor(PredictM0, levels = levels(y.t.data[,M]))
+		} else {
+			pred.data.t[,M] <- PredictM1
+			pred.data.c[,M] <- PredictM0
+	}
+
 			
 		#Treatment Predictions
 		if(test3=="rq"){#Why not test2?
@@ -422,34 +470,33 @@ for(i in 1:sims){
 		rm(pred.data.t, pred.data.c, pr.1, pr.0,pr.mat)
 
 		#Control Predictions Data
-		if(is.factor(y.t.data[,paste(T)])==TRUE){
 		pred.data.t <- y.t.data
-		pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
-		pred.data.t[,M] <- PredictM1
 		pred.data.c <- y.t.data
-		pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
-		pred.data.c[,M] <- PredictM0
-		if(is.null(C)!=TRUE){
+		
+	if(is.factor(y.t.data[,paste(T)])==TRUE){
+			pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
+			pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
+	if(is.null(C)!=TRUE){
 			pred.data.t[,C] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
 			pred.data.c[,C] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
 			}
-		} else {
-		pred.data.t <- y.t.data
-		pred.data.t[,T] <- cat.0
-		pred.data.t[,M] <- PredictM1
-		pred.data.c <- y.t.data
-		pred.data.c[,T] <- cat.0
-		pred.data.c[,M] <- PredictM0
-		if(is.null(C)!=TRUE){
-			pred.data.t[,C] <- cat.1
-			pred.data.c[,C] <- cat.1
-		if(is.null(C)!=TRUE){
+	} else{
+			pred.data.t[,T] <- cat.0	
+			pred.data.c[,T] <- cat.0
+	if(is.null(C)!=TRUE){
 			pred.data.t[,C] <- cat.1
 			pred.data.c[,C] <- cat.1
 			}
-			}
+		} 
 
-			}
+if(is.factor(y.t.data[,paste(M)])==TRUE) {
+	pred.data.t[,M] <- factor(PredictM1, levels = levels(y.t.data[,M]))
+	pred.data.c[,M] <- factor(PredictM0, levels = levels(y.t.data[,M]))
+			} else {
+	pred.data.t[,M] <- PredictM1
+	pred.data.c[,M] <- PredictM0
+	}
+			
 		#Controls Predictions	
 		if(test3=="rq"){
 		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t, interval="none");		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c, interval="none");
@@ -465,29 +512,31 @@ for(i in 1:sims){
 		#Direct Effects 
 ########################################################################		
 		#Zeta.1
-		if(is.factor(y.t.data[,paste(T)])==TRUE){
 		pred.data.t <- y.t.data
-		pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
-		pred.data.t[,M] <- PredictM1
 		pred.data.c <- y.t.data
-		pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
-		pred.data.c[,M] <- PredictM1
-		if(is.null(C)!=TRUE){
+	if(is.factor(y.t.data[,paste(T)])==TRUE){
+	pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
+	pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
+	if(is.null(C)!=TRUE){
 			pred.data.t[,C] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
 			pred.data.c[,C] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
 			}
-		} else {
-		pred.data.t <- y.t.data
-		pred.data.t[,T] <- cat.1
-		pred.data.t[,M] <- PredictM1
-		pred.data.c <- y.t.data
-		pred.data.c[,T] <- cat.0
-		pred.data.c[,M] <- PredictM1
-		if(is.null(C)!=TRUE){
+	} else{
+	pred.data.t[,T] <- cat.1	
+	pred.data.c[,T] <- cat.0
+	if(is.null(C)!=TRUE){
 			pred.data.t[,C] <- cat.0
 			pred.data.c[,C] <- cat.1
 			}
-			}
+		} 
+
+		if(is.factor(y.t.data[,paste(M)])==TRUE) {
+	pred.data.t[,M] <- factor(PredictM1, levels = levels(y.t.data[,M]))
+	pred.data.c[,M] <- factor(PredictM1, levels = levels(y.t.data[,M]))
+			} else {
+	pred.data.t[,M] <- PredictM1
+	pred.data.c[,M] <- PredictM1
+	}
 			
 		if(test3=="rq"){
 		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t, interval="none");		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c, interval="none");
@@ -500,30 +549,31 @@ for(i in 1:sims){
 
 		rm(pred.data.t, pred.data.c, pr.1, pr.0,pr.mat)
 		#Zeta.0
-		if(is.factor(y.t.data[,paste(T)])==TRUE){
 		pred.data.t <- y.t.data
-		pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
-		pred.data.t[,M] <- PredictM0
 		pred.data.c <- y.t.data
-		pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
-		pred.data.c[,M] <- PredictM0
-		if(is.null(C)!=TRUE){
-			pred.data.t[,C] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
-			pred.data.c[,C] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
+	if(is.factor(y.t.data[,paste(T)])==TRUE){
+	pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
+	pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
+	if(is.null(C)!=TRUE){
+			pred.data.t[,C] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
+			pred.data.c[,C] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
 			}
-		} else {
-		pred.data.t <- y.t.data
-		pred.data.t[,T] <- cat.1
-		pred.data.t[,M] <- PredictM0
-		pred.data.c <- y.t.data
-		pred.data.c[,T] <- cat.0
-		pred.data.c[,M] <- PredictM0
-		if(is.null(C)!=TRUE){
+	} else{
+	pred.data.t[,T] <- cat.1	
+	pred.data.c[,T] <- cat.0
+	if(is.null(C)!=TRUE){
 			pred.data.t[,C] <- cat.0
 			pred.data.c[,C] <- cat.1
 			}
-			}
+		} 
 
+		if(is.factor(y.t.data[,paste(M)])==TRUE) {
+	pred.data.t[,M] <- factor(PredictM0, levels = levels(y.t.data[,M]))
+	pred.data.c[,M] <- factor(PredictM0, levels = levels(y.t.data[,M]))
+			} else {
+	pred.data.t[,M] <- PredictM0
+	pred.data.c[,M] <- PredictM0
+	}
 		if(test3=="rq"){
 		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t, interval="none");		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c, interval="none");
 			} else {

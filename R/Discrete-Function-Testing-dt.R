@@ -11,10 +11,10 @@ rm(list=ls())
 set.seed(3)
 
 setwd("~/Documents/Mediation Analysis/Local/mediation/mediation/R")
-setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/R")
+#setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/R")
 source("binary.med.R")
 
-n <-  10000
+n <-  1000
 #Population Values
 alpha.2 <- .25
 alpha.3 <- .25
@@ -43,9 +43,6 @@ data<- data.frame(M,T,X.1,X.2)
 mmodel <- polr(M ~ T + X.1 + X.2, method="probit", Hess=TRUE, data=data)
 treat <- data
 treat[,2] <- 1
-mmodel <- polr(as.factor(M) ~ T + X.1 + X.2, method="probit", Hess=TRUE, data=data)
-treat<-data
-treat[,2]<-1
 m.treat<-predict(mmodel, new=treat, type="probs")
 control <- data
 control[,2] <- 0
@@ -53,7 +50,6 @@ m.control <- predict(mmodel, new=control, type="probs")
 m.def <- m.treat-m.control
 
 #calculate predicted values of the outcome variable under the observed treatment and under the 4 categories of the mediator
-M<-as.factor(M)
 ymodel <- lm(Y ~ T + M + X.1 + X.2)
 
 y.predict.m1<-ymodel$coef["T"]*T+ymodel$coef["X.1"]*X.1+ymodel$coef["X.2"]*X.2
@@ -82,10 +78,8 @@ mmodel <- polr(M ~ T + X.1 + X.2, method="probit", Hess=TRUE)
 ymodel <- lm(Y ~ T + M + X.1 + X.2)
 
 time.start <- Sys.time()
-mod.1 <- mediate.binary(mmodel, ymodel, sims=5000, boot=TRUE, T="T", M="M")
+mod.1 <- mediate.binary(mmodel, ymodel, sims=1000, boot=TRUE, T="T", M="M")
 print (round((Sys.time()-time.start),1))
-
-
 
 time.start <- Sys.time()
 mod.2 <- mediate.binary(mmodel, ymodel, sims=1000, T="T", M="M")
