@@ -180,7 +180,7 @@ Y[latenty >= 1] <- 1
 
 mmodel <- lm(M ~ T + X.1 + X.2)
 sigma <- summary(mmodel)$sigma
-ymodel <- glm(Y ~ T + M + X.1 + X.2, family=binomial(link=probit))
+ymodel <- glm(Y ~ T + M + T:M + X.1 + X.2, family=binomial(link=probit))
 
 
 #New Method
