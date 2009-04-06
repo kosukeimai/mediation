@@ -10,15 +10,20 @@ library(Zelig)
 rm(list=ls())
 set.seed(3)
 
-setwd("~/Documents/Mediation Analysis/Local/mediation/mediation/R")
-#setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/R")
+#setwd("~/Documents/Mediation Analysis/Local/mediation/mediation/R")
+setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/R")
 source("binary.med.R")
 
-n <-  1000
+
+
+#Need to write out model with the interaction effect
+
+
+n <-  10000
 #Population Values
 alpha.2 <- .25
 alpha.3 <- .25
-beta.2 <- .25
+beta.2 <- 1
 beta.3 <- .25
 gamma <- .25
 kappa <- .25
@@ -69,7 +74,7 @@ cme[i,4]<-y.predict.m4[i]*m.def[i,4]
 #Average over the rows and then sum across the columns
 acme<-apply(cme,2,mean, na.rm=TRUE)
 delta <- sum(acme)
-delta
+print(delta)
 
 
 #Simulation Approach
@@ -80,6 +85,10 @@ ymodel <- lm(Y ~ T + M + X.1 + X.2)
 time.start <- Sys.time()
 mod.1 <- mediate.binary(mmodel, ymodel, sims=1000, boot=TRUE, T="T", M="M")
 print (round((Sys.time()-time.start),1))
+print(summary(mod.1))
+
+
+
 
 time.start <- Sys.time()
 mod.2 <- mediate.binary(mmodel, ymodel, sims=1000, T="T", M="M")
