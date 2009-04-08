@@ -599,7 +599,7 @@ if(is.factor(y.t.data[,paste(M)])==TRUE) {
 	tau.coef <- mean(tau)
 	tau.ci <- quantile(tau,c(.025,.975), na.rm=TRUE)
 	avg.delta <- (d0 + d1)/2
-	pct.dist <- abs(avg.delta/tau.coef)
+	pct.dist <- abs(avg.delta/tau)
 	pct.coef <- median(pct.dist)
 	pct.ci <- quantile(pct.dist,c(.025,.975), na.rm=TRUE)
 	z1 <- mean(zeta.1)	
