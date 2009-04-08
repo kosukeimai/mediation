@@ -332,7 +332,7 @@ for(i in 1:sims){
 	#rm(delta.1.tmp)
 	delta.0 <- t(as.matrix(apply(delta.0.tmp, 2, mean)));
 	#rm(delta.0.tmp)
-	tau <- (zeta.1 + delta.1)
+	tau <- (zeta.1 + delta.0 + zeta.0 + delta.1)/2
 
 #######################################################################
 	} else { #@@@@@@@@@@@@@@Nonparametric Bootstrap@@@@@@@@@@@@@@@@@@@
@@ -366,9 +366,12 @@ for(i in 1:sims){
 		index <- sample(1:n,n, repl=TRUE)
 		Call.M$data <- m.data[index,]
 		Call.Y.t$data <- y.t.data[index,]
+		
+		if(test=="polr"){
 		if(length(unique(y.t.data[index,M]))!=m){
 			cat("Insufficient Variation on Mediator")
 			break
+			}
 			}
 
 		#Refit Models with Resampled Data
@@ -420,10 +423,9 @@ for(i in 1:sims){
 			sigma <- summary(new.fit.M)$sigma
 				}		
 		error <- rnorm(n, mean=0, sd=sigma)
-		PredictM1 <- MModel %*% t(mmat.t)
-		PredictM0 <- MModel %*% t(mmat.c)
-		PredictM1 <- PredictM1 + error
-		PredictM0 <- PredictM0 + error
+		PredictM1 <- predict(new.fit.M, type="response", newdata=pred.data.t) + error
+		PredictM0 <- predict(new.fit.M, type="response", newdata=pred.data.c) + error
+
 		rm(error)
 		}
 		
@@ -587,12 +589,7 @@ if(is.factor(y.t.data[,paste(M)])==TRUE) {
 		zeta.0[b] <- mean(zeta.0.tmp)		
 		delta.1[b] <- mean(delta.1.tmp)
 		delta.0[b] <- mean(delta.0.tmp)
-		if(INT==TRUE){
-		tau[b] <- zeta.1[b] + delta.0[b]
-		} else {
-		tau[b] <- zeta.0[b] + delta.1[b]	
-			}
-		
+		tau[b] <- (zeta.1[b] + zeta.0[b] + delta.0[b] + delta.1[b])/2
 		} #bootstrap loop
 	} #nonpara boot branch
 	d0 <- mean(delta.0)
