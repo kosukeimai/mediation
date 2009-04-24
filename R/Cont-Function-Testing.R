@@ -8,6 +8,8 @@ set.seed(3)
 
 setwd("~/Documents/Mediation Analysis/Local/mediation/mediation/R")
 source("cont.med.R")
+source("binary.med.R")
+
 n <-  1000
 #Population Values
 alpha.2 <- .25
@@ -33,6 +35,7 @@ mod.2 <- mediate.cont(mmodel, model.y, sims=1000, T="T", M="M")
 summary(mod.1)
 summary(mod.2)
 
+
 #Mediation Effect
 mmodel$coef[2]*model.y$coef[3] 
 
@@ -53,7 +56,12 @@ beta.3
 #Total
 beta.3 + beta.2*gamma
 
+
+#########################################################
 #Test Relaxing No Interaction Assumption
+##########################################################
+
+
 T <- round(runif(n), 0)
 M <- alpha.2 + beta.2*T + beta.2*X.1 + beta.2*X.2 + rnorm(n)
 Y <-  alpha.3 + beta.3*T + gamma*M + kappa*T*M + beta.2*X.1 + beta.2*X.2 + rnorm(n)
@@ -63,6 +71,12 @@ model.y <- lm(Y ~ T + M + T:M + X.1 + X.2)
 
 mod.1 <- mediate.cont(mmodel, model.y, sims=1000, boot=TRUE, INT=TRUE, T="T", M="M")
 mod.2 <- mediate.cont(mmodel, model.y, sims=1000, INT=TRUE, T="T", M="M")
+
+summary(mod.1)
+summary(mod.2)
+
+mod.1 <- mediate.binary(mmodel, model.y, sims=1000, boot=TRUE, INT=TRUE, T="T", M="M")
+mod.2 <- mediate.binary(mmodel, model.y, sims=1000, INT=TRUE, T="T", M="M")
 
 summary(mod.1)
 summary(mod.2)

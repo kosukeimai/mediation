@@ -75,10 +75,10 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 	for(j in 1:sims){
 	if(is.factor(y.t.data[,paste(T)])==TRUE){
 	pred.data.t <- y.t.data
-	pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
+	pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
 	pred.data.t[,M] <- PredictM1[j,]
 	pred.data.c <- y.t.data
-	pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
+	pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
 	pred.data.c[,M] <- PredictM0[j,]
 			} else {
 	pred.data.t <- y.t.data
@@ -108,10 +108,10 @@ mediate.cont.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T
 	for(j in 1:sims){
 	if(is.factor(y.t.data[,paste(T)])==TRUE){
 	pred.data.t <- y.t.data
-	pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
+	pred.data.t[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
 	pred.data.t[,M] <- PredictM1[j,]
 	pred.data.c <- y.t.data
-	pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[1], levels = levels(y.t.data[,T])))
+	pred.data.c[,T] <- list(factor(unique(y.t.data[,T])[2], levels = levels(y.t.data[,T])))
 	pred.data.c[,M] <- PredictM0[j,]
 			} else {
 	pred.data.t <- y.t.data
