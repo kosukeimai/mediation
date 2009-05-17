@@ -127,7 +127,7 @@ if(INT==TRUE){
 	d1[i,] <- m.coefs[paste(T.cat),]*(y.coefs[paste(M),] + y.coefs[paste(int.lab),])
 	} else {
 		d0[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(M),]
-		d1 <- NULL 
+		d1 <- m.coefs[paste(T.cat),]*y.coefs[paste(M),] 
 		}
 
 #Save Variance Estimates
@@ -136,7 +136,7 @@ if(INT==TRUE){
 	d1.var[i,] <- (y.coefs[paste(M),] + y.coefs[paste(int.lab),])^2*v.m[T.cat,T.cat] + 	m.coefs[paste(T.cat),]^2*(v.y[M,M] + v.y[int.lab, int.lab] + 2*v.y[M, int.lab])
 	} else {
 	d0.var[i,] <- (m.coefs[paste(T.cat),]^2*v.y[M,M]) + (y.coefs[paste(M),]^2*v.m[T.cat,T.cat])
-	d1.var <- NULL
+	d1.var <- (m.coefs[paste(T.cat),]^2*v.y[M,M]) + (y.coefs[paste(M),]^2*v.m[T.cat,T.cat])
 		}
 		
 rm(b.sur, m.coefs, y.coefs, v.cov, v.m, v.y)
