@@ -1,8 +1,8 @@
-mediate.binary <- function(z, ...){
-	UseMethod("mediate.binary", z)
+mediate <- function(z, ...){
+	UseMethod("mediate", z)
 	}
 	
-mediate.binary.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T="treat.name", M="med.name", C=NULL){
+mediate.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T="treat.name", M="med.name", C=NULL){
 	B <- sims
 	model.m <- z
 	model.y.t <- model.y
