@@ -53,12 +53,35 @@ med.3 <- mediate(m.model, y.model, sims=1000, boot=TRUE, INT=TRUE, T="treat", M=
 
 summary(med.3)
 
+#Generalized additive model (GAM) for outcome allowing smoothing on the mediator
+a<-lm(depress2 ~ treat + depress1 +age+educ+sex+nonwhite+econ_hard+marital+occp+income, data=job)
+b <- lm(job_seek ~ treat + depress1 +age+educ+sex+nonwhite+econ_hard+marital+occp+income, data=job)
+c <- gam(depress2 ~ treat +s(job_seek, bs="cr")+ depress1+age+educ+sex+nonwhite+econ_hard+marital+occp+income , data=job)
+gam <- mediate.binary(b, c, sims=sims, boot=TRUE, T="treat", M="job_seek")
+summary(gam)
+
+
+
+#Quantile regression for outcome variable
+b <- lm(job_seek ~ treat + depress1 +age+educ+sex+nonwhite+econ_hard+marital+occp, data=job)
+c <- rq(depress2 ~ treat +job_seek+ depress1+age+educ+sex+nonwhite+econ_hard+marital+occp +income, data=job, tau=.5)
+
+
 
 #Binary Outcome
 y.model <- glm(work1 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, family=binomial(link="probit"), data=job)
 
-med.4 <- mediate(m.model, y.model, sims=1000, boot=TRUE, T="treat", M="job_seek")
+quantile <- mediate(m.model, y.model, sims=1000, boot=TRUE, T="treat", M="job_seek")
 
-summary(med.4)
+summary(quantile)
+
+
+#Ordinal Mediator
+
+b <- polr(job_disc ~ treat + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job, method="probit", Hess=TRUE)
+c <- lm(depress2 ~ treat + job_disc + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job)
+
+discrete<- mediate.binary(b, c, sims=1000, T="treat", M="job_disc")
+summary(discrete)
 
 } 
