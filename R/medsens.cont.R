@@ -43,6 +43,8 @@ d1 <- matrix(NA, length(rho), 1)
 d0.var <- matrix(NA, length(rho), 1)
 d1.var <- matrix(NA, length(rho), 1)
 
+
+
 for(i in 1:length(rho)){
 
 e.cor <- rho[i]
@@ -127,7 +129,7 @@ if(INT==TRUE){
 	d1[i,] <- m.coefs[paste(T.cat),]*(y.coefs[paste(M),] + y.coefs[paste(int.lab),])
 	} else {
 		d0[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(M),]
-		d1 <- m.coefs[paste(T.cat),]*y.coefs[paste(M),] 
+		d1[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(M),] 
 		}
 
 #Save Variance Estimates
@@ -136,7 +138,7 @@ if(INT==TRUE){
 	d1.var[i,] <- (y.coefs[paste(M),] + y.coefs[paste(int.lab),])^2*v.m[T.cat,T.cat] + 	m.coefs[paste(T.cat),]^2*(v.y[M,M] + v.y[int.lab, int.lab] + 2*v.y[M, int.lab])
 	} else {
 	d0.var[i,] <- (m.coefs[paste(T.cat),]^2*v.y[M,M]) + (y.coefs[paste(M),]^2*v.m[T.cat,T.cat])
-	d1.var <- (m.coefs[paste(T.cat),]^2*v.y[M,M]) + (y.coefs[paste(M),]^2*v.m[T.cat,T.cat])
+	d1.var[i,] <- (m.coefs[paste(T.cat),]^2*v.y[M,M]) + (y.coefs[paste(M),]^2*v.m[T.cat,T.cat])
 		}
 		
 rm(b.sur, m.coefs, y.coefs, v.cov, v.m, v.y)
@@ -159,13 +161,13 @@ ind.d0 <- as.numeric(lower.d0 < 0 & upper.d0 > 0)
 ind.d1 <- as.numeric(lower.d1 < 0 & upper.d1 > 0)
 		}
 
-out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1)
+out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL)
 class(out) <- "sens.c"
 out
 	}
 
 print.sens.c <- function(x, ...){
-	print(unlist(x[1:6]))
+	print(unlist(x[1:16]))
 	invisible(x)
 	}
 
@@ -173,7 +175,7 @@ summary.sens.c <- function(object)
 	structure(object, class = c("sum.sens.c", class(object)))
  
 print.sum.sens.c <- function(x, ...){
-	if(INT==FALSE){
+	if(x$INT==FALSE){
 	tab <- cbind(x$rho, round(x$err.cr,4), round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
 	tab <- tab[x$ind.d0==1, -6]
     colnames(tab) <-  c("Rho","Error Cor.", "Med. Eff.", "95% CI Lower", "95% CI Upper")
@@ -187,7 +189,6 @@ print.sum.sens.c <- function(x, ...){
 	tab.d0 <- tab.d0[x$ind==1, -6]
     colnames(tab.d0) <-  c("Rho","Error Cor.", "Med. Eff.", "95% CI Lower", "95% CI Upper")
     rownames(tab.d0) <- NULL
-   
     tab.d1 <- cbind(x$rho, round(x$err.cr,4), round(x$d1,4), round(x$lower.d1,4), round(x$upper.d1, 4), x$ind.d1)
 	tab.d1 <- tab[x$ind.d1==1, -6]
     colnames(tab.d1) <-  c("Rho","Error Cor.", "Med. Eff.", "95% CI Lower", "95% CI Upper")
@@ -201,23 +202,31 @@ print.sum.sens.c <- function(x, ...){
 			}
 	}
 
-plot.sens.c <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL, ...){
-	if(INT==FALSE){
+plot.sens.c <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL,...){
+	if(x$INT==FALSE){
 		plot(x$rho, x$d0, type="n", xlab="", ylab = "", main=main, xlim=xlim, ylim=ylim)
 		polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.d0, rev(x$upper.d0)), border=FALSE, col=8, lty=2)
-		lines(x$rho, x$delta, lty=1)
+		lines(x$rho, x$d0, lty=1)
 		abline(h=0)
-		abline(h=x$delta[96], lty=2)
 		abline(v=0)
 		title(xlab=expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
 		title(ylab = expression(paste("Average Mediation Effect: ", bar(delta))), cex.lab=.9)
+		if(x$DETAIL==TRUE){
+		abline(h=x$d0[96], lty=2)
+			} else {
+		abline(h=x$d0[10], lty=2)		
+				}
 		} else {
 		par(mfrow=c(1,2))
 		plot(x$rho, x$d0, type="n", xlab="", ylab = "", ylim = c(-.2,.2))
 		polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.d0, rev(x$upper.d0)), border=FALSE, col=8, lty=2)
 		lines(x$rho, x$d0, lty=1)
 		abline(h=0)
+		if(x$DETAIL==TRUE){
 		abline(h=x$d0[96], lty=2)
+			} else {
+		abline(h=x$d0[10], lty=2)		
+				}
 		abline(v=0)
 		title(xlab=expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
 		title(ylab = expression(paste("Average Mediation Effect: ", bar(delta[0]))), cex.lab=.9)
@@ -227,7 +236,11 @@ plot.sens.c <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL
 		polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.d1, rev(x$upper.d1)), border=FALSE, col=8, lty=2)
 		lines(rho, d1, lty=1)
 		abline(h=0)
+				if(x$DETAIL==TRUE){
 		abline(h=x$d1[96], lty=2)
+			} else {
+		abline(h=x$d1[10], lty=2)		
+				}
 		abline(v=0)
 		title(xlab=expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
 		title(ylab = expression(paste("Average Mediation Effect: ", bar(delta[1]))), cex.lab=.9)
