@@ -175,8 +175,8 @@ for(i in 1:sims){
 		}
 	
 	if(is.factor(y.t.data[,paste(M)])==TRUE) {
-		pred.data.t[,M] <- factor(PredictM1[j,], levels = levels(y.t.data[,M]))
-		pred.data.c[,M] <- factor(PredictM0[j,], levels = levels(y.t.data[,M]))
+		pred.data.t[,M] <- factor(PredictM1[j,], labels = levels(y.t.data[,M]))
+		pred.data.c[,M] <- factor(PredictM0[j,], labels = levels(y.t.data[,M]))
 		} else {
 	pred.data.t[,M] <- PredictM1[j,]
 	pred.data.c[,M] <- PredictM0[j,]
@@ -216,8 +216,8 @@ for(i in 1:sims){
 		} 
 		
 	if(is.factor(y.t.data[,paste(M)])==TRUE) {
-	pred.data.t[,M] <- factor(PredictM1[j,], levels = levels(y.t.data[,M]))
-	pred.data.c[,M] <- factor(PredictM0[j,], levels = levels(y.t.data[,M]))
+	pred.data.t[,M] <- factor(PredictM1[j,], labels = levels(y.t.data[,M]))
+	pred.data.c[,M] <- factor(PredictM0[j,], labels = levels(y.t.data[,M]))
 			} else {
 	pred.data.t[,M] <- PredictM1[j,]
 	pred.data.c[,M] <- PredictM0[j,]
@@ -259,8 +259,8 @@ for(i in 1:sims){
 	}
 	
 	if(is.factor(y.t.data[,paste(M)])==TRUE) {
-	pred.data.t[,M] <- factor(PredictM1[j,], levels = levels(y.t.data[,M]))
-	pred.data.c[,M] <- factor(PredictM1[j,], levels = levels(y.t.data[,M]))
+	pred.data.t[,M] <- factor(PredictM1[j,], labels = levels(y.t.data[,M]))
+	pred.data.c[,M] <- factor(PredictM1[j,], labels = levels(y.t.data[,M]))
 	} else {
 	pred.data.t[,M] <- PredictM1[j,]
 	pred.data.c[,M] <- PredictM1[j,]
@@ -300,8 +300,8 @@ for(i in 1:sims){
 		}
 	
 	if(is.factor(y.t.data[,paste(M)])==TRUE) {
-	pred.data.t[,M] <- factor(PredictM0[j,], levels = levels(y.t.data[,M]))
-	pred.data.c[,M] <- factor(PredictM0[j,], levels = levels(y.t.data[,M]))
+	pred.data.t[,M] <- factor(PredictM0[j,], labels = levels(y.t.data[,M]))
+	pred.data.c[,M] <- factor(PredictM0[j,], labels = levels(y.t.data[,M]))
 	} else {
 	pred.data.t[,M] <- PredictM0[j,]
 	pred.data.c[,M] <- PredictM0[j,]
@@ -451,8 +451,8 @@ for(i in 1:sims){
 		} 
 		
 	if(is.factor(y.t.data[,paste(M)])==TRUE) {
-			pred.data.t[,M] <- factor(PredictM1, levels = levels(y.t.data[,M]))
-			pred.data.c[,M] <- factor(PredictM0, levels = levels(y.t.data[,M]))
+			pred.data.t[,M] <- factor(PredictM1, labels = levels(y.t.data[,M]))
+			pred.data.c[,M] <- factor(PredictM0, labels = levels(y.t.data[,M]))
 		} else {
 			pred.data.t[,M] <- PredictM1
 			pred.data.c[,M] <- PredictM0
@@ -492,8 +492,8 @@ for(i in 1:sims){
 		} 
 
 if(is.factor(y.t.data[,paste(M)])==TRUE) {
-	pred.data.t[,M] <- factor(PredictM1, levels = levels(y.t.data[,M]))
-	pred.data.c[,M] <- factor(PredictM0, levels = levels(y.t.data[,M]))
+	pred.data.t[,M] <- factor(PredictM1, labels = levels(y.t.data[,M]))
+	pred.data.c[,M] <- factor(PredictM0, labels = levels(y.t.data[,M]))
 			} else {
 	pred.data.t[,M] <- PredictM1
 	pred.data.c[,M] <- PredictM0
@@ -533,8 +533,8 @@ if(is.factor(y.t.data[,paste(M)])==TRUE) {
 		} 
 
 		if(is.factor(y.t.data[,paste(M)])==TRUE) {
-	pred.data.t[,M] <- factor(PredictM1, levels = levels(y.t.data[,M]))
-	pred.data.c[,M] <- factor(PredictM1, levels = levels(y.t.data[,M]))
+	pred.data.t[,M] <- factor(PredictM1, labels = levels(y.t.data[,M]))
+	pred.data.c[,M] <- factor(PredictM1, labels = levels(y.t.data[,M]))
 			} else {
 	pred.data.t[,M] <- PredictM1
 	pred.data.c[,M] <- PredictM1
@@ -570,8 +570,8 @@ if(is.factor(y.t.data[,paste(M)])==TRUE) {
 		} 
 
 		if(is.factor(y.t.data[,paste(M)])==TRUE) {
-	pred.data.t[,M] <- factor(PredictM0, levels = levels(y.t.data[,M]))
-	pred.data.c[,M] <- factor(PredictM0, levels = levels(y.t.data[,M]))
+	pred.data.t[,M] <- factor(PredictM0, labels = levels(y.t.data[,M]))
+	pred.data.c[,M] <- factor(PredictM0, labels = levels(y.t.data[,M]))
 			} else {
 	pred.data.t[,M] <- PredictM0
 	pred.data.c[,M] <- PredictM0
