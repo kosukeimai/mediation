@@ -35,13 +35,13 @@ data(jobs)
 attach(jobs)
 
 
-#Recommended packages needed for below examples: MASS, AER, mgcv, quantreg
+#Required packages needed for below examples: MASS, AER, mgcv, quantreg
 
 
 ####################################################
 #Continuous Outcome - Continuous Mediator--Equivalent to Baron-Kenny
 ####################################################
-
+rm(list=ls())
 library(MASS)
 library(foreign)
 library(AER)
@@ -53,6 +53,12 @@ load("job.RData")
 setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/R")
 source("mediate.R")
 source("medsens.cont.R")
+
+
+
+####################################################
+#Continuous Outcome - Continuous Mediator--Equivalent to Baron-Kenny
+####################################################
 
 b <- lm(job_seek ~ treat + econ_hard + sex + age  + occp + marital + nonwhite + educ + income, data=job)
 c <- lm(depress2 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job)
@@ -87,10 +93,9 @@ summary(gam)
 
 #Effect Without No Interaction Assumption
 #Note, to make GAM play nice you have to create separate dummies for the treatment and control variables.
-#job$control<-as.numeric(job$treat=="control")
 b <- lm(job_seek ~ treat + depress1 +age+educ+sex+nonwhite+econ_hard+marital+occp+income, data=job)
 d3 <- gam(depress2 ~treat+ s(job_seek, by=control)+ s(job_seek, by=treat) + depress1 +age+educ+sex+nonwhite+econ_hard+marital+occp+income, data=job)
-gam.int <- mediate(b, d3, sims=100, boot=TRUE, T="treat", M="job_seek", C="control", INT=TRUE)
+gam.int <- mediate(b, d3, sims=10, boot=TRUE, T="treat", M="job_seek", C="control", INT=TRUE)
 summary(gam.int)
 
 #This creates nice plots of the effects as calculated in the GAM model
