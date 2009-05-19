@@ -107,7 +107,7 @@ summary(gam.int)
 
 b <- lm(job_seek ~ treat + depress1 +age+educ+sex+nonwhite+econ_hard+marital+occp+income, data=job)
 c <- rq(depress2 ~ treat +job_seek+ depress1+age+educ+sex+nonwhite+econ_hard+marital+occp +income, data=job, tau=.5)
-quantile<- mediate(b, c, sims=10, T="treat", M="job_disc")
+quantile<- mediate(b, c, sims=10, boot=TRUE, T="treat", M="job_seek")
 summary(quantile)
 
 
