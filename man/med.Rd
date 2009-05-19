@@ -35,7 +35,7 @@ data(jobs)
 attach(jobs)
 
 
-#Recommended packages needed for below examples: MASS, AER, Zelig, mgcv, quantreg
+#Recommended packages needed for below examples: MASS, AER, mgcv, quantreg
 
 
 ####################################################
@@ -56,7 +56,6 @@ summary(continuous_boot)
 #INTERACTION TERM BTWN TREATEMENT AND MEDIATOR IS INCLUDED IN THE MODEL
 b <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age  + occp + marital + nonwhite + educ + income, data=job)
 d <- lm(depress2 ~ treat + job_seek + treat:job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job)
-
 cont.int <- mediate(b, d, sims=10, INT=TRUE, T="treat", M="job_seek")
 summary(cont.int)
 cont.int.boot  <- mediate(b, d, sims=10, boot=TRUE, INT=TRUE, T="treat", M="job_seek")
@@ -68,23 +67,16 @@ summary(cont.int.boot)
 ######################################################
 #GAM: Estimation of quantities of interest using generalized additive models, GAM, for the outcome variable while smoothing over the mediator
 ######################################################
-
-
-
-#Initialize set of models
-a<-lm(depress2 ~ treat + depress1 +age+educ+sex+nonwhite+econ_hard+marital+occp+income, data=job)
+#Effect With No Interaction Assumption
 b <- lm(job_seek ~ treat + depress1 +age+educ+sex+nonwhite+econ_hard+marital+occp+income, data=job)
 c <- gam(depress2 ~ treat +s(job_seek, bs="cr")+ depress1+age+educ+sex+nonwhite+econ_hard+marital+occp+income , data=job)
-
-#Effect With No Interaction Assumption
 gam <- mediate(b, c, sims=10, boot=TRUE, T="treat", M="job_seek")
 summary(gam)
 
 #Effect Without No Interaction Assumption
 #Note, to make GAM play nice you have to create separate dummies for the treatment and control variables.
-job$control<-as.numeric(job$treat=="control")
+#job$control<-as.numeric(job$treat=="control")
 b <- lm(job_seek ~ treat + depress1 +age+educ+sex+nonwhite+econ_hard+marital+occp+income, data=job)
-
 d3 <- gam(depress2 ~treat+ s(job_seek, by=control)+ s(job_seek, by=treat) + depress1 +age+educ+sex+nonwhite+econ_hard+marital+occp+income, data=job)
 gam.int <- mediate(b, d3, sims=10, boot=TRUE, T="treat", M="job_seek", C="control", INT=TRUE)
 summary(gam.int)
@@ -127,8 +119,8 @@ summary(discrete)
 ######################################################
 #Binary Outcome
 ######################################################
-#job <- read.dta("Jobs-NoMiss-Binary.dta")
 
+b <- lm(job_seek ~ treat + depress1 +age+educ+sex+nonwhite+econ_hard+marital+occp+income, data=job)
 c <- glm(work1 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, family=binomial(link="probit"), data=job)
 binary <- mediate(b, c, sims=10, T="treat", M="job_seek")
 summary(binary)
