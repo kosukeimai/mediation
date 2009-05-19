@@ -36,23 +36,18 @@ attach(jobs)
 
 
 #Required packages needed for below examples: MASS, AER, mgcv, quantreg
-
-
-####################################################
-#Continuous Outcome - Continuous Mediator--Equivalent to Baron-Kenny
-####################################################
-rm(list=ls())
-library(MASS)
-library(foreign)
-library(AER)
-library(Zelig)
-library(mgcv)
-library(quantreg)
-setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/data")
-load("job.RData")
-setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/R")
-source("mediate.R")
-source("medsens.cont.R")
+#rm(list=ls())
+#library(MASS)
+#library(foreign)
+#library(AER)
+#library(Zelig)
+#library(mgcv)
+#library(quantreg)
+#setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/data")
+#load("job.RData")
+#setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/R")
+#source("mediate.R")
+#source("medsens.cont.R")
 
 
 
