@@ -44,6 +44,7 @@ d0.var <- matrix(NA, length(rho), 1)
 d1.var <- matrix(NA, length(rho), 1)
 
 
+#all of the above appears like it would be the case for cont-cont and cont-binary. So below would put something to trigger the below if two lm's.
 
 for(i in 1:length(rho)){
 
@@ -161,10 +162,23 @@ ind.d0 <- as.numeric(lower.d0 < 0 & upper.d0 > 0)
 ind.d1 <- as.numeric(lower.d1 < 0 & upper.d1 > 0)
 		}
 
+
 out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL)
 class(out) <- "sens.c"
 out
+
+
+#this appears to be where the cont-cont case ends, thought the } below is what closes the WHOLE function
+
+
 	}
+
+
+
+
+
+
+
 
 print.sens.c <- function(x, ...){
 	print(unlist(x[1:16]))
