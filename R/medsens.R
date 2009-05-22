@@ -177,7 +177,8 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
 
         #this is where the cont-cont case ends
     } else
-       
+ 
+ #Luke We never worked out the case with sensitivity analysis where there is an interaction between T and M. I suggest leaving the code as is but with a warning not to do this.      
     if(class(model.y)=="glm" & class(model.m)=="lm") {
         sims<-1000 #Luke, for the dichotomous outcome case the sims needs to be set. I do it within the function here but this be user specified so it can match the number of sims used with mediate.R
     
@@ -239,7 +240,7 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
                     #tau<-matrix(NA, length(rho), 1)
               
              
-                    
+                    #Luke -why do we have to set i here?
                     i <- 1
 
                             for(i in 1:length(rho)){
@@ -309,12 +310,13 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         upper.pr<-pr.ci[2,]
         lower.pr<-pr.ci[1,]
             }
+ #Luke -I have to create err.cr to get the summary to work. Can't figure out why.            
  err.cr <- matrix(1, length(rho), 1)
 
 
 out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL)
-
 #out <- list(rho = rho, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL)
+
 class(out) <- "sens.c"
 out
    
@@ -370,6 +372,8 @@ print.sum.sens.c <- function(x, ...){
       } else
         
      if(class(model.y)=="glm") {
+#Luke -for some reason I can only get the summary command to work by creating a vector for err.cr in the binary function above, and then include it in the printout below
+#Not sure why, can you try to fix this?
         if(x$INT==FALSE){
             tab <- cbind(x$rho, round(x$err.cr,4), round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
             tab <- tab[x$ind.d0==1, -6]

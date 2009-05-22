@@ -55,8 +55,7 @@ sens.cont <- medsens.cont(model.m, model.y, T="treat", M="job_seek", INT=FALSE, 
 sens.cont <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE)
 
 summary(sens.cont)
-#Why plotting sens.1?
-plot(sens.1, main="JOBS", ylim=c(-.2,.2))
+plot(sens.cont, main="JOBS", ylim=c(-.2,.2))
 
 #Estimate outcome and mediator models for continuous treatment and outcome
 model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job)
