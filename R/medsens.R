@@ -4,9 +4,25 @@ medsens <- function(z, ...){
     UseMethod("medsens", z)
     }
 
-medsens.cont.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE, DETAIL=TRUE)
+medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE, DETAIL=TRUE)
 {
 
+                #Sensitivity Parameter
+                if(DETAIL==TRUE){
+                    rho <- round(seq(-.99, .99, by = .01),2)    
+                    } else {
+                    rho <- round(seq(-.90, .90, by = .1),2)
+                        }
+                
+
+                
+    if(class(model.y)=="lm") {
+
+                d0 <- matrix(NA, length(rho), 1)
+                d1 <- matrix(NA, length(rho), 1)
+                d0.var <- matrix(NA, length(rho), 1)
+                d1.var <- matrix(NA, length(rho), 1)
+                
                 y.t.data <- model.frame(model.y)    
                 if(is.factor(y.t.data[,paste(T)])==TRUE){
                     cat.c <- levels(y.t.data[,T])[1] 
@@ -31,21 +47,10 @@ medsens.cont.default <- function(z, model.y, T="treat.name", M="med.name", INT=F
                         }
                 err.cr <- cor(model.m$resid, mod.y$resid)
                 
-                #Sensitivity Parameter
-                if(DETAIL==TRUE){
-                    rho <- round(seq(-.99, .99, by = .01),2)    
-                    } else {
-                    rho <- round(seq(-.90, .90, by = .1),2)
-                        }
-                
-                d0 <- matrix(NA, length(rho), 1)
-                d1 <- matrix(NA, length(rho), 1)
-                d0.var <- matrix(NA, length(rho), 1)
-                d1.var <- matrix(NA, length(rho), 1)
-                
-                
-                #all of the above appears like it would be the case for cont-cont and cont-binary. So below would put something to trigger the below if two lm's.
-    if(class(model.y[1])=="lm"){
+
+              
+             
+
                          
                 
                 for(i in 1:length(rho)){
@@ -170,12 +175,12 @@ medsens.cont.default <- function(z, model.y, T="treat.name", M="med.name", INT=F
                 out
 
 
-        #this appears to be where the cont-cont case ends
+        #this is where the cont-cont case ends
     }
-           
+         
    
-if(class(model.y[1])=="glm"){
-    sims<-1000 #the sims needs to be fixed
+if(class(model.y)=="glm"){
+    sims<-10 #the sims needs to be fixed
     
                     Mmodel.coef <- model.m$coef
                     m.k <- length(model.m$coef)
@@ -223,9 +228,17 @@ if(class(model.y[1])=="glm"){
                     ymat[,2] <- 0
                     eta3.X <- ydraws %*% t(ymat)
                     
-                    tau <- matrix(, nrow=length(ydraws), ncol=n.rho)
-                    d0 <- matrix(, nrow=length(ydraws), ncol=n.rho)
-                    d1 <- matrix(, nrow=length(ydraws), ncol=n.rho)
+                    tau <- matrix(, nrow=sims, ncol=length(rho))
+                    d0 <- matrix(, nrow=sims, ncol=length(rho))
+                    d1 <- matrix(, nrow=sims, ncol=length(rho))
+                    d.sum <- matrix(, nrow=sims, ncol=length(rho))
+
+                    #d0 <- matrix(NA, length(rho), 1)
+                    #d1 <- matrix(NA, length(rho), 1)
+                    #tau<-matrix(NA, length(rho), 1)
+              
+             
+                    
                     i <- 1
 
                             for(i in 1:length(rho)){
@@ -250,9 +263,9 @@ if(class(model.y[1])=="glm"){
 
         tau <- pnorm(alpha.1 + beta.1) - pnorm(alpha.1)
         
-        d0.ci <- apply(d0, 2, quantile, probs=c(0.025, 0.975))
-        d1.ci <- apply(d1, 2, quantile, probs=c(0.025, 0.975))
-        pr.ci <- apply(d.sum, 2, quantile, probs=c(0.025, 0.975))
+        d0.ci <- apply(d0, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
+        d1.ci <- apply(d1, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
+        pr.ci <- apply(d.sum, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
 
 
         
