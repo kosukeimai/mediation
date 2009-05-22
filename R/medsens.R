@@ -16,7 +16,7 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
                 
 
                 
-    if(class(model.y)=="lm") {
+    if(class(model.y)=="lm" & class(model.m)=="lm") {
 
                 d0 <- matrix(NA, length(rho), 1)
                 d1 <- matrix(NA, length(rho), 1)
@@ -176,11 +176,10 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
 
 
         #this is where the cont-cont case ends
-    }
-         
-   
-if(class(model.y)=="glm"){
-    sims<-10 #the sims needs to be fixed
+    } else
+       
+    if(class(model.y)=="glm" & class(model.m)=="lm") {
+        sims<-1000 #Luke, for the dichotomous outcome case the sims needs to be set. I do it within the function here but this be user specified so it can match the number of sims used with mediate.R
     
                     Mmodel.coef <- model.m$coef
                     m.k <- length(model.m$coef)
@@ -229,8 +228,10 @@ if(class(model.y)=="glm"){
                     eta3.X <- ydraws %*% t(ymat)
                     
                     tau <- matrix(, nrow=sims, ncol=length(rho))
-                    d0 <- matrix(, nrow=sims, ncol=length(rho))
-                    d1 <- matrix(, nrow=sims, ncol=length(rho))
+                    #d0 <- matrix(, nrow=sims, ncol=length(rho))
+                    #d1 <- matrix(, nrow=sims, ncol=length(rho))
+                    d0.tmp <- matrix(, nrow=sims, ncol=length(rho))
+                    d1.tmp <- matrix(, nrow=sims, ncol=length(rho))                    
                     d.sum <- matrix(, nrow=sims, ncol=length(rho))
 
                     #d0 <- matrix(NA, length(rho), 1)
@@ -257,50 +258,63 @@ if(class(model.y)=="glm"){
                                     t <- 1
                                     d1.covartemp <- pnorm((alpha3 + beta3*t + eta3.X + gamma*(alpha2.est + beta2.est + eta2.X))/sqrt(gamma^2*sigma.sq+2*gamma*rho[i]*sigma+1)) -pnorm((alpha3 + beta3*t + eta3.X + gamma*(alpha2.est + eta2.X))/sqrt(gamma^2*sigma.sq+2*gamma*rho[i]*sigma+1))
                                     
-                                    d0[,i] <- d0.tmp <- apply(d0.covartemp, 1, mean)
-                                    d1[,i] <- d1.tmp <- apply(d1.covartemp, 1, mean)
+                                    #d0[,i] <- d0.tmp <- apply(d0.covartemp, 1, mean)
+                                    #d1[,i] <- d1.tmp <- apply(d1.covartemp, 1, mean)
+                                    d0.tmp[,i] <- apply(d0.covartemp, 1, mean)
+                                    d1.tmp[,i] <- apply(d1.covartemp, 1, mean)
                             }
 
         tau <- pnorm(alpha.1 + beta.1) - pnorm(alpha.1)
         
-        d0.ci <- apply(d0, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
-        d1.ci <- apply(d1, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
+        #d0.ci <- apply(d0, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
+        #d1.ci <- apply(d1, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
+        #d.avg <- (d0 + d1)/2
+        #d.sum <- d.avg / tau       
+        #pr.ci <- apply(d.sum, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
+
+        d0.ci <- apply(d0.tmp, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
+        d1.ci <- apply(d1.tmp, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
+        d.avg <- (d0.tmp + d1.tmp)/2
+        d.sum <- d.avg / tau       
         pr.ci <- apply(d.sum, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
 
-
         
-        d.avg <- (d0 + d1)/2
-        d.sum <- d.avg / tau
+
         pr.med <- apply(d.sum, 2, mean)
         pr.ci <- apply(d.sum, 2, quantile, probs=c(0.025, 0.975))
 
-        d0 <- apply(d0,2,mean)
-        d1 <- apply(d1,2,mean) 
+        #d0 <- apply(d0.tmp,2,mean)
+        #d1 <- apply(d1.tmp,2,mean) 
 
+        d0 <- apply(d0.tmp,2,mean)
+        d1 <- apply(d1.tmp,2,mean)
 
         if(INT==TRUE){
-        upper.d0 <- d0.ci[2]
-        lower.d0 <- d0.ci[1]
+        upper.d0 <- d0.ci[2,]
+        lower.d0 <- d0.ci[1,]
         upper.d1 <- NULL
         lower.d1 <- NULL
         ind.d0 <- as.numeric(lower.d0 < 0 & upper.d0 > 0)
         ind.d1 <- NULL
-        upper.pr<-pr.ci[2]
-        lower.pr<-pr.ci[1]
+        upper.pr<-pr.ci[2,]
+        lower.pr<-pr.ci[1,]
           
             } else {
-        upper.d0 <-  d0.ci[2]
-        lower.d0 <-  d0.ci[1]
-        upper.d1 <-  d1.ci[2]
-        lower.d1 <-  d1.ci[1]   
+        upper.d0 <-  d0.ci[2,]
+        lower.d0 <-  d0.ci[1,]
+        upper.d1 <-  d1.ci[2,]
+        lower.d1 <-  d1.ci[1,]   
         ind.d0 <- as.numeric(lower.d0 < 0 & upper.d0 > 0)
         ind.d1 <- as.numeric(lower.d1 < 0 & upper.d1 > 0)
-        upper.pr<-pr.ci[2]
-        lower.pr<-pr.ci[1]
+        upper.pr<-pr.ci[2,]
+        lower.pr<-pr.ci[1,]
             }
+ err.cr <- matrix(1, length(rho), 1)
 
 
 out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL)
+
+#out <- list(rho = rho, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL)
 class(out) <- "sens.c"
 out
    
@@ -327,32 +341,63 @@ summary.sens.c <- function(object)
     structure(object, class = c("sum.sens.c", class(object)))
  
 print.sum.sens.c <- function(x, ...){
-    if(x$INT==FALSE){
-    tab <- cbind(x$rho, round(x$err.cr,4), round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
-    tab <- tab[x$ind.d0==1, -6]
-    colnames(tab) <-  c("Rho","Error Cor.", "Med. Eff.", "95% CI Lower", "95% CI Upper")
-    rownames(tab) <- NULL
-    cat("\nMediation Sensitivity Analysis\n")
-    cat("\nSensitivity Region\n\n")
-    print(tab)
-    invisible(x)    
-        } else {
-    tab.d0 <- cbind(x$rho, round(x$err.cr,4), round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
-    tab.d0 <- tab.d0[x$ind==1, -6]
-    colnames(tab.d0) <-  c("Rho","Error Cor.", "Med. Eff.", "95% CI Lower", "95% CI Upper")
-    rownames(tab.d0) <- NULL
-    tab.d1 <- cbind(x$rho, round(x$err.cr,4), round(x$d1,4), round(x$lower.d1,4), round(x$upper.d1, 4), x$ind.d1)
-    tab.d1 <- tab[x$ind.d1==1, -6]
-    colnames(tab.d1) <-  c("Rho","Error Cor.", "Med. Eff.", "95% CI Lower", "95% CI Upper")
-    rownames(tab.d1) <- NULL
-    cat("\nMediation Sensitivity Analysis\n")
-    cat("\nSensitivity Region: d0\n\n")
-    print(tab.d0)
-    cat("\nSensitivity Region: d1\n\n")
-    print(tab.d1)
-    invisible(x)        
+     if(class(model.y)=="lm") {
+        if(x$INT==FALSE){
+            tab <- cbind(x$rho, round(x$err.cr,4), round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
+            tab <- tab[x$ind.d0==1, -6]
+            colnames(tab) <-  c("Rho","Error Cor.", "Med. Eff.", "95% CI Lower", "95% CI Upper")
+            rownames(tab) <- NULL
+            cat("\nMediation Sensitivity Analysis\n")
+            cat("\nSensitivity Region\n\n")
+            print(tab)
+            invisible(x)    
+                } else {
+            tab.d0 <- cbind(x$rho, round(x$err.cr,4), round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
+            tab.d0 <- tab.d0[x$ind==1, -6]
+            colnames(tab.d0) <-  c("Rho","Error Cor.", "Med. Eff.", "95% CI Lower", "95% CI Upper")
+            rownames(tab.d0) <- NULL
+            tab.d1 <- cbind(x$rho, round(x$err.cr,4), round(x$d1,4), round(x$lower.d1,4), round(x$upper.d1, 4), x$ind.d1)
+            tab.d1 <- tab[x$ind.d1==1, -6]
+            colnames(tab.d1) <-  c("Rho","Error Cor.", "Med. Eff.", "95% CI Lower", "95% CI Upper")
+            rownames(tab.d1) <- NULL
+            cat("\nMediation Sensitivity Analysis\n")
+            cat("\nSensitivity Region: d0\n\n")
+            print(tab.d0)
+            cat("\nSensitivity Region: d1\n\n")
+            print(tab.d1)
+            invisible(x)        
             }
-    }
+      } else
+        
+     if(class(model.y)=="glm") {
+        if(x$INT==FALSE){
+            tab <- cbind(x$rho, round(x$err.cr,4), round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
+            tab <- tab[x$ind.d0==1, -6]
+            colnames(tab) <-  c("Rho","Error Cor.", "Med. Eff.", "95% CI Lower", "95% CI Upper")
+            rownames(tab) <- NULL
+            cat("\nMediation Sensitivity Analysis\n")
+            cat("\nSensitivity Region\n\n")
+            print(tab)
+            invisible(x)    
+                } else {
+            tab.d0 <- cbind(x$rho, round(x$err.cr,4), round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
+            tab.d0 <- tab.d0[x$ind==1, -6]
+            colnames(tab.d0) <-  c("Rho","Error Cor.", "Med. Eff.", "95% CI Lower", "95% CI Upper")
+            rownames(tab.d0) <- NULL
+            tab.d1 <- cbind(x$rho, round(x$err.cr,4), round(x$d1,4), round(x$lower.d1,4), round(x$upper.d1, 4), x$ind.d1)
+            tab.d1 <- tab[x$ind.d1==1, -6]
+            colnames(tab.d1) <-  c("Rho","Error Cor.", "Med. Eff.", "95% CI Lower", "95% CI Upper")
+            rownames(tab.d1) <- NULL
+            cat("\nMediation Sensitivity Analysis\n")
+            cat("\nSensitivity Region: d0\n\n")
+            print(tab.d0)
+            cat("\nSensitivity Region: d1\n\n")
+            print(tab.d1)
+            invisible(x)        
+            }
+     }
+        
+}
 
 plot.sens.c <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL,...){
     if(x$INT==FALSE){

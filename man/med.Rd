@@ -134,7 +134,7 @@ summary(discrete)
 
 b <- lm(job_seek ~ treat + depress1 +age+educ+sex+nonwhite+econ_hard+marital+occp+income, data=job)
 c <- glm(work1 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, family=binomial(link="probit"), data=job)
-binary <- mediate(b, c, sims=10, T="treat", M="job_seek")
+binary <- mediate(b, c, sims=1000, T="treat", M="job_seek")
 summary(binary)
 
 

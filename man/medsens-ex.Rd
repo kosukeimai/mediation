@@ -43,6 +43,8 @@ load("job.RData")
 setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/R")
 source("mediate.R")
 source("medsens.R")
+source("medsens.cont.R")
+
 #data(job)
 attach(job)
 
@@ -53,11 +55,13 @@ sens.cont <- medsens.cont(model.m, model.y, T="treat", M="job_seek", INT=FALSE, 
 sens.cont <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE)
 
 summary(sens.cont)
+#Why plotting sens.1?
 plot(sens.1, main="JOBS", ylim=c(-.2,.2))
 
 #Estimate outcome and mediator models for continuous treatment and outcome
 model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job)
 model.y <- glm(work1 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, family=binomial(link="probit"), data=job)
+
 sens.dich <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE)
 summary(sens.dich)
 plot(sens.dich, main="JOBS", ylim=c(-.2,.2))
