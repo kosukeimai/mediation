@@ -222,6 +222,8 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
                     #calculate eta1
                     eta.1 <- (eta3.tilde*sqrt(1 - rho12^2)) + ((eta2.est*rho12)/sigma)
                     
+                     #Luke-this appears to require that the first variable in the model for the outcome is T. We want to avoid this.                      
+
                     y.data <- model.frame(model.y)
                     ymat <- model.matrix(model.y, y.data)
                     ymat[,1] <- 0
@@ -242,7 +244,10 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
              
                     #Luke -why do we have to set i here?
                     i <- 1
-
+                        #Teppei-I think this is wrong...we need to loop over sims too..right?
+                        #Also, I think this messes up the way we are using the covars, bc eta2.X is quite what we want. Is the fix to also do eta2.X[k]?
+                    
+                        
                             for(i in 1:length(rho)){
                                     #Step 4 - Calculate Gamma
                                     gamma <- (-rho[i] + rho12*sqrt((1-rho[i]^2)/(1-rho12^2)))/sigma
@@ -264,7 +269,9 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
                                     d0.tmp[,i] <- apply(d0.covartemp, 1, mean)
                                     d1.tmp[,i] <- apply(d1.covartemp, 1, mean)
                             }
-
+                            
+                            
+    #This calculates various quantities of interest that are required for the summary and plot functions
         tau <- pnorm(alpha.1 + beta.1) - pnorm(alpha.1)
         
         #d0.ci <- apply(d0, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
@@ -321,6 +328,134 @@ class(out) <- "sens.c"
 out
    
   #this ends the binary portion   
+    } else 
+    
+    if(class(model.y)=="lm" & class(model.m)=="glm") {
+                    sims<-1000 #Luke, for the dichotomous outcome case the sims needs to be set. I do it within the function here but this be user specified so it can match the number of sims used with mediate.R
+    
+                    Mmodel.coef <- model.m$coef
+                    m.k <- length(model.m$coef)
+                    Mmodel.var.cov <- vcov(model.m)
+                    mdraws <- mvrnorm(sims, mu=Mmodel.coef, Sigma=Mmodel.var.cov)
+                    alpha2.est <- mdraws[,1]
+                    beta2.est <- mdraws[,2]
+                    eta2.est <- mdraws[,3:m.k]
+                    sigma <- rep(summary(model.m)$sigma, sims)
+                    sigma.sq <- sigma^2
+                    
+                    #General Eta.2 Quantity
+                    m.data <- model.frame(model.m)
+                    mmat <- model.matrix(model.m, m.data)
+                    mmat[,1] <- 0
+                    mmat[,2] <- 0
+                    eta2.X <-  mdraws %*% t(mmat)
+
+                    Ymodel.coef <- model.y$coef
+                    Ymodel.var.cov <- vcov(model.y)
+                    y.k <- length(Ymodel.coef)
+                    ydraws <- mvrnorm(sims, mu=Ymodel.coef, Sigma=Ymodel.var.cov)
+                    alpha3.tilde <- ydraws[,1]
+                    beta3.tilde <- ydraws[,T] #Luke-will it know to use T and M?
+                    gamma.tilde <- ydraws[,M]
+                    eta3.tilde <- ydraws[,4:y.k] #Dimension by extra covariates or use predict or what i use in binary code.
+                    
+                  #Luke-this appears to require that the first variable in the model for the outcome is T. We want to avoid this.                      
+                    y.data <- model.frame(model.y)
+                    ymat <- model.matrix(model.y, y.data)
+                    ymat[,1] <- 0
+                    ymat[,2] <- 0
+                    eta3.X <- ydraws %*% t(ymat)
+                    
+                    tau <- matrix(, nrow=sims, ncol=length(rho))
+                    #d0 <- matrix(, nrow=sims, ncol=length(rho))
+                    #d1 <- matrix(, nrow=sims, ncol=length(rho))
+                    d0.tmp <- matrix(, nrow=sims, ncol=length(rho))
+                    d1.tmp <- matrix(, nrow=sims, ncol=length(rho))                    
+                    d.sum <- matrix(, nrow=sims, ncol=length(rho))
+
+                    #d0 <- matrix(NA, length(rho), 1)
+                    #d1 <- matrix(NA, length(rho), 1)
+                    #tau<-matrix(NA, length(rho), 1)
+              
+             
+                    #Luke -why do we have to set i here?
+                    i <- 1
+
+
+                            for(i in 1:length(rho)){
+
+                                for(k in 1:sims){
+                                        t<-0
+                                        lambda_0<-lambda_f0(alpha.2[k], beta.2[k], eta.2[k], t, X.1)
+                                        lambda_1<-lambda_f1(alpha.2[k], beta.2[k], eta.2[k], t, X.1)
+                                        d0.tmp[k,i]<- mean( (gamma[k]+kappa[k]*t+rho[i]*sigma3[k]*(lambda_1-lambda_0))*(pnorm(alpha.2[k]+beta.2[k]+eta.2[k]*X.1)-pnorm(alpha.2[k]+eta.2[k]*X.1)) ) 
+                                        t<-1
+                                        lambda_0<-lambda_f0(alpha.2[k], beta.2[k], eta.2[k], t, X.1)
+                                        lambda_1<-lambda_f1(alpha.2[k], beta.2[k], eta.2[k], t, X.1)
+                                        d1.tmp[k,i]<- mean( (gamma[k]+kappa[k]*t+rho[i]*sigma3[k]*(lambda_1-lambda_0))*(pnorm(alpha.2[k]+beta.2[k]+eta.2[k]*X.1)-pnorm(alpha.2[k]+eta.2[k]*X.1)) ) 
+                                        
+                                        tau[k,i] <- mean(beta.3.tilde.storage[,i] + ((d0[,i] + d1[,i])/2))
+                                        }
+
+                            }
+                    
+                    
+                                          
+                                            #d0.ci <- apply(d0, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
+                                            #d1.ci <- apply(d1, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
+                                            #d.avg <- (d0 + d1)/2
+                                            #d.sum <- d.avg / tau       
+                                            #pr.ci <- apply(d.sum, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
+                                    
+                                            d0.ci <- apply(d0.tmp, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
+                                            d1.ci <- apply(d1.tmp, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
+                                            d.avg <- (d0.tmp + d1.tmp)/2
+                                            d.sum <- d.avg / tau       
+                                            pr.ci <- apply(d.sum, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
+                                    
+                                            
+                                    
+                                            pr.med <- apply(d.sum, 2, mean)
+                                            pr.ci <- apply(d.sum, 2, quantile, probs=c(0.025, 0.975))
+                                    
+                                            #d0 <- apply(d0.tmp,2,mean)
+                                            #d1 <- apply(d1.tmp,2,mean) 
+                                    
+                                            d0 <- apply(d0.tmp,2,mean)
+                                            d1 <- apply(d1.tmp,2,mean)
+                                    
+                                            if(INT==TRUE){
+                                            upper.d0 <- d0.ci[2,]
+                                            lower.d0 <- d0.ci[1,]
+                                            upper.d1 <- NULL
+                                            lower.d1 <- NULL
+                                            ind.d0 <- as.numeric(lower.d0 < 0 & upper.d0 > 0)
+                                            ind.d1 <- NULL
+                                            upper.pr<-pr.ci[2,]
+                                            lower.pr<-pr.ci[1,]
+                                              
+                                                } else {
+                                            upper.d0 <-  d0.ci[2,]
+                                            lower.d0 <-  d0.ci[1,]
+                                            upper.d1 <-  d1.ci[2,]
+                                            lower.d1 <-  d1.ci[1,]   
+                                            ind.d0 <- as.numeric(lower.d0 < 0 & upper.d0 > 0)
+                                            ind.d1 <- as.numeric(lower.d1 < 0 & upper.d1 > 0)
+                                            upper.pr<-pr.ci[2,]
+                                            lower.pr<-pr.ci[1,]
+                                                }
+                                     #Luke -I have to create err.cr to get the summary to work. Can't figure out why.            
+                                     err.cr <- matrix(1, length(rho), 1)
+                                    
+                                    
+                                    out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL)
+                                    #out <- list(rho = rho, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL)
+                                    
+                                    class(out) <- "sens.c"
+                                    out
+                    
+                        
+#this ends binary mediator part    
     }
 
 
