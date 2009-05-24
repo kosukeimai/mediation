@@ -3,7 +3,6 @@ medsens <- function(z, ...){
     }
 
 medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE, DETAIL=TRUE, nboot=1000)
-    #Luke, I think this argument should be "model.m" instead of "z"; otherwise the code would work only when the first argument is named "model.m"
 {
 
     #########################################################
@@ -166,7 +165,7 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         ind.d1 <- as.numeric(lower.d1 < 0 & upper.d1 > 0)
                 }
         
-        out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL)
+        out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, nboot=nboot)
         class(out) <- "sens.c"
         out
 
@@ -213,6 +212,7 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         Y.value <- y.t.data[,1]
         T.value <- y.t.data[,T]
         M.value <- y.t.data[,M]
+        y.k <- length(model.y$coef)
         
         # Step 1: Pre-loop computations
         # Step 1-1: Bootstrap M model parameters
@@ -242,8 +242,19 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         }
 
         # Step 2: Rho loop
+        ## Step 2-0: Initialize containers
+        d0 <- matrix(NA, length(rho), 1)
+        d1 <- matrix(NA, length(rho), 1)
+        Ymodel.coef.boot <- matrix(NA, nboot, y.k)
+        sigma.3.boot <- rep(NA, nboot)
+        d0.boot <- d1.boot <- rep(NA, nboot)
+        
+        ## START OF RHO LOOP
         for(i in 1:length(rho)){
+        
+            ## START OF BOOTSTRAP LOOP
             for(k in 1:nboot){
+            
             ## Step 2-1: Obtain the initial Y model with the correction term
             adj <- lambda(mmodel, Mmodel.coef.boot[k]) * rho[i]
             model.y.adj <- update(model.y, as.formula(paste(". ~ . + adj")))
@@ -259,104 +270,48 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
                 sigma.dif <- sigma.3.temp - sigma.3
                 sigma.3 <- sigma.3.temp
             }
-            Ymodel.coef.boot 
-
-        ## Work done up to here; below needs work
-Ymodel.coef <- y.update$coef
-Ymodel.var.cov <- vcov(y.update)
-
-
-            for(k in 1:nboot){
-                t<-0
-                lambda_0<-lambda_f0(alpha.2[k], beta.2[k], xi.2[k], t, X.1)
-                lambda_1<-lambda_f1(alpha.2[k], beta.2[k], xi.2[k], t, X.1)
-                d0.tmp[k,i]<- mean( (gamma[k]+kappa[k]*t+rho[i]*sigma3[k]*(lambda_1-lambda_0))*(pnorm(alpha.2[k]+beta.2[k]+xi.2[k]*X.1)-pnorm(alpha.2[k]+xi.2[k]*X.1)) ) 
-                t<-1
-                lambda_0<-lambda_f0(alpha.2[k], beta.2[k], xi.2[k], t, X.1)
-                lambda_1<-lambda_f1(alpha.2[k], beta.2[k], xi.2[k], t, X.1)
-                d1.tmp[k,i]<- mean( (gamma[k]+kappa[k]*t+rho[i]*sigma3[k]*(lambda_1-lambda_0))*(pnorm(alpha.2[k]+beta.2[k]+xi.2[k]*X.1)-pnorm(alpha.2[k]+xi.2[k]*X.1)) ) 
+            
+            ## Step 2-3: Bootstrap Y model parameters
+            Ymodel.coef <- y.update$coef
+            Ymodel.var.cov <- vcov(y.update)
+            Ymodel.coef.boot[k,] <- mvrnorm(1, mu=Ymodel.coef, Sigma=Ymodel.var.cov)
+            sig3.shape <- y.update$df/2
+            sig3.invscale <- (y.update$df/2) * sigma.3^2
+            sigma.3.boot[k] <- sqrt(1 / rgamma(1, shape = sig3.shape, scale = 1/sig3.invscale))
+            
+            ## Step 2-4: Bootstrap ACMEs
+            d0.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + rho[i]*sigma.3.boot[k]*(lambda10[,k] - lambda00[,k])) * 
+                (dnorm(mu.1.boot[,k]) - dnorm(mu.0.boot[,k])) )
+            if(INT==TRUE){
+                d1.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + Ymodel.coef.boot[k,TM.out] + rho[i]*sigma.3.boot[k]*(lambda11[,k] - lambda01[,k])) *
+                    (dnorm(mu.1,boot[,k]) - dnorm(mu.0.boot[,k])) )
+                } else {
+                d1.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + rho[i]*sigma.3.boot[k]*(lambda11[,k] - lambda01[,k])) *
+                    (dnorm(mu.1,boot[,k]) - dnorm(mu.0.boot[,k])) )
+                }
                 
-                tau[k,i] <- mean(beta.3.tilde.storage[,i] + ((d0[,i] + d1[,i])/2))
+            ## END OF BOOTSTAP LOOP
             }
+            
+        ## Step 2-5: Compute Outputs
+        d0[i] <- mean(d0.boot)
+        d1[i] <- mean(d1.boot)
+        err.cr <- NULL
+        upper.d0[i] <- quantile(d0.boot, 0.975)
+        upper.d1[i] <- quantile(d1.boot, 0.975)
+        lower.d0[i] <- quantile(d0.boot, 0.025)
+        lower.d1[i] <- quantile(d1.boot, 0.025)
+        ind.d0[i] <- as.numeric(lower.d0[i] < 0 & upper.d0[i] > 0)
+        ind.d1[i] <- as.numeric(lower.d1[i] < 0 & upper.d1[i] > 0)
+        
+        ## END OF RHO LOOP
         }
         
-        Ymodel.coef <- model.y$coef
-        Ymodel.var.cov <- vcov(model.y)
-        y.k <- length(Ymodel.coef)
-        ydraws <- mvrnorm(nboot, mu=Ymodel.coef, Sigma=Ymodel.var.cov)
-        alpha3.tilde <- ydraws[,1]
-        beta3.tilde <- ydraws[,T]
-        gamma.tilde <- ydraws[,M]
-        xi3.tilde <- ydraws[,4:y.k] #Dimension by extra covariates or use predict or what i use in binary code.
-        
-        #Luke-this appears to require that the first variable in the model for the outcome is T. We want to avoid this.                      
-        y.data <- model.frame(model.y)
-        ymat <- model.matrix(model.y, y.data)
-        ymat[,1] <- 0
-        ymat[,2] <- 0
-        xi3.X <- ydraws %*% t(ymat)
-        
-        tau <- matrix(, nrow=nboot, ncol=length(rho))
-        #d0 <- matrix(, nrow=nboot, ncol=length(rho))
-        #d1 <- matrix(, nrow=nboot, ncol=length(rho))
-        d0.tmp <- matrix(, nrow=nboot, ncol=length(rho))
-        d1.tmp <- matrix(, nrow=nboot, ncol=length(rho))                    
-        d.sum <- matrix(, nrow=nboot, ncol=length(rho))
-
-        #d0 <- matrix(NA, length(rho), 1)
-        #d1 <- matrix(NA, length(rho), 1)
-        #tau<-matrix(NA, length(rho), 1)
-    
-    
-        #d0.ci <- apply(d0, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
-        #d1.ci <- apply(d1, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
-        #d.avg <- (d0 + d1)/2
-        #d.sum <- d.avg / tau       
-        #pr.ci <- apply(d.sum, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
-
-        d0.ci <- apply(d0.tmp, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
-        d1.ci <- apply(d1.tmp, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
-        d.avg <- (d0.tmp + d1.tmp)/2
-        d.sum <- d.avg / tau       
-        pr.ci <- apply(d.sum, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
-
-        pr.med <- apply(d.sum, 2, mean)
-        pr.ci <- apply(d.sum, 2, quantile, probs=c(0.025, 0.975))
-
-        #d0 <- apply(d0.tmp,2,mean)
-        #d1 <- apply(d1.tmp,2,mean) 
-
-        d0 <- apply(d0.tmp,2,mean)
-        d1 <- apply(d1.tmp,2,mean)
-
-        if(INT==TRUE){
-            upper.d0 <- d0.ci[2,]
-            lower.d0 <- d0.ci[1,]
-            upper.d1 <- NULL
-            lower.d1 <- NULL
-            ind.d0 <- as.numeric(lower.d0 < 0 & upper.d0 > 0)
-            ind.d1 <- NULL
-            upper.pr<-pr.ci[2,]
-            lower.pr<-pr.ci[1,]
-            } else {
-                upper.d0 <-  d0.ci[2,]
-                lower.d0 <-  d0.ci[1,]
-                upper.d1 <-  d1.ci[2,]
-                lower.d1 <-  d1.ci[1,]   
-                ind.d0 <- as.numeric(lower.d0 < 0 & upper.d0 > 0)
-                ind.d1 <- as.numeric(lower.d1 < 0 & upper.d1 > 0)
-                upper.pr<-pr.ci[2,]
-                lower.pr<-pr.ci[1,]
-                }
-        #Luke -I have to create err.cr to get the summary to work. Can't figure out why.            
-        err.cr <- matrix(1, length(rho), 1)
-
-        out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL)
-        #out <- list(rho = rho, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL)
-
-        class(out) <- "sens.c"
+        # Step 3: Output
+        out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, nboot=nboot)
+        class(out) <- "sens.bm"
         out
-                            
+        
     ## END OF CASE 2: Continuous Outcome + Binary Mediator    
     }
     
