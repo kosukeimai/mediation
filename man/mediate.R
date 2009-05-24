@@ -138,5 +138,23 @@ binary <- mediate(b, c, sims=1000, T="treat", M="job_seek")
 summary(binary)
 
 
+#EXAMPLES USING SIMULATED ANSWERS
+H:\imai_methods\Mediation\CheckoutCVS\mediation\mediation\data
+load("sim.RData")
+load("sim.answers.RData")
+setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/R")
+source("mediate.R")
+
+b <- lm(M.cont ~ T+X.1, data=sim)
+c <- lm(Y.cont ~T+M.Cont+X.1, data=sim)
+cont-cont<-mediate(b,c)
+summary(cont-cont)
+
+b <- lm(M.cont ~ T+X.1, data=sim)
+c <- glm(Y.dich ~ T+M+X.1, family=binomial(link="probit"), data=sim)
+binary <- mediate(b, c, sims=1000, T="T", M="M.cont")
+summary(binary)
+
+sim.answers
 
 } 
