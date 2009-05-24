@@ -13,12 +13,12 @@ save(job,file="job.RData")
 #Generate simulation data for mediation function
 rm(list=ls())
 
-n<-5000
+n<-10000
 
 ALPHA.2 <- .25
 ALPHA.3 <- .25
 BETA.2 <- .25
-BETA.3 <- -.25
+BETA.3 <- .25
 GAMMA <- .25
 GAMMA.2 <- .25
 GAMMA.3 <- .5
@@ -41,7 +41,7 @@ e <- mvrnorm(n, rep(0,2), Sigma)
 X.1 <- rnorm(n)
 T <- round(runif(n), 0)
 M.cont <- ALPHA.2 + BETA.2*T + ETA.2*X.1 + e[,1]
-latentm <-  ALPHA.2 + BETA.2*T + ETA.2*X.1 + e[,2]
+latentm <-  ALPHA.2 + BETA.2*T + ETA.2*X.1 + e[,1]
 M.dich <- latentm
 M.dich[latentm <  0] <- 0
 M.dich[latentm >= 0] <- 1
@@ -60,10 +60,10 @@ M.ord.4<-as.numeric(M.ord==4)
 Y.cont <-  ALPHA.3 + BETA.3*T + GAMMA*M.cont + ETA.3*X.1+ e[,2]
 Y.ord <-  ALPHA.3 + BETA.3*T + GAMMA.2*M.ord.2+GAMMA.3*M.ord.3+GAMMA.4*M.ord.4 + ETA.3*X.1+ e[,2]
 
-latenty.dich <-  ALPHA.3 + BETA.3*T + GAMMA*M.dich + ETA.3*X.1+ e[,2]
-Y.dich <- latenty.dich
-Y.dich[latenty.dich <  0] <- 0
-Y.dich[latenty.dich >= 0] <- 1
+Y.dich.temp <-  ALPHA.3 + BETA.3*T + GAMMA*M.cont + ETA.3*X.1+ e[,2]
+Y.dich<-0
+Y.dich[Y.dich.temp  <  0] <- 0
+Y.dich[Y.dich.temp  >= 0] <- 1
 
 
 #Analytic answers
@@ -98,7 +98,7 @@ PROPMED<-ACME/TAU
 DichOutcomesAnswers<-cbind(ACME,TAU,PROPMED)
 
 ACME<-GAMMA*BETA.2
-TAU<-BETA.3
+TAU<-BETA.3+GAMMA*BETA.2
 ContContAnswers<-cbind(ACME,TAU)
 
 sim<-as.data.frame(cbind(T,X.1,M.cont,M.dich,M.ord,Y.cont,Y.dich,Y.ord))
