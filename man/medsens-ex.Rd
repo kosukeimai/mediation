@@ -62,14 +62,21 @@ model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age + occp + marit
 model.y <- glm(work1 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, family=binomial(link="probit"), data=job)
 
 sens.dichO <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE)
-summary(sens.dich)
-plot(sens.dich, main="JOBS", ylim=c(-.2,.2))
+summary(sens.dichO)
+plot(sens.dichO, main="JOBS", ylim=c(-.2,.2))
 
-#continuous outcome and binary mediator
+
+
+#continuous outcome and binary mediator w no interaction
+model.m <- glm(job_dich ~ treat + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job, family=binomial(link="probit"))
+model.y <- lm(depress2 ~ treat + job_dich  + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job)
+sens.dichM <- medsens(model.m, model.y, T="treat", M="job_dich", INT=FALSE,  DETAIL=FALSE)
+summary(sens.dichM)
+plot(sens.dichM, main="JOBS", ylim=c(-.2,.2))
+#continuous outcome and binary mediator w interaction
 model.m <- glm(job_dich ~ treat + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job, family=binomial(link="probit"))
 model.y <- lm(depress2 ~ treat + job_dich + treat:job_dich + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job)
-
-sens.dichM <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE)
+sens.dichM <- medsens(model.m, model.y, T="treat", M="job_dich", INT=TRUE,  DETAIL=FALSE)
 summary(sens.dichM)
 plot(sens.dichM, main="JOBS", ylim=c(-.2,.2))
 

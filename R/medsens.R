@@ -225,10 +225,10 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         m.mat.0[,T.out] <- 0
         mu.1.boot <- m.mat.1 %*% t(Mmodel.coef.boot) 
         mu.0.boot <- m.mat.0 %*% t(Mmodel.coef.boot) 
-        lambda11 <- apply(-mu.1,2,dnorm) / apply(mu.1,2,pnorm) #m=1,t=1
-        lambda10 <- apply(-mu.0,2,dnorm) / apply(mu.0,2,pnorm) #m=1,t=0
-        lambda01 <- -apply(-mu.1,2,dnorm) / apply(-mu.1,2,pnorm) #m=0,t=1
-        lambda00 <- -apply(-mu.0,2,dnorm) / apply(-mu.0,2,pnorm) #m=0,t=0
+        lambda11 <- apply(-mu.1.boot,2,dnorm) / apply(mu.1.boot,2,pnorm) #m=1,t=1
+        lambda10 <- apply(-mu.0.boot,2,dnorm) / apply(mu.0.boot,2,pnorm) #m=1,t=0
+        lambda01 <- -apply(-mu.1.boot,2,dnorm) / apply(-mu.1.boot,2,pnorm) #m=0,t=1
+        lambda00 <- -apply(-mu.0.boot,2,dnorm) / apply(-mu.0.boot,2,pnorm) #m=0,t=0
         
         # Step 1-3: Define lambda functions
         lambda <- function(mmodel, mcoef) {
@@ -245,6 +245,7 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         Ymodel.coef.boot <- matrix(NA, nboot, y.k)
         sigma.3.boot <- rep(NA, nboot)
         d0.boot <- d1.boot <- rep(NA, nboot)
+        adj <- rep(NA, nrow(y.t.data))
         
         ## START OF RHO LOOP
         for(i in 1:length(rho)){
@@ -253,7 +254,7 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
             for(k in 1:nboot){
             
             ## Step 2-1: Obtain the initial Y model with the correction term
-            adj <- lambda(mmodel, Mmodel.coef.boot[k]) * rho[i]
+            adj <- lambda(model.m, Mmodel.coef.boot[k,]) * rho[i]
             model.y.adj <- update(model.y, as.formula(paste(". ~ . + adj")))
             sigma.3 <- summary(model.y.adj)$sigma
             
