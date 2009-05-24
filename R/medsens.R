@@ -243,19 +243,19 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         upper.d0 <- upper.d1 <- lower.d0 <- lower.d1 <- matrix(NA, length(rho), 1)
         ind.d0 <- ind.d1 <- matrix(NA, length(rho), 1)
         Ymodel.coef.boot <- matrix(NA, nboot, y.k)
+        colnames(Ymodel.coef.boot) <- names(model.y$coef)
         sigma.3.boot <- rep(NA, nboot)
         d0.boot <- d1.boot <- rep(NA, nboot)
-        adj <- rep(NA, nrow(y.t.data))
         
         ## START OF RHO LOOP
         for(i in 1:length(rho)){
         
             ## START OF BOOTSTRAP LOOP
             for(k in 1:nboot){
-            
             ## Step 2-1: Obtain the initial Y model with the correction term
             adj <- lambda(model.m, Mmodel.coef.boot[k,]) * rho[i]
-            model.y.adj <- update(model.y, as.formula(paste(". ~ . + adj")))
+            y.t.data.adj <- data.frame(y.t.data, adj)
+            model.y.adj <- update(model.y, as.formula(paste(". ~ . + adj")), data=y.t.data.adj)
             sigma.3 <- summary(model.y.adj)$sigma
             
             ## Step 2-2: Update the Y model via Iterative OLS
@@ -263,18 +263,19 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
             sigma.dif <- 1
             while(abs(sigma.dif) > eps){
                 Y.star <- Y.value - sigma.3 * adj
-                model.y.update <- update(model.y, as.formula(paste("Y.star ~ .")))
+                y.t.data.star <- data.frame(Y.star, y.t.data[,-1])
+                model.y.update <- update(model.y, as.formula(paste("Y.star ~ .")), data=y.t.data.star)
                 sigma.3.temp <- summary(model.y.update)$sigma
                 sigma.dif <- sigma.3.temp - sigma.3
                 sigma.3 <- sigma.3.temp
             }
             
             ## Step 2-3: Bootstrap Y model parameters
-            Ymodel.coef <- y.update$coef
-            Ymodel.var.cov <- vcov(y.update)
+            Ymodel.coef <- model.y.update$coef
+            Ymodel.var.cov <- vcov(model.y.update)
             Ymodel.coef.boot[k,] <- mvrnorm(1, mu=Ymodel.coef, Sigma=Ymodel.var.cov)
-            sig3.shape <- y.update$df/2
-            sig3.invscale <- (y.update$df/2) * sigma.3^2
+            sig3.shape <- model.y.update$df/2
+            sig3.invscale <- (model.y.update$df/2) * sigma.3^2
             sigma.3.boot[k] <- sqrt(1 / rgamma(1, shape = sig3.shape, scale = 1/sig3.invscale))
             
             ## Step 2-4: Bootstrap ACMEs
@@ -282,10 +283,10 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
                 (dnorm(mu.1.boot[,k]) - dnorm(mu.0.boot[,k])) )
             if(INT==TRUE){
                 d1.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + Ymodel.coef.boot[k,TM.out] + rho[i]*sigma.3.boot[k]*(lambda11[,k] - lambda01[,k])) *
-                    (dnorm(mu.1,boot[,k]) - dnorm(mu.0.boot[,k])) )
+                    (dnorm(mu.1.boot[,k]) - dnorm(mu.0.boot[,k])) )
                 } else {
                 d1.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + rho[i]*sigma.3.boot[k]*(lambda11[,k] - lambda01[,k])) *
-                    (dnorm(mu.1,boot[,k]) - dnorm(mu.0.boot[,k])) )
+                    (dnorm(mu.1.boot[,k]) - dnorm(mu.0.boot[,k])) )
                 }
                 
             ## END OF BOOTSTAP LOOP
