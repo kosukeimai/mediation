@@ -210,8 +210,6 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         
         ## Variable values (LABEL.value)
         Y.value <- y.t.data[,1]
-        T.value <- y.t.data[,T]
-        M.value <- y.t.data[,M]
         y.k <- length(model.y$coef)
         
         # Step 1: Pre-loop computations
@@ -219,8 +217,6 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         Mmodel.coef <- model.m$coef
         Mmodel.var.cov <- vcov(model.m)
         Mmodel.coef.boot <- mvrnorm(nboot, mu=Mmodel.coef, Sigma=Mmodel.var.cov)
-        alpha2.boot <- Mmodel.coef.boot[,1]
-        beta2.boot <- Mmodel.coef.boot[,T]
         
         # Step 1-2: Bootstrap lambda_0 and lambda_1; lambdas are (n x nboot) matrix
         m.mat.1 <- model.matrix(model.m)
@@ -243,8 +239,9 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
 
         # Step 2: Rho loop
         ## Step 2-0: Initialize containers
-        d0 <- matrix(NA, length(rho), 1)
-        d1 <- matrix(NA, length(rho), 1)
+        d0 <- d1 <- matrix(NA, length(rho), 1)
+        upper.d0 <- upper.d1 <- lower.d0 <- lower.d1 <- matrix(NA, length(rho), 1)
+        ind.d0 <- ind.d1 <- matrix(NA, length(rho), 1)
         Ymodel.coef.boot <- matrix(NA, nboot, y.k)
         sigma.3.boot <- rep(NA, nboot)
         d0.boot <- d1.boot <- rep(NA, nboot)
@@ -296,7 +293,6 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         ## Step 2-5: Compute Outputs
         d0[i] <- mean(d0.boot)
         d1[i] <- mean(d1.boot)
-        err.cr <- NULL
         upper.d0[i] <- quantile(d0.boot, 0.975)
         upper.d1[i] <- quantile(d1.boot, 0.975)
         lower.d0[i] <- quantile(d0.boot, 0.025)
@@ -308,6 +304,7 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         }
         
         # Step 3: Output
+        err.cr <- NULL
         out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, nboot=nboot)
         class(out) <- "sens.bm"
         out
