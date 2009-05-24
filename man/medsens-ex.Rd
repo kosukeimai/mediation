@@ -48,7 +48,7 @@ source("medsens.cont.R")
 #data(job)
 attach(job)
 
-#Estimate outcome and mediator models for continuous treatment and outcome
+#continuous mediator and continuous outcome
 model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age  + occp + marital + nonwhite + educ + income, data=job)
 model.y <- lm(depress2 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job)
 sens.cont <- medsens.cont(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE)
@@ -57,13 +57,21 @@ sens.cont <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETA
 summary(sens.cont)
 plot(sens.cont, main="JOBS", ylim=c(-.2,.2))
 
-#Estimate outcome and mediator models for continuous treatment and outcome
+#binary outcome and continuous mediator
 model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job)
 model.y <- glm(work1 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, family=binomial(link="probit"), data=job)
 
-sens.dich <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE)
+sens.dichO <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE)
 summary(sens.dich)
 plot(sens.dich, main="JOBS", ylim=c(-.2,.2))
+
+#continuous outcome and binary mediator
+model.m <- glm(job_dich ~ treat + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job, family=binomial(link="probit"))
+model.y <- lm(depress2 ~ treat + job_dich + treat:job_dich + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job)
+
+sens.dichM <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE)
+summary(sens.dichM)
+plot(sens.dichM, main="JOBS", ylim=c(-.2,.2))
 
 
 } 
