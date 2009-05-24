@@ -139,19 +139,19 @@ summary(binary)
 
 
 #EXAMPLES USING SIMULATED ANSWERS
-H:\imai_methods\Mediation\CheckoutCVS\mediation\mediation\data
+setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/data")
 load("sim.RData")
 load("sim.answers.RData")
 setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/R")
 source("mediate.R")
 
 b <- lm(M.cont ~ T+X.1, data=sim)
-c <- lm(Y.cont ~T+M.Cont+X.1, data=sim)
-cont-cont<-mediate(b,c)
+c <- lm(Y.cont ~T+M.cont+X.1, data=sim)
+cont-cont<-mediate(b,c,sims=1000, T="T", M="M.cont")
 summary(cont-cont)
 
 b <- lm(M.cont ~ T+X.1, data=sim)
-c <- glm(Y.dich ~ T+M+X.1, family=binomial(link="probit"), data=sim)
+c <- glm(Y.dich ~ T+M.cont+X.1, family=binomial(link="probit"), data=sim)
 binary <- mediate(b, c, sims=1000, T="T", M="M.cont")
 summary(binary)
 
