@@ -9,8 +9,7 @@ setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/data")
 save(job,file="job.RData")
 
 
-
-#Generate simulation data for mediation function
+#Create global parameters and storage
 rm(list=ls())
 
 n<-10000
@@ -36,7 +35,7 @@ cov <- 0
 Sigma <- matrix(c(SIGMA.2^2,cov,cov,SIGMA.3^2), 2,2)
 e <- mvrnorm(n, rep(0,2), Sigma)
 
-
+#Non-Interaction
 #Generate Data
 X.1 <- rnorm(n)
 T <- round(runif(n), 0)
@@ -64,12 +63,48 @@ Y.dich.temp <-  ALPHA.3 + BETA.3*T + GAMMA*M.cont + ETA.3*X.1+ e[,2]
 Y.dich<-0
 Y.dich[Y.dich.temp  <  0] <- 0
 Y.dich[Y.dich.temp  >= 0] <- 1
-
 Y.cont.dich<-ALPHA.3 + BETA.3*T + GAMMA*M.dich + ETA.3*X.1+ e[,2]
 
 
+
+#Generate interaction data
+M.cont.T.int<-M.cont*T 
+M.dich.T.int<-M.dich*T
+M.ord.T.int.1<-M.ord.1*T
+M.ord.T.int.2<-M.ord.2*T
+M.ord.T.int.3<-M.ord.3*T
+M.ord.T.int.4<-M.ord.4*T
+
+
+Y.cont.int <-  ALPHA.3 + BETA.3*T + GAMMA*M.cont+ KAPPA*M.cont.T.int + ETA.3*X.1+ e[,2]
+Y.ord.int <-  ALPHA.3 + BETA.3*T + GAMMA.2*M.ord.2+GAMMA.3*M.ord.3+GAMMA.4*M.ord.4 + ETA.3*X.1+ e[,2]
+Y.dich.temp <-  ALPHA.3 + BETA.3*T + GAMMA*M.cont +KAPPA*M.cont.T.int+ ETA.3*X.1+ e[,2]
+Y.dich.int<-0
+Y.dich.int[Y.dich.temp  <  0] <- 0
+Y.dich.int[Y.dich.temp  >= 0] <- 1
+Y.cont.dich.int<-ALPHA.3 + BETA.3*T + GAMMA*M.dich + KAPPA*M.dich.T.int+ ETA.3*X.1+ e[,2]
+
+setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/data")
+sim<-as.data.frame(cbind(T,X.1,M.cont,M.dich,M.ord,Y.cont,Y.dich,Y.ord,Y.cont.int,Y.dich.int,Y.ord.int))
+save(sim,file="sim.RData")
+
+
+
+
 #Analytic answers
-#Dichotomous outcomes
+####################
+#Cont Mediator - Cont outcome 
+####################
+
+
+ACME<-GAMMA*BETA.2
+TAU<-BETA.3+GAMMA*BETA.2
+ContContAnswers<-cbind(ACME,TAU)
+
+
+####################
+#Dichotomous outcomes cont mediator
+####################
 IKY_DELTA<-function(alpha.2,alpha.3,beta.2,beta.3,gamma, eta.2, eta.3, X, sigma.2.sq) {
 std.scalar<-sqrt(sigma.2.sq*gamma^2+1)
 t<-0
@@ -99,18 +134,59 @@ TAU<-IKY_TAU(ALPHA.2,ALPHA.3,BETA.2,BETA.3,GAMMA, ETA.2, ETA.3, X.1, SIGMA.2.SQ)
 PROPMED<-ACME/TAU
 DichOutcomesAnswers<-cbind(ACME,TAU,PROPMED)
 
-#ACME<-mean(GAMMA*(pnorm(ALPHA.2+BETA.2+ETA.2*X.1)-pnorm(ALPHA.2+ETA.2*X.1)))
-ACME<-mean(GAMMA*(pnorm(-ALPHA.2-ETA.2*X.1)-pnorm(-ALPHA.2-BETA.2-ETA.2*X.1)))
+
+####################
+#Dichotomous Mediator - Cont outcome
+####################
+
+ACME<-mean(GAMMA*(pnorm(ALPHA.2+BETA.2+ETA.2*X.1)-pnorm(ALPHA.2+ETA.2*X.1)))
+#ACME<-mean(GAMMA*(pnorm(-ALPHA.2-ETA.2*X.1)-pnorm(-ALPHA.2-BETA.2-ETA.2*X.1))) #Li's expression
 TAU<-BETA.3+ACME
 PROPMED<-ACME/TAU
 DichMediatorAnswers<-cbind(ACME,TAU,PROPMED)
 
-ACME<-GAMMA*BETA.2
-TAU<-BETA.3+GAMMA*BETA.2
-ContContAnswers<-cbind(ACME,TAU)
 
-sim<-as.data.frame(cbind(T,X.1,M.cont,M.dich,M.ord,Y.cont,Y.dich,Y.ord))
-sim.answers<-cbind(DichOutcomesAnswers,DichMediatorAnswers,ContContAnswers)
-setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/data")
-save(sim,file="sim.RData")
+#INTERACTIONS
+
+####################
+#Cont Mediator - Cont outcome - Interaction
+####################
+
+delta.0<-BETA.2*(GAMMA+KAPPA)
+delta.1<-BETA.2*(GAMMA+KAPPA)
+
+TAU<-BETA.2*GAMMA+BETA.3+KAPPA*(ALPHA.2+BETA.2+ETA.2*mean(X.1))
+ContContAnswers.int<-cbind(delta.0,delta.1,TAU)
+
+
+
+####################
+#Dichotomous Mediator - Cont outcome - Interaction
+####################
+
+t<-0
+delta.0<- mean((GAMMA+KAPPA*t)*(pnorm(ALPHA.2+BETA.2+ETA.2*X.1)-pnorm(ALPHA.2+ETA.2*X.1)))
+t<-1
+delta.1<- mean((GAMMA+KAPPA*t)*(pnorm(ALPHA.2+BETA.2+ETA.2*X.1)-pnorm(ALPHA.2+ETA.2*X.1)))
+ACME<-(delta.0+delta.1)/2
+TAU<-BETA.3+ACME
+PROPMED<-ACME/TAU
+DichMediatorAnswers.int<-cbind(ACME,TAU,PROPMED)
+
+
+####################
+#Cont Mediator - Dict outcome - Interaction
+####################
+#must be done
+
+ACME<-1
+TAU<-1
+PROPMED<-ACME/TAU
+DichOutcomesAnswers.int<-cbind(ACME,TAU,PROPMED)
+
+
+
+
+
+sim.answers<-cbind(ContContAnswers,DichOutcomesAnswers,DichMediatorAnswers,ContContAnswers.int,DichOutcomesAnswers.int,DichMediatorAnswers.int)
 save(sim.answers,file="sim.answers.RData")
