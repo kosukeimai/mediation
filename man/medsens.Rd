@@ -50,7 +50,7 @@ source("medsens.cont.R")
 #data(job)
 attach(job)
 attach(sim)
-attach(sim.answers)
+
 
 #continuous mediator and continuous outcome
 model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age  + occp + marital + nonwhite + educ + income, data=job)
@@ -90,7 +90,7 @@ plot(sens.dichM.int, main="JOBS", ylim=c(-.2,.2))
 #Simulation Data
 ############################
 
-#No interaction
+#No interaction-checked
 model.m <- lm(M.cont ~ T+X.1, data=sim)
 model.y <- lm(Y.cont ~ T+M.cont+X.1, data=sim)
 cont.cont.sens <- medsens(model.m, model.y, sims=1000, T="T", M="M.cont")
@@ -101,15 +101,15 @@ summary(cont.cont)
 
 model.m <- lm(M.cont ~ T+X.1, data=sim)
 model.y <- glm(Y.dich ~ T+M.cont+X.1, family=binomial(link="probit"), data=sim)
-binary.outcome.sens <- medsens(model.m, model.y, sims=1000, T="T", M="M.cont")
+binary.outcome.sens <- medsens(model.m, model.y, sims=1000, T="T", M="M.cont",  DETAIL=FALSE)
 binary.outcome <- mediate(model.m, model.y, sims=1000, T="T", M="M.cont")
 summary(binary.outcome.sens)
 summary(binary.outcome)
 
 
 model.m  <- glm(M.dich ~ T+X.1, , family=binomial(link="probit"), data=sim)
-model.y  <- lm(Y.cont.dich.int ~ T+M.dich+X.1, data=sim)
-binary.mediator.sens <- medsens(model.m , model.y, T="T", M="M.dich", INT=FALSE,  DETAIL=FALSE)
+model.y  <- lm(Y.cont.dich ~ T+M.dich+X.1, data=sim)
+binary.mediator.sens <- medsens(model.m , model.y, sims=1000, T="T", M="M.dich", INT=FALSE,  DETAIL=FALSE)
 binary.mediator <-mediate(model.m, model.y, sims=1000, T="T", M="M.dich", INT=TRUE)
 summary(binary.mediator.sens)
 summary(binary.mediator)

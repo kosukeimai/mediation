@@ -12,7 +12,7 @@ save(job,file="job.RData")
 #Create global parameters and storage
 rm(list=ls())
 set.seed(1)
-n<-10000
+n<-4000
 
 ALPHA.2 <- .25
 ALPHA.3 <- .25
@@ -84,8 +84,9 @@ Y.dich.int[Y.dich.temp  <  0] <- 0
 Y.dich.int[Y.dich.temp  >= 0] <- 1
 Y.cont.dich.int<-ALPHA.3 + BETA.3*T + GAMMA*M.dich + KAPPA*M.dich.T.int+ ETA.3*X.1+ e[,2]
 
+
 setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/data")
-sim<-as.data.frame(cbind(T,X.1,M.cont,M.dich,M.ord,Y.cont,Y.dich,Y.ord,Y.cont.int,Y.dich.int,Y.ord.int,Y.cont.dich.int))
+sim<-as.data.frame(cbind(T,X.1,M.cont,M.dich,M.ord,Y.cont,Y.cont.dich,Y.dich,Y.ord,Y.cont.int,Y.dich.int,Y.ord.int,Y.cont.dich.int))
 save(sim,file="sim.RData")
 
 
