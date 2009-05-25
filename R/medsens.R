@@ -2,7 +2,7 @@ medsens <- function(z, ...){
     UseMethod("medsens", z)
     }
 
-medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE, DETAIL=TRUE, nboot=1000)
+medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE, DETAIL=TRUE, sims=1000)
 {
 
     #########################################################
@@ -165,7 +165,7 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         ind.d1 <- as.numeric(lower.d1 < 0 & upper.d1 > 0)
                 }
         
-        out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, nboot=nboot)
+        out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, sims=sims)
         class(out) <- "sens.c"
         out
 
@@ -216,9 +216,9 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         # Step 1-1: Bootstrap M model parameters
         Mmodel.coef <- model.m$coef
         Mmodel.var.cov <- vcov(model.m)
-        Mmodel.coef.boot <- mvrnorm(nboot, mu=Mmodel.coef, Sigma=Mmodel.var.cov)
+        Mmodel.coef.boot <- mvrnorm(sims, mu=Mmodel.coef, Sigma=Mmodel.var.cov)
         
-        # Step 1-2: Bootstrap lambda_0 and lambda_1; lambdas are (n x nboot) matrix
+        # Step 1-2: Bootstrap lambda_0 and lambda_1; lambdas are (n x sims) matrix
         m.mat.1 <- model.matrix(model.m)
         m.mat.1[,T.out] <- 1
         m.mat.0 <- model.matrix(model.m)
@@ -242,16 +242,16 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         d0 <- d1 <- matrix(NA, length(rho), 1)
         upper.d0 <- upper.d1 <- lower.d0 <- lower.d1 <- matrix(NA, length(rho), 1)
         ind.d0 <- ind.d1 <- matrix(NA, length(rho), 1)
-        Ymodel.coef.boot <- matrix(NA, nboot, y.k)
+        Ymodel.coef.boot <- matrix(NA, sims, y.k)
         colnames(Ymodel.coef.boot) <- names(model.y$coef)
-        sigma.3.boot <- rep(NA, nboot)
-        d0.boot <- d1.boot <- rep(NA, nboot)
+        sigma.3.boot <- rep(NA, sims)
+        d0.boot <- d1.boot <- rep(NA, sims)
         
         ## START OF RHO LOOP
         for(i in 1:length(rho)){
         
             ## START OF BOOTSTRAP LOOP
-            for(k in 1:nboot){
+            for(k in 1:sims){
             ## Step 2-1: Obtain the initial Y model with the correction term
             adj <- lambda(model.m, Mmodel.coef.boot[k,]) * rho[i]
             y.t.data.adj <- data.frame(y.t.data, adj)
@@ -307,7 +307,7 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         
         # Step 3: Output
         err.cr <- 1 # Just for now --- need to remove this value when summary func is fixed
-        out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, nboot=nboot)
+        out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, sims=sims)
         class(out) <- "sens.bm"
         out
         
@@ -321,11 +321,11 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         Mmodel.coef <- model.m$coef
         m.k <- length(model.m$coef)
         Mmodel.var.cov <- vcov(model.m)
-        mdraws <- mvrnorm(nboot, mu=Mmodel.coef, Sigma=Mmodel.var.cov)
+        mdraws <- mvrnorm(sims, mu=Mmodel.coef, Sigma=Mmodel.var.cov)
         alpha2.est <- mdraws[,1]
         beta2.est <- mdraws[,2]
         xi2.est <- mdraws[,3:m.k]
-        sigma <- rep(summary(model.m)$sigma, nboot)
+        sigma <- rep(summary(model.m)$sigma, sims)
         sigma.sq <- sigma^2
         
         #General xi.2 Quantity
@@ -338,7 +338,7 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         Ymodel.coef <- model.y$coef
         Ymodel.var.cov <- vcov(model.y)
         y.k <- length(Ymodel.coef)
-        ydraws <- mvrnorm(nboot, mu=Ymodel.coef, Sigma=Ymodel.var.cov)
+        ydraws <- mvrnorm(sims, mu=Ymodel.coef, Sigma=Ymodel.var.cov)
         alpha3.tilde <- ydraws[,1]
         beta3.tilde <- ydraws[,T] #Luke-will it know to use T and M?
         gamma.tilde <- ydraws[,M]
@@ -366,12 +366,12 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         ymat[,2] <- 0
         xi3.X <- ydraws %*% t(ymat)
         
-        tau <- matrix(, nrow=nboot, ncol=length(rho))
-        #d0 <- matrix(, nrow=nboot, ncol=length(rho))
-        #d1 <- matrix(, nrow=nboot, ncol=length(rho))
-        d0.tmp <- matrix(, nrow=nboot, ncol=length(rho))
-        d1.tmp <- matrix(, nrow=nboot, ncol=length(rho))                    
-        d.sum <- matrix(, nrow=nboot, ncol=length(rho))
+        tau <- matrix(, nrow=sims, ncol=length(rho))
+        #d0 <- matrix(, nrow=sims, ncol=length(rho))
+        #d1 <- matrix(, nrow=sims, ncol=length(rho))
+        d0.tmp <- matrix(, nrow=sims, ncol=length(rho))
+        d1.tmp <- matrix(, nrow=sims, ncol=length(rho))                    
+        d.sum <- matrix(, nrow=sims, ncol=length(rho))
 
         #d0 <- matrix(NA, length(rho), 1)
         #d1 <- matrix(NA, length(rho), 1)
@@ -380,7 +380,7 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
     
         #Luke -why do we have to set i here?
         i <- 1
-            #Teppei-I think this is wrong...we need to loop over nboot too..right?
+            #Teppei-I think this is wrong...we need to loop over sims too..right?
             #Also, I think this messes up the way we are using the covars, bc xi2.X is quite what we want. Is the fix to also do xi2.X[k]?
     
         for(i in 1:length(rho)){
