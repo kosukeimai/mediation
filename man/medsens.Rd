@@ -93,10 +93,12 @@ binary.outcome <- mediate(b, c, sims=1000, T="T", M="M.cont")
 summary(binary.outcome.sens)
 summary(binary.outcome)
 
+#Teppei use this case but set sims to like 1 so you can check summary part
 model.m  <- glm(M.dich ~ T+X.1, , family=binomial(link="probit"), data=sim)
 model.y  <- lm(Y.cont.dich.int ~ T+M.dich+T:M.dich+X.1)
-sens.dichM.int <- medsens(model.m, model.y, T="T", M="M.dich", INT=TRUE,  DETAIL=FALSE)
-binary.mediator <-mediate(b, c, sims=1000, T="T", M="M.dich", INT=TRUE)
+sens.dichM.int <- medsens(model.m, model.y, sims=1000, T="T", M="M.dich", INT=TRUE,  DETAIL=FALSE)
+summary(sens.dichM.int)
+binary.mediator.int <-mediate(model.m, model.y, sims=1000, T="T", M="M.dich", INT=TRUE)
 summary(binary.mediator.int)
 
 
