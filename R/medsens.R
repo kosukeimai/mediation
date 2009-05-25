@@ -306,20 +306,18 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         }
         
         # Step 3: Output
-        err.cr <- NULL
+        err.cr <- 1 # Just for now --- need to remove this value when summary func is fixed
         out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, nboot=nboot)
         class(out) <- "sens.bm"
         out
         
     ## END OF CASE 2: Continuous Outcome + Binary Mediator    
-    }
+    } else
     
     #########################################################
     ## CASE 3: Binary Outcome + Continuous Mediator
     #########################################################
     if(class(model.y)=="glm" & class(model.m)=="lm") {
-        nboot<-1000 #Luke, for the dichotomous outcome case the nboot needs to be set. I do it within the function here but this be user specified so it can match the number of nboot used with mediate.R
-
         Mmodel.coef <- model.m$coef
         m.k <- length(model.m$coef)
         Mmodel.var.cov <- vcov(model.m)
