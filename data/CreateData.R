@@ -85,7 +85,7 @@ Y.dich.int[Y.dich.temp  >= 0] <- 1
 Y.cont.dich.int<-ALPHA.3 + BETA.3*T + GAMMA*M.dich + KAPPA*M.dich.T.int+ ETA.3*X.1+ e[,2]
 
 setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/data")
-sim<-as.data.frame(cbind(T,X.1,M.cont,M.dich,M.ord,Y.cont,Y.dich,Y.ord,Y.cont.int,Y.dich.int,Y.ord.int))
+sim<-as.data.frame(cbind(T,X.1,M.cont,M.dich,M.ord,Y.cont,Y.dich,Y.ord,Y.cont.int,Y.dich.int,Y.ord.int,Y.cont.dich.int))
 save(sim,file="sim.RData")
 
 
@@ -99,7 +99,8 @@ save(sim,file="sim.RData")
 
 ACME<-GAMMA*BETA.2
 TAU<-BETA.3+GAMMA*BETA.2
-ContContAnswers<-cbind(ACME,TAU)
+PROPMED<-ACME/TAU
+ContContAnswers<-cbind(ACME,TAU,PROPMED)
 
 
 ####################
@@ -171,7 +172,7 @@ delta.1<- mean((GAMMA+KAPPA*t)*(pnorm(ALPHA.2+BETA.2+ETA.2*X.1)-pnorm(ALPHA.2+ET
 ACME<-(delta.0+delta.1)/2
 TAU<-BETA.3+ACME
 PROPMED<-ACME/TAU
-DichMediatorAnswers.int<-cbind(ACME,TAU,PROPMED)
+DichMediatorAnswers.int<-cbind(delta.0,delta.1,TAU,PROPMED)
 
 
 ####################
@@ -181,12 +182,14 @@ DichMediatorAnswers.int<-cbind(ACME,TAU,PROPMED)
 
 ACME<-1
 TAU<-1
+delta.0<-0
+delta.1<-1
 PROPMED<-ACME/TAU
-DichOutcomesAnswers.int<-cbind(ACME,TAU,PROPMED)
+DichOutcomesAnswers.int<-cbind(delta.0,delta.1,TAU,PROPMED)
 
 
+answertag<-"Order: cont-cont, dichO-contM, ContO-DichM, repeat but w interactions."
 
 
-
-sim.answers<-cbind(ContContAnswers,DichOutcomesAnswers,DichMediatorAnswers,ContContAnswers.int,DichOutcomesAnswers.int,DichMediatorAnswers.int)
+sim.answers<-t(cbind(answertag, ContContAnswers,DichOutcomesAnswers,DichMediatorAnswers,ContContAnswers.int,DichOutcomesAnswers.int,DichMediatorAnswers.int))
 save(sim.answers,file="sim.answers.RData")

@@ -161,7 +161,7 @@ binary.mediator <-mediate(b, c, sims=1000, T="T", M="M.dich")
 summary(binary.mediator)
 
 
-
+#Models w TxM interactions
 b <- lm(M.cont ~ T+X.1, data=sim)
 c <- lm(Y.cont.int ~T+M.cont+T:M.cont+X.1, data=sim)
 cont.cont.int<-mediate(b,c,sims=1000, T="T", M="M.cont", INT=TRUE)
