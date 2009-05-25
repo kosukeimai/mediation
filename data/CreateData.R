@@ -65,6 +65,8 @@ Y.dich<-0
 Y.dich[Y.dich.temp  <  0] <- 0
 Y.dich[Y.dich.temp  >= 0] <- 1
 
+Y.cont.dich<-ALPHA.3 + BETA.3*T + GAMMA*M.dich + ETA.3*X.1+ e[,2]
+
 
 #Analytic answers
 #Dichotomous outcomes
@@ -97,12 +99,18 @@ TAU<-IKY_TAU(ALPHA.2,ALPHA.3,BETA.2,BETA.3,GAMMA, ETA.2, ETA.3, X.1, SIGMA.2.SQ)
 PROPMED<-ACME/TAU
 DichOutcomesAnswers<-cbind(ACME,TAU,PROPMED)
 
+#ACME<-mean(GAMMA*(pnorm(ALPHA.2+BETA.2+ETA.2*X.1)-pnorm(ALPHA.2+ETA.2*X.1)))
+ACME<-mean(GAMMA*(pnorm(-ALPHA.2-ETA.2*X.1)-pnorm(-ALPHA.2-BETA.2-ETA.2*X.1)))
+TAU<-BETA.3+ACME
+PROPMED<-ACME/TAU
+DichMediatorAnswers<-cbind(ACME,TAU,PROPMED)
+
 ACME<-GAMMA*BETA.2
 TAU<-BETA.3+GAMMA*BETA.2
 ContContAnswers<-cbind(ACME,TAU)
 
 sim<-as.data.frame(cbind(T,X.1,M.cont,M.dich,M.ord,Y.cont,Y.dich,Y.ord))
-sim.answers<-cbind(DichOutcomesAnswers,ContContAnswers)
+sim.answers<-cbind(DichOutcomesAnswers,DichMediatorAnswers,ContContAnswers)
 setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/data")
 save(sim,file="sim.RData")
 save(sim.answers,file="sim.answers.RData")

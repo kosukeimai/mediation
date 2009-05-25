@@ -147,13 +147,18 @@ source("mediate.R")
 
 b <- lm(M.cont ~ T+X.1, data=sim)
 c <- lm(Y.cont ~T+M.cont+X.1, data=sim)
-cont-cont<-mediate(b,c,sims=1000, T="T", M="M.cont")
-summary(cont-cont)
+cont.cont<-mediate(b,c,sims=1000, T="T", M="M.cont")
+summary(cont.cont)
 
 b <- lm(M.cont ~ T+X.1, data=sim)
 c <- glm(Y.dich ~ T+M.cont+X.1, family=binomial(link="probit"), data=sim)
-binary <- mediate(b, c, sims=1000, T="T", M="M.cont")
-summary(binary)
+binary.outcome <- mediate(b, c, sims=1000, T="T", M="M.cont")
+summary(binary.outcome)
+
+b <- glm(M.dich ~ T+X.1, , family=binomial(link="probit"), data=sim)
+c <- lm(Y.cont.dich ~ T+M.dich+X.1)
+binary.mediator <-mediate(b, c, sims=1000, T="T", M="M.dich")
+summary(binary.mediator)
 
 sim.answers
 
