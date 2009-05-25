@@ -41,6 +41,7 @@ library(quantreg)
 setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/data")
 load("job.RData")
 load("sim.RData")
+load("sim.answers.RData")
 setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/R")
 source("mediate.R")
 source("medsens.R")
@@ -49,6 +50,7 @@ source("medsens.cont.R")
 #data(job)
 attach(job)
 attach(sim)
+attach(sim.answers)
 
 #continuous mediator and continuous outcome
 model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age  + occp + marital + nonwhite + educ + income, data=job)
@@ -84,29 +86,40 @@ sens.dichM.int <- medsens(model.m, model.y, T="treat", M="job_dich", INT=TRUE,  
 summary(sens.dichM.int)
 plot(sens.dichM.int, main="JOBS", ylim=c(-.2,.2))
 
-
+############################3
 #Simulation Data
+############################
+
 #No interaction
 model.m <- lm(M.cont ~ T+X.1, data=sim)
+model.y <- lm(Y.cont ~ T+M.cont+X.1, data=sim)
+cont.cont.sens <- medsens(model.m, model.y, sims=1000, T="T", M="M.cont")
+cont.cont <- mediate(model.m, model.y, sims=1000, T="T", M="M.cont")
+summary(cont.cont.sens)
+summary(cont.cont)
+
+
+model.m <- lm(M.cont ~ T+X.1, data=sim)
 model.y <- glm(Y.dich ~ T+M.cont+X.1, family=binomial(link="probit"), data=sim)
-binary.outcome.sens <- medsens(b, c, sims=1000, T="T", M="M.cont")
-binary.outcome <- mediate(b, c, sims=1000, T="T", M="M.cont")
+binary.outcome.sens <- medsens(model.m, model.y, sims=1000, T="T", M="M.cont")
+binary.outcome <- mediate(model.m, model.y, sims=1000, T="T", M="M.cont")
 summary(binary.outcome.sens)
 summary(binary.outcome)
 
 
 model.m  <- glm(M.dich ~ T+X.1, , family=binomial(link="probit"), data=sim)
-model.y  <- lm(Y.cont.dich.int ~ T+M.dich+X.1)
-sens.dichM <- medsens(model.m , model.y, T="T", M="M.dich", INT=FALSE,  DETAIL=FALSE)
+model.y  <- lm(Y.cont.dich.int ~ T+M.dich+X.1, data=sim)
+binary.mediator.sens <- medsens(model.m , model.y, T="T", M="M.dich", INT=FALSE,  DETAIL=FALSE)
 binary.mediator <-mediate(model.m, model.y, sims=1000, T="T", M="M.dich", INT=TRUE)
+summary(binary.mediator.sens)
+summary(binary.mediator)
 
 
-#Teppei use this case but set sims to like 1 so you can check summary part
 #interaction
 model.m  <- glm(M.dich ~ T+X.1, , family=binomial(link="probit"), data=sim)
 model.y  <- lm(Y.cont.dich.int ~ T+M.dich+T:M.dich+X.1)
 sens.dichM.int <- medsens(model.m, model.y, sims=1000, T="T", M="M.dich", INT=TRUE,  DETAIL=FALSE)
-summary(sens.dichM.int)
+summary(binary.mediator.sens.int)
 binary.mediator.int <-mediate(model.m, model.y, sims=1000, T="T", M="M.dich", INT=TRUE)
 summary(binary.mediator.int)
 

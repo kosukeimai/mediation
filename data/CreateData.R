@@ -11,7 +11,7 @@ save(job,file="job.RData")
 
 #Create global parameters and storage
 rm(list=ls())
-
+set.seed(1)
 n<-10000
 
 ALPHA.2 <- .25
