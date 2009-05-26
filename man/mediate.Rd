@@ -174,7 +174,7 @@ summary(binary.outcome.int)
 
 b <- glm(M.dich ~ T+X.1, , family=binomial(link="probit"), data=sim)
 c <- lm(Y.cont.dich.int ~ T+M.dich+T:M.dich+X.1)
-binary.mediator <-mediate(b, c, sims=1000, T="T", M="M.dich", INT=TRUE)
+binary.mediator.int <-mediate(b, c, sims=1000, T="T", M="M.dich", INT=TRUE)
 summary(binary.mediator.int)
 
 sim.answers
