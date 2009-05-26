@@ -2,7 +2,7 @@ medsens <- function(z, ...){
     UseMethod("medsens", z)
     }
 
-medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE, DETAIL=TRUE, sims=1000)
+medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE, DETAIL=FALSE, sims=1000)
 {
 
     #########################################################
@@ -476,7 +476,7 @@ print.sum.sens <- function(x, ...){
             print(tab.d1)
             invisible(x)        
             }
-	} else if(x$type=="bm") {
+    } else if(x$type=="bm") {
         if(x$INT==FALSE){
             tab <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
             tab <- tab[x$ind.d0==1, -5]
@@ -503,7 +503,31 @@ print.sum.sens <- function(x, ...){
             invisible(x)        
             }
         } else if(x$type=="bo") {
-     cat("COMING SOON!!!")
+        if(x$INT==FALSE){
+            tab <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
+            tab <- tab[x$ind.d0==1, -5]
+            colnames(tab) <-  c("Rho", "Med. Eff.", "95% CI Lower", "95% CI Upper")
+            rownames(tab) <- NULL
+            cat("\nMediation Sensitivity Analysis\n")
+            cat("\nSensitivity Region\n\n")
+            print(tab)
+            invisible(x)    
+                } else {
+            tab.d0 <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
+            tab.d0 <- tab.d0[x$ind==1, -5]
+            colnames(tab.d0) <-  c("Rho","Med. Eff.", "95% CI Lower", "95% CI Upper")
+            rownames(tab.d0) <- NULL
+            tab.d1 <- cbind(x$rho, round(x$d1,4), round(x$lower.d1,4), round(x$upper.d1, 4), x$ind.d1)
+            tab.d1 <- tab[x$ind.d1==1, -5]
+            colnames(tab.d1) <-  c("Rho","Med. Eff.", "95% CI Lower", "95% CI Upper")
+            rownames(tab.d1) <- NULL
+            cat("\nMediation Sensitivity Analysis\n")
+            cat("\nSensitivity Region: d0\n\n")
+            print(tab.d0)
+            cat("\nSensitivity Region: d1\n\n")
+            print(tab.d1)
+            invisible(x)        
+            }
      }
         
 }
