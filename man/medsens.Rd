@@ -90,7 +90,7 @@ plot(sens.dichM.int, main="JOBS", ylim=c(-.2,.2))
 #Simulation Data
 ############################
 
-#No interaction-checked
+#No interaction-only binmed sens does not work and match analytical
 model.m <- lm(M.cont ~ T+X.1, data=sim)
 model.y <- lm(Y.cont ~ T+M.cont+X.1, data=sim)
 cont.cont.sens <- medsens(model.m, model.y, sims=1000, T="T", M="M.cont")
@@ -118,7 +118,7 @@ summary(binary.mediator)
 #interaction
 model.m  <- glm(M.dich ~ T+X.1, , family=binomial(link="probit"), data=sim)
 model.y  <- lm(Y.cont.dich.int ~ T+M.dich+T:M.dich+X.1)
-sens.dichM.int <- medsens(model.m, model.y, sims=1000, T="T", M="M.dich", INT=TRUE,  DETAIL=FALSE)
+binary.mediator.sens.int <- medsens(model.m, model.y, sims=1000, T="T", M="M.dich", INT=TRUE,  DETAIL=FALSE)
 summary(binary.mediator.sens.int)
 binary.mediator.int <-mediate(model.m, model.y, sims=1000, T="T", M="M.dich", INT=TRUE)
 summary(binary.mediator.int)
