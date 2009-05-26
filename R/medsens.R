@@ -306,8 +306,7 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         }
         
         # Step 3: Output
-        err.cr <- 1 # Just for now --- need to remove this value when summary func is fixed
-        out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, sims=sims)
+        out <- list(rho = rho, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, sims=sims)
         class(out) <- "sens.bm"
         out
         
@@ -318,147 +317,120 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
     ## CASE 3: Binary Outcome + Continuous Mediator
     #########################################################
     if(class(model.y)=="glm" & class(model.m)=="lm") {
+        
+        # Step 0: Setting Variable labels
+        ## Uppercase letters (e.g. T) = labels in the input matrix
+        ## Uppercase letters + ".out" (e.g. T.out) = labels in the regression output
+        
+        y.t.data <- model.frame(model.y)
+        Y <- colnames(y.t.data)[1]
+        if(is.factor(y.t.data[,T])==TRUE){
+            cat.c <- levels(y.t.data[,T])[1] 
+            cat.t <- levels(y.t.data[,T])[2]
+            T.out <- paste(T,cat.t, sep="") 
+            } else {
+            cat.c <- NULL
+            cat.t <- NULL
+            T.out <- paste(T,cat.t, sep="")
+            }
+        
+        if(is.factor(y.t.data[,M])==TRUE){
+            cat.m0 <- levels(y.t.data[,M])[1] 
+            cat.m1 <- levels(y.t.data[,M])[2]
+            M.out <- paste(M,cat.m1, sep="") 
+            } else {
+            cat.m0 <- NULL
+            cat.m1 <- NULL
+            M.out <- paste(M,cat.m1, sep="")
+            }
+        
+        if(INT==TRUE){
+        TM <- paste(T,M, sep=":")
+        TM.out <- paste(T.out,M.out, sep=":")
+            }
+        
+        # Step 1: Obtain Model Parameters
+        ## Step 1-1: Bootstrap M model parameters
         Mmodel.coef <- model.m$coef
         m.k <- length(model.m$coef)
         Mmodel.var.cov <- vcov(model.m)
-        mdraws <- mvrnorm(sims, mu=Mmodel.coef, Sigma=Mmodel.var.cov)
-        alpha2.est <- mdraws[,1]
-        beta2.est <- mdraws[,2]
-        xi2.est <- mdraws[,3:m.k]
-        sigma <- rep(summary(model.m)$sigma, sims)
-        sigma.sq <- sigma^2
+        Mmodel.coef.boot <- mvrnorm(sims, mu=Mmodel.coef, Sigma=Mmodel.var.cov)
+        beta2.boot <- Mmodel.coef.boot[,T]
         
-        #General xi.2 Quantity
-        m.data <- model.frame(model.m)
-        mmat <- model.matrix(model.m, m.data)
-        mmat[,1] <- 0
-        mmat[,2] <- 0
-        xi2.X <-  mdraws %*% t(mmat)
-
+        sigma.2 <- summary(model.m)$sigma
+        sig2.shape <- model.m$df/2
+        sig2.invscale <- (model.m$df/2) * sigma.2^2
+        sigma.2.boot <- sqrt(1 / rgamma(sims, shape = sig2.shape, scale = 1/sig2.invscale))
+        
+        ## Step 1-2: Bootstrap Y model parameters
         Ymodel.coef <- model.y$coef
         Ymodel.var.cov <- vcov(model.y)
         y.k <- length(Ymodel.coef)
-        ydraws <- mvrnorm(sims, mu=Ymodel.coef, Sigma=Ymodel.var.cov)
-        alpha3.tilde <- ydraws[,1]
-        beta3.tilde <- ydraws[,T] #Luke-will it know to use T and M?
-        gamma.tilde <- ydraws[,M]
-        xi3.tilde <- ydraws[,4:y.k] #Dimension by extra covariates or use predict or what i use in binary code.
-            
-        ###############################################
-        # Calculations Start Here
-        #Step 2 - Estimate Error Correlation from inconsistent estimate of Y on M
-        rho12 <- (sigma*gamma.tilde)/(sqrt(sigma.sq*gamma.tilde^2+1))
-        
-        #Step 2 - Calculate Alpha_1
-        alpha.1 <- alpha3.tilde*sqrt(1 - rho12^2) + (alpha2.est*rho12)/sigma
-        
-        #Step 3 - Calculate Beta_1
-        beta.1 <- beta3.tilde*sqrt(1 - rho12^2) + (beta2.est*rho12)/sigma
-        
-        #calculate xi1
-        xi.1 <- (xi3.tilde*sqrt(1 - rho12^2)) + ((xi2.est*rho12)/sigma)
-        
-            #Luke-this appears to require that the first variable in the model for the outcome is T. We want to avoid this.                      
+        Ymodel.coef.boot <- mvrnorm(sims, mu=Ymodel.coef, Sigma=Ymodel.var.cov)
+        gamma.tilde <- Ymodel.coef.boot[,M]
 
-        y.data <- model.frame(model.y)
-        ymat <- model.matrix(model.y, y.data)
-        ymat[,1] <- 0
-        ymat[,2] <- 0
-        xi3.X <- ydraws %*% t(ymat)
+        # Step 2: Compute ACME via the procedure in IKT
+        ## Step 2-1: Estimate Error Correlation from inconsistent estimate of Y on M
+        rho12.boot <- (sigma.2.boot * gamma.tilde) / (1 + sqrt(sigma.2.boot^2*gamma.tilde^2))
         
-        tau <- matrix(, nrow=sims, ncol=length(rho))
-        #d0 <- matrix(, nrow=sims, ncol=length(rho))
-        #d1 <- matrix(, nrow=sims, ncol=length(rho))
-        d0.tmp <- matrix(, nrow=sims, ncol=length(rho))
-        d1.tmp <- matrix(, nrow=sims, ncol=length(rho))                    
-        d.sum <- matrix(, nrow=sims, ncol=length(rho))
-
-        #d0 <- matrix(NA, length(rho), 1)
-        #d1 <- matrix(NA, length(rho), 1)
-        #tau<-matrix(NA, length(rho), 1)
-    
-    
-        #Luke -why do we have to set i here?
-        i <- 1
-            #Teppei-I think this is wrong...we need to loop over sims too..right?
-            #Also, I think this messes up the way we are using the covars, bc xi2.X is quite what we want. Is the fix to also do xi2.X[k]?
-    
+        ## Step 2-2: Calculate alpha_1, beta_1 and xi_1
+        YTmodel.coef.boot <- Ymodel.coef.boot * sqrt(1-rho12.boot^2) %x% t(rep(1,y.k)) + Mmodel.coef.boot * (rho12.boot/sigma.2.boot)
+        
+        ## Step 2-3: Calculate Gamma
+        ## Data matrices for the Y model less M
+        y.mat.1 <- model.matrix(model.y)[,-M]
+        y.mat.1[,T.out] <- 1
+        y.mat.0 <- model.matrix(model.y)[,-M]
+        y.mat.0[,T.out] <- 0
+        
+        ## Initialize objects before the rho loop
+        d0 <- d1 <- rep(NA, length(rho))
+        upper.d0 <- upper.d1 <- lower.d0 <- lower.d1 <- rep(NA, length(rho))
+        ind.d0 <- ind.d1 <- rep(NA, length(rho))
+        tau <- nu <- rep(NA, length(rho))
+        upper.tau <- upper.nu <- lower.tau <- lower.nu <- rep(NA, length(rho))
+        d0.boot <- d1.boot <- rep(NA, sims)
+        tau.boot <- nu.boot <- rep(NA, sims)
+        
+        ## START OF RHO LOOP
         for(i in 1:length(rho)){
-            #Step 4 - Calculate Gamma
-            gamma <- (-rho[i] + rho12*sqrt((1-rho[i]^2)/(1-rho12^2)))/sigma
+            gamma.boot <- (-rho[i] + rho12.boot*sqrt((1-rho[i]^2)/(1-rho12.boot^2)))/sigma.2.boot
+            for(k in 1:sims){
+            d0.boot[k] <- mean( pnorm(YTmodel.coef.boot[k]%*%y.mat.1) - pnorm(YTmodel.coef.boot[k]%*%y.mat.1 - 
+                gamma.boot[k]*beta2.boot[k]/sqrt(gamma.boot[k]^2*sigma.2.boot[k]^2+2*gamma.boot[k]*rho[i]*sigma.2.boot[k]+1)) )
+            d1.boot[k] <- mean( pnorm(YTmodel.coef.boot[k]%*%y.mat.0 + 
+                gamma.boot[k]*beta2.boot[k]/sqrt(gamma.boot[k]^2*sigma.2.boot[k]^2+2*gamma.boot[k]*rho[i]*sigma.2.boot[k]+1)) -
+                pnorm(YTmodel.coef.boot[k]%*%y.mat.0) )
+            tau.boot[k] <- mean( pnorm(YTmodel.coef.boot[k]%*%y.mat.1) - pnorm(YTmodel.coef.boot[k]%*%y.mat.0) )
+            nu.boot[k] <- (d0.boot[k] + d1.boot[k])/(2*tau.boot[k])
+            }
             
-            #Step 5 - Alpha_3
-            alpha3 <- alpha.1*sqrt(gamma^2*sigma.sq + 2*gamma*rho[i]*sigma + 1) - gamma*alpha2.est
-            
-            #Step 6 - Beta_3
-            beta3 <- beta.1*sqrt(gamma^2*sigma.sq + 2*gamma*rho[i]*sigma + 1) - gamma*beta2.est
-            
-            t <- 0
-            d0.covartemp <- pnorm((alpha3 + beta3*t + xi3.X + gamma*(alpha2.est + beta2.est + xi2.X))/sqrt(gamma^2*sigma.sq+2*gamma*rho[i]*sigma+1)) -pnorm((alpha3 + beta3*t + xi3.X + gamma*(alpha2.est + xi2.X))/sqrt(gamma^2*sigma.sq+2*gamma*rho[i]*sigma+1))
-            
-            t <- 1
-            d1.covartemp <- pnorm((alpha3 + beta3*t + xi3.X + gamma*(alpha2.est + beta2.est + xi2.X))/sqrt(gamma^2*sigma.sq+2*gamma*rho[i]*sigma+1)) -pnorm((alpha3 + beta3*t + xi3.X + gamma*(alpha2.est + xi2.X))/sqrt(gamma^2*sigma.sq+2*gamma*rho[i]*sigma+1))
-            
-            #d0[,i] <- d0.tmp <- apply(d0.covartemp, 1, mean)
-            #d1[,i] <- d1.tmp <- apply(d1.covartemp, 1, mean)
-            d0.tmp[,i] <- apply(d0.covartemp, 1, mean)
-            d1.tmp[,i] <- apply(d1.covartemp, 1, mean)
+        ## Step 2-4: Compute Outputs
+        d0[i] <- mean(d0.boot)
+        d1[i] <- mean(d1.boot)
+        upper.d0[i] <- quantile(d0.boot, 0.975)
+        upper.d1[i] <- quantile(d1.boot, 0.975)
+        lower.d0[i] <- quantile(d0.boot, 0.025)
+        lower.d1[i] <- quantile(d1.boot, 0.025)
+        tau[i] <- mean(tau.boot)
+        nu[i] <- mean(nu.boot)
+        upper.tau[i] <- quantile(tau.boot, 0.975)
+        upper.nu[i] <- quantile(nu.boot, 0.975)
+        lower.tau[i] <- quantile(tau.boot, 0.025)
+        lower.nu[i] <- quantile(nu.boot, 0.025)
+        ind.d0[i] <- as.numeric(lower.d0[i] < 0 & upper.d0[i] > 0)
+        ind.d1[i] <- as.numeric(lower.d1[i] < 0 & upper.d1[i] > 0)
+        
+        ## END OF RHO LOOP
         }
-                            
-    #This calculates various quantities of interest that are required for the summary and plot functions
-        tau <- pnorm(alpha.1 + beta.1) - pnorm(alpha.1)
         
-        #d0.ci <- apply(d0, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
-        #d1.ci <- apply(d1, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
-        #d.avg <- (d0 + d1)/2
-        #d.sum <- d.avg / tau       
-        #pr.ci <- apply(d.sum, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
-
-        d0.ci <- apply(d0.tmp, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
-        d1.ci <- apply(d1.tmp, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
-        d.avg <- (d0.tmp + d1.tmp)/2
-        d.sum <- d.avg / tau       
-        pr.ci <- apply(d.sum, 2, quantile, probs=c(0.025, 0.975),na.rm=TRUE)
-
-        
-
-        pr.med <- apply(d.sum, 2, mean)
-        pr.ci <- apply(d.sum, 2, quantile, probs=c(0.025, 0.975))
-
-        #d0 <- apply(d0.tmp,2,mean)
-        #d1 <- apply(d1.tmp,2,mean) 
-
-        d0 <- apply(d0.tmp,2,mean)
-        d1 <- apply(d1.tmp,2,mean)
-
-        if(INT==TRUE){
-            upper.d0 <- d0.ci[2,]
-            lower.d0 <- d0.ci[1,]
-            upper.d1 <- NULL
-            lower.d1 <- NULL
-            ind.d0 <- as.numeric(lower.d0 < 0 & upper.d0 > 0)
-            ind.d1 <- NULL
-            upper.pr<-pr.ci[2,]
-            lower.pr<-pr.ci[1,]
-            } else {
-                upper.d0 <-  d0.ci[2,]
-                lower.d0 <-  d0.ci[1,]
-                upper.d1 <-  d1.ci[2,]
-                lower.d1 <-  d1.ci[1,]   
-                ind.d0 <- as.numeric(lower.d0 < 0 & upper.d0 > 0)
-                ind.d1 <- as.numeric(lower.d1 < 0 & upper.d1 > 0)
-                upper.pr<-pr.ci[2,]
-                lower.pr<-pr.ci[1,]
-                }
-
-        #Luke -I have to create err.cr to get the summary to work. Can't figure out why.            
-        err.cr <- matrix(1, length(rho), 1)
-
-
-        out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL)
-        #out <- list(rho = rho, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL)
-
-        class(out) <- "sens.c"
+        ## Step 3: Output
+        err.cr <- mean(rho12.boot)
+        out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, 
+            upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, 
+            tau=tau, upper.tau=upper.tau, lower.tau=lower.tau, nu=nu, upper.nu=upper.nu, lower.nu=lower.nu,
+            INT=INT, DETAIL=DETAIL, sims=sims)
+        class(out) <- "sens.bo"
         out
     ## END OF CASE 3: Binary Outcome + Continuous Mediator    
     }
@@ -477,7 +449,7 @@ summary.sens.c <- function(object)
     structure(object, class = c("sum.sens.c", class(object)))
  
 print.sum.sens.c <- function(x, ...){
-     if(class(model.y)=="lm") {
+     if(class(x)=="sens.c") {
         if(x$INT==FALSE){
             tab <- cbind(x$rho, round(x$err.cr,4), round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
             tab <- tab[x$ind.d0==1, -6]
@@ -505,26 +477,24 @@ print.sum.sens.c <- function(x, ...){
             }
       } else
         
-     if(class(model.y)=="glm") {
-#Luke -for some reason I can only get the summary command to work by creating a vector for err.cr in the binary function above, and then include it in the printout below
-#Not sure why, can you try to fix this?
+     if(class(x)=="sens.bm") {
         if(x$INT==FALSE){
-            tab <- cbind(x$rho, round(x$err.cr,4), round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
-            tab <- tab[x$ind.d0==1, -6]
-            colnames(tab) <-  c("Rho","Error Cor.", "Med. Eff.", "95% CI Lower", "95% CI Upper")
+            tab <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
+            tab <- tab[x$ind.d0==1, -5]
+            colnames(tab) <-  c("Rho", "Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
             cat("\nSensitivity Region\n\n")
             print(tab)
             invisible(x)    
                 } else {
-            tab.d0 <- cbind(x$rho, round(x$err.cr,4), round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
-            tab.d0 <- tab.d0[x$ind==1, -6]
-            colnames(tab.d0) <-  c("Rho","Error Cor.", "Med. Eff.", "95% CI Lower", "95% CI Upper")
+            tab.d0 <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
+            tab.d0 <- tab.d0[x$ind==1, -5]
+            colnames(tab.d0) <-  c("Rho","Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab.d0) <- NULL
-            tab.d1 <- cbind(x$rho, round(x$err.cr,4), round(x$d1,4), round(x$lower.d1,4), round(x$upper.d1, 4), x$ind.d1)
-            tab.d1 <- tab[x$ind.d1==1, -6]
-            colnames(tab.d1) <-  c("Rho","Error Cor.", "Med. Eff.", "95% CI Lower", "95% CI Upper")
+            tab.d1 <- cbind(x$rho, round(x$d1,4), round(x$lower.d1,4), round(x$upper.d1, 4), x$ind.d1)
+            tab.d1 <- tab[x$ind.d1==1, -5]
+            colnames(tab.d1) <-  c("Rho","Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab.d1) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
             cat("\nSensitivity Region: d0\n\n")
@@ -533,6 +503,10 @@ print.sum.sens.c <- function(x, ...){
             print(tab.d1)
             invisible(x)        
             }
+     } else
+     
+     if(class(x)=="sens.bo") {
+     cat("COMING SOON!!!")
      }
         
 }
