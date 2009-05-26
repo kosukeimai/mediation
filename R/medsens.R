@@ -280,13 +280,13 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
             
             ## Step 2-4: Bootstrap ACMEs
             d0.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + rho[i]*sigma.3.boot[k]*(lambda10[,k] - lambda00[,k])) * 
-                (dnorm(mu.1.boot[,k]) - dnorm(mu.0.boot[,k])) )
+                (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
             if(INT==TRUE){
                 d1.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + Ymodel.coef.boot[k,TM.out] + rho[i]*sigma.3.boot[k]*(lambda11[,k] - lambda01[,k])) *
-                    (dnorm(mu.1.boot[,k]) - dnorm(mu.0.boot[,k])) )
+                    (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
                 } else {
                 d1.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + rho[i]*sigma.3.boot[k]*(lambda11[,k] - lambda01[,k])) *
-                    (dnorm(mu.1.boot[,k]) - dnorm(mu.0.boot[,k])) )
+                    (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
                 }
                 
             ## END OF BOOTSTAP LOOP
