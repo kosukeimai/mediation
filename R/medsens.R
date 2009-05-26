@@ -355,8 +355,12 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         m.k <- length(model.m$coef)
         Mmodel.var.cov <- vcov(model.m)
         Mmodel.coef.boot <- mvrnorm(sims, mu=Mmodel.coef, Sigma=Mmodel.var.cov)
-        beta2.boot <- Mmodel.coef.boot[,T.out]
-        
+        if(is.factor(y.t.data[,T])==TRUE){
+         beta2.boot <- Mmodel.coef.boot[,T.out] 
+        	} else {
+          beta2.boot <- Mmodel.coef.boot[,T]	
+        		}
+
         sigma.2 <- summary(model.m)$sigma
         sig2.shape <- model.m$df/2
         sig2.invscale <- (model.m$df/2) * sigma.2^2
@@ -492,7 +496,7 @@ print.sum.sens <- function(x, ...){
             colnames(tab.d0) <-  c("Rho","Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab.d0) <- NULL
             tab.d1 <- cbind(x$rho, round(x$d1,4), round(x$lower.d1,4), round(x$upper.d1, 4), x$ind.d1)
-            tab.d1 <- tab[x$ind.d1==1, -5]
+            tab.d1 <- tab.d1[x$ind.d1==1, -5]
             colnames(tab.d1) <-  c("Rho","Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab.d1) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
@@ -505,7 +509,8 @@ print.sum.sens <- function(x, ...){
         } else if(x$type=="bo") {
         if(x$INT==FALSE){
             tab <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
-            tab <- tab[x$ind.d0==1, -5]
+            tab <- as.matrix(tab[x$ind.d0==1, -5])
+            #tab <- t(tab)
             colnames(tab) <-  c("Rho", "Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
