@@ -367,6 +367,7 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         Ymodel.var.cov <- vcov(model.y)
         y.k <- length(Ymodel.coef)
         Ymodel.coef.boot <- mvrnorm(sims, mu=Ymodel.coef, Sigma=Ymodel.var.cov)
+        colnames(Ymodel.coef.boot) <- names(Ymodel.coef)
         gamma.tilde <- Ymodel.coef.boot[,M]
 
         # Step 2: Compute ACME via the procedure in IKT
@@ -374,13 +375,13 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         rho12.boot <- (sigma.2.boot * gamma.tilde) / (1 + sqrt(sigma.2.boot^2*gamma.tilde^2))
         
         ## Step 2-2: Calculate alpha_1, beta_1 and xi_1
-        YTmodel.coef.boot <- Ymodel.coef.boot * sqrt(1-rho12.boot^2) %x% t(rep(1,y.k)) + Mmodel.coef.boot * (rho12.boot/sigma.2.boot)
+        YTmodel.coef.boot <- Ymodel.coef.boot[,!colnames(Ymodel.coef.boot)%in%M] * sqrt(1-rho12.boot^2) %x% t(rep(1,y.k-1)) + Mmodel.coef.boot * (rho12.boot/sigma.2.boot) %x% t(rep(1,y.k-1))
         
         ## Step 2-3: Calculate Gamma
         ## Data matrices for the Y model less M
-        y.mat.1 <- model.matrix(model.y)[,-M]
+        y.mat.1 <- model.matrix(model.y)[,!colnames(model.matrix(model.y))%in%M]
         y.mat.1[,T.out] <- 1
-        y.mat.0 <- model.matrix(model.y)[,-M]
+        y.mat.0 <- model.matrix(model.y)[,!colnames(model.matrix(model.y))%in%M]
         y.mat.0[,T.out] <- 0
         
         ## Initialize objects before the rho loop
@@ -396,12 +397,12 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         for(i in 1:length(rho)){
             gamma.boot <- (-rho[i] + rho12.boot*sqrt((1-rho[i]^2)/(1-rho12.boot^2)))/sigma.2.boot
             for(k in 1:sims){
-            d0.boot[k] <- mean( pnorm(YTmodel.coef.boot[k]%*%y.mat.1) - pnorm(YTmodel.coef.boot[k]%*%y.mat.1 - 
-                gamma.boot[k]*beta2.boot[k]/sqrt(gamma.boot[k]^2*sigma.2.boot[k]^2+2*gamma.boot[k]*rho[i]*sigma.2.boot[k]+1)) )
-            d1.boot[k] <- mean( pnorm(YTmodel.coef.boot[k]%*%y.mat.0 + 
+            d0.boot[k] <- mean( pnorm(y.mat.0 %*% YTmodel.coef.boot[k,] + 
                 gamma.boot[k]*beta2.boot[k]/sqrt(gamma.boot[k]^2*sigma.2.boot[k]^2+2*gamma.boot[k]*rho[i]*sigma.2.boot[k]+1)) -
-                pnorm(YTmodel.coef.boot[k]%*%y.mat.0) )
-            tau.boot[k] <- mean( pnorm(YTmodel.coef.boot[k]%*%y.mat.1) - pnorm(YTmodel.coef.boot[k]%*%y.mat.0) )
+                pnorm(y.mat.0 %*% YTmodel.coef.boot[k,]) )
+            d1.boot[k] <- mean( pnorm(y.mat.1 %*% YTmodel.coef.boot[k,]) - pnorm(y.mat.1 %*% YTmodel.coef.boot[k,] - 
+                gamma.boot[k]*beta2.boot[k]/sqrt(gamma.boot[k]^2*sigma.2.boot[k]^2+2*gamma.boot[k]*rho[i]*sigma.2.boot[k]+1)) )
+            tau.boot[k] <- mean( pnorm(y.mat.1 %*% YTmodel.coef.boot[k,]) - pnorm(y.mat.0 %*% YTmodel.coef.boot[k,]) )
             nu.boot[k] <- (d0.boot[k] + d1.boot[k])/(2*tau.boot[k])
             }
             
