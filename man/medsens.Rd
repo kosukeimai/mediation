@@ -110,7 +110,7 @@ summary(binary.outcome)
 model.m  <- glm(M.dich ~ T+X.1, , family=binomial(link="probit"), data=sim)
 model.y  <- lm(Y.cont.dich ~ T+M.dich+X.1, data=sim)
 binary.mediator.sens <- medsens(model.m , model.y, sims=1000, T="T", M="M.dich", INT=FALSE,  DETAIL=FALSE)
-binary.mediator <-mediate(model.m, model.y, sims=1000, T="T", M="M.dich", INT=TRUE)
+binary.mediator <-mediate(model.m, model.y, sims=1000, T="T", M="M.dich", INT=FALSE)
 summary(binary.mediator.sens)
 summary(binary.mediator)
 
