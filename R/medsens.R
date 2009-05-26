@@ -17,7 +17,7 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
     #########################################################
     ## CASE 1: Continuous Outcome + Continuous Mediator
     #########################################################
-    if(class(model.y)=="lm" & class(model.m)=="lm") {
+    if(class(model.y)[1]=="lm" & class(model.m)[1]=="lm") {
 
         d0 <- matrix(NA, length(rho), 1)
         d1 <- matrix(NA, length(rho), 1)
@@ -164,9 +164,9 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         ind.d0 <- as.numeric(lower.d0 < 0 & upper.d0 > 0)
         ind.d1 <- as.numeric(lower.d1 < 0 & upper.d1 > 0)
                 }
-        
-        out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, sims=sims)
-        class(out) <- "sens.c"
+        type <- "ct"
+        out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, sims=sims,tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL, type=type)
+        class(out) <- "sens"
         out
 
     ## END OF CASE 1: Continuous Outcome + Continuous Mediator    
@@ -175,7 +175,7 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
     #########################################################
     ## CASE 2: Continuous Outcome + Binary Mediator
     #########################################################
-    if(class(model.y)=="lm" & class(model.m)=="glm") {
+    if(class(model.y)[1]=="lm" & class(model.m)[1]=="glm") {
 
         # Step 0: Setting Variable labels
         ## Uppercase letters (e.g. T) = labels in the input matrix
@@ -304,10 +304,10 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         
         ## END OF RHO LOOP
         }
-        
+        type <- "bm"
         # Step 3: Output
-        out <- list(rho = rho, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, sims=sims)
-        class(out) <- "sens.bm"
+        out <- list(rho = rho, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, sims=sims,tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL,type=type)
+        class(out) <- "sens"
         out
         
     ## END OF CASE 2: Continuous Outcome + Binary Mediator    
@@ -316,7 +316,7 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
     #########################################################
     ## CASE 3: Binary Outcome + Continuous Mediator
     #########################################################
-    if(class(model.y)=="glm" & class(model.m)=="lm") {
+    if(class(model.y)[1]=="glm" & class(model.m)[1]=="lm") {
         
         # Step 0: Setting Variable labels
         ## Uppercase letters (e.g. T) = labels in the input matrix
@@ -424,14 +424,14 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         
         ## END OF RHO LOOP
         }
-        
+        type <- "bo"
         ## Step 3: Output
         err.cr <- mean(rho12.boot) # Rho_12 estimate
         out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, 
             upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, 
             tau=tau, upper.tau=upper.tau, lower.tau=lower.tau, nu=nu, upper.nu=upper.nu, lower.nu=lower.nu,
-            INT=INT, DETAIL=DETAIL, sims=sims)
-        class(out) <- "sens.bo"
+            INT=INT, DETAIL=DETAIL, sims=sims, type=type)
+        class(out) <- "sens"
         out
     ## END OF CASE 3: Binary Outcome + Continuous Mediator    
     }
@@ -441,16 +441,16 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
 
 
 
-print.sens.c <- function(x, ...){
+print.sens <- function(x, ...){
     print(unlist(x[1:16]))
     invisible(x)
     }
 
-summary.sens.c <- function(object)
-    structure(object, class = c("sum.sens.c", class(object)))
+summary.sens <- function(object)
+    structure(object, class = c("sum.sens", class(object)))
  
-print.sum.sens.c <- function(x, ...){
-     if(class(x)=="sens.c") {
+print.sum.sens <- function(x, ...){
+ if(x$type=="ct"){
         if(x$INT==FALSE){
             tab <- cbind(x$rho, round(x$err.cr,4), round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
             tab <- tab[x$ind.d0==1, -6]
@@ -476,9 +476,7 @@ print.sum.sens.c <- function(x, ...){
             print(tab.d1)
             invisible(x)        
             }
-      } else
-        
-     if(class(x)=="sens.bm") {
+	} else if(x$type=="bm") {
         if(x$INT==FALSE){
             tab <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
             tab <- tab[x$ind.d0==1, -5]
@@ -504,15 +502,13 @@ print.sum.sens.c <- function(x, ...){
             print(tab.d1)
             invisible(x)        
             }
-     } else
-     
-     if(class(x)=="sens.bo") {
+        } else if(x$type=="bo") {
      cat("COMING SOON!!!")
      }
         
 }
 
-plot.sens.c <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL,...){
+plot.sens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL,...){
     if(x$INT==FALSE){
         plot(x$rho, x$d0, type="n", xlab="", ylab = "", main=main, xlim=xlim, ylim=ylim)
         polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.d0, rev(x$upper.d0)), border=FALSE, col=8, lty=2)
