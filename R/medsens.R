@@ -225,10 +225,10 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         m.mat.0[,T.out] <- 0
         mu.1.boot <- m.mat.1 %*% t(Mmodel.coef.boot) 
         mu.0.boot <- m.mat.0 %*% t(Mmodel.coef.boot) 
-        lambda11 <- apply(-mu.1.boot,2,dnorm) / apply(mu.1.boot,2,pnorm) #m=1,t=1
-        lambda10 <- apply(-mu.0.boot,2,dnorm) / apply(mu.0.boot,2,pnorm) #m=1,t=0
-        lambda01 <- -apply(-mu.1.boot,2,dnorm) / apply(-mu.1.boot,2,pnorm) #m=0,t=1
-        lambda00 <- -apply(-mu.0.boot,2,dnorm) / apply(-mu.0.boot,2,pnorm) #m=0,t=0
+        lambda11 <- dnorm(-mu.1.boot) / pnorm(mu.1.boot) #m=1,t=1
+        lambda10 <- dnorm(-mu.0.boot) / pnorm(mu.0.boot) #m=1,t=0
+        lambda01 <- -dnorm(-mu.1.boot) / pnorm(-mu.1.boot) #m=0,t=1
+        lambda00 <- -dnorm(-mu.0.boot) / pnorm(-mu.0.boot) #m=0,t=0
         
         # Step 1-3: Define lambda functions
         lambda <- function(mmodel, mcoef) {
@@ -355,7 +355,7 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         m.k <- length(model.m$coef)
         Mmodel.var.cov <- vcov(model.m)
         Mmodel.coef.boot <- mvrnorm(sims, mu=Mmodel.coef, Sigma=Mmodel.var.cov)
-        beta2.boot <- Mmodel.coef.boot[,T]
+        beta2.boot <- Mmodel.coef.boot[,T.out]
         
         sigma.2 <- summary(model.m)$sigma
         sig2.shape <- model.m$df/2
@@ -368,20 +368,20 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         y.k <- length(Ymodel.coef)
         Ymodel.coef.boot <- mvrnorm(sims, mu=Ymodel.coef, Sigma=Ymodel.var.cov)
         colnames(Ymodel.coef.boot) <- names(Ymodel.coef)
-        gamma.tilde <- Ymodel.coef.boot[,M]
+        gamma.tilde <- Ymodel.coef.boot[,M.out]
 
         # Step 2: Compute ACME via the procedure in IKT
         ## Step 2-1: Estimate Error Correlation from inconsistent estimate of Y on M
         rho12.boot <- (sigma.2.boot * gamma.tilde) / (1 + sqrt(sigma.2.boot^2*gamma.tilde^2))
         
         ## Step 2-2: Calculate alpha_1, beta_1 and xi_1
-        YTmodel.coef.boot <- Ymodel.coef.boot[,!colnames(Ymodel.coef.boot)%in%M] * sqrt(1-rho12.boot^2) %x% t(rep(1,y.k-1)) + Mmodel.coef.boot * (rho12.boot/sigma.2.boot) %x% t(rep(1,y.k-1))
+        YTmodel.coef.boot <- Ymodel.coef.boot[,!colnames(Ymodel.coef.boot)%in%M.out] * sqrt(1-rho12.boot^2) %x% t(rep(1,y.k-1)) + Mmodel.coef.boot * (rho12.boot/sigma.2.boot) %x% t(rep(1,y.k-1))
         
         ## Step 2-3: Calculate Gamma
         ## Data matrices for the Y model less M
-        y.mat.1 <- model.matrix(model.y)[,!colnames(model.matrix(model.y))%in%M]
+        y.mat.1 <- model.matrix(model.y)[,!colnames(model.matrix(model.y))%in%M.out]
         y.mat.1[,T.out] <- 1
-        y.mat.0 <- model.matrix(model.y)[,!colnames(model.matrix(model.y))%in%M]
+        y.mat.0 <- model.matrix(model.y)[,!colnames(model.matrix(model.y))%in%M.out]
         y.mat.0[,T.out] <- 0
         
         ## Initialize objects before the rho loop
