@@ -38,14 +38,15 @@ library(AER)
 library(Zelig)
 library(mgcv)
 library(quantreg)
-setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/data")
-load("job.RData")
-load("sim.RData")
-load("sim.answers.RData")
 setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/R")
 source("mediate.R")
 source("medsens.R")
 source("medsens.cont.R")
+setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/data")
+load("job.RData")
+load("sim.RData")
+load("sim.answers.RData")
+
 
 #data(job)
 attach(job)
@@ -105,7 +106,7 @@ binary.outcome.sens <- medsens(model.m, model.y, sims=1000, T="T", M="M.cont",  
 binary.outcome <- mediate(model.m, model.y, sims=1000, T="T", M="M.cont")
 summary(binary.outcome.sens)
 summary(binary.outcome)
-
+save(binary.outcome.sens,file="binary.outcome.sens.RData")
 
 model.m  <- glm(M.dich ~ T+X.1, , family=binomial(link="probit"), data=sim)
 model.y  <- lm(Y.cont.dich ~ T+M.dich+X.1, data=sim)
@@ -113,6 +114,7 @@ binary.mediator.sens <- medsens(model.m , model.y, sims=1000, T="T", M="M.dich",
 binary.mediator <-mediate(model.m, model.y, sims=1000, T="T", M="M.dich", INT=FALSE)
 summary(binary.mediator.sens)
 summary(binary.mediator)
+save(binary.mediator.sens,file="binary.mediator.sens.RData")
 
 
 #interaction
