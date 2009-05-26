@@ -407,14 +407,14 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
             }
             
         ## Step 2-4: Compute Outputs
-        d0[i] <- mean(d0.boot)
-        d1[i] <- mean(d1.boot)
+        d0[i] <- mean(d0.boot) # ACME(t=0)
+        d1[i] <- mean(d1.boot) # ACME(t=1)
         upper.d0[i] <- quantile(d0.boot, 0.975)
         upper.d1[i] <- quantile(d1.boot, 0.975)
         lower.d0[i] <- quantile(d0.boot, 0.025)
         lower.d1[i] <- quantile(d1.boot, 0.025)
-        tau[i] <- mean(tau.boot)
-        nu[i] <- mean(nu.boot)
+        tau[i] <- mean(tau.boot) # ATE
+        nu[i] <- mean(nu.boot) # Proportion Mediated
         upper.tau[i] <- quantile(tau.boot, 0.975)
         upper.nu[i] <- quantile(nu.boot, 0.975)
         lower.tau[i] <- quantile(tau.boot, 0.025)
@@ -426,7 +426,7 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         }
         
         ## Step 3: Output
-        err.cr <- mean(rho12.boot)
+        err.cr <- mean(rho12.boot) # Rho_12 estimate
         out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, 
             upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, 
             tau=tau, upper.tau=upper.tau, lower.tau=lower.tau, nu=nu, upper.nu=upper.nu, lower.nu=lower.nu,
