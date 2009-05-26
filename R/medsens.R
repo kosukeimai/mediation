@@ -2,7 +2,7 @@ medsens <- function(z, ...){
     UseMethod("medsens", z)
     }
 
-medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE, DETAIL=FALSE, sims=1000)
+medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE, DETAIL=FALSE, sims=1000, pr.plot=FALSE)
 {
 
     #########################################################
@@ -165,7 +165,7 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         ind.d1 <- as.numeric(lower.d1 < 0 & upper.d1 > 0)
                 }
         type <- "ct"
-        out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, sims=sims,tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL, type=type)
+        out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, sims=sims,tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL, type=type, pr.plot=pr.plot)
         class(out) <- "sens"
         out
 
@@ -306,7 +306,7 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         }
         type <- "bm"
         # Step 3: Output
-        out <- list(rho = rho, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, sims=sims,tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL,type=type)
+        out <- list(rho = rho, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, sims=sims,tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL,type=type, pr.plot=pr.plot)
         class(out) <- "sens"
         out
         
@@ -434,7 +434,7 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, 
             upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, 
             tau=tau, upper.tau=upper.tau, lower.tau=lower.tau, nu=nu, upper.nu=upper.nu, lower.nu=lower.nu,
-            INT=INT, DETAIL=DETAIL, sims=sims, type=type)
+            INT=INT, DETAIL=DETAIL, sims=sims, type=type, pr.plot=pr.plot)
         class(out) <- "sens"
         out
     ## END OF CASE 3: Binary Outcome + Continuous Mediator    
@@ -457,7 +457,12 @@ print.sum.sens <- function(x, ...){
  if(x$type=="ct"){
         if(x$INT==FALSE){
             tab <- cbind(x$rho, round(x$err.cr,4), round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
-            tab <- tab[x$ind.d0==1, -6]
+            if(sum(x$ind.d0)==1){
+	tab <- as.matrix(tab[x$ind.d0==1, -6])
+	tab <- t(tab)
+	} else {
+	tab <- tab[x$ind.d0==1, -6]	
+		}
             colnames(tab) <-  c("Rho","Error Cor.", "Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
@@ -466,11 +471,21 @@ print.sum.sens <- function(x, ...){
             invisible(x)    
                 } else {
             tab.d0 <- cbind(x$rho, round(x$err.cr,4), round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
-            tab.d0 <- tab.d0[x$ind==1, -6]
+            if(sum(x$ind.d0)==1){
+			tab <- as.matrix(tab[x$ind.d0==1, -6])
+			tab <- t(tab)
+			} else {
+			tab <- tab[x$ind.d0==1, -6]	
+			}
             colnames(tab.d0) <-  c("Rho","Error Cor.", "Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab.d0) <- NULL
             tab.d1 <- cbind(x$rho, round(x$err.cr,4), round(x$d1,4), round(x$lower.d1,4), round(x$upper.d1, 4), x$ind.d1)
-            tab.d1 <- tab[x$ind.d1==1, -6]
+            if(sum(x$ind.d1)==1){
+			tab <- as.matrix(tab[x$ind.d1==1, -6])
+			tab <- t(tab)
+			} else {
+			tab <- tab[x$ind.d1==1, -6]	
+			}
             colnames(tab.d1) <-  c("Rho","Error Cor.", "Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab.d1) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
@@ -483,7 +498,12 @@ print.sum.sens <- function(x, ...){
     } else if(x$type=="bm") {
         if(x$INT==FALSE){
             tab <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
-            tab <- tab[x$ind.d0==1, -5]
+            if(sum(x$ind.d0)==1){
+			tab <- as.matrix(tab[x$ind.d0==1, -5])
+			tab <- t(tab)
+			} else {
+			tab <- tab[x$ind.d0==1, -5]	
+			}
             colnames(tab) <-  c("Rho", "Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
@@ -492,11 +512,21 @@ print.sum.sens <- function(x, ...){
             invisible(x)    
                 } else {
             tab.d0 <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
-            tab.d0 <- tab.d0[x$ind==1, -5]
+    		if(sum(x$ind.d0)==1){
+			tab <- as.matrix(tab[x$ind.d0==1, -5])
+			tab <- t(tab)
+			} else {
+			tab <- tab[x$ind.d0==1, -5]	
+			}
             colnames(tab.d0) <-  c("Rho","Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab.d0) <- NULL
             tab.d1 <- cbind(x$rho, round(x$d1,4), round(x$lower.d1,4), round(x$upper.d1, 4), x$ind.d1)
-            tab.d1 <- tab.d1[x$ind.d1==1, -5]
+           		if(sum(x$ind.d1)==1){
+				tab <- as.matrix(tab[x$ind.d1==1, -5])
+				tab <- t(tab)
+				} else {
+			tab <- tab[x$ind.d1==1, -5]	
+			}
             colnames(tab.d1) <-  c("Rho","Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab.d1) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
@@ -509,8 +539,12 @@ print.sum.sens <- function(x, ...){
         } else if(x$type=="bo") {
         if(x$INT==FALSE){
             tab <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
-            tab <- as.matrix(tab[x$ind.d0==1, -5])
-            #tab <- t(tab)
+            if(sum(x$ind.d0)==1){
+			tab <- as.matrix(tab[x$ind.d0==1, -5])
+			tab <- t(tab)
+			} else {
+			tab <- tab[x$ind.d0==1, -5]	
+			}
             colnames(tab) <-  c("Rho", "Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
@@ -519,11 +553,21 @@ print.sum.sens <- function(x, ...){
             invisible(x)    
                 } else {
             tab.d0 <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
-            tab.d0 <- tab.d0[x$ind==1, -5]
+			if(sum(x$ind.d0)==1){
+			tab <- as.matrix(tab[x$ind.d0==1, -5])
+			tab <- t(tab)
+			} else {
+			tab <- tab[x$ind.d0==1, -5]	
+			}
             colnames(tab.d0) <-  c("Rho","Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab.d0) <- NULL
             tab.d1 <- cbind(x$rho, round(x$d1,4), round(x$lower.d1,4), round(x$upper.d1, 4), x$ind.d1)
-            tab.d1 <- tab[x$ind.d1==1, -5]
+			if(sum(x$ind.d1)==1){
+			tab <- as.matrix(tab[x$ind.d1==1, -5])
+			tab <- t(tab)
+			} else {
+			tab <- tab[x$ind.d1==1, -5]	
+			}
             colnames(tab.d1) <-  c("Rho","Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab.d1) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
@@ -538,7 +582,16 @@ print.sum.sens <- function(x, ...){
 }
 
 plot.sens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL,...){
-    if(x$INT==FALSE){
+	if(x$pr.plot==TRUE){
+		plot(x$rho, x$nu, type="n", xlab="", ylab = "", main=main, xlim=xlim, ylim=ylim)
+        polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.nu, rev(x$upper.nu)), border=FALSE, col=8, lty=2)
+        lines(x$rho, x$d0, lty=1)
+        abline(h=0)
+        abline(v=0)
+        title(xlab=expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
+        title(ylab = expression(paste("Proportion Mediated: ", bar(delta))), cex.lab=.9)
+		} else {
+   if(x$INT==FALSE){
         plot(x$rho, x$d0, type="n", xlab="", ylab = "", main=main, xlim=xlim, ylim=ylim)
         polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.d0, rev(x$upper.d0)), border=FALSE, col=8, lty=2)
         lines(x$rho, x$d0, lty=1)
@@ -580,5 +633,5 @@ plot.sens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL,.
         title(xlab=expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
         title(ylab = expression(paste("Average Mediation Effect: ", bar(delta[1]))), cex.lab=.9)
             }
-
+		}
     }
