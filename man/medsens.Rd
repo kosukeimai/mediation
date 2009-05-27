@@ -30,27 +30,16 @@ Imai, Kosuke, Luke Keele and Teppei Yamamoto (2009) Identification, Inference, a
 \examples{ 
 
 #Example with JOBS II Field experiment
-#Required packages needed for below examples: MASS, AER, mgcv, quantreg
-rm(list=ls())
-library(MASS)
-library(foreign)
-library(AER)
-library(Zelig)
-library(mgcv)
-library(quantreg)
-setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/R")
-source("mediate.R")
-source("medsens.R")
-source("medsens.cont.R")
-setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/data")
-load("job.RData")
-load("sim.RData")
-load("sim.answers.RData")
+#Required packages needed for below examples: MASS, AER, mgcv, 
+#For illustration purposes simulations set to low number.
 
-
-#data(job)
-attach(job)
+#Example with JOBS II Field experiment
+data(jobs)
+attach(jobs)
+#Example with simulation data
+data(sim)
 attach(sim)
+
 
 
 #continuous mediator and continuous outcome
@@ -71,6 +60,7 @@ model.y <- glm(work1 ~ treat + job_seek + depress1 + econ_hard + sex + age + occ
 sens.dichO <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE, sims=1000)
 summary(sens.dichO)
 plot(sens.dichO, main="JOBS", ylim=c(-.2,.2))
+save(sens.dichO,file="sens.dichO.RData")
 
 
 
@@ -102,7 +92,7 @@ summary(cont.cont)
 
 model.m <- lm(M.cont ~ T+X.1, data=sim)
 model.y <- glm(Y.dich ~ T+M.cont+X.1, family=binomial(link="probit"), data=sim)
-binary.outcome.sens <- medsens(model.m, model.y,  T="T", M="M.cont",  DETAIL=FALSE, sims=1000)
+binary.outcome.sens <- medsens(model.m, model.y,  T="T", M="M.cont", INT=FALSE,  DETAIL=FALSE, sims=100)
 binary.outcome <- mediate(model.m, model.y, sims=1000, T="T", M="M.cont")
 summary(binary.outcome.sens)
 summary(binary.outcome)
@@ -110,7 +100,7 @@ save(binary.outcome.sens,file="binary.outcome.sens.RData")
 
 model.m  <- glm(M.dich ~ T+X.1, , family=binomial(link="probit"), data=sim)
 model.y  <- lm(Y.cont.dich ~ T+M.dich+X.1, data=sim)
-binary.mediator.sens <- medsens(model.m , model.y,  T="T", M="M.dich", INT=FALSE,  DETAIL=FALSE, sims=1000)
+binary.mediator.sens <- medsens(model.m , model.y,  T="T", M="M.dich", INT=FALSE,  DETAIL=FALSE, sims=100)
 binary.mediator <-mediate(model.m, model.y, sims=1000, T="T", M="M.dich", INT=FALSE)
 summary(binary.mediator.sens)
 summary(binary.mediator)

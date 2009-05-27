@@ -29,12 +29,6 @@ Imai, Kosuke, Luke Keele and Teppei Yamamoto (2009) Identification, Inference, a
 \seealso{See also \code{\link{medsens.cont}}, \code{\link{medsens.binary}} }
 
 \examples{ 
-
-#Example with JOBS II Field experiment
-data(jobs)
-attach(jobs)
-
-
 #Required packages needed for below examples: MASS, AER, mgcv, quantreg
 #rm(list=ls())
 #library(MASS)
@@ -43,12 +37,18 @@ attach(jobs)
 #library(Zelig)
 #library(mgcv)
 #library(quantreg)
-setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/data")
-load("job.RData")
-load("sim.RData")
-load("sim.answers.RData")
-setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/R")
-source("mediate.R")
+
+#For illustration purposes simulations set to low number.
+
+#Example with JOBS II Field experiment
+data(jobs)
+attach(jobs)
+#Example with simulation data
+data(sim)
+attach(sim)
+data(sim.answers)
+
+
 
 
 
@@ -139,13 +139,11 @@ c <- glm(work1 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + ma
 binary <- mediate(b, c, sims=1000, T="treat", M="job_seek")
 summary(binary)
 
-
+######################################################
 #EXAMPLES USING SIMULATED ANSWERS
-#setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/data")
-#load("sim.RData")
-#load("sim.answers.RData")
-#setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/R")
-#source("mediate.R")
+#call sim.answers for answers using population parameters
+######################################################
+
 
 b <- lm(M.cont ~ T+X.1, data=sim)
 c <- lm(Y.cont ~T+M.cont+X.1, data=sim)
@@ -179,6 +177,6 @@ c <- lm(Y.cont.dich.int ~ T+M.dich+T:M.dich+X.1)
 binary.mediator.int <-mediate(b, c, sims=1000, T="T", M="M.dich", INT=TRUE)
 summary(binary.mediator.int)
 
-sim.answers
+
 
 } 
