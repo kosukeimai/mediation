@@ -26,7 +26,7 @@ Imai, Kosuke, Luke Keele and Teppei Yamamoto (2009) Identification, Inference, a
 
 \author{Luke Keele, Ohio State University, \email{keele.4@osu.edu}, Dustin Tingley, Princeton University, \email{dtingley@princeton.edu} }
  
-\seealso{See also \code{\link{medsens.cont}}, \code{\link{medsens.binary}} }
+\seealso{See also \code{\link{medsens}} }
 
 \examples{ 
 
@@ -34,8 +34,8 @@ Imai, Kosuke, Luke Keele and Teppei Yamamoto (2009) Identification, Inference, a
 #For illustration purposes simulations set to low number.
 
 #Example with JOBS II Field experiment
-data(jobs)
-attach(jobs)
+data(job)
+attach(job)
 #Example with simulation data
 data(sim)
 attach(sim)

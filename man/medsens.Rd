@@ -6,7 +6,7 @@ Function to perform sensitivity analysis with continuous mediator and outcome.
 } 
 \usage{
 
-medsens.cont(mmodel, ymodel, INT=FALSE, T="T", M="M",DETAIL=TRUE)
+medsens(mmodel, ymodel, INT=FALSE, T="T", M="M",DETAIL=TRUE)
 
 } 
 
@@ -25,7 +25,7 @@ Imai, Kosuke, Luke Keele and Teppei Yamamoto (2009) Identification, Inference, a
 
 \author{Luke Keele, Ohio State University, \email{keele.4@osu.edu} , Dustin Tingley, Princeton University, \email{dtingley@princeton.edu} }
  
-\seealso{See also \code{\link{medsens.cont}}, \code{\link{medsens.binary}} }
+\seealso{See also \code{\link{mediate}} }
 
 \examples{ 
 
