@@ -279,7 +279,7 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
 
         for(i in 1:length(rho)){
             ## START OF BOOTSTRAP LOOP
-            for(k in 1:sims){
+            #for(k in 1:sims){
             
 ## For non-boostrap point estimates:
 ##            adj <- lambda(model.m, Mmodel.coef) * rho[i]
@@ -447,9 +447,9 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         Mmodel.coef.boot <- mvrnorm(sims, mu=Mmodel.coef, Sigma=Mmodel.var.cov)
         if(is.factor(y.t.data[,T])==TRUE){
          beta2.boot <- Mmodel.coef.boot[,T.out] 
-        	} else {
-          beta2.boot <- Mmodel.coef.boot[,T]	
-        		}
+            } else {
+          beta2.boot <- Mmodel.coef.boot[,T]    
+                }
 
         sigma.2 <- summary(model.m)$sigma
         sig2.shape <- model.m$df/2
@@ -548,11 +548,11 @@ print.sum.sens <- function(x, ...){
         if(x$INT==FALSE){
             tab <- cbind(x$rho, round(x$err.cr,4), round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
             if(sum(x$ind.d0)==1){
-	tab <- as.matrix(tab[x$ind.d0==1, -6])
-	tab <- t(tab)
-	} else {
-	tab <- tab[x$ind.d0==1, -6]	
-		}
+    tab <- as.matrix(tab[x$ind.d0==1, -6])
+    tab <- t(tab)
+    } else {
+    tab <- tab[x$ind.d0==1, -6] 
+        }
             colnames(tab) <-  c("Rho","Error Cor.", "Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
@@ -562,20 +562,20 @@ print.sum.sens <- function(x, ...){
                 } else {
             tab.d0 <- cbind(x$rho, round(x$err.cr,4), round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
             if(sum(x$ind.d0)==1){
-			tab <- as.matrix(tab[x$ind.d0==1, -6])
-			tab <- t(tab)
-			} else {
-			tab <- tab[x$ind.d0==1, -6]	
-			}
+            tab <- as.matrix(tab[x$ind.d0==1, -6])
+            tab <- t(tab)
+            } else {
+            tab <- tab[x$ind.d0==1, -6] 
+            }
             colnames(tab.d0) <-  c("Rho","Error Cor.", "Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab.d0) <- NULL
             tab.d1 <- cbind(x$rho, round(x$err.cr,4), round(x$d1,4), round(x$lower.d1,4), round(x$upper.d1, 4), x$ind.d1)
             if(sum(x$ind.d1)==1){
-			tab <- as.matrix(tab[x$ind.d1==1, -6])
-			tab <- t(tab)
-			} else {
-			tab <- tab[x$ind.d1==1, -6]	
-			}
+            tab <- as.matrix(tab[x$ind.d1==1, -6])
+            tab <- t(tab)
+            } else {
+            tab <- tab[x$ind.d1==1, -6] 
+            }
             colnames(tab.d1) <-  c("Rho","Error Cor.", "Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab.d1) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
@@ -589,11 +589,11 @@ print.sum.sens <- function(x, ...){
         if(x$INT==FALSE){
             tab <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
             if(sum(x$ind.d0)==1){
-			tab <- as.matrix(tab[x$ind.d0==1, -5])
-			tab <- t(tab)
-			} else {
-			tab <- tab[x$ind.d0==1, -5]	
-			}
+            tab <- as.matrix(tab[x$ind.d0==1, -5])
+            tab <- t(tab)
+            } else {
+            tab <- tab[x$ind.d0==1, -5] 
+            }
             colnames(tab) <-  c("Rho", "Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
@@ -602,21 +602,21 @@ print.sum.sens <- function(x, ...){
             invisible(x)    
                 } else {
             tab.d0 <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
-    		if(sum(x$ind.d0)==1){
-			tab <- as.matrix(tab[x$ind.d0==1, -5])
-			tab <- t(tab)
-			} else {
-			tab <- tab[x$ind.d0==1, -5]	
-			}
+            if(sum(x$ind.d0)==1){
+            tab <- as.matrix(tab[x$ind.d0==1, -5])
+            tab <- t(tab)
+            } else {
+            tab <- tab[x$ind.d0==1, -5] 
+            }
             colnames(tab.d0) <-  c("Rho","Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab.d0) <- NULL
             tab.d1 <- cbind(x$rho, round(x$d1,4), round(x$lower.d1,4), round(x$upper.d1, 4), x$ind.d1)
-           		if(sum(x$ind.d1)==1){
-				tab <- as.matrix(tab[x$ind.d1==1, -5])
-				tab <- t(tab)
-				} else {
-			tab <- tab[x$ind.d1==1, -5]	
-			}
+                if(sum(x$ind.d1)==1){
+                tab <- as.matrix(tab[x$ind.d1==1, -5])
+                tab <- t(tab)
+                } else {
+            tab <- tab[x$ind.d1==1, -5] 
+            }
             colnames(tab.d1) <-  c("Rho","Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab.d1) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
@@ -630,11 +630,11 @@ print.sum.sens <- function(x, ...){
         if(x$INT==FALSE){
             tab <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
             if(sum(x$ind.d0)==1){
-			tab <- as.matrix(tab[x$ind.d0==1, -5])
-			tab <- t(tab)
-			} else {
-			tab <- tab[x$ind.d0==1, -5]	
-			}
+            tab <- as.matrix(tab[x$ind.d0==1, -5])
+            tab <- t(tab)
+            } else {
+            tab <- tab[x$ind.d0==1, -5] 
+            }
             colnames(tab) <-  c("Rho", "Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
@@ -643,21 +643,21 @@ print.sum.sens <- function(x, ...){
             invisible(x)    
                 } else {
             tab.d0 <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
-			if(sum(x$ind.d0)==1){
-			tab <- as.matrix(tab[x$ind.d0==1, -5])
-			tab <- t(tab)
-			} else {
-			tab <- tab[x$ind.d0==1, -5]	
-			}
+            if(sum(x$ind.d0)==1){
+            tab <- as.matrix(tab[x$ind.d0==1, -5])
+            tab <- t(tab)
+            } else {
+            tab <- tab[x$ind.d0==1, -5] 
+            }
             colnames(tab.d0) <-  c("Rho","Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab.d0) <- NULL
             tab.d1 <- cbind(x$rho, round(x$d1,4), round(x$lower.d1,4), round(x$upper.d1, 4), x$ind.d1)
-			if(sum(x$ind.d1)==1){
-			tab <- as.matrix(tab[x$ind.d1==1, -5])
-			tab <- t(tab)
-			} else {
-			tab <- tab[x$ind.d1==1, -5]	
-			}
+            if(sum(x$ind.d1)==1){
+            tab <- as.matrix(tab[x$ind.d1==1, -5])
+            tab <- t(tab)
+            } else {
+            tab <- tab[x$ind.d1==1, -5] 
+            }
             colnames(tab.d1) <-  c("Rho","Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab.d1) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
@@ -672,15 +672,15 @@ print.sum.sens <- function(x, ...){
 }
 
 plot.sens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL,...){
-	if(x$pr.plot==TRUE){
-		plot(x$rho, x$nu, type="n", xlab="", ylab = "", main=main, xlim=xlim, ylim=ylim)
+    if(x$pr.plot==TRUE){
+        plot(x$rho, x$nu, type="n", xlab="", ylab = "", main=main, xlim=xlim, ylim=ylim)
         polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.nu, rev(x$upper.nu)), border=FALSE, col=8, lty=2)
         lines(x$rho, x$d0, lty=1)
         abline(h=0)
         abline(v=0)
         title(xlab=expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
         title(ylab = expression(paste("Proportion Mediated: ", bar(delta))), cex.lab=.9)
-		} else {
+        } else {
    if(x$INT==FALSE){
         plot(x$rho, x$d0, type="n", xlab="", ylab = "", main=main, xlim=xlim, ylim=ylim)
         polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.d0, rev(x$upper.d0)), border=FALSE, col=8, lty=2)
@@ -723,5 +723,5 @@ plot.sens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL,.
         title(xlab=expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
         title(ylab = expression(paste("Average Mediation Effect: ", bar(delta[1]))), cex.lab=.9)
             }
-		}
+        }
     }
