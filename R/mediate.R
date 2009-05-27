@@ -1,10 +1,10 @@
-mediate <- function(z, ...){
-	UseMethod("mediate", z)
+mediate <- function(model.m, ...){
+	UseMethod("mediate", model.m)
 	}
 	
-mediate.default <- function(z, model.y, sims=1000, boot=FALSE, INT=FALSE, T="treat.name", M="med.name", C=NULL){
+mediate.default <- function(model.m, model.y, sims=1000, boot=FALSE, INT=FALSE, T="treat.name", M="med.name", C=NULL){
 	B <- sims
-	model.m <- z
+	#model.m <- z
 	model.y.t <- model.y
 	
 	m.data <- model.frame(model.m)  #Call.M$data
