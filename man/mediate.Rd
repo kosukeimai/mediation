@@ -29,15 +29,8 @@ Imai, Kosuke, Luke Keele and Teppei Yamamoto (2009) Identification, Inference, a
 \seealso{See also \code{\link{medsens.cont}}, \code{\link{medsens.binary}} }
 
 \examples{ 
-#Required packages needed for below examples: MASS, AER, mgcv, quantreg
-#rm(list=ls())
-#library(MASS)
-#library(foreign)
-#library(AER)
-#library(Zelig)
-#library(mgcv)
-#library(quantreg)
 
+#Required packages needed for below examples: MASS, AER, mgcv, quantreg
 #For illustration purposes simulations set to low number.
 
 #Example with JOBS II Field experiment
