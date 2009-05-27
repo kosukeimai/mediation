@@ -222,6 +222,13 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         m.mat.1 <- model.matrix(model.m)
         m.mat.1[,T.out] <- 1 # M-model matrix with t=1
         m.mat.0 <- model.matrix(model.m)
+        m.mat.0[,T.out] <- 0
+        mu.1.boot <- m.mat.1 %*% t(Mmodel.coef.boot) 
+        mu.0.boot <- m.mat.0 %*% t(Mmodel.coef.boot) 
+        lambda11 <- dnorm(-mu.1.boot) / pnorm(mu.1.boot) #m=1,t=1
+        lambda10 <- dnorm(-mu.0.boot) / pnorm(mu.0.boot) #m=1,t=0
+        lambda01 <- -dnorm(-mu.1.boot) / pnorm(-mu.1.boot) #m=0,t=1
+        lambda00 <- -dnorm(-mu.0.boot) / pnorm(-mu.0.boot) #m=0,t=0
         m.mat.0[,T.out] <- 0 # M-model matrix with t=0
         mu.1.boot <- m.mat.1 %*% t(Mmodel.coef.boot) # E(M|T=1,X)
         mu.0.boot <- m.mat.0 %*% t(Mmodel.coef.boot) # E(M|T=0,X)
@@ -247,6 +254,16 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
 
         # Step 2: Rho loop
         ## Step 2-0: Initialize containers
+        d0 <- d1 <- matrix(NA, length(rho), 1)
+        upper.d0 <- upper.d1 <- lower.d0 <- lower.d1 <- matrix(NA, length(rho), 1)
+        ind.d0 <- ind.d1 <- matrix(NA, length(rho), 1)
+        Ymodel.coef.boot <- matrix(NA, sims, y.k)
+        colnames(Ymodel.coef.boot) <- names(model.y$coef)
+        sigma.3.boot <- rep(NA, sims)
+        d0.boot <- d1.boot <- rep(NA, sims)
+        
+        ## START OF RHO LOOP
+        ## Step 2-0: Initialize containers
         d0 <- d1 <- rep(NA, length(rho))
         upper.d0 <- upper.d1 <- lower.d0 <- lower.d1 <- rep(NA, length(rho))
         ind.d0 <- ind.d1 <- rep(NA, length(rho))
@@ -259,7 +276,10 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
 ##        d0.point <- d1.point <- rep(NA,length(rho))
         
         ## START OF RHO LOOP
+
         for(i in 1:length(rho)){
+            ## START OF BOOTSTRAP LOOP
+            for(k in 1:sims){
             
 ## For non-boostrap point estimates:
 ##            adj <- lambda(model.m, Mmodel.coef) * rho[i]
@@ -286,6 +306,9 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
             ## START OF BOOTSTRAP LOOP
             for(k in 1:sims){
             ## Step 2-1: Obtain the initial Y model with the correction term
+            adj <- lambda(model.m, Mmodel.coef.boot[k,]) * rho[i]
+            y.t.data.adj <- data.frame(y.t.data, adj)
+            model.y.adj <- update(model.y, as.formula(paste(". ~ . + adj")), data=y.t.data.adj)
             adj <- lambda(model.m, Mmodel.coef.boot[k,]) * rho[i] # the adjustment term
             y.t.data.adj <- data.frame(y.t.data, adj)
             model.y.adj <- update(model.y, as.formula(paste(". ~ . + adj")), data=y.t.data.adj)
@@ -302,6 +325,26 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
                 sigma.dif <- sigma.3.temp - sigma.3
                 sigma.3 <- sigma.3.temp
             }
+            
+            ## Step 2-3: Bootstrap Y model parameters
+            Ymodel.coef <- model.y.update$coef
+            Ymodel.var.cov <- vcov(model.y.update)
+            Ymodel.coef.boot[k,] <- mvrnorm(1, mu=Ymodel.coef, Sigma=Ymodel.var.cov)
+            sig3.shape <- model.y.update$df/2
+            sig3.invscale <- (model.y.update$df/2) * sigma.3^2
+            sigma.3.boot[k] <- sqrt(1 / rgamma(1, shape = sig3.shape, scale = 1/sig3.invscale))
+            
+            ## Step 2-4: Bootstrap ACMEs
+            d0.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + rho[i]*sigma.3.boot[k]*(lambda10[,k] - lambda00[,k])) * 
+                (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
+            if(INT==TRUE){
+                d1.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + Ymodel.coef.boot[k,TM.out] + rho[i]*sigma.3.boot[k]*(lambda11[,k] - lambda01[,k])) *
+                    (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
+                } else {
+                d1.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + rho[i]*sigma.3.boot[k]*(lambda11[,k] - lambda01[,k])) *
+                    (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
+                }
+
             
             ## Step 2-3: Bootstrap Y model parameters
             Ymodel.coef <- model.y.update$coef
@@ -325,8 +368,8 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
 #                d1.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + rho[i]*sigma.3.boot[k]*(lambda11[,k] - lambda01[,k])) * 
 #                    (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
 #                }
-                
-            ## END OF BOOTSTRAP LOOP
+
+            ## END OF BOOTSTAP LOOP
             }
             
         ## Step 2-5: Compute Outputs
@@ -346,7 +389,7 @@ medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE,
         out <- list(rho = rho, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, sims=sims,tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL,type=type, pr.plot=pr.plot)
         class(out) <- "sens"
         out
-        
+
     ## END OF CASE 2: Continuous Outcome + Binary Mediator    
     
     ## PROBLEM: d1 and d0 move in different ways as functions of rho. We know this to be wrong from the equation.

@@ -421,11 +421,9 @@ for(i in 1:sims){
 			sigma <- summary(new.fit.M)$scale
 			} else {
 			sigma <- summary(new.fit.M)$sigma
-				}		
+				}
 		error <- rnorm(n, mean=0, sd=sigma)
-		PredictM1 <- predict(new.fit.M, type="response", newdata=pred.data.t) + error
-		PredictM0 <- predict(new.fit.M, type="response", newdata=pred.data.c) + error
-
+		PredictM1 <- predict(new.fit.M, type="response", newdata=pred.data.t) + error;		PredictM0 <- predict(new.fit.M, type="response", newdata=pred.data.c) + error
 		rm(error)
 		}
 		
