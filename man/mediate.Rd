@@ -43,11 +43,13 @@ attach(jobs)
 #library(Zelig)
 #library(mgcv)
 #library(quantreg)
-#setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/data")
-#load("job.RData")
-#setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/R")
-#source("mediate.R")
-#source("medsens.cont.R")
+setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/data")
+load("job.RData")
+load("sim.RData")
+load("sim.answers.RData")
+setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/R")
+source("mediate.R")
+
 
 
 
@@ -139,11 +141,11 @@ summary(binary)
 
 
 #EXAMPLES USING SIMULATED ANSWERS
-setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/data")
-load("sim.RData")
-load("sim.answers.RData")
-setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/R")
-source("mediate.R")
+#setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/data")
+#load("sim.RData")
+#load("sim.answers.RData")
+#setwd("H:/imai_methods/Mediation/CheckoutCVS/mediation/mediation/R")
+#source("mediate.R")
 
 b <- lm(M.cont ~ T+X.1, data=sim)
 c <- lm(Y.cont ~T+M.cont+X.1, data=sim)
