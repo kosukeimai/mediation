@@ -39,7 +39,7 @@ attach(job)
 #Example with simulation data
 data(sim)
 attach(sim)
-data(sim.answers)
+
 
 
 
@@ -134,7 +134,6 @@ summary(binary)
 
 ######################################################
 #EXAMPLES USING SIMULATED ANSWERS
-#call sim.answers for answers using population parameters
 ######################################################
 
 
