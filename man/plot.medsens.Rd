@@ -1,12 +1,16 @@
 \name{plot.medsens} 
 \alias{plot.medsens} 
-\title{Causal Mediation Analysis - Sensitivity Analysis} 
+#\alias{print.plot.medsens} 
+
+\title{Plotting results from sensitivity analysis of mediation effects.} 
 \description{ 
-Plots results from medsens function. Y axis plots mediation effect and x-axis plots the error correlation rho. 
+Plots results from medsens function. Y axis plots mediation effect and x-axis plots the error correlation rho. Standard options for plot function available.
 } 
 \usage{
 
-plot(z)
+  \method{plot}{medsens}(z, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL,...) 
+
+ # \method{print}{plot.medsens}(z)
 
 } 
 
@@ -40,8 +44,6 @@ model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age  + occp + mari
 model.y <- lm(depress2 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job)
 #pass model objects through medsens function
 sens.cont <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE, sims=10)
-#use summary function to display values of rho where 95% confidence interval overlaps with 0.
-summary(sens.cont)
 #plot mediation effect and 95% CI's for each value of rho
 plot(sens.cont, main="JOBS", ylim=c(-.2,.2))
 

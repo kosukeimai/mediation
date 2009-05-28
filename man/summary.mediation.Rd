@@ -1,18 +1,23 @@
-\name{plot.medsens} 
-\alias{plot.medsens} 
-\title{Causal Mediation Analysis - Sensitivity Analysis} 
+\name{summary.mediation} 
+\alias{summary.mediation} 
+\alias{print.summary.mediation} 
+
+\title{Summarizing output from mediation analysis.} 
 \description{ 
-Function to perform sensitivity analysis on mediation effect for violations of sequential ignorability assumption. This allows for a correlation between the error terms of the outcome model and the mediator model. Sensitivity analysis is possible with continuous mediator and continuous outcome and binary outcome and continuous mediator.
-Future versions of the function will also permit sensitivity analysis for a continuous outcome and binary mediator. Output from the function can be passed through summary or plot functions which display estimated mediation effects for given values of rho.
+Function to report summary statistics from mediation analysis. Reported categories are mediation effect, direct effect, total effect, and proportion of total effect mediated. 
+All quantities reported with 95 percent confidence intervals. If the INT=TRUE option is selected in the mediate function, which allows for a treatment X mediator interaction, then effects are reported separetly for the treatment and control groups.
 } 
 \usage{
 
-plot(z)
+  \method{summary}{mediation}(z) 
+
+  \method{print}{summary.mediation}(z)
 
 } 
 
 \arguments{ 
-\item{z}{Output from medsens function.} 
+
+\item{z}{Output from mediate function.} 
 } 
 
 \references{Imai, Kosuke, Luke Keele and Dustin Tingley (2009) A General Approach to Causal Mediation Analysis.
@@ -20,7 +25,7 @@ Imai, Kosuke, Luke Keele and Teppei Yamamoto (2009) Identification, Inference, a
 
 \author{Luke Keele, Ohio State University, \email{keele.4@osu.edu} , Dustin Tingley, Princeton University, \email{dtingley@princeton.edu}, Teppei Yamamoto, Princeton University, \email{tyamamot@princeton.edu}, Kosuke Imai, Princeton University, \email{imai@princeton.edu} }
  
-\seealso{See also \code{\link{medsens}} }
+\seealso{See also \code{\link{mediate}} }
 
 \examples{ 
 
@@ -29,10 +34,6 @@ Imai, Kosuke, Luke Keele and Teppei Yamamoto (2009) Identification, Inference, a
 
 #Example with JOBS II Field experiment
 data(jobs)
-
-#Example with simulation data
-data(sim)
-
 
 
 #########################################
@@ -50,17 +51,6 @@ summary(sens.cont)
 plot(sens.cont, main="JOBS", ylim=c(-.2,.2))
 
 
-
-
-#########################################
-#binary outcome and continuous mediator
-#########################################
-
-model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job)
-model.y <- glm(work1 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, family=binomial(link="probit"), data=job)
-sens.dichO <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE, sims=10)
-summary(sens.dichO)
-plot(sens.dichO, main="JOBS", ylim=c(-.2,.2))
 
 
 
