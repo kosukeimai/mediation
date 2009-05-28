@@ -708,7 +708,7 @@ plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NUL
         #Delta_1
         plot(x$rho, x$d1, type="n", xlab="", ylab = "", ylim = c(-.2,.2))
         polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.d1, rev(x$upper.d1)), border=FALSE, col=8, lty=2)
-        lines(rho, d1, lty=1)
+        lines(x$rho, x$d1, lty=1)
         abline(h=0)
                 if(x$DETAIL==TRUE){
         abline(h=x$d1[96], lty=2)
