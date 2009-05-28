@@ -166,7 +166,7 @@ medsens.default <- function(model.m, model.y, T="treat.name", M="med.name", INT=
                 }
         type <- "ct"
         out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, sims=sims,tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL, type=type, pr.plot=pr.plot)
-        class(out) <- "sens"
+        class(out) <- "medsens"
         out
 
     ## END OF CASE 1: Continuous Outcome + Continuous Mediator    
@@ -535,15 +535,15 @@ medsens.default <- function(model.m, model.y, T="treat.name", M="med.name", INT=
 
 
 
-print.sens <- function(x, ...){
+print.medsens <- function(x, ...){
     print(unlist(x[1:16]))
     invisible(x)
     }
 
-summary.sens <- function(object)
-    structure(object, class = c("sum.sens", class(object)))
+summary.medsens <- function(object, ...)
+    structure(object, class = c("summary.medsens", class(object)))
  
-print.sum.sens <- function(x, ...){
+print.summary.medsens <- function(x, ...){
  if(x$type=="ct"){
         if(x$INT==FALSE){
             tab <- cbind(x$rho, round(x$err.cr,4), round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
@@ -671,7 +671,7 @@ print.sum.sens <- function(x, ...){
         
 }
 
-plot.sens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL,...){
+plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL,...){
     if(x$pr.plot==TRUE){
         plot(x$rho, x$nu, type="n", xlab="", ylab = "", main=main, xlim=xlim, ylim=ylim)
         polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.nu, rev(x$upper.nu)), border=FALSE, col=8, lty=2)

@@ -1,8 +1,4 @@
 mediate <- function(model.m, model.y, sims=1000, boot=FALSE, INT=FALSE, T="treat.name", M="med.name", C=NULL){
-	UseMethod("mediate", model.m)
-	}
-	
-mediate.default <- function(model.m, model.y, sims=1000, boot=FALSE, INT=FALSE, T="treat.name", M="med.name", C=NULL){
 	B <- sims
 	#model.m <- z
 	model.y.t <- model.y
@@ -608,20 +604,20 @@ if(is.factor(y.t.data[,paste(M)])==TRUE) {
  }
 
 out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci, pct.coef=pct.coef, pct.ci=pct.ci, tau.coef=tau.coef, tau.ci=tau.ci, z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci,boot=boot, INT=INT)
-class(out) <- "my.mediate"
+class(out) <- "mediation"
 out
 
 }
 
-print.my.mediate <- function(x, ...){
+print.mediation <- function(x, ...){
 	print(unlist(x[1:11]))
 	invisible(x)
 	}
 
-summary.my.mediate <- function(object)
-	structure(object, class = c("sum.my.mediate", class(object)))
+summary.mediation <- function(object, ...)
+	structure(object, class = c("summary.mediation", class(object)))
  
-print.sum.my.mediate <- function(x, ...){
+print.summary.mediation <- function(x, ...){
 	if(x$INT==TRUE){
 		cat("\n Causal Mediation Analysis \n\n")
 	if(x$boot==TRUE){
