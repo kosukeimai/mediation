@@ -1,5 +1,5 @@
-\name{plot.medsens} 
-\alias{plot.medsens} 
+\name{summary.medsens} 
+\alias{summary.medsens} 
 \title{Causal Mediation Analysis - Sensitivity Analysis} 
 \description{ 
 Function to perform sensitivity analysis on mediation effect for violations of sequential ignorability assumption. This allows for a correlation between the error terms of the outcome model and the mediator model. Sensitivity analysis is possible with continuous mediator and continuous outcome and binary outcome and continuous mediator.
@@ -7,7 +7,7 @@ Future versions of the function will also permit sensitivity analysis for a cont
 } 
 \usage{
 
-plot(z)
+summary(z)
 
 } 
 

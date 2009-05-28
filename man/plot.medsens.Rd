@@ -2,8 +2,7 @@
 \alias{plot.medsens} 
 \title{Causal Mediation Analysis - Sensitivity Analysis} 
 \description{ 
-Function to perform sensitivity analysis on mediation effect for violations of sequential ignorability assumption. This allows for a correlation between the error terms of the outcome model and the mediator model. Sensitivity analysis is possible with continuous mediator and continuous outcome and binary outcome and continuous mediator.
-Future versions of the function will also permit sensitivity analysis for a continuous outcome and binary mediator. Output from the function can be passed through summary or plot functions which display estimated mediation effects for given values of rho.
+Plots results from medsens function. Y axis plots mediation effect and x-axis plots the error correlation rho. 
 } 
 \usage{
 
@@ -30,9 +29,6 @@ Imai, Kosuke, Luke Keele and Teppei Yamamoto (2009) Identification, Inference, a
 #Example with JOBS II Field experiment
 data(jobs)
 
-#Example with simulation data
-data(sim)
-
 
 
 #########################################
@@ -48,19 +44,6 @@ sens.cont <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETA
 summary(sens.cont)
 #plot mediation effect and 95% CI's for each value of rho
 plot(sens.cont, main="JOBS", ylim=c(-.2,.2))
-
-
-
-
-#########################################
-#binary outcome and continuous mediator
-#########################################
-
-model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job)
-model.y <- glm(work1 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, family=binomial(link="probit"), data=job)
-sens.dichO <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE, sims=10)
-summary(sens.dichO)
-plot(sens.dichO, main="JOBS", ylim=c(-.2,.2))
 
 
 
