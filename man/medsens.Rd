@@ -6,18 +6,19 @@ Function to perform sensitivity analysis with continuous mediator and outcome.
 } 
 \usage{
 
-medsens(mmodel, ymodel, INT=FALSE, T="T", M="M",DETAIL=TRUE)
+medsens(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, DETAIL=FALSE, sims=1000, pr.plot=FALSE)
 
 } 
 
 \arguments{ 
-\item{mmodel}{R model object for mediator.  Can be of class lm, polr, glm, or gam.} 
-\item{ymodel}{R model object for outcome.  Can be of class lm, glm, gam, or rq.} 
-
+\item{model.m}{R model object for mediator.  Can be of class lm, polr, glm, or gam.} 
+\item{model.y}{R model object for outcome.  Can be of class lm, glm, gam, or rq.} 
 \item{INT}{If TRUE this indicates that treatment is interacted with mediator in ymodel object. Default is FALSE} 
 \item{T}{Name of binary treatment indicator.}
 \item{M}{Name of mediator variable.}
-\item{DETAIL}{If FALSE estimation is on .1 grid for rho vs. a grid of .01). Default is TRUE}
+\item{DETAIL}{If FALSE estimation is on .1 grid for rho vs. a grid of .01).}
+\item{sims}{Number of draws for parametric bootstrap.}
+\item{pr.plot}{Plot proportion mediated for binary mediator.}
 } 
 
 \references{Imai, Kosuke, Luke Keele and Dustin Tingley (2009) A General Approach to Causal Mediation Analysis.
@@ -76,40 +77,6 @@ plot(sens.dichO, main="JOBS", ylim=c(-.2,.2))
 #sens.dichM.int <- medsens(model.m, model.y, T="treat", M="job_dich", INT=TRUE,  DETAIL=FALSE, sims=10)
 #summary(sens.dichM.int)
 #plot(sens.dichM.int, main="JOBS", ylim=c(-.2,.2))
-
-############################3
-#Simulation Data
-############################
-
-
-model.m <- lm(M.cont ~ T+X.1, data=sim)
-model.y <- lm(Y.cont ~ T+M.cont+X.1, data=sim)
-cont.cont.sens <- medsens(model.m, model.y,  T="T", M="M.cont", DETAIL=FALSE, sims=10)
-cont.cont <- mediate(model.m, model.y, sims=1000, T="T", M="M.cont")
-summary(cont.cont.sens)
-summary(cont.cont)
-
-
-model.m <- lm(M.cont ~ T+X.1, data=sim)
-model.y <- glm(Y.dich ~ T+M.cont+X.1, family=binomial(link="probit"), data=sim)
-binary.outcome.sens <- medsens(model.m, model.y,  T="T", M="M.cont", INT=FALSE,  DETAIL=FALSE, sims=10)
-summary(binary.outcome.sens)
-
-
-#model.m  <- glm(M.dich ~ T+X.1, , family=binomial(link="probit"), data=sim)
-#model.y  <- lm(Y.cont.dich ~ T+M.dich+X.1, data=sim)
-#binary.mediator.sens <- medsens(model.m , model.y,  T="T", M="M.dich", INT=FALSE,  DETAIL=FALSE, sims=10)
-#summary(binary.mediator.sens)
-
-
-
-#interaction
-#model.m  <- glm(M.dich ~ T+X.1, , family=binomial(link="probit"), data=sim)
-#model.y  <- lm(Y.cont.dich.int ~ T+M.dich+T:M.dich+X.1)
-#binary.mediator.sens.int <- medsens(model.m, model.y,  T="T", M="M.dich", INT=TRUE,  DETAIL=FALSE, sims=10)
-#summary(binary.mediator.sens.int)
-
-
 
 
 } 

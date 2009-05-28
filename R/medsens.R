@@ -1,8 +1,8 @@
-medsens <- function(z, ...){ 
-    UseMethod("medsens", z)
+medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, DETAIL=FALSE, sims=1000, pr.plot=FALSE){ 
+    UseMethod("medsens", model.m)
     }
 
-medsens.default <- function(z, model.y, T="treat.name", M="med.name", INT=FALSE, DETAIL=FALSE, sims=1000, pr.plot=FALSE)
+medsens.default <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, DETAIL=FALSE, sims=1000, pr.plot=FALSE)
 {
 
     #########################################################

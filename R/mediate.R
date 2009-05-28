@@ -1,4 +1,4 @@
-mediate <- function(model.m, ...){
+mediate <- function(model.m, model.y, sims=1000, boot=FALSE, INT=FALSE, T="treat.name", M="med.name", C=NULL){
 	UseMethod("mediate", model.m)
 	}
 	
