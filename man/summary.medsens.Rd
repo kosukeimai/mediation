@@ -16,7 +16,8 @@ Future versions of the function will also permit sensitivity analysis for a cont
 } 
 
 \arguments{ 
-\item{x}{Output from medsens function.} 
+\item{x}{Output from medsens function.}
+\item{object}{Output from medsens function.} 
 } 
 
 \references{Imai, Kosuke, Luke Keele and Dustin Tingley (2009) A General Approach to Causal Mediation Analysis.

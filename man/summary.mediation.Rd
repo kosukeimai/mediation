@@ -16,7 +16,7 @@ All quantities reported with 95 percent confidence intervals. If the INT=TRUE op
 } 
 
 \arguments{ 
-
+\item{object}{Output from mediate function.} 
 \item{x}{Output from mediate function.} 
 } 
 
