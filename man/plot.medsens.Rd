@@ -8,14 +8,14 @@ Plots results from medsens function. Y axis plots mediation effect and x-axis pl
 } 
 \usage{
 
-  \method{plot}{medsens}(z, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL,...) 
+  \method{plot}{medsens}(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL,...) 
 
  # \method{print}{plot.medsens}(z)
 
 } 
 
 \arguments{ 
-\item{z}{Output from medsens function.} 
+\item{x}{Output from medsens function.} 
 } 
 
 \references{Imai, Kosuke, Luke Keele and Dustin Tingley (2009) A General Approach to Causal Mediation Analysis.
