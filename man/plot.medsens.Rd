@@ -20,7 +20,8 @@ Plots results from medsens function. Y axis plots mediation effect and x-axis pl
 \item{ylab}{y-axis label.} 
 \item{xlim}{range for x-axis.} 
 \item{ylim}{range for y-axis.} 
-\item{main}{main title for graph.} 
+\item{main}{main title for graph.}
+\item{...}{Additional arguments to be passed.} 
 } 
 
 \references{Imai, Kosuke, Luke Keele and Dustin Tingley (2009) A General Approach to Causal Mediation Analysis.

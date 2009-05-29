@@ -1,6 +1,6 @@
 \name{summary.medsens} 
+\alias{summary.medsens}
 \alias{print.summary.medsens} 
-\alias{summary.medsens} 
 \title{Summarizing results from sensitivity analysis of mediation effects.} 
 \description{ 
 Function to perform sensitivity analysis on mediation effect for violations of sequential ignorability assumption. This allows for a correlation between the error terms of the outcome model and the mediator model. Sensitivity analysis is possible with continuous mediator and continuous outcome and binary outcome and continuous mediator.
@@ -17,7 +17,8 @@ Future versions of the function will also permit sensitivity analysis for a cont
 
 \arguments{ 
 \item{x}{Output from medsens function.}
-\item{object}{Output from medsens function.} 
+\item{object}{Output from medsens function.}
+\item{...}{Additional arguments to be passed.}
 } 
 
 \references{Imai, Kosuke, Luke Keele and Dustin Tingley (2009) A General Approach to Causal Mediation Analysis.
@@ -33,7 +34,7 @@ Imai, Kosuke, Luke Keele and Teppei Yamamoto (2009) Identification, Inference, a
 #For illustration purposes simulations set to low number.
 
 #Example with JOBS II Field experiment
-data(jobs)
+data(job)
 
 #Example with simulation data
 data(sim)

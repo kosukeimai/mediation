@@ -18,6 +18,7 @@ All quantities reported with 95 percent confidence intervals. If the INT=TRUE op
 \arguments{ 
 \item{object}{Output from mediate function.} 
 \item{x}{Output from mediate function.} 
+ \item{...}{Additional arguments to be passed.}
 } 
 
 \references{Imai, Kosuke, Luke Keele and Dustin Tingley (2009) A General Approach to Causal Mediation Analysis.
