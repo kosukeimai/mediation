@@ -1,6 +1,6 @@
 \name{plot.medsens} 
 \alias{plot.medsens} 
-#\alias{print.plot.medsens} 
+
 
 \title{Plotting results from sensitivity analysis of mediation effects.} 
 \description{ 
@@ -8,7 +8,7 @@ Plots results from medsens function. Y axis plots mediation effect and x-axis pl
 } 
 \usage{
 
-  \method{plot}{medsens}(x) 
+  \method{plot}{medsens}(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL,...) 
 
  # \method{print}{plot.medsens}(z)
 

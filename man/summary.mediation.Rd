@@ -9,9 +9,9 @@ All quantities reported with 95 percent confidence intervals. If the INT=TRUE op
 } 
 \usage{
 
-  \method{summary}{mediation}(object) 
+  \method{summary}{mediation}(object, ...) 
 
-  \method{print}{summary.mediation}(x)
+  \method{print}{summary.mediation}(x, ...)
 
 } 
 

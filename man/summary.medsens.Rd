@@ -9,9 +9,9 @@ Future versions of the function will also permit sensitivity analysis for a cont
 \usage{
 
 
-  \method{summary}{medsens}(x) 
+  \method{summary}{medsens}(object, ...) 
 
-  \method{print}{summary.medsens}(x)
+  \method{print}{summary.medsens}(x, ...)
 
 } 
 

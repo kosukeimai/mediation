@@ -35,7 +35,7 @@ Imai, Kosuke, Luke Keele and Teppei Yamamoto (2009) Identification, Inference, a
 #For illustration purposes simulations set to low number.
 
 #Example with JOBS II Field experiment
-data(jobs)
+data(job)
 
 #Example with simulation data
 data(sim)
