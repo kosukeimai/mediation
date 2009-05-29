@@ -9,15 +9,15 @@ All quantities reported with 95 percent confidence intervals. If the INT=TRUE op
 } 
 \usage{
 
-  \method{summary}{mediation}(z) 
+  \method{summary}{mediation}(object) 
 
-  \method{print}{summary.mediation}(z)
+  \method{print}{summary.mediation}(x)
 
 } 
 
 \arguments{ 
 
-\item{z}{Output from mediate function.} 
+\item{x}{Output from mediate function.} 
 } 
 
 \references{Imai, Kosuke, Luke Keele and Dustin Tingley (2009) A General Approach to Causal Mediation Analysis.

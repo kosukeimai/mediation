@@ -9,14 +9,14 @@ Future versions of the function will also permit sensitivity analysis for a cont
 \usage{
 
 
-  \method{summary}{medsens}(z) 
+  \method{summary}{medsens}(x) 
 
-  \method{print}{summary.medsens}(z)
+  \method{print}{summary.medsens}(x)
 
 } 
 
 \arguments{ 
-\item{z}{Output from medsens function.} 
+\item{x}{Output from medsens function.} 
 } 
 
 \references{Imai, Kosuke, Luke Keele and Dustin Tingley (2009) A General Approach to Causal Mediation Analysis.
