@@ -63,11 +63,11 @@ plot(sens.cont, main="JOBS", ylim=c(-.2,.2))
 #binary outcome and continuous mediator
 #########################################
 
-#model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job)
-#model.y <- glm(work1 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, family=binomial(link="probit"), data=job)
-#sens.dichO <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE, sims=100)
-#summary(sens.dichO)
-#plot(sens.dichO, main="JOBS", ylim=c(-.2,.2))
+model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job)
+model.y <- glm(work1 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, family=binomial(link="probit"), data=job)
+sens.dichO <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE, sims=100)
+summary(sens.dichO)
+plot(sens.dichO, main="JOBS", ylim=c(-.2,.2))
 
 
 
