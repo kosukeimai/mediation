@@ -37,10 +37,6 @@ Imai, Kosuke, Luke Keele and Teppei Yamamoto (2009) Identification, Inference, a
 #Example with JOBS II Field experiment
 data(job)
 
-#Example with simulation data
-data(sim)
-
-
 
 #########################################
 #continuous mediator and continuous outcome

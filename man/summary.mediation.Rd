@@ -4,7 +4,7 @@
 
 \title{Summarizing output from mediation analysis.} 
 \description{ 
-Function to report summary statistics from mediation analysis. Reported categories are mediation effect, direct effect, total effect, and proportion of total effect mediated. 
+Function to report results from mediation analysis. Reported categories are mediation effect, direct effect, total effect, and proportion of total effect mediated. 
 All quantities reported with 95 percent confidence intervals. If the INT=TRUE option is selected in the mediate function, which allows for a treatment X mediator interaction, then effects are reported separetly for the treatment and control groups.
 } 
 \usage{
@@ -44,12 +44,8 @@ data(jobs)
 #fit parametric model
 model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age  + occp + marital + nonwhite + educ + income, data=job)
 model.y <- lm(depress2 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job)
-#pass model objects through medsens function
-sens.cont <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE, sims=10)
-#use summary function to display values of rho where 95% confidence interval overlaps with 0.
-summary(sens.cont)
-#plot mediation effect and 95% CI's for each value of rho
-plot(sens.cont, main="JOBS", ylim=c(-.2,.2))
+continuous <- mediate(model.m , model.y, sims=10, T="treat", M="job_seek")
+summary(continuous)
 
 
 

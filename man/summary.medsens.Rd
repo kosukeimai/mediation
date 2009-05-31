@@ -3,7 +3,7 @@
 \alias{print.summary.medsens} 
 \title{Summarizing results from sensitivity analysis of mediation effects.} 
 \description{ 
-Function to perform sensitivity analysis on mediation effect for violations of sequential ignorability assumption. This allows for a correlation between the error terms of the outcome model and the mediator model. Sensitivity analysis is possible with continuous mediator and continuous outcome and binary outcome and continuous mediator.
+Function to perform sensitivity analysis on mediation effect for violations of sequential ignorability assumption. The procedure estimates the mediation effect allowing for a correlation between the error terms of the outcome model and the mediator model. The extent of this correlation is expressed in terms of the parameter rho. Sensitivity analysis is possible with continuous mediator and continuous outcome and binary outcome and continuous mediator.
 Future versions of the function will also permit sensitivity analysis for a continuous outcome and binary mediator. Output from the function can be passed through summary or plot functions which display estimated mediation effects for given values of rho.
 } 
 \usage{

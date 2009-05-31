@@ -2,7 +2,7 @@
 \alias{mediate} 
 \title{Causal Mediation Analysis} 
 \description{ 
-Function to estimate average causal mediation effects.
+Function to estimate causal mediation effects.
 } 
 \usage{
 
@@ -25,7 +25,7 @@ mediate(model.m, model.y, sims=1000, boot=FALSE, INT=FALSE, T="treat.name", M="m
 \references{Imai, Kosuke, Luke Keele and Dustin Tingley (2009) A General Approach to Causal Mediation Analysis.
 Imai, Kosuke, Luke Keele and Teppei Yamamoto (2009) Identification, Inference, and Sensitivity Analysis for Causal Mediation Effects.} 
 
-\author{Luke Keele, Ohio State University, \email{keele.4@osu.edu}, Dustin Tingley, Princeton University, \email{dtingley@princeton.edu} }
+\author{Luke Keele, Ohio State University, \email{keele.4@osu.edu} , Dustin Tingley, Princeton University, \email{dtingley@princeton.edu}, Teppei Yamamoto, Princeton University, \email{tyamamot@princeton.edu}, Kosuke Imai, Princeton University, \email{imai@princeton.edu} }
  
 \seealso{See also \code{\link{medsens}} }
 
@@ -37,11 +37,9 @@ Imai, Kosuke, Luke Keele and Teppei Yamamoto (2009) Identification, Inference, a
 #Example with JOBS II Field experiment
 data(job)
 
-#Example with simulation data
-data(sim)
 
 ####################################################
-#Continuous Outcome - Continuous Mediator--Equivalent to Baron-Kenny
+#Continuous Outcome - Continuous Mediator--Equivalent to Baron-Kenny Method
 ####################################################
 
 b <- lm(job_seek ~ treat + econ_hard + sex + age  + occp + marital + nonwhite + educ + income, data=job)
@@ -60,8 +58,17 @@ b <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age  + occp + marital + 
 d <- lm(depress2 ~ treat + job_seek + treat:job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job)
 cont.int <- mediate(b, d, sims=10, INT=TRUE, T="treat", M="job_seek")
 summary(cont.int)
-cont.int.boot  <- mediate(b, d, sims=10, boot=TRUE, INT=TRUE, T="treat", M="job_seek")
-summary(cont.int.boot)
+
+
+######################################################
+#Binary Outcome
+######################################################
+
+b <- lm(job_seek ~ treat + depress1 +age+educ+sex+nonwhite+econ_hard+marital+occp+income, data=job)
+c <- glm(work1 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, family=binomial(link="probit"), data=job)
+binary <- mediate(b, c, sims=10, T="treat", M="job_seek")
+summary(binary)
+
 
 
 } 
