@@ -5,7 +5,7 @@
 \title{Summarizing output from mediation analysis.} 
 \description{ 
 Function to report results from mediation analysis. Reported categories are mediation effect, direct effect, total effect, and proportion of total effect mediated. 
-All quantities reported with 95 percent confidence intervals. If the INT=TRUE option is selected in the mediate function, which allows for a treatment X mediator interaction, then effects are reported separetly for the treatment and control groups.
+All quantities reported with 95 percent confidence intervals. If the \code{INT = TRUE} option is selected in the mediate function, which allows for a treatment X mediator interaction, then effects are reported separetly for the treatment and control groups.
 } 
 \usage{
 
@@ -24,7 +24,7 @@ All quantities reported with 95 percent confidence intervals. If the INT=TRUE op
 \references{Imai, Kosuke, Luke Keele and Dustin Tingley (2009) A General Approach to Causal Mediation Analysis.
 Imai, Kosuke, Luke Keele and Teppei Yamamoto (2009) Identification, Inference, and Sensitivity Analysis for Causal Mediation Effects.} 
 
-\author{Luke Keele, Ohio State University, \email{keele.4@osu.edu} , Dustin Tingley, Princeton University, \email{dtingley@princeton.edu}, Teppei Yamamoto, Princeton University, \email{tyamamot@princeton.edu}, Kosuke Imai, Princeton University, \email{imai@princeton.edu} }
+\author{Luke Keele, Ohio State University, \email{keele.4@osu.edu} , Dustin Tingley, Princeton University, \email{dtingley@princeton.edu}, Teppei Yamamoto, Princeton University, \email{tyamamot@princeton.edu}, Kosuke Imai, Princeton University, \email{kimai@princeton.edu} }
  
 \seealso{See also \code{\link{mediate}} }
 

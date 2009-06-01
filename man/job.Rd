@@ -16,7 +16,7 @@ measured; a continuous measure of depressive symptoms based on the Hopkins Sympt
 and a binary variable, representing whether the respondent had become employed.
 }
 \usage{data}
-\format{A data matrix containing no missing values and hence is provided only for illustrative purposes and not for inference about program success.}
+\format{A data matrix containing no missing values and hence is provided only for illustrative purposes and not for inference about program efficacy.}
 \source{The complete JOBS II data is available from the data archives at www.icpsr.umich.edu/}
 \references{
 Vinokur, A. and Schul, Y. (1997). Mastery and inoculation against setbacks as active ingredients
