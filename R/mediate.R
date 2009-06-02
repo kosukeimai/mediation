@@ -604,20 +604,20 @@ if(is.factor(y.t.data[,paste(M)])==TRUE) {
  }
 
 out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci, pct.coef=pct.coef, pct.ci=pct.ci, tau.coef=tau.coef, tau.ci=tau.ci, z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci,boot=boot, INT=INT)
-class(out) <- "mediation"
+class(out) <- "mediate"
 out
 
 }
 
-print.mediation <- function(x, ...){
+print.mediate <- function(x, ...){
 	print(unlist(x[1:11]))
 	invisible(x)
 	}
 
-summary.mediation <- function(object, ...)
-	structure(object, class = c("summary.mediation", class(object)))
+summary.mediate <- function(object, ...)
+	structure(object, class = c("summary.mediate", class(object)))
  
-print.summary.mediation <- function(x, ...){
+print.summary.mediate <- function(x, ...){
 	if(x$INT==TRUE){
 		cat("\n Causal Mediation Analysis \n\n")
 	if(x$boot==TRUE){

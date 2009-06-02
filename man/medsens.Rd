@@ -22,6 +22,27 @@ medsens(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, DETAIL=FALSE,
 \item{pr.plot}{Plot proportion mediated for binary outcome variable.}
 } 
 
+\details{This is the workhorse function for estimating mediation effects for a variety of data types. For a continuous mediator variable and a continuous outcome variable, the results will be identical to the usual Baron and Kenny method.  The function can, however, accomodate other data types including binary outcomes and mediators and discrete mediators.  Continuous variables can also be modeled nonparametrically or semiparametrically.
+
+Users should note that computation time is several minutes for these functions.}
+
+\section{Warning}{These functions assume that all missing values have been removed from the data set.  This can be done using the \code{na.omit()} command before the outcome and mediation models are fitted.}
+
+\value{\code{mediate} returns an object of class "\code{mediate}".  The function \code{summary} is used to obtain a table of the results.  The object \code{mediate} is a list that contains the following components.  Some of these elements are not available depending on whether INT is specified as TRUE or FALSE by the user or depending on the type of model fit
+\item{d0}{Point estimate for mediation effect under control.}
+\item{d1}{Point estimate for mediation effect under treatment.}
+\item{upper.d0}{Upper confidence interval for mediation effect under control.}
+\item{lower.d0}{Lower confidence interval for mediation effect under control.}
+\item{upper.d1}{Upper confidence interval for mediation effect under treatment.}
+\item{lower.d1}{Lower confidence interval for mediation effect under treatment.}
+\item{tau}{Point estimate for total effect.}
+\item{upper.tau}{Upper confidence interval for total effect.}
+\item{lower.tau}{Lower confidence interval for total effect.}
+\item{nu}{Proportion of total effect mediated.}
+\item{upper.nu}{Upper confidence interval for proportion mediated.}
+\item{lower.nu}{Upper confidence interval for proportion mediated.}
+}
+
 \references{Imai, Kosuke, Luke Keele and Dustin Tingley (2009) A General Approach to Causal Mediation Analysis.
 Imai, Kosuke, Luke Keele and Teppei Yamamoto (2009) Identification, Inference, and Sensitivity Analysis for Causal Mediation Effects.} 
 
@@ -43,8 +64,8 @@ data(job)
 #########################################
 
 #fit parametric model
-model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age  + occp + marital + nonwhite + educ + income, data=job)
-model.y <- lm(depress2 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job)
+model.m <- lm(job_seek ~ treat + depress1, data=job)
+model.y <- lm(depress2 ~ treat + job_seek + depress1, data=job)
 #pass model objects through medsens function
 sens.cont <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE, sims=10)
 #use summary function to display values of rho where 95% confidence interval overlaps with 0.
@@ -59,8 +80,8 @@ plot(sens.cont, main="JOBS", ylim=c(-.2,.2))
 #binary outcome and continuous mediator
 #########################################
 
-model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job)
-model.y <- glm(work1 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, family=binomial(link="probit"), data=job)
+model.m <- lm(job_seek ~ treat + depress1, data=job)
+model.y <- glm(work1 ~ treat + job_seek + depress1, family=binomial(link="probit"), data=job)
 sens.dichO <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE, sims=10)
 summary(sens.dichO)
 plot(sens.dichO, main="JOBS", ylim=c(-.2,.2))
@@ -72,14 +93,14 @@ plot(sens.dichO, main="JOBS", ylim=c(-.2,.2))
 #NOT YET IMPLEMENTED...DO NOT DRAW INFERENCES FROM RESULTS
 #########################################
 
-#model.m <- glm(job_dich ~ treat + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job, family=binomial(link="probit"))
-#model.y <- lm(depress2 ~ treat + job_dich  + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job)
+#model.m <- glm(job_dich ~ treat + depress1, data=job, family=binomial(link="probit"))
+#model.y <- lm(depress2 ~ treat + job_dich + depress1, data=job)
 #sens.dichM <- medsens(model.m, model.y, T="treat", M="job_dich", INT=FALSE,  DETAIL=FALSE, sims=10)
 #summary(sens.dichM)
 #plot(sens.dichM, main="JOBS", ylim=c(-.2,.2))
 #continuous outcome and binary mediator w interaction
-#model.m <- glm(job_dich ~ treat + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job, family=binomial(link="probit"))
-#model.y <- lm(depress2 ~ treat + job_dich + treat:job_dich + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job)
+#model.m <- glm(job_dich ~ treat + depress1, data=job, family=binomial(link="probit"))
+#model.y <- lm(depress2 ~ treat + job_dich + treat:job_dich + depress1, data=job)
 #sens.dichM.int <- medsens(model.m, model.y, T="treat", M="job_dich", INT=TRUE,  DETAIL=FALSE, sims=10)
 #summary(sens.dichM.int)
 #plot(sens.dichM.int, main="JOBS", ylim=c(-.2,.2))
