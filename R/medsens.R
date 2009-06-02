@@ -215,31 +215,18 @@ medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, D
         Mmodel.coef.boot <- mvrnorm(sims, mu=Mmodel.coef, Sigma=Mmodel.var.cov) # bootstrap M-model parameters
         
         # Step 1-2: Bootstrap lambda_0 and lambda_1; lambdas are (n x sims) matrix
+        m.mat <- model.matrix(model.m)
         m.mat.1 <- model.matrix(model.m)
         m.mat.1[,T.out] <- 1 # M-model matrix with t=1
         m.mat.0 <- model.matrix(model.m)
-        m.mat.0[,T.out] <- 0
-        mu.1.boot <- m.mat.1 %*% t(Mmodel.coef.boot) 
-        mu.0.boot <- m.mat.0 %*% t(Mmodel.coef.boot) 
-        lambda11 <- dnorm(-mu.1.boot) / pnorm(mu.1.boot) #m=1,t=1
-        lambda10 <- dnorm(-mu.0.boot) / pnorm(mu.0.boot) #m=1,t=0
-        lambda01 <- -dnorm(-mu.1.boot) / pnorm(-mu.1.boot) #m=0,t=1
-        lambda00 <- -dnorm(-mu.0.boot) / pnorm(-mu.0.boot) #m=0,t=0
         m.mat.0[,T.out] <- 0 # M-model matrix with t=0
+        mu.boot <- m.mat %*% t(Mmodel.coef.boot) # E(M|T,X)
         mu.1.boot <- m.mat.1 %*% t(Mmodel.coef.boot) # E(M|T=1,X)
         mu.0.boot <- m.mat.0 %*% t(Mmodel.coef.boot) # E(M|T=0,X)
         lambda11 <- dnorm(-mu.1.boot) / pnorm(mu.1.boot) #lambda for m=1,t=1
         lambda10 <- dnorm(-mu.0.boot) / pnorm(mu.0.boot) #lambda for m=1,t=0
         lambda01 <- -dnorm(-mu.1.boot) / pnorm(-mu.1.boot) #lambda for m=0,t=1
         lambda00 <- -dnorm(-mu.0.boot) / pnorm(-mu.0.boot) #lambda for m=0,t=0
-        
-## For non-bootstrap point estimates:
-##        mu.1 <- m.mat.1 %*% Mmodel.coef
-##        mu.0 <- m.mat.0 %*% Mmodel.coef
-##        lambda11p <- dnorm(-mu.1) / pnorm(mu.1) #m=1,t=1
-##        lambda10p <- dnorm(-mu.0) / pnorm(mu.0) #m=1,t=0
-##        lambda01p <- -dnorm(-mu.1) / pnorm(-mu.1) #m=0,t=1
-##        lambda00p <- -dnorm(-mu.0) / pnorm(-mu.0) #m=0,t=0
         
         # Step 1-3: Define lambda function
         lambda <- function(mmodel, mcoef) {
@@ -268,49 +255,20 @@ medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, D
         sigma.3.boot <- rep(NA, sims)
         d0.boot <- d1.boot <- rep(NA, sims)
 
-## For non-boostrap point estimates:
-##        d0.point <- d1.point <- rep(NA,length(rho))
-        
         ## START OF RHO LOOP
-
         for(i in 1:length(rho)){
-            ## START OF BOOTSTRAP LOOP
-            #for(k in 1:sims){
-            
-## For non-boostrap point estimates:
-##            adj <- lambda(model.m, Mmodel.coef) * rho[i]
-##            y.t.data.adj <- data.frame(y.t.data, adj)
-##            model.y.adj <- update(model.y, as.formula(paste(". ~ . + adj")), data=y.t.data.adj)
-##            sigma.3 <- summary(model.y.adj)$sigma
-##            
-##            eps <- .001
-##            sigma.dif <- 1
-##            while(abs(sigma.dif) > eps){
-##                Y.star <- Y.value - sigma.3 * adj
-##                y.t.data.star <- data.frame(Y.star, y.t.data[,-1])
-##                model.y.update <- update(model.y, as.formula(paste("Y.star ~ .")), data=y.t.data.star)
-##                sigma.3.temp <- summary(model.y.update)$sigma
-##                sigma.dif <- sigma.3.temp - sigma.3
-##                sigma.3 <- sigma.3.temp
-##            }
-##            
-##            Ymodel.coef <- model.y.update$coef
-##            
-##            d0.point[i] <- mean( (Ymodel.coef[M.out] + rho[i]*sigma.3*(lambda10p - lambda00p)) * (pnorm(mu.1) - pnorm(mu.0) ))
-##            d1.point[i] <- mean( (Ymodel.coef[M.out] + rho[i]*sigma.3*(lambda11p - lambda01p)) * (pnorm(mu.1) - pnorm(mu.0) ))
             
             ## START OF BOOTSTRAP LOOP
             for(k in 1:sims){
             ## Step 2-1: Obtain the initial Y model with the correction term
-            adj <- lambda(model.m, Mmodel.coef.boot[k,]) * rho[i]
-            y.t.data.adj <- data.frame(y.t.data, adj)
-            model.y.adj <- update(model.y, as.formula(paste(". ~ . + adj")), data=y.t.data.adj)
             adj <- lambda(model.m, Mmodel.coef.boot[k,]) * rho[i] # the adjustment term
             y.t.data.adj <- data.frame(y.t.data, adj)
+            w <- 1 - rho[i]^2*lambda(model.m, Mmodel.coef.boot[k,])*(lambda(model.m, Mmodel.coef.boot[k,]) - mu.boot[,k])
+#            model.y.adj <- update(model.y, as.formula(paste(". ~ . + adj")), weights=w, data=y.t.data.adj)
             model.y.adj <- update(model.y, as.formula(paste(". ~ . + adj")), data=y.t.data.adj)
             sigma.3 <- summary(model.y.adj)$sigma
             
-            ## Step 2-2: Update the Y model via Iterative OLS
+            ## Step 2-2: Update the Y model via Iterative FGLS
             eps <- .001
             sigma.dif <- 1
             while(abs(sigma.dif) > eps){
@@ -325,45 +283,21 @@ medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, D
             ## Step 2-3: Bootstrap Y model parameters
             Ymodel.coef <- model.y.update$coef
             Ymodel.var.cov <- vcov(model.y.update)
-            Ymodel.coef.boot[k,] <- mvrnorm(1, mu=Ymodel.coef, Sigma=Ymodel.var.cov)
-            sig3.shape <- model.y.update$df/2
-            sig3.invscale <- (model.y.update$df/2) * sigma.3^2
-            sigma.3.boot[k] <- sqrt(1 / rgamma(1, shape = sig3.shape, scale = 1/sig3.invscale))
-            
-            ## Step 2-4: Bootstrap ACMEs
-            d0.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + rho[i]*sigma.3.boot[k]*(lambda10[,k] - lambda00[,k])) * 
-                (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
-            if(INT==TRUE){
-                d1.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + Ymodel.coef.boot[k,TM.out] + rho[i]*sigma.3.boot[k]*(lambda11[,k] - lambda01[,k])) *
-                    (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
-                } else {
-                d1.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + rho[i]*sigma.3.boot[k]*(lambda11[,k] - lambda01[,k])) *
-                    (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
-                }
-
-            
-            ## Step 2-3: Bootstrap Y model parameters
-            Ymodel.coef <- model.y.update$coef
-            Ymodel.var.cov <- vcov(model.y.update)
             Ymodel.coef.boot[k,] <- mvrnorm(1, mu=Ymodel.coef, Sigma=Ymodel.var.cov) #draw one bootstrap sample of Y-model parameters for each k
             sig3.shape <- model.y.update$df/2
             sig3.invscale <- (model.y.update$df/2) * sigma.3^2
             sigma.3.boot[k] <- sqrt(1 / rgamma(1, shape = sig3.shape, scale = 1/sig3.invscale)) #one sample of sigma.3 via inverse-gamma posterior
             
             ## Step 2-4: Bootstrap ACMEs; means are over observations
-#            d0.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + rho[i]*sigma.3.boot[k]*(lambda10[,k] - lambda00[,k])) * 
-#                (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
-            d0.boot[k] <- mean( (-0.5 + rho[i]*sigma.3.boot[k]*(lambda10[,k] - lambda00[,k])) * 
+            d0.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + rho[i]*sigma.3.boot[k]*(lambda10[,k] - lambda00[,k])) * 
                 (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
-            d1.boot[k] <- mean( (-0.5 + rho[i]*sigma.3.boot[k]*(lambda11[,k] - lambda01[,k])) * 
-                (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
-#            if(INT==TRUE){
-#                d1.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + Ymodel.coef.boot[k,TM.out] + rho[i]*sigma.3.boot[k]*(lambda11[,k] - lambda01[,k])) * 
-#                    (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
-#                } else {
-#                d1.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + rho[i]*sigma.3.boot[k]*(lambda11[,k] - lambda01[,k])) * 
-#                    (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
-#                }
+            if(INT==TRUE){
+                d1.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + Ymodel.coef.boot[k,TM.out] + rho[i]*sigma.3.boot[k]*(lambda11[,k] - lambda01[,k])) * 
+                    (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
+                } else {
+                d1.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + rho[i]*sigma.3.boot[k]*(lambda11[,k] - lambda01[,k])) * 
+                    (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
+                }
 
             ## END OF BOOTSTAP LOOP
             }
