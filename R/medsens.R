@@ -1,4 +1,4 @@
-medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, DETAIL=FALSE, sims=1000, pr.plot=FALSE)
+medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, DETAIL=FALSE, sims=1000)
 {
 
     #########################################################
@@ -161,7 +161,7 @@ medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, D
         ind.d1 <- as.numeric(lower.d1 < 0 & upper.d1 > 0)
                 }
         type <- "ct"
-        out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, sims=sims,tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL, type=type, pr.plot=pr.plot)
+        out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, sims=sims,tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL, type=type)
         class(out) <- "medsens"
         out
 
@@ -316,7 +316,7 @@ medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, D
         }
         type <- "bm"
         # Step 3: Output
-        out <- list(rho = rho, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, sims=sims,tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL,type=type, pr.plot=pr.plot)
+        out <- list(rho = rho, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, sims=sims,tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL,type=type)
         class(out) <- "medsens"
         out
 
@@ -454,7 +454,7 @@ medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, D
         out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, 
             upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, 
             tau=tau, upper.tau=upper.tau, lower.tau=lower.tau, nu=nu, upper.nu=upper.nu, lower.nu=lower.nu,
-            INT=INT, DETAIL=DETAIL, sims=sims, type=type, pr.plot=pr.plot)
+            INT=INT, DETAIL=DETAIL, sims=sims, type=type)
         class(out) <- "medsens"
         out
     ## END OF CASE 3: Binary Outcome + Continuous Mediator    
@@ -601,8 +601,8 @@ print.summary.medsens <- function(x, ...){
         
 }
 
-plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL,...){
-    if(x$pr.plot==TRUE){
+plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL,pr.plot=FALSE,...){
+    if(pr.plot==TRUE){
         plot(x$rho, x$nu, type="n", xlab="", ylab = "", main=main, xlim=xlim, ylim=ylim)
         polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.nu, rev(x$upper.nu)), border=FALSE, col=8, lty=2)
         lines(x$rho, x$d0, lty=1)
