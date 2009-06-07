@@ -246,16 +246,6 @@ medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, D
         d0.boot <- d1.boot <- rep(NA, sims)
         
         ## START OF RHO LOOP
-        ## Step 2-0: Initialize containers
-        d0 <- d1 <- rep(NA, length(rho))
-        upper.d0 <- upper.d1 <- lower.d0 <- lower.d1 <- rep(NA, length(rho))
-        ind.d0 <- ind.d1 <- rep(NA, length(rho))
-        Ymodel.coef.boot <- matrix(NA, sims, y.k)
-        colnames(Ymodel.coef.boot) <- names(model.y$coef)
-        sigma.3.boot <- rep(NA, sims)
-        d0.boot <- d1.boot <- rep(NA, sims)
-
-        ## START OF RHO LOOP
         for(i in 1:length(rho)){
             
             ## START OF BOOTSTRAP LOOP
@@ -263,18 +253,17 @@ medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, D
             ## Step 2-1: Obtain the initial Y model with the correction term
             adj <- lambda(model.m, Mmodel.coef.boot[k,]) * rho[i] # the adjustment term
             y.t.data.adj <- data.frame(y.t.data, adj)
-            w <- 1 - rho[i]^2*lambda(model.m, Mmodel.coef.boot[k,])*(lambda(model.m, Mmodel.coef.boot[k,]) - mu.boot[,k])
-#            model.y.adj <- update(model.y, as.formula(paste(". ~ . + adj")), weights=w, data=y.t.data.adj)
-            model.y.adj <- update(model.y, as.formula(paste(". ~ . + adj")), data=y.t.data.adj)
+            w <- 1 - rho[i]^2*lambda(model.m, Mmodel.coef.boot[k,])*(lambda(model.m, Mmodel.coef.boot[k,]) + mu.boot[,k])
+            model.y.adj <- update(model.y, as.formula(paste(". ~ . + adj")), weights=w, data=y.t.data.adj)
             sigma.3 <- summary(model.y.adj)$sigma
             
             ## Step 2-2: Update the Y model via Iterative FGLS
-            eps <- .001
+            eps <- .Machine$double.eps
             sigma.dif <- 1
             while(abs(sigma.dif) > eps){
                 Y.star <- Y.value - sigma.3 * adj
                 y.t.data.star <- data.frame(Y.star, y.t.data[,-1])
-                model.y.update <- update(model.y, as.formula(paste("Y.star ~ .")), data=y.t.data.star)
+                model.y.update <- update(model.y, as.formula(paste("Y.star ~ .")), weights=w, data=y.t.data.star)
                 sigma.3.temp <- summary(model.y.update)$sigma
                 sigma.dif <- sigma.3.temp - sigma.3
                 sigma.3 <- sigma.3.temp
