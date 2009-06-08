@@ -244,7 +244,6 @@ medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, D
         colnames(Ymodel.coef.boot) <- names(model.y$coef)
         sigma.3.boot <- rep(NA, sims)
         d0.boot <- d1.boot <- rep(NA, sims)
-        
         ## START OF RHO LOOP
         for(i in 1:length(rho)){
             
@@ -252,8 +251,8 @@ medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, D
             for(k in 1:sims){
             ## Step 2-1: Obtain the initial Y model with the correction term
             adj <- lambda(model.m, Mmodel.coef.boot[k,]) * rho[i] # the adjustment term
-            y.t.data.adj <- data.frame(y.t.data, adj)
             w <- 1 - rho[i]^2*lambda(model.m, Mmodel.coef.boot[k,])*(lambda(model.m, Mmodel.coef.boot[k,]) + mu.boot[,k])
+            y.t.data.adj <- data.frame(y.t.data, w, adj)
             model.y.adj <- update(model.y, as.formula(paste(". ~ . + adj")), weights=w, data=y.t.data.adj)
             sigma.3 <- summary(model.y.adj)$sigma
             
@@ -262,7 +261,7 @@ medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, D
             sigma.dif <- 1
             while(abs(sigma.dif) > eps){
                 Y.star <- Y.value - sigma.3 * adj
-                y.t.data.star <- data.frame(Y.star, y.t.data[,-1])
+                y.t.data.star <- data.frame(Y.star, y.t.data.adj)
                 model.y.update <- update(model.y, as.formula(paste("Y.star ~ .")), weights=w, data=y.t.data.star)
                 sigma.3.temp <- summary(model.y.update)$sigma
                 sigma.dif <- sigma.3.temp - sigma.3
@@ -309,17 +308,7 @@ medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, D
         class(out) <- "medsens"
         out
 
-    ## END OF CASE 2: Continuous Outcome + Binary Mediator    
-    
-    ## PROBLEM: d1 and d0 move in different ways as functions of rho. We know this to be wrong from the equation.
-    ## THINGS WE TRIED:
-    # * replaced mean() with a loop -> same problem.
-    # * point estimates w/o bootstrapping -> same problem. so it doesn't have anything to do with boostrapping
-    # * fixed sigma.3.boot to one artificially -> same problem.
-    # * fixed the second term (the "pnorm(mu.1) - pnorm(mu.0)" term to .1 -> same problem.
-    # * fixed lambda1t - lambda0t constant -> PROBLEM FIXED. So the problem seems to lie in this term!
-    # * fixed Ymodel.coef to -0.5 -> PROBLEM FIXED. So the problem must be something about these two terms.
-    # * OR MAYBE THIS ISN'T A PROBLEM AT ALL?
+    ## END OF CASE 2: Continuous Outcome + Binary Mediator
     } else
     
     #########################################################
