@@ -1,4 +1,4 @@
-medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, DETAIL=FALSE, sims=1000)
+medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, DETAIL=FALSE, sims=1000, eps=.Machine$double.eps)
 {
 
     #########################################################
@@ -50,7 +50,7 @@ medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, D
         e.cor <- rho[i]
         
         b.dif <- 1
-        eps <- .001 #.Machine$double.eps
+        #eps <- .001 #.Machine$double.eps
         
         #Stacked Equations
         m.mat <- model.matrix(model.m)
@@ -257,7 +257,7 @@ medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, D
             sigma.3 <- summary(model.y.adj)$sigma
             
             ## Step 2-2: Update the Y model via Iterative FGLS
-            eps <- .Machine$double.eps
+            #eps <- .Machine$double.eps
             sigma.dif <- 1
             while(abs(sigma.dif) > eps){
                 Y.star <- Y.value - sigma.3 * adj
@@ -304,7 +304,7 @@ medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, D
         }
         type <- "bm"
         # Step 3: Output
-        out <- list(rho = rho, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, sims=sims,tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL,type=type)
+        out <- list(rho = rho, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, sims=sims,tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL,type=type, err.cr=NULL)
         class(out) <- "medsens"
         out
 
@@ -429,7 +429,7 @@ medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, D
         type <- "bo"
         ## Step 3: Output
         err.cr <- mean(rho12.boot) # Rho_12 estimate
-        out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, 
+        out <- list(rho = rho, err.cr=NULL, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, 
             upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, 
             tau=tau, upper.tau=upper.tau, lower.tau=lower.tau, nu=nu, upper.nu=upper.nu, lower.nu=lower.nu,
             INT=INT, DETAIL=DETAIL, sims=sims, type=type)
