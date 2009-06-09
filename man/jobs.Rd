@@ -1,6 +1,6 @@
-\name{job}
+\name{jobs}
 \docType{data}
-\alias{job}
+\alias{jobs}
 \title{JOB II data}
 \description{
 Job Search Intervention Study (JOBS
