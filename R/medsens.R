@@ -272,18 +272,22 @@ medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, D
             Ymodel.coef <- model.y.update$coef
             Ymodel.var.cov <- vcov(model.y.update)
             Ymodel.coef.boot[k,] <- mvrnorm(1, mu=Ymodel.coef, Sigma=Ymodel.var.cov) #draw one bootstrap sample of Y-model parameters for each k
-            sig3.shape <- model.y.update$df/2
-            sig3.invscale <- (model.y.update$df/2) * sigma.3^2
-            sigma.3.boot[k] <- sqrt(1 / rgamma(1, shape = sig3.shape, scale = 1/sig3.invscale)) #one sample of sigma.3 via inverse-gamma posterior
+            #sig3.shape <- model.y.update$df/2
+            #sig3.invscale <- (model.y.update$df/2) * sigma.3^2
+            #sigma.3.boot[k] <- sqrt(1 / rgamma(1, shape = sig3.shape, scale = 1/sig3.invscale)) #one sample of sigma.3 via inverse-gamma posterior
             
             ## Step 2-4: Bootstrap ACMEs; means are over observations
-            d0.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + rho[i]*sigma.3.boot[k]*(lambda10[,k] - lambda00[,k])) * 
+            #temp0<-rho[i]*sigma.3.boot[k]*(lambda10[,k] - lambda00[,k])
+            #temp1<-rho[i]*sigma.3.boot[k]*(lambda11[,k] - lambda01[,k])
+            temp0<-0
+            temp1<-1
+            d0.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + temp0) * 
                 (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
             if(INT==TRUE){
-                d1.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + Ymodel.coef.boot[k,TM.out] + rho[i]*sigma.3.boot[k]*(lambda11[,k] - lambda01[,k])) * 
+                d1.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + Ymodel.coef.boot[k,TM.out] + temp1) * 
                     (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
                 } else {
-                d1.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + rho[i]*sigma.3.boot[k]*(lambda11[,k] - lambda01[,k])) * 
+                d1.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] +temp1) * 
                     (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
                 }
 
