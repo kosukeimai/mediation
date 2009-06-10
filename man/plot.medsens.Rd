@@ -8,7 +8,7 @@ Plots results from medsens function. Y axis plots mediation effect and x-axis pl
 } 
 \usage{
 
-  \method{plot}{medsens}(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL,...) 
+  \method{plot}{medsens}(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL,pr.plot=FALSE,...) 
 
  # \method{print}{plot.medsens}(z)
 
@@ -21,6 +21,7 @@ Plots results from medsens function. Y axis plots mediation effect and x-axis pl
 \item{xlim}{range for x-axis.} 
 \item{ylim}{range for y-axis.} 
 \item{main}{main title for graph.}
+\item{pr.plot}{If pr.plot=TRUE then proportion mediated will be plotted.}
 \item{...}{Additional arguments to be passed.} 
 } 
 
