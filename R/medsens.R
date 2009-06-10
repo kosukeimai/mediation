@@ -280,7 +280,7 @@ medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, D
             #temp0<-rho[i]*sigma.3.boot[k]*(lambda10[,k] - lambda00[,k])
             #temp1<-rho[i]*sigma.3.boot[k]*(lambda11[,k] - lambda01[,k])
             temp0<-0
-            temp1<-1
+            temp1<-0
             d0.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + temp0) * 
                 (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
             if(INT==TRUE){
