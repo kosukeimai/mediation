@@ -595,7 +595,7 @@ plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NUL
         abline(h=0)
         abline(v=0)
         title(xlab=expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
-        title(ylab = expression(paste("Average Mediation Effect: ", bar(delta))), cex.lab=.9)
+        title(ylab = expression(paste("Average Mediation Effect: ", bar(delta)(t))), cex.lab=.9)
         if(x$DETAIL==TRUE){
         abline(h=x$d0[96], lty=2)
             } else {
