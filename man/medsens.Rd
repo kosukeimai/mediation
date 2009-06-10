@@ -64,8 +64,8 @@ data(jobs)
 #########################################
 
 #fit parametric model
-model.m <- lm(job_seek ~ treat + depress1, data=job)
-model.y <- lm(depress2 ~ treat + job_seek + depress1, data=job)
+model.m <- lm(job_seek ~ treat + depress1, data=jobs)
+model.y <- lm(depress2 ~ treat + job_seek + depress1, data=jobs)
 #pass model objects through medsens function
 sens.cont <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE, sims=10)
 #use summary function to display values of rho where 95% confidence interval overlaps with 0.
@@ -80,8 +80,8 @@ plot(sens.cont, main="JOBS", ylim=c(-.2,.2))
 #binary outcome and continuous mediator
 #########################################
 
-model.m <- lm(job_seek ~ treat + depress1, data=job)
-model.y <- glm(work1 ~ treat + job_seek + depress1, family=binomial(link="probit"), data=job)
+model.m <- lm(job_seek ~ treat + depress1, data=jobs)
+model.y <- glm(work1 ~ treat + job_seek + depress1, family=binomial(link="probit"), data=jobs)
 sens.dichO <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE, sims=10)
 summary(sens.dichO)
 plot(sens.dichO, main="JOBS", ylim=c(-.2,.2))
@@ -93,8 +93,8 @@ plot(sens.dichO, main="JOBS", ylim=c(-.2,.2))
 #NOT YET IMPLEMENTED...DO NOT DRAW INFERENCES FROM RESULTS
 #########################################
 
-#model.m <- glm(job_dich ~ treat + depress1, data=job, family=binomial(link="probit"))
-#model.y <- lm(depress2 ~ treat + job_dich + depress1, data=job)
+#model.m <- glm(job_dich ~ treat + depress1, data=jobs, family=binomial(link="probit"))
+#model.y <- lm(depress2 ~ treat + job_dich + depress1, data=jobs)
 #sens.dichM <- medsens(model.m, model.y, T="treat", M="job_dich", INT=FALSE,  DETAIL=FALSE, sims=10)
 #summary(sens.dichM)
 #plot(sens.dichM, main="JOBS", ylim=c(-.2,.2))
