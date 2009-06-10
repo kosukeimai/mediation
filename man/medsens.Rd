@@ -27,33 +27,23 @@ Users should note that computation time is several minutes for these functions. 
 
 \section{Warning}{These functions assume that all missing values have been removed from the data set.  This can be done using the \code{na.omit()} command before the outcome and mediation models are fitted.}
 
-\value{\code{medsens} returns an object of class "\code{medsens}".  The function \code{summary} is used to obtain a table of the results. The function \code{plot} is used to plot the results.  
+\value{\code{medsens} returns an object of class "\code{medsens}". Some of the below elements are not available depending on whether INT is
+     specified as TRUE or FALSE by the user or depending on the type of model fit   The function \code{summary} is used to obtain a table of the results. The function \code{plot} is used to plot the results.  
 
-      d0: Point estimate for mediation effect under control.
-
-      d1: Point estimate for mediation effect under treatment.
-
-upper.d0: Upper confidence interval for mediation effect under control.
-
-lower.d0: Lower confidence interval for mediation effect under control.
-
-upper.d1: Upper confidence interval for mediation effect under
-          treatment.
-
-lower.d1: Lower confidence interval for mediation effect under
-          treatment.
-
-     tau: Point estimate for total effect.
-
-upper.tau: Upper confidence interval for total effect.
-
-lower.tau: Lower confidence interval for total effect.
-
-      nu: Proportion of total effect mediated.
-
-upper.nu: Upper confidence interval for proportion mediated.
-
-lower.nu: Upper confidence interval for proportion mediated.
+      \item{d0}{Point estimate for mediation effect under control.}
+      \item{d1}{Point estimate for mediation effect under treatment.}
+\item{upper.d0}{Upper confidence interval for mediation effect under control.}
+\item{lower.d0}{Lower confidence interval for mediation effect under control.}
+\item{upper.d1}{Upper confidence interval for mediation effect under
+          treatment.}
+\item{lower.d1}{Lower confidence interval for mediation effect under
+          treatment.}
+     \item{tau}{Point estimate for total effect.}
+\item{upper.tau}{Upper confidence interval for total effect.}
+\item{lower.tau}{Lower confidence interval for total effect.}
+      \item{nu}{Proportion of total effect mediated.}
+\item{upper.nu}{Upper confidence interval for proportion mediated.}
+\item{lower.nu}{Upper confidence interval for proportion mediated.}
 
 
 }
