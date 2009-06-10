@@ -79,8 +79,6 @@ summary(sens.cont)
 plot(sens.cont, main="JOBS", ylim=c(-.2,.2))
 
 
-
-
 #########################################
 #binary outcome and continuous mediator
 #########################################
@@ -90,8 +88,6 @@ model.y <- glm(work1 ~ treat + job_seek + depress1, family=binomial(link="probit
 sens.dichO <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE, sims=10)
 summary(sens.dichO)
 plot(sens.dichO, main="JOBS", ylim=c(-.2,.2))
-
-
 
 #########################################
 #continuous outcome and binary mediator w no interaction
@@ -112,6 +108,7 @@ model.y <- lm(depress2 ~ treat + job_dich + treat:job_dich + depress1, data=jobs
 sens.dichM.int <- medsens(model.m, model.y, T="treat", M="job_dich", INT=TRUE,  DETAIL=FALSE, sims=10)
 summary(sens.dichM.int)
 plot(sens.dichM.int, main="JOBS", ylim=c(-.2,.2))
+}
 
 
 } 
