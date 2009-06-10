@@ -8,7 +8,7 @@ Plots results from medsens function. Y axis plots mediation effect and x-axis pl
 } 
 \usage{
 
-  \method{plot}{medsens}(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL,pr.plot=FALSE,...) 
+  \method{plot}{medsens}(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL, pr.plot=FALSE,...) 
 
  # \method{print}{plot.medsens}(z)
 

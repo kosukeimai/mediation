@@ -6,7 +6,7 @@ Function to perform sensitivity analysis on mediation effect for violations of s
 } 
 \usage{
 
-medsens(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, DETAIL=FALSE, sims=1000, pr.plot=FALSE)
+medsens(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, DETAIL=FALSE, sims=1000, eps=.Machine$double.eps)
 
 } 
 
@@ -18,6 +18,7 @@ medsens(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, DETAIL=FALSE,
 \item{M}{Name of mediator. Variable name listed in quotations.}
 \item{DETAIL}{If FALSE estimation is on .1 grid for rho (sensitivity parameter) vs. a grid of .01). Due to computational time FALSE is recommended.}
 \item{sims}{Number of draws for parametric bootstrap used to calculate 95 percent confidence intervals.}
+\item{eps}{Convergence parameter for FGLS estimation.}
 } 
 
 \details{This is the workhorse function for estimating sensitivity analyses for mediation effects. In fitting models for a binary variable a probit function must be used. In fitting the model.y object with a treatmentXmediator interaction the user must input the interation in the format treatment:mediator. Furthermore, the user must make sure to also include the main effect for the mediator in this case.  
@@ -89,8 +90,8 @@ plot(sens.dichM, main="JOBS", ylim=c(-.2,.2))
 #continuous outcome and binary mediator w interaction
 #########################################
 
-model.m <- glm(job_dich ~ treat + depress1, data=job, family=binomial(link="probit"))
-model.y <- lm(depress2 ~ treat + job_dich + treat:job_dich + depress1, data=job)
+model.m <- glm(job_dich ~ treat + depress1, data=jobs, family=binomial(link="probit"))
+model.y <- lm(depress2 ~ treat + job_dich + treat:job_dich + depress1, data=jobs)
 sens.dichM.int <- medsens(model.m, model.y, T="treat", M="job_dich", INT=TRUE,  DETAIL=FALSE, sims=10)
 summary(sens.dichM.int)
 plot(sens.dichM.int, main="JOBS", ylim=c(-.2,.2))
