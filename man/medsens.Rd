@@ -29,6 +29,33 @@ Users should note that computation time is several minutes for these functions. 
 
 \value{\code{medsens} returns an object of class "\code{medsens}".  The function \code{summary} is used to obtain a table of the results. The function \code{plot} is used to plot the results.  
 
+      d0: Point estimate for mediation effect under control.
+
+      d1: Point estimate for mediation effect under treatment.
+
+upper.d0: Upper confidence interval for mediation effect under control.
+
+lower.d0: Lower confidence interval for mediation effect under control.
+
+upper.d1: Upper confidence interval for mediation effect under
+          treatment.
+
+lower.d1: Lower confidence interval for mediation effect under
+          treatment.
+
+     tau: Point estimate for total effect.
+
+upper.tau: Upper confidence interval for total effect.
+
+lower.tau: Lower confidence interval for total effect.
+
+      nu: Proportion of total effect mediated.
+
+upper.nu: Upper confidence interval for proportion mediated.
+
+lower.nu: Upper confidence interval for proportion mediated.
+
+
 }
 
 \references{Imai, Kosuke, Luke Keele and Dustin Tingley (2009) A General Approach to Causal Mediation Analysis.
