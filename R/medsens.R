@@ -510,19 +510,19 @@ print.summary.medsens <- function(x, ...){
                 } else {
             tab.d0 <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
             if(sum(x$ind.d0)==1){
-            tab <- as.matrix(tab[x$ind.d0==1, -5])
-            tab <- t(tab)
+            tab.d0 <- as.matrix(tab.d0[x$ind.d0==1, -5])
+            tab.d0 <- t(tab.d0)
             } else {
-            tab <- tab[x$ind.d0==1, -5] 
+            tab.d0 <- tab.d0[x$ind.d0==1, -5] 
             }
             colnames(tab.d0) <-  c("Rho","Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab.d0) <- NULL
             tab.d1 <- cbind(x$rho, round(x$d1,4), round(x$lower.d1,4), round(x$upper.d1, 4), x$ind.d1)
                 if(sum(x$ind.d1)==1){
-                tab <- as.matrix(tab[x$ind.d1==1, -5])
-                tab <- t(tab)
+                tab.d1 <- as.matrix(tab.d1[x$ind.d1==1, -5])
+                tab.d1 <- t(tab.d1)
                 } else {
-            tab <- tab[x$ind.d1==1, -5] 
+            tab.d1 <- tab.d1[x$ind.d1==1, -5] 
             }
             colnames(tab.d1) <-  c("Rho","Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab.d1) <- NULL
