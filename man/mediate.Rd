@@ -67,8 +67,10 @@ c <- lm(depress2 ~ treat + job_seek + depress1 + econ_hard + sex + age, data=job
 #Calculates quantities using parametric bootstrap
 #The general format of the function is to record two model objects
 #The first for the mediator the second for the outcome variable 
-continuous <- mediate(b, c, sims=10, T="treat", M="job_seek")
+continuous <- mediate(b, c, sims=1000, T="treat", M="job_seek")
 summary(continuous)
+
+\dontrun{
 #Calculates quantities using the non-parametric bootstrap - This takes several minutes
 continuous_boot <- mediate(b, c, sims=10, boot=TRUE, T="treat", M="job_seek")
 summary(continuous_boot)
@@ -88,7 +90,7 @@ b <- lm(job_seek ~ treat + depress1, data=jobs)
 c <- glm(work1 ~ treat + job_seek + depress1, family=binomial(link="probit"), data=jobs)
 binary <- mediate(b, c, sims=10, T="treat", M="job_seek")
 summary(binary)
-
+}
 
 
 } 

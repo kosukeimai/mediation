@@ -34,11 +34,7 @@ Imai, Kosuke, Luke Keele and Teppei Yamamoto (2009) Identification, Inference, a
 #For illustration purposes simulations set to low number.
 
 #Example with JOBS II Field experiment
-data(job)
-
-#Example with simulation data
-data(sim)
-
+data(jobs)
 
 
 #########################################
@@ -46,8 +42,8 @@ data(sim)
 #########################################
 
 #fit parametric model
-model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age  + occp + marital + nonwhite + educ + income, data=job)
-model.y <- lm(depress2 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job)
+model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age  + occp + marital + nonwhite + educ + income, data=jobs)
+model.y <- lm(depress2 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=jobs)
 #pass model objects through medsens function
 sens.cont <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE, sims=10)
 #use summary function to display values of rho where 95% confidence interval overlaps with 0.
@@ -62,8 +58,8 @@ plot(sens.cont, main="JOBS", ylim=c(-.2,.2))
 #binary outcome and continuous mediator
 #########################################
 
-model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=job)
-model.y <- glm(work1 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, family=binomial(link="probit"), data=job)
+model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=jobs)
+model.y <- glm(work1 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, family=binomial(link="probit"), data=jobs)
 sens.dichO <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE, sims=10)
 summary(sens.dichO)
 plot(sens.dichO, main="JOBS", ylim=c(-.2,.2))
