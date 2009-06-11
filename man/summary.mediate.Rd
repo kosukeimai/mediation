@@ -41,12 +41,13 @@ data(jobs)
 #continuous mediator and continuous outcome
 #########################################
 
+\dontrun{
 #fit parametric model
 model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age  + occp + marital + nonwhite + educ + income, data=jobs)
 model.y <- lm(depress2 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=jobs)
-continuous <- mediate(model.m , model.y, sims=10, T="treat", M="job_seek")
+continuous <- mediate(model.m , model.y, sims=1000, T="treat", M="job_seek")
 summary(continuous)
-
+}
 
 
 

@@ -36,7 +36,7 @@ Imai, Kosuke, Luke Keele and Teppei Yamamoto (2009) Identification, Inference, a
 #Example with JOBS II Field experiment
 data(jobs)
 
-
+\dontrun{
 #########################################
 #continuous mediator and continuous outcome
 #########################################
@@ -63,7 +63,7 @@ model.y <- glm(work1 ~ treat + job_seek + depress1 + econ_hard + sex + age + occ
 sens.dichO <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE, sims=10)
 summary(sens.dichO)
 plot(sens.dichO, main="JOBS", ylim=c(-.2,.2))
-
+}
 
 
 } 

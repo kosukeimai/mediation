@@ -72,13 +72,13 @@ data(jobs)
 model.m <- lm(job_seek ~ treat + depress1, data=jobs)
 model.y <- lm(depress2 ~ treat + job_seek + depress1, data=jobs)
 #pass model objects through medsens function
-sens.cont <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE, sims=10)
+sens.cont <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE, sims=1000)
 #use summary function to display values of rho where 95% confidence interval overlaps with 0.
 summary(sens.cont)
 #plot mediation effect and 95% CI's for each value of rho
 plot(sens.cont, main="JOBS", ylim=c(-.2,.2))
 
-
+\dontrun{
 #########################################
 #binary outcome and continuous mediator
 #########################################
@@ -108,6 +108,6 @@ model.y <- lm(depress2 ~ treat + job_dich + treat:job_dich + depress1, data=jobs
 sens.dichM.int <- medsens(model.m, model.y, T="treat", M="job_dich", INT=TRUE,  DETAIL=FALSE, sims=10)
 summary(sens.dichM.int)
 plot(sens.dichM.int, main="JOBS", ylim=c(-.2,.2))
-
+}
 
 } 

@@ -41,7 +41,7 @@ Imai, Kosuke, Luke Keele and Teppei Yamamoto (2009) Identification, Inference, a
 data(jobs)
 
 
-
+\dontrun{
 #########################################
 #continuous mediator and continuous outcome
 #########################################
@@ -50,10 +50,10 @@ data(jobs)
 model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age  + occp + marital + nonwhite + educ + income, data=jobs)
 model.y <- lm(depress2 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=jobs)
 #pass model objects through medsens function
-sens.cont <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE, sims=10)
+sens.cont <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE, sims=1000)
 #plot mediation effect and 95% CI's for each value of rho
 plot(sens.cont, main="JOBS", ylim=c(-.2,.2))
-
+}
 
 
 } 
