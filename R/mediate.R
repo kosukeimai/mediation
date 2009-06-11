@@ -40,8 +40,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, INT=FALSE, T="treat
 				}
 
 	if(n.m != n.y){
-	cat("Error: Missing Values Present in Data")
-	stop
+	stop("Error: Missing Values Present in Data")
 	} else {
 	if(boot == FALSE){ 
 	cat.0 <- 0
@@ -623,7 +622,7 @@ print.summary.mediate <- function(x, ...){
 	if(x$boot==TRUE){
 		cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
 		} else {
-		cat("Confidence Intervals Based on Parametric Bootstrap\n\n")
+		cat("Quasi-Bayesian Confidence Intervals\n\n")
 		}
 	cat("Mediation Effect_0: ", format(x$d0, digits=4), "95% CI ", format(x$d0.ci, digits=4), "\n")
 	cat("Mediation Effect_1: ", format(x$d1, digits=4), "95% CI ", format(x$d1.ci, digits=4), "\n")
@@ -637,7 +636,7 @@ print.summary.mediate <- function(x, ...){
 			if(x$boot==TRUE){
 		cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
 		} else {
-		cat("Confidence Intervals Based on Parametric Bootstrap\n\n")
+		cat("Quasi-Bayesian Confidence Intervals\n\n")
 		}
 	cat("Mediation Effect: ", format(x$d1, digits=4), "95% CI ", format(x$d1.ci, digits=4), "\n")
 	cat("Direct Effect: ", format(x$z0, digits=4), "95% CI ", format(x$z0.ci, digits=4), "\n")

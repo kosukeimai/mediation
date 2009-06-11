@@ -145,7 +145,7 @@ medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, D
         
         }
         
-        if(INT==TRUE){
+        if(INT==FALSE){
         upper.d0 <- d0 + qnorm(0.975) * sqrt(d0.var)
         lower.d0 <- d0 - qnorm(0.975) * sqrt(d0.var)
         upper.d1 <- NULL
@@ -160,6 +160,13 @@ medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, D
         ind.d0 <- as.numeric(lower.d0 < 0 & upper.d0 > 0)
         ind.d1 <- as.numeric(lower.d1 < 0 & upper.d1 > 0)
                 }
+        if(INT==TRUE){
+        ii <- which(abs(d0-0)==min(abs(d0-0)))
+        kk <- which(abs(d1-0)==min(abs(d1-0)))
+		err.cr.1 <- rho[ii]
+		err.cr.2 <- rho[kk]
+		err.cr <- c(err.cr.1, err.cr.2)
+		} 
         type <- "ct"
         out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, sims=sims,tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL, type=type)
         class(out) <- "medsens"
@@ -301,9 +308,19 @@ medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, D
         
         ## END OF RHO LOOP
         }
+        if(INT==TRUE){
+        ii <- which(abs(d0-0)==min(abs(d0-0)))
+        kk <- which(abs(d1-0)==min(abs(d1-0)))
+		err.cr.1 <- rho[ii]
+		err.cr.2 <- rho[kk]
+		err.cr <- c(err.cr.1, err.cr.2)
+		} else {
+		ii <- which(abs(d0-0)==min(abs(d0-0)))
+		err.cr <- rho[ii]	
+			}
         type <- "bm"
         # Step 3: Output
-        out <- list(rho = rho, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, sims=sims,tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL,type=type, err.cr=NULL)
+        out <- list(rho = rho, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, INT=INT, DETAIL=DETAIL, sims=sims,tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL,type=type, err.cr=err.cr)
         class(out) <- "medsens"
         out
 
@@ -314,7 +331,9 @@ medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, D
     ## CASE 3: Binary Outcome + Continuous Mediator
     #########################################################
     if(class(model.y)[1]=="glm" & class(model.m)[1]=="lm") {
-        
+        	if(INT==TRUE){
+		stop("Sensitivity Analysis Not Available Binary Mediator With Interactions \n")
+		}
         # Step 0: Setting Variable labels
         ## Uppercase letters (e.g. T) = labels in the input matrix
         ## Uppercase letters + ".out" (e.g. T.out) = labels in the regression output
@@ -425,10 +444,20 @@ medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, D
         
         ## END OF RHO LOOP
         }
+        if(INT==TRUE){
+        ii <- which(abs(d0-0)==min(abs(d0-0)))
+        kk <- which(abs(d1-0)==min(abs(d1-0)))
+		err.cr.1 <- rho[ii]
+		err.cr.2 <- rho[kk]
+		err.cr <- c(err.cr.1, err.cr.2)
+		} else {
+		ii <- which(abs(d0-0)==min(abs(d0-0)))
+		err.cr <- rho[ii]	
+			}
         type <- "bo"
         ## Step 3: Output
         err.cr <- mean(rho12.boot) # Rho_12 estimate
-        out <- list(rho = rho, err.cr=NULL, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, 
+        out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0, lower.d0=lower.d0, 
             upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0, ind.d1=ind.d1, 
             tau=tau, upper.tau=upper.tau, lower.tau=lower.tau, nu=nu, upper.nu=upper.nu, lower.nu=lower.nu,
             INT=INT, DETAIL=DETAIL, sims=sims, type=type)
@@ -453,43 +482,46 @@ summary.medsens <- function(object, ...)
 print.summary.medsens <- function(x, ...){
  if(x$type=="ct"){
         if(x$INT==FALSE){
-            tab <- cbind(x$rho, round(x$err.cr,4), round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
+            tab <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
             if(sum(x$ind.d0)==1){
-    tab <- as.matrix(tab[x$ind.d0==1, -6])
+    tab <- as.matrix(tab[x$ind.d0==1, -5])
     tab <- t(tab)
     } else {
-    tab <- tab[x$ind.d0==1, -6] 
+    tab <- tab[x$ind.d0==1, -5] 
         }
-            colnames(tab) <-  c("Rho","Error Cor.", "Med. Eff.", "95% CI Lower", "95% CI Upper")
+            colnames(tab) <-  c("Rho", "Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
             cat("\nSensitivity Region\n\n")
             print(tab)
+            cat("\nRho at which Delta = 0:", round(x$err.cr, 4), "\n\n")
             invisible(x)    
-                } else {
-            tab.d0 <- cbind(x$rho, round(x$err.cr,4), round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
+                } else { #Interaction Tables Start Here
+            tab.d0 <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
             if(sum(x$ind.d0)==1){
-            tab <- as.matrix(tab[x$ind.d0==1, -6])
-            tab <- t(tab)
+            tab.d0 <- as.matrix(tab.d0[x$ind.d0==1, -5])
+            tab.d0 <- t(tab.d0)
             } else {
-            tab <- tab[x$ind.d0==1, -6] 
+            tab.d0 <- tab.d0[x$ind.d0==1, -5] 
             }
-            colnames(tab.d0) <-  c("Rho","Error Cor.", "Med. Eff.", "95% CI Lower", "95% CI Upper")
+            colnames(tab.d0) <-  c("Rho", "Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab.d0) <- NULL
-            tab.d1 <- cbind(x$rho, round(x$err.cr,4), round(x$d1,4), round(x$lower.d1,4), round(x$upper.d1, 4), x$ind.d1)
+            tab.d1 <- cbind(x$rho, round(x$d1,4), round(x$lower.d1,4), round(x$upper.d1, 4), x$ind.d1)
             if(sum(x$ind.d1)==1){
-            tab <- as.matrix(tab[x$ind.d1==1, -6])
-            tab <- t(tab)
+            tab.d1 <- as.matrix(tab.d1[x$ind.d1==1, -5])
+            tab.d1 <- t(tab.d1)
             } else {
-            tab <- tab[x$ind.d1==1, -6] 
+            tab.d1 <- tab.d1[x$ind.d1==1, -5] 
             }
-            colnames(tab.d1) <-  c("Rho","Error Cor.", "Med. Eff.", "95% CI Lower", "95% CI Upper")
+            colnames(tab.d1) <-  c("Rho", "Med. Eff.", "95% CI Lower", "95% CI Upper")
             rownames(tab.d1) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
             cat("\nSensitivity Region: d0\n\n")
             print(tab.d0)
+            cat("\nRho at which Delta_0 = 0:", round(x$err.cr[1], 4), "\n\n")
             cat("\nSensitivity Region: d1\n\n")
             print(tab.d1)
+            cat("\nRho at which Delta_1 = 0:", round(x$err.cr[2], 4), "\n\n")
             invisible(x)        
             }
     } else if(x$type=="bm") {
@@ -506,6 +538,7 @@ print.summary.medsens <- function(x, ...){
             cat("\nMediation Sensitivity Analysis\n")
             cat("\nSensitivity Region\n\n")
             print(tab)
+            cat("\nRho at which Delta = 0:", round(x$err.cr, 4), "\n\n")
             invisible(x)    
                 } else {
             tab.d0 <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
@@ -529,8 +562,10 @@ print.summary.medsens <- function(x, ...){
             cat("\nMediation Sensitivity Analysis\n")
             cat("\nSensitivity Region: d0\n\n")
             print(tab.d0)
+            cat("\nRho at which Delta_0 = 0:", round(x$err.cr[1], 4), "\n\n")
             cat("\nSensitivity Region: d1\n\n")
             print(tab.d1)
+            cat("\nRho at which Delta_1 = 0:", round(x$err.cr[2], 4), "\n\n")
             invisible(x)        
             }
         } else if(x$type=="bo") {
@@ -547,6 +582,7 @@ print.summary.medsens <- function(x, ...){
             cat("\nMediation Sensitivity Analysis\n")
             cat("\nSensitivity Region\n\n")
             print(tab)
+            cat("\nRho at which Delta = 0:", round(x$err.cr, 4), "\n\n")
             invisible(x)    
                 } else {
             tab.d0 <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0)
@@ -570,8 +606,10 @@ print.summary.medsens <- function(x, ...){
             cat("\nMediation Sensitivity Analysis\n")
             cat("\nSensitivity Region: d0\n\n")
             print(tab.d0)
+            cat("\nRho at which Delta_0 = 0:", round(x$err.cr[1], 4), "\n\n")
             cat("\nSensitivity Region: d1\n\n")
             print(tab.d1)
+            cat("\nRho at which Delta_1 = 0:", round(x$err.cr[2], 4), "\n\n")
             invisible(x)        
             }
      }
