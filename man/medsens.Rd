@@ -108,7 +108,6 @@ model.y <- lm(depress2 ~ treat + job_dich + treat:job_dich + depress1, data=jobs
 sens.dichM.int <- medsens(model.m, model.y, T="treat", M="job_dich", INT=TRUE,  DETAIL=FALSE, sims=10)
 summary(sens.dichM.int)
 plot(sens.dichM.int, main="JOBS", ylim=c(-.2,.2))
-}
 
 
 } 
