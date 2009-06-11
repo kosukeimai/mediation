@@ -86,7 +86,7 @@ plot(sens.cont, main="JOBS", ylim=c(-.2,.2))
 
 model.m <- lm(job_seek ~ treat + depress1, data=jobs)
 model.y <- glm(work1 ~ treat + job_seek + depress1, family=binomial(link="probit"), data=jobs)
-sens.dichO <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE, sims=10)
+sens.dichO <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE)
 summary(sens.dichO)
 plot(sens.dichO, main="JOBS", ylim=c(-.2,.2))
 
@@ -96,7 +96,7 @@ plot(sens.dichO, main="JOBS", ylim=c(-.2,.2))
 
 model.m <- glm(job_dich ~ treat + depress1, data=jobs, family=binomial(link="probit"))
 model.y <- lm(depress2 ~ treat + job_dich + depress1, data=jobs)
-sens.dichM <- medsens(model.m, model.y, T="treat", M="job_dich", INT=FALSE,  DETAIL=FALSE, sims=10)
+sens.dichM <- medsens(model.m, model.y, T="treat", M="job_dich", INT=FALSE,  DETAIL=FALSE)
 summary(sens.dichM)
 plot(sens.dichM, main="JOBS", ylim=c(-.2,.2))
 
@@ -106,7 +106,7 @@ plot(sens.dichM, main="JOBS", ylim=c(-.2,.2))
 
 model.m <- glm(job_dich ~ treat + depress1, data=jobs, family=binomial(link="probit"))
 model.y <- lm(depress2 ~ treat + job_dich + treat:job_dich + depress1, data=jobs)
-sens.dichM.int <- medsens(model.m, model.y, T="treat", M="job_dich", INT=TRUE,  DETAIL=FALSE, sims=10)
+sens.dichM.int <- medsens(model.m, model.y, T="treat", M="job_dich", INT=TRUE,  DETAIL=FALSE)
 summary(sens.dichM.int)
 plot(sens.dichM.int, main="JOBS", ylim=c(-.2,.2))
 }

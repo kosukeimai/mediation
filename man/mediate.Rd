@@ -73,7 +73,7 @@ summary(continuous)
 
 \dontrun{
 #Calculates quantities using the non-parametric bootstrap - This takes several minutes
-continuous_boot <- mediate(b, c, sims=10, boot=TRUE, T="treat", M="job_seek")
+continuous_boot <- mediate(b, c, boot=TRUE, T="treat", M="job_seek")
 summary(continuous_boot)
 
 #INTERACTION TERM BTWN TREATEMENT AND MEDIATOR IS INCLUDED IN THE MODEL
@@ -89,7 +89,7 @@ summary(cont.int)
 
 b <- lm(job_seek ~ treat + depress1, data=jobs)
 c <- glm(work1 ~ treat + job_seek + depress1, family=binomial(link="probit"), data=jobs)
-binary <- mediate(b, c, sims=10, T="treat", M="job_seek")
+binary <- mediate(b, c, T="treat", M="job_seek")
 summary(binary)
 }
 
