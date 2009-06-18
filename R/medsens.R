@@ -289,7 +289,7 @@ medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, D
                 d1.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + Ymodel.coef.boot[k,TM.out]) * 
                     (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
                 } else {
-                d1.boot[k] <- mean( (Ymodel.coef.boot[k,M.out]) * 
+                d1.boot[k] <- mean((Ymodel.coef.boot[k,M.out]) * 
                     (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
                 }
 
