@@ -46,16 +46,15 @@ rho.neg.tilde <- function(a,b){
 	rho.sq <- a*b/((1 - r.sq.m)*(1 - r.sq.y))
     sqrt(rho.sq) *-1
 	}
-	
-    #########################################################
+   #########################################################
     ## CASE 1: Continuous Outcome + Continuous Mediator
     #########################################################
     if(class(model.y)[1]=="lm" & class(model.m)[1]=="lm") {
 		#R^2 Values
 		r.sq.m <- summary(model.m)$adj.r.squared
 		r.sq.y <- summary(model.y)$adj.r.squared
-		r.sq.m.star <- seq(0,.98,.01)
-		r.sq.y.star <- seq(0,.98,.01)
+		r.sq.m.star <- seq(0.01,.98,.01)
+		r.sq.y.star <- seq(0.01,.98,.01)
 		r.tilde.m <- (1 - r.sq.m)*r.sq.m.star
 		r.tilde.y <- (1 - r.sq.y)*r.sq.y.star   
 		sigma.2 <- var(model.m$resid)
@@ -64,7 +63,7 @@ rho.neg.tilde <- function(a,b){
 		sigma.23.star <- cov(model.m$resid, e.3.star) 
 
 		acme.lm <- function(rho){
-			model.m$coef[T]*(sigma.23.star/sigma.2) - rho/sqrt(sigma.2) * sqrt(1/(1-rho^2)*(sigma.3.star - sigma.23.star/			sigma.2))
+			model.m$coef[T.out]*(sigma.23.star/sigma.2) - rho/sqrt(sigma.2) * sqrt(1/(1-rho^2)*(sigma.3.star - sigma.23.star/			sigma.2))
 			}
 		#Matrix of Rho Values
 		rho.p <- outer(r.sq.m.star, r.sq.y.star, rho.pos)
@@ -80,7 +79,8 @@ rho.neg.tilde <- function(a,b){
 		r.til.p <- matrix(r.til.p, nrow(rho.til.p), ncol(rho.til.p))
 		r.til.n <- sapply(rho.til.n, acme.lm)
 		r.til.n <- matrix(r.til.n, nrow(rho.til.n), ncol(rho.til.n))
-        
+		
+        type <- "ct"
     ## END OF CASE 1: Continuous Outcome + Continuous Mediator    
     } else
 
@@ -92,8 +92,8 @@ rho.neg.tilde <- function(a,b){
 		#R^2 Values
 		r.sq.m <- 1 - (model.m$deviance/model.m$null.deviance)
 		r.sq.y <- summary(model.y)$adj.r.squared
-		r.sq.m.star <- seq(0,1,.1)
-		r.sq.y.star <- seq(0,1,.1)
+		r.sq.m.star <- seq(0.01, 1, length.out=25)
+		r.sq.y.star <- seq(0.01, 1, length.out=25)
 		r.tilde.m <- (1 - r.sq.m)*r.sq.m.star
 		r.tilde.y <- (1 - r.sq.y)*r.sq.y.star
 
@@ -165,7 +165,7 @@ rho.neg.tilde <- function(a,b){
 			r.til.p <- matrix(r.til.p, nrow(rho.til.p), ncol(rho.til.p))
 			r.til.n <- sapply(rho.til.n, acme)
 			r.til.n <- matrix(r.til.n, nrow(rho.til.n), ncol(rho.til.n))
-
+			type <- "bm"
        
     ## END OF CASE 2: Continuous Outcome + Binary Mediator
     } else
@@ -177,8 +177,8 @@ rho.neg.tilde <- function(a,b){
         	#R^2 Values
         	r.sq.m <- summary(model.m)$adj.r.squared
 			r.sq.y <- 1 - (model.y$deviance/model.y$null.deviance)
-			r.sq.m.star <- seq(0,1,.1)
-			r.sq.y.star <- seq(0,1,.1)
+			r.sq.m.star <- seq(.01,1,.01)
+			r.sq.y.star <- seq(.01,1,.01)
 			r.tilde.m <- (1 - r.sq.m)*r.sq.m.star
 			r.tilde.y <- (1 - r.sq.y)*r.sq.y.star
 
@@ -235,6 +235,7 @@ rho.neg.tilde <- function(a,b){
 		r.til.p <- matrix(r.til.p, nrow(rho.til.p), ncol(rho.til.p))
 		r.til.n <- sapply(rho.til.n, acme)
 		r.til.n <- matrix(r.til.n, nrow(rho.til.n), ncol(rho.til.n))
+		type <- "bo"
             ## END OF CASE 3: Binary Outcome + Continuous Mediator    
     }
 
@@ -242,54 +243,103 @@ rho.neg.tilde <- function(a,b){
 		n.r <- nrow(r.til.p)
 		n.c <- ncol(r.til.p)
 		r.c <- n.r*n.c
-
+		
 		#Vectorize Matrices
-		r.til.p.vec <- matrix(jitter(r.til.p), r.c, 1)
-		out <- cbind(round(r.tilde.m, 4), round(r.tilde.y, 4), r.til.p.vec)
+		r.til.p.vec <- matrix(r.til.p, r.c, 1)
+		out.1 <- cbind(round(r.tilde.m, 4), round(r.tilde.y, 4), r.til.p.vec)
 		ii <- which(abs(r.til.p.vec-0)==min(abs(r.til.p.vec-0)))
-		out.til.p <- out[ii,1:2]
+		out.til.p <- out.1[ii,1:2]
 
-		r.til.n.vec <- matrix(jitter(r.til.n), r.c, 1)
-		out <- cbind(round(r.tilde.m, 4), round(r.tilde.y, 4), r.til.n.vec)
+		r.til.n.vec <- matrix(r.til.n, r.c, 1)
+		out.2 <- cbind(round(r.tilde.m, 4), round(r.tilde.y, 4), r.til.n.vec)
 		ii <- which(abs(r.til.n.vec-0)==min(abs(r.til.n.vec-0)))
-		out.til.n <- out[ii,1:2]
+		out.til.n <- out.2[ii,1:2]
 
-		r.n.vec <- matrix(jitter(r.n), r.c, 1)
-		out <- cbind(round(r.sq.m.star, 4), round(r.sq.y.star, 4), r.n.vec)
+		r.n.vec <- matrix(r.n, r.c, 1)
+		out.3 <- cbind(round(r.sq.m.star, 4), round(r.sq.y.star, 4), r.n.vec)
 		ii <- which(abs(r.n.vec-0)==min(abs(r.n.vec-0)))
-		out.r.n <- out[ii,1:2]
+		out.r.n <- out.3[ii,1:2]
 
-		r.p.vec <- matrix(jitter(r.p), r.c, 1)
-		out <- cbind(round(r.sq.m.star, 4), round(r.sq.y.star, 4), r.p.vec)
+		r.p.vec <- matrix(r.p, r.c, 1)
+		out.4 <- cbind(round(r.sq.m.star, 4), round(r.sq.y.star, 4), r.p.vec)
 		ii <- which(abs(r.p.vec-0)==min(abs(r.p.vec-0)))
-		out.r.p <- out[ii,1:2]
-
-	out <- list(r.p = r.p, r.n = r.n, r.til.p = r.til.p, r.til.n = r.til.n, out.til.p=out.til.p, out.til.n=out.til.n, out.r.n=out.r.n, 	out.r.p=out.r.p)
+		out.r.p <- out.4[ii,1:2]
+	
+	
+	out <- list(r.p = r.p, r.n = r.n, r.til.p = r.til.p, r.til.n = r.til.n, out.til.p=out.til.p, out.til.n=out.til.n, out.r.n=out.r.n, 	out.r.p=out.r.p, type=type, r.sq.m.star=r.sq.m.star, r.sq.y.star=r.sq.y.star, r.tilde.m=r.tilde.m, r.tilde.y=r.tilde.y)
 	class(out) <- "medsensr2"
+	out
 ## END OF SENSITIVITY FUNCTION
 }
 
-
-
 print.medsensr2 <- function(x, ...){
-    print(unlist(x[1:16]))
+    print(unlist(x[1:5]))
     invisible(x)
     }
 
 summary.medsensr2 <- function(object, ...)
-    structure(object, class = c("summary.medsens", class(object)))
+    structure(object, class = c("summary.medsensr2", class(object)))
  
 print.summary.medsensr2 <- function(x, ...){
+	cat("\nMediation Sensitivity Analysis\n")
+	
+	if(length(x$out.r.p)==2){
+    x$out.r.p <- as.matrix(x$out.r.p)
+    x$out.r.p <- t(x$out.r.p)
+    }
+	if(length(x$out.r.n)==2){
+    x$out.r.n <- as.matrix(x$out.r.n)
+    x$out.r.n <- t(x$out.r.n)
+    }
+    if(length(x$out.til.p)==2){
+    x$out.til.p <- as.matrix(x$out.til.p)
+    x$out.til.p <- t(x$out.til.p)
+    }
+    if(length(x$out.til.n)==2){
+    x$out.til.n <- as.matrix(x$out.til.n)
+    x$out.til.n <- t(x$out.til.n)
+    }
+    
+	colnames(x$out.r.p) <-  c("M R-squared Star", "Y R-squared Star")
+    rownames(x$out.r.p) <- NULL
+    colnames(x$out.r.n) <-  c("M R-squared Star", "Y R-squared Star")
+    rownames(x$out.r.n) <- NULL
+          
+    colnames(x$out.til.p) <-  c("M R-squared Tilde", "Y R-squared Tilde")
+    rownames(x$out.til.p) <- NULL
+    colnames(x$out.til.n) <-  c("M R-squared Tilde", "Y R-squared Tilde")
+    rownames(x$out.til.n) <- NULL
+      
+	cat("Sign of Unobserved Confounder is Positive\n")
+	print(x$out.til.p)
+	print(x$out.r.p)
+	
+	cat("Sign of Unobserved Confounder is Negative\n")
+	print(x$out.til.n)
+	print(x$out.r.n)
+	invisible(x)
          
 }
 
-plot.medsensr2 <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL, r.type = 1, lev.1 = c(-5,17), lev.2 = c(0,-3),... ){
-	if(r.type== 1){
+
+plot.medsensr2 <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL,... ){
+	#if(r.type== 1){
 		
-		par(mfrow=c(1,2))
+		if(x$type=="bo"){
+			lev.1 <- c(0,.1)
+			lev.2 <- c(.1,-.1)
+			} else if(x$type=="bm"){
+			lev.1 <- c(-.1,.1)
+			lev.2 <- c(-.15,.1)
+			} else {
+			lev.1 = c(-.5,1.7)
+			lev.2 = c(0,-3)
+					}
+		
+		par(mfrow=c(2,2))
 		par(mar=c(3.55,7,4,0))  #(b,l,t,r)
 		#Column 1 Sgn -1
-		contour(x$r.sq.m.star, x$r.sq.y.star, x$r.n, ylim=c(0,1), xlim=c(0,1), levels=pretty(lev.1, 15), asp=1)
+		contour(x$r.sq.m.star, x$r.sq.y.star, x$r.n, ylim=c(0,1), xlim=c(0,1), levels=pretty(lev.1, 25), asp=1)
 		title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
 		title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9 )
 		title(main=expression(paste("sgn", (lambda[2]*lambda[3])==-1)))
@@ -299,34 +349,34 @@ plot.medsensr2 <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=N
 
 		#Column 2 Sgn 1
 		par(mar=c(3.55,5,4,2)) 
-		contour(x$r.sq.m.star, x$r.sq.y.star, r.p, ylim=c(0,1), xlim=c(0,1), levels = pretty(lev.2, 15), asp=1)
+		contour(x$r.sq.m.star, x$r.sq.y.star, x$r.p, ylim=c(0,1), xlim=c(0,1), levels = pretty(lev.2, 25), asp=1)
 		title(xlab=expression(paste(R[M]^2,"*")), line=2.5, cex.lab=.9)
 		title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9 )
 		title(main=expression(paste("sgn", (lambda[2]*lambda[3])==1)))
 		axis(2,at=seq(0,1,by=.1))
 		axis(1,at=seq(0,1,by=.1))
 
-		} else if(r.type==2) {
-		par(mfrow=c(1,2))
+		#} else if(r.type==2) {
+		#par(mfrow=c(1,2))
 		#Lower Left
 		par(mar=c(5,7,2,0))
-		contour(x$r.tilde.m, x$r.tilde.y, x$r.til.n, ylim=c(0,1), xlim=c(0,1), levels=pretty(lev.1, 15), asp=1)
+		contour(x$r.tilde.m, x$r.tilde.y, x$r.til.n, ylim=c(0,1), xlim=c(0,1), levels=pretty(lev.1, 25), asp=1)
 		title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
 		title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9 )
-		title(main=expression(paste("sgn", (lambda[2]*lambda[3])==-1)))
+		#title(main=expression(paste("sgn", (lambda[2]*lambda[3])==-1)))
 		mtext("Proportion of original variance \n explained by an unobserved confounder", side=2, line=4, cex=.9)
 		axis(2,at=seq(0,1,by=.1))
 		axis(1,at=seq(0,1.1,by=.1))
 
 		#Lower Right
 		par(mar=c(5,5,2,2)) 
-		contour(x$r.tilde.m, x$r.tilde.y, x$r.til.p, ylim=c(0,1), xlim=c(0,1), levels = pretty(lev.2, 15), asp=1)
+		contour(x$r.tilde.m, x$r.tilde.y, x$r.til.p, ylim=c(0,1), xlim=c(0,1), levels = pretty(lev.2, 25), asp=1)
 		title(xlab=expression(paste(tilde(R)[M]^2)), line=2.5, cex.lab=.9)
 		title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9 )
-		title(main=expression(paste("sgn", (lambda[2]*lambda[3])==1)))
+		#title(main=expression(paste("sgn", (lambda[2]*lambda[3])==1)))
 		axis(2,at=seq(0,1,by=.1))
 		axis(1,at=seq(0,2,by=.1))
 			
-		}
+		#}
 	
         }
