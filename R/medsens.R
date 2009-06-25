@@ -1,6 +1,9 @@
-medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, DETAIL=FALSE, sims=1000, eps=.Machine$double.eps)
+medsens <- function(x, T="treat.name", M="med.name", DETAIL=FALSE, sims=1000, eps=.Machine$double.eps)
 {
-
+    model.y <- x$model.y
+    model.m <- x$model.m
+    INT <- x$INT
+    
     #########################################################
     ## Setting Up Sensitivity Parameters
     #########################################################
@@ -182,8 +185,8 @@ medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, D
         out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0,
         lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0,
         ind.d1=ind.d1, R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
-        R2star.thresh = R2star.thresh, R2tilde.thresh=R2tilde.thresh,
-        INT=INT, DETAIL=DETAIL, sims=sims,tau=NULL, upper.tau=NULL,
+        R2star.thresh=R2star.thresh, R2tilde.thresh=R2tilde.thresh,
+        model.m=model.m, model.y=model.y, INT=INT, DETAIL=DETAIL, sims=sims,tau=NULL, upper.tau=NULL,
         lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL, type=type)
         class(out) <- "medsens"
         out
@@ -351,8 +354,8 @@ medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, D
         out <- list(rho = rho, d0=d0, d1=d1, upper.d0=upper.d0,
         lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0,
         ind.d1=ind.d1, R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
-        R2star.thresh = R2star.thresh, R2tilde.thresh=R2tilde.thresh,
-        INT=INT, DETAIL=DETAIL, sims=sims,tau=NULL, upper.tau=NULL,
+        R2star.thresh=R2star.thresh, R2tilde.thresh=R2tilde.thresh,
+        model.m=model.m, model.y=model.y, INT=INT, DETAIL=DETAIL, sims=sims,tau=NULL, upper.tau=NULL,
         lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL,type=type,
         err.cr=err.cr)
         class(out) <- "medsens"
@@ -507,9 +510,10 @@ medsens <- function(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, D
         out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0,
         lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0,
         ind.d1=ind.d1, R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
-        R2star.thresh = R2star.thresh, R2tilde.thresh=R2tilde.thresh,
+        R2star.thresh=R2star.thresh, R2tilde.thresh=R2tilde.thresh,
         tau=tau, upper.tau=upper.tau, lower.tau=lower.tau, nu=nu, upper.nu=upper.nu,
-        lower.nu=lower.nu, INT=INT, DETAIL=DETAIL, sims=sims, type=type)
+        lower.nu=lower.nu, model.m=model.m, model.y=model.y, INT=INT,
+        DETAIL=DETAIL, sims=sims, type=type)
         class(out) <- "medsens"
         out
 
@@ -697,7 +701,7 @@ plotrho <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL, pr
         title(xlab=expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
         title(ylab = expression(paste("Proportion Mediated: ", bar(delta))), cex.lab=.9)
         } else {
-   if(x$INT==FALSE){
+   if(INT==FALSE){
         plot(x$rho, x$d0, type="n", xlab="", ylab = "", main=main, xlim=xlim, ylim=ylim)
         polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.d0, rev(x$upper.d0)), border=FALSE, col=8, lty=2)
         lines(x$rho, x$d0, lty=1)
