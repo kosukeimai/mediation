@@ -602,7 +602,15 @@ if(is.factor(y.t.data[,paste(M)])==TRUE) {
 		
  }
 
-out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci, pct.coef=pct.coef, pct.ci=pct.ci, tau.coef=tau.coef, tau.ci=tau.ci, z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci,boot=boot, INT=INT, model.m=model.m, model.y=model.y)
+# Saving model attributes
+call.y <- model.y$call
+call.m <- model.m$call
+env.y <- environment(model.y$terms)
+env.m <- environment(model.m$terms)
+
+out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci, pct.coef=pct.coef, pct.ci=pct.ci, 
+tau.coef=tau.coef, tau.ci=tau.ci, z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci,
+boot=boot, INT=INT, call.m=call.m, call.y=call.y, env.m=env.m, env.y=env.y)
 class(out) <- "mediate"
 out
 

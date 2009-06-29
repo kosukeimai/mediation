@@ -1,24 +1,21 @@
-medsens <- function(x, T="treat.name", M="med.name", DETAIL=FALSE, sims=1000, eps=.Machine$double.eps)
+medsens <- function(x, T="treat.name", M="med.name", rho.by=.1, sims=1000, eps=.Machine$double.eps)
 {
-    model.y <- x$model.y
-    model.m <- x$model.m
+    model.y <- eval(x$call.y, envir=x$env.y)
+    model.m <- eval(x$call.m, envir=x$env.m)
+    class.y <- class(model.y)
+    class.m <- class(model.m)
     INT <- x$INT
     
     #########################################################
     ## Setting Up Sensitivity Parameters
     #########################################################
-    if(DETAIL==TRUE){
-        rho <- round(seq(-.99, .99, by = .01),2)
-        } else {
-        rho <- round(seq(-.90, .90, by = .1),2)
-            }
+    rho <- seq(-1+rho.by, 1-rho.by, rho.by)
     R2star.prod <- rho^2
     
     #########################################################
     ## CASE 1: Continuous Outcome + Continuous Mediator
     #########################################################
-    if(class(model.y)[1]=="lm" & class(model.m)[1]=="lm") {
-
+    if(class.y=="lm" & class.m=="lm") {
         d0 <- matrix(NA, length(rho), 1)
         d1 <- matrix(NA, length(rho), 1)
         d0.var <- matrix(NA, length(rho), 1)
@@ -186,8 +183,8 @@ medsens <- function(x, T="treat.name", M="med.name", DETAIL=FALSE, sims=1000, ep
         lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0,
         ind.d1=ind.d1, R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
         R2star.thresh=R2star.thresh, R2tilde.thresh=R2tilde.thresh,
-        model.m=model.m, model.y=model.y, INT=INT, DETAIL=DETAIL, sims=sims,tau=NULL, upper.tau=NULL,
-        lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL, type=type)
+        rho.by=rho.by, INT=INT, sims=sims, 
+        tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL, type=type)
         class(out) <- "medsens"
         out
 
@@ -197,7 +194,7 @@ medsens <- function(x, T="treat.name", M="med.name", DETAIL=FALSE, sims=1000, ep
     #########################################################
     ## CASE 2: Continuous Outcome + Binary Mediator
     #########################################################
-    if(class(model.y)[1]=="lm" & class(model.m)[1]=="glm") {
+    if(class.y=="lm" & class.m=="glm") {
 
         # Step 0: Setting Variable labels
         ## Uppercase letters (e.g. T) = labels in the input matrix
@@ -355,7 +352,7 @@ medsens <- function(x, T="treat.name", M="med.name", DETAIL=FALSE, sims=1000, ep
         lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0,
         ind.d1=ind.d1, R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
         R2star.thresh=R2star.thresh, R2tilde.thresh=R2tilde.thresh,
-        model.m=model.m, model.y=model.y, INT=INT, DETAIL=DETAIL, sims=sims,tau=NULL, upper.tau=NULL,
+        rho.by=rho.by, INT=INT, sims=sims, tau=NULL, upper.tau=NULL,
         lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL,type=type,
         err.cr=err.cr)
         class(out) <- "medsens"
@@ -367,7 +364,7 @@ medsens <- function(x, T="treat.name", M="med.name", DETAIL=FALSE, sims=1000, ep
     #########################################################
     ## CASE 3: Binary Outcome + Continuous Mediator
     #########################################################
-    if(class(model.y)[1]=="glm" & class(model.m)[1]=="lm") {
+    if(class.y=="glm" & class.m=="lm") {
         	if(INT==TRUE){
 		stop("Sensitivity Analysis Not Available Binary Mediator With Interactions \n")
 		}
@@ -512,8 +509,8 @@ medsens <- function(x, T="treat.name", M="med.name", DETAIL=FALSE, sims=1000, ep
         ind.d1=ind.d1, R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
         R2star.thresh=R2star.thresh, R2tilde.thresh=R2tilde.thresh,
         tau=tau, upper.tau=upper.tau, lower.tau=lower.tau, nu=nu, upper.nu=upper.nu,
-        lower.nu=lower.nu, model.m=model.m, model.y=model.y, INT=INT,
-        DETAIL=DETAIL, sims=sims, type=type)
+        lower.nu=lower.nu, INT=INT, rho.by=rho.by,
+        sims=sims, type=type)
         class(out) <- "medsens"
         out
 
@@ -688,7 +685,8 @@ print.summary.medsens <- function(x, ...){
         
 }
 
-plotrho <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL, pr.plot=FALSE,...){
+plot.medsens <- function(x, par="rho", xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL, pr.plot=FALSE,...){
+  if(par=="rho"){
     if(pr.plot==TRUE){
         if(x$type!="bm"){
             stop("Proportion mediated is only defined for binary mediator \n")
@@ -701,31 +699,25 @@ plotrho <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL, pr
         title(xlab=expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
         title(ylab = expression(paste("Proportion Mediated: ", bar(delta))), cex.lab=.9)
         } else {
-   if(INT==FALSE){
+   if(x$INT==FALSE){
         plot(x$rho, x$d0, type="n", xlab="", ylab = "", main=main, xlim=xlim, ylim=ylim)
         polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.d0, rev(x$upper.d0)), border=FALSE, col=8, lty=2)
         lines(x$rho, x$d0, lty=1)
         abline(h=0)
         abline(v=0)
+        abline(h=weighted.mean(c(x$d0[floor(1/x$rho.by)],x$d0[ceiling(1/x$rho.by)]), 
+            c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2)
         title(xlab=expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
         title(ylab = expression(paste("Average Mediation Effect: ", bar(delta)(t))), cex.lab=.9)
-        if(x$DETAIL==TRUE){
-        abline(h=x$d0[96], lty=2)
-            } else {
-        abline(h=x$d0[10], lty=2)       
-                }
         } else {
         par(mfrow=c(1,2))
         plot(x$rho, x$d0, type="n", xlab="", ylab = "", ylim = c(-.2,.2))
         polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.d0, rev(x$upper.d0)), border=FALSE, col=8, lty=2)
         lines(x$rho, x$d0, lty=1)
         abline(h=0)
-        if(x$DETAIL==TRUE){
-        abline(h=x$d0[96], lty=2)
-            } else {
-        abline(h=x$d0[10], lty=2)       
-                }
         abline(v=0)
+        abline(h=weighted.mean(c(x$d0[floor(1/x$rho.by)],x$d0[ceiling(1/x$rho.by)]), 
+            c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2)
         title(xlab=expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
         title(ylab = expression(paste("Average Mediation Effect: ", bar(delta[0]))), cex.lab=.9)
 
@@ -734,80 +726,76 @@ plotrho <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL, pr
         polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.d1, rev(x$upper.d1)), border=FALSE, col=8, lty=2)
         lines(x$rho, x$d1, lty=1)
         abline(h=0)
-                if(x$DETAIL==TRUE){
-        abline(h=x$d1[96], lty=2)
-            } else {
-        abline(h=x$d1[10], lty=2)       
-                }
         abline(v=0)
+        abline(h=weighted.mean(c(x$d1[floor(1/x$rho.by)],x$d1[ceiling(1/x$rho.by)]), 
+            c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2)
         title(xlab=expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
         title(ylab = expression(paste("Average Mediation Effect: ", bar(delta[1]))), cex.lab=.9)
             }
         }
+    } else if (par=="R2"){
+    #if(r.type== 1){
+        if(x$type=="bo"){
+            lev.1 <- c(0,.1)
+            lev.2 <- c(.1,-.1)
+            } else if(x$type=="bm"){
+            lev.1 <- c(-.1,.1)
+            lev.2 <- c(-.15,.1)
+            } else {
+            lev.1 = c(-.5,1.7)
+            lev.2 = c(0,-3)
+                    }
+                    
+        rho2 <- x$rho[1:(length(x$rho)-1)/2]^2
+        r.sq.m.star <- seq(-.99, .99, by=.01)
+        r.sq.y.star <- rho.p^2/r.sq.m.star
+        
+        d0.p <- x$d0[(length(x$d0)-1)/2:length(x$d0)]
+        d0.p <- matrix(rep(d0.p, length(r.sq.m.star)), length(r.sq.m.star))
+        d0.n <- x$d0[1:(length(x$d0)-1)/2]
+        d0.n <- matrix(rep(d0.n, length(r.sq.m.star)), length(r.sq.m.star))
+        
+        par(mfrow=c(2,2))
+        par(mar=c(3.55,7,4,0))  #(b,l,t,r)
+        #Column 1 Sgn -1
+        contour(r.sq.m.star, r.sq.y.star, d0.n, ylim=c(0,1), xlim=c(0,1), levels=pretty(lev.1, 25), asp=1)
+        title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
+        title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9 )
+        title(main=expression(paste("sgn", (lambda[2]*lambda[3])==-1)))
+        axis(2,at=seq(0,1,by=.1))
+        axis(1,at=seq(0,1,by=.1))
+        mtext("Proportion of unexplained variance \n explained by an unobserved confounder", side=2, line=4, cex=.9)
+
+        #Column 2 Sgn 1
+        par(mar=c(3.55,5,4,2)) 
+        contour(r.sq.m.star, r.sq.y.star, d0.p, ylim=c(0,1), xlim=c(0,1), levels = pretty(lev.2, 25), asp=1)
+        title(xlab=expression(paste(R[M]^2,"*")), line=2.5, cex.lab=.9)
+        title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9 )
+        title(main=expression(paste("sgn", (lambda[2]*lambda[3])==1)))
+        axis(2,at=seq(0,1,by=.1))
+        axis(1,at=seq(0,1,by=.1))
+
+        #} else if(r.type==2) {
+        #par(mfrow=c(1,2))
+        #Lower Left
+        par(mar=c(5,7,2,0))
+        contour(x$r.tilde.m, x$r.tilde.y, x$r.til.n, ylim=c(0,1), xlim=c(0,1), levels=pretty(lev.1, 25), asp=1)
+        title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
+        title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9 )
+        #title(main=expression(paste("sgn", (lambda[2]*lambda[3])==-1)))
+        mtext("Proportion of original variance \n explained by an unobserved confounder", side=2, line=4, cex=.9)
+        axis(2,at=seq(0,1,by=.1))
+        axis(1,at=seq(0,1.1,by=.1))
+
+        #Lower Right
+        par(mar=c(5,5,2,2)) 
+        contour(x$r.tilde.m, x$r.tilde.y, x$r.til.p, ylim=c(0,1), xlim=c(0,1), levels = pretty(lev.2, 25), asp=1)
+        title(xlab=expression(paste(tilde(R)[M]^2)), line=2.5, cex.lab=.9)
+        title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9 )
+        #title(main=expression(paste("sgn", (lambda[2]*lambda[3])==1)))
+        axis(2,at=seq(0,1,by=.1))
+        axis(1,at=seq(0,2,by=.1))
+            
+        #}
     }
-    
-#plotr2 <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL,... ){
-#    #if(r.type== 1){
-#        if(x$type=="bo"){
-#            lev.1 <- c(0,.1)
-#            lev.2 <- c(.1,-.1)
-#            } else if(x$type=="bm"){
-#            lev.1 <- c(-.1,.1)
-#            lev.2 <- c(-.15,.1)
-#            } else {
-#            lev.1 = c(-.5,1.7)
-#            lev.2 = c(0,-3)
-#                    }
-#                    
-#        rho2 <- x$rho[1:(length(x$rho)-1)/2]^2
-#        r.sq.m.star <- seq(-.99, .99, by=.01)
-#        r.sq.y.star <- rho.p^2/r.sq.m.star
-#        
-#        d0.p <- x$d0[(length(x$d0)-1)/2:length(x$d0)]
-#        d0.p <- matrix(rep(d0.p, length(r.sq.m.star)), length(r.sq.m.star))
-#        d0.n <- x$d0[1:(length(x$d0)-1)/2]
-#        d0.n <- matrix(rep(d0.n, length(r.sq.m.star)), length(r.sq.m.star))
-#        
-#        par(mfrow=c(2,2))
-#        par(mar=c(3.55,7,4,0))  #(b,l,t,r)
-#        #Column 1 Sgn -1
-#        contour(r.sq.m.star, r.sq.y.star, d0.n, ylim=c(0,1), xlim=c(0,1), levels=pretty(lev.1, 25), asp=1)
-#        title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
-#        title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9 )
-#        title(main=expression(paste("sgn", (lambda[2]*lambda[3])==-1)))
-#        axis(2,at=seq(0,1,by=.1))
-#        axis(1,at=seq(0,1,by=.1))
-#        mtext("Proportion of unexplained variance \n explained by an unobserved confounder", side=2, line=4, cex=.9)
-
-#        #Column 2 Sgn 1
-#        par(mar=c(3.55,5,4,2)) 
-#        contour(r.sq.m.star, r.sq.y.star, d0.p, ylim=c(0,1), xlim=c(0,1), levels = pretty(lev.2, 25), asp=1)
-#        title(xlab=expression(paste(R[M]^2,"*")), line=2.5, cex.lab=.9)
-#        title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9 )
-#        title(main=expression(paste("sgn", (lambda[2]*lambda[3])==1)))
-#        axis(2,at=seq(0,1,by=.1))
-#        axis(1,at=seq(0,1,by=.1))
-
-#        #} else if(r.type==2) {
-#        #par(mfrow=c(1,2))
-#        #Lower Left
-#        par(mar=c(5,7,2,0))
-#        contour(x$r.tilde.m, x$r.tilde.y, x$r.til.n, ylim=c(0,1), xlim=c(0,1), levels=pretty(lev.1, 25), asp=1)
-#        title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
-#        title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9 )
-#        #title(main=expression(paste("sgn", (lambda[2]*lambda[3])==-1)))
-#        mtext("Proportion of original variance \n explained by an unobserved confounder", side=2, line=4, cex=.9)
-#        axis(2,at=seq(0,1,by=.1))
-#        axis(1,at=seq(0,1.1,by=.1))
-
-#        #Lower Right
-#        par(mar=c(5,5,2,2)) 
-#        contour(x$r.tilde.m, x$r.tilde.y, x$r.til.p, ylim=c(0,1), xlim=c(0,1), levels = pretty(lev.2, 25), asp=1)
-#        title(xlab=expression(paste(tilde(R)[M]^2)), line=2.5, cex.lab=.9)
-#        title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9 )
-#        #title(main=expression(paste("sgn", (lambda[2]*lambda[3])==1)))
-#        axis(2,at=seq(0,1,by=.1))
-#        axis(1,at=seq(0,2,by=.1))
-#            
-#        #}
-#        }
+  }
