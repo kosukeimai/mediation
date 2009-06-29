@@ -733,7 +733,7 @@ plot.medsens <- function(x, par="rho", xlab=NULL, ylab=NULL, xlim=NULL, ylim=NUL
         title(ylab = expression(paste("Average Mediation Effect: ", bar(delta[1]))), cex.lab=.9)
             }
         }
-    } else if (par=="R2"){
+  } else if (par=="R2"){
     #if(r.type== 1){
         if(x$type=="bo"){
             lev.1 <- c(0,.1)
@@ -745,6 +745,18 @@ plot.medsens <- function(x, par="rho", xlab=NULL, ylab=NULL, xlim=NULL, ylim=NUL
             lev.1 = c(-.5,1.7)
             lev.2 = c(0,-3)
                     }
+                    
+        R2M <- seq(0, 1-rho.by, rho.by^2)
+        R2Y <- seq(0, 1-rho.by, rho.by^2)
+        dlength <- length(seq(0, (1-rho.by)^2, rho.by^4))
+        d0.p <- approx(x$d0[((length(x$d0)-1)/2):length(x$d0)], n=dlength)$y
+        d0.n <- approx(x$d0[1:((length(x$d0)-1)/2)], n=dlength)$y
+        R2prod.mat <- outer(R2M, R2Y)
+        d0mat.p <- matrix(d0.p[R2prod.mat/rho.by^4+1], nrow=length(R2M))
+        contour(R2M, R2Y, d0mat.p,ylim=c(0,1), xlim=c(0,1))
+        
+        correction <- abs(sqrt(x$R2tilde.prod)/x$rho)
+
                     
         rho2 <- x$rho[1:(length(x$rho)-1)/2]^2
         r.sq.m.star <- seq(-.99, .99, by=.01)
