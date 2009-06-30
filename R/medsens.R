@@ -746,31 +746,19 @@ plot.medsens <- function(x, par="rho", xlab=NULL, ylab=NULL, xlim=NULL, ylim=NUL
             lev.2 = c(0,-3)
                     }
                     
-        R2M <- seq(0, 1-rho.by, rho.by^2)
-        R2Y <- seq(0, 1-rho.by, rho.by^2)
+        R2Mstar <- seq(0, 1-rho.by, rho.by^2)
+        R2Ystar <- seq(0, 1-rho.by, rho.by^2)
         dlength <- length(seq(0, (1-rho.by)^2, rho.by^4))
         d0.p <- approx(x$d0[((length(x$d0)-1)/2):length(x$d0)], n=dlength)$y
         d0.n <- approx(x$d0[1:((length(x$d0)-1)/2)], n=dlength)$y
-        R2prod.mat <- outer(R2M, R2Y)
+        R2prod.mat <- outer(R2Mstar, R2Ystar)
         d0mat.p <- matrix(d0.p[R2prod.mat/rho.by^4+1], nrow=length(R2M))
-        contour(R2M, R2Y, d0mat.p,ylim=c(0,1), xlim=c(0,1))
-        
-        correction <- abs(sqrt(x$R2tilde.prod)/x$rho)
-
-                    
-        rho2 <- x$rho[1:(length(x$rho)-1)/2]^2
-        r.sq.m.star <- seq(-.99, .99, by=.01)
-        r.sq.y.star <- rho.p^2/r.sq.m.star
-        
-        d0.p <- x$d0[(length(x$d0)-1)/2:length(x$d0)]
-        d0.p <- matrix(rep(d0.p, length(r.sq.m.star)), length(r.sq.m.star))
-        d0.n <- x$d0[1:(length(x$d0)-1)/2]
-        d0.n <- matrix(rep(d0.n, length(r.sq.m.star)), length(r.sq.m.star))
+        d0mat.n <- matrix(d0.n[R2prod.mat/rho.by^4+1], nrow=length(R2M))
         
         par(mfrow=c(2,2))
         par(mar=c(3.55,7,4,0))  #(b,l,t,r)
         #Column 1 Sgn -1
-        contour(r.sq.m.star, r.sq.y.star, d0.n, ylim=c(0,1), xlim=c(0,1), levels=pretty(lev.1, 25), asp=1)
+        contour(R2Mstar, R2Ystar, d0mat.n, ylim=c(0,1), xlim=c(0,1), levels=pretty(lev.1, 25), asp=1)
         title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
         title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9 )
         title(main=expression(paste("sgn", (lambda[2]*lambda[3])==-1)))
@@ -780,34 +768,34 @@ plot.medsens <- function(x, par="rho", xlab=NULL, ylab=NULL, xlim=NULL, ylim=NUL
 
         #Column 2 Sgn 1
         par(mar=c(3.55,5,4,2)) 
-        contour(r.sq.m.star, r.sq.y.star, d0.p, ylim=c(0,1), xlim=c(0,1), levels = pretty(lev.2, 25), asp=1)
+        contour(R2Mstar, R2Ystar, d0mat.p, ylim=c(0,1), xlim=c(0,1), levels = pretty(lev.2, 25), asp=1)
         title(xlab=expression(paste(R[M]^2,"*")), line=2.5, cex.lab=.9)
         title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9 )
         title(main=expression(paste("sgn", (lambda[2]*lambda[3])==1)))
         axis(2,at=seq(0,1,by=.1))
         axis(1,at=seq(0,1,by=.1))
 
-        #} else if(r.type==2) {
-        #par(mfrow=c(1,2))
-        #Lower Left
-        par(mar=c(5,7,2,0))
-        contour(x$r.tilde.m, x$r.tilde.y, x$r.til.n, ylim=c(0,1), xlim=c(0,1), levels=pretty(lev.1, 25), asp=1)
-        title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
-        title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9 )
-        #title(main=expression(paste("sgn", (lambda[2]*lambda[3])==-1)))
-        mtext("Proportion of original variance \n explained by an unobserved confounder", side=2, line=4, cex=.9)
-        axis(2,at=seq(0,1,by=.1))
-        axis(1,at=seq(0,1.1,by=.1))
+#        #} else if(r.type==2) {
+#        #par(mfrow=c(1,2))
+#        #Lower Left
+#        par(mar=c(5,7,2,0))
+#        contour(x$r.tilde.m, x$r.tilde.y, x$r.til.n, ylim=c(0,1), xlim=c(0,1), levels=pretty(lev.1, 25), asp=1)
+#        title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
+#        title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9 )
+#        #title(main=expression(paste("sgn", (lambda[2]*lambda[3])==-1)))
+#        mtext("Proportion of original variance \n explained by an unobserved confounder", side=2, line=4, cex=.9)
+#        axis(2,at=seq(0,1,by=.1))
+#        axis(1,at=seq(0,1.1,by=.1))
 
-        #Lower Right
-        par(mar=c(5,5,2,2)) 
-        contour(x$r.tilde.m, x$r.tilde.y, x$r.til.p, ylim=c(0,1), xlim=c(0,1), levels = pretty(lev.2, 25), asp=1)
-        title(xlab=expression(paste(tilde(R)[M]^2)), line=2.5, cex.lab=.9)
-        title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9 )
-        #title(main=expression(paste("sgn", (lambda[2]*lambda[3])==1)))
-        axis(2,at=seq(0,1,by=.1))
-        axis(1,at=seq(0,2,by=.1))
-            
-        #}
+#        #Lower Right
+#        par(mar=c(5,5,2,2)) 
+#        contour(x$r.tilde.m, x$r.tilde.y, x$r.til.p, ylim=c(0,1), xlim=c(0,1), levels = pretty(lev.2, 25), asp=1)
+#        title(xlab=expression(paste(tilde(R)[M]^2)), line=2.5, cex.lab=.9)
+#        title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9 )
+#        #title(main=expression(paste("sgn", (lambda[2]*lambda[3])==1)))
+#        axis(2,at=seq(0,1,by=.1))
+#        axis(1,at=seq(0,2,by=.1))
+#            
+#        #}
     }
   }
