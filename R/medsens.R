@@ -685,8 +685,8 @@ print.summary.medsens <- function(x, ...){
         
 }
 
-plot.medsens <- function(x, par="rho", xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL, pr.plot=FALSE,...){
-  if(par=="rho"){
+plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL, sens.par="rho", pr.plot=FALSE,...){
+  if(sens.par=="rho"){
     if(pr.plot==TRUE){
         if(x$type!="bm"){
             stop("Proportion mediated is only defined for binary mediator \n")
@@ -733,7 +733,7 @@ plot.medsens <- function(x, par="rho", xlab=NULL, ylab=NULL, xlim=NULL, ylim=NUL
         title(ylab = expression(paste("Average Mediation Effect: ", bar(delta[1]))), cex.lab=.9)
             }
         }
-  } else if (par=="R2"){
+  } else if (sens.par=="R2"){
     #if(r.type== 1){
         if(x$type=="bo"){
             lev.1 <- c(0,.1)
@@ -746,19 +746,19 @@ plot.medsens <- function(x, par="rho", xlab=NULL, ylab=NULL, xlim=NULL, ylim=NUL
             lev.2 = c(0,-3)
                     }
                     
-        R2Mstar <- seq(0, 1-rho.by, rho.by^2)
-        R2Ystar <- seq(0, 1-rho.by, rho.by^2)
-        dlength <- length(seq(0, (1-rho.by)^2, rho.by^4))
+        R2Mstar <- seq(0, 1-x$rho.by, x$rho.by^2)
+        R2Ystar <- seq(0, 1-x$rho.by, x$rho.by^2)
+        dlength <- length(seq(0, (1-x$rho.by)^2, x$rho.by^4))
         d0.p <- approx(x$d0[((length(x$d0)-1)/2):length(x$d0)], n=dlength)$y
         d0.n <- approx(x$d0[1:((length(x$d0)-1)/2)], n=dlength)$y
         R2prod.mat <- outer(R2Mstar, R2Ystar)
-        d0mat.p <- matrix(d0.p[R2prod.mat/rho.by^4+1], nrow=length(R2M))
-        d0mat.n <- matrix(d0.n[R2prod.mat/rho.by^4+1], nrow=length(R2M))
+        d0mat.p <- matrix(d0.p[R2prod.mat/x$rho.by^4+1], nrow=length(R2Mstar))
+        d0mat.n <- matrix(d0.n[R2prod.mat/x$rho.by^4+1], nrow=length(R2Mstar))
         
         par(mfrow=c(2,2))
         par(mar=c(3.55,7,4,0))  #(b,l,t,r)
         #Column 1 Sgn -1
-        contour(R2Mstar, R2Ystar, d0mat.n, ylim=c(0,1), xlim=c(0,1), levels=pretty(lev.1, 25), asp=1)
+        contour(R2Mstar, R2Ystar, d0mat.n, ylim=c(0,1), xlim=c(0,1))
         title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
         title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9 )
         title(main=expression(paste("sgn", (lambda[2]*lambda[3])==-1)))
@@ -768,7 +768,7 @@ plot.medsens <- function(x, par="rho", xlab=NULL, ylab=NULL, xlim=NULL, ylim=NUL
 
         #Column 2 Sgn 1
         par(mar=c(3.55,5,4,2)) 
-        contour(R2Mstar, R2Ystar, d0mat.p, ylim=c(0,1), xlim=c(0,1), levels = pretty(lev.2, 25), asp=1)
+        contour(R2Mstar, R2Ystar, d0mat.p, ylim=c(0,1), xlim=c(0,1))
         title(xlab=expression(paste(R[M]^2,"*")), line=2.5, cex.lab=.9)
         title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9 )
         title(main=expression(paste("sgn", (lambda[2]*lambda[3])==1)))
