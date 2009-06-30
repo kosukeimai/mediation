@@ -757,7 +757,8 @@ plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NUL
         d0mat.p <- matrix(d0.p[R2prod.mat/x$rho.by^4+1], nrow=length(R2Mstar))
         d0mat.n <- matrix(d0.n[R2prod.mat/x$rho.by^4+1], nrow=length(R2Mstar))
         
-        par(mfrow=c(2,2))
+        #par(mfrow=c(2,2))
+        par(mfrow=c(1,2))
         par(mar=c(3.55,7,4,0))  #(b,l,t,r)
         #Column 1 Sgn -1
         contour(R2Mstar, R2Ystar, d0mat.n, ylim=c(0,1), xlim=c(0,1))
