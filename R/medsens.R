@@ -16,6 +16,7 @@ medsens <- function(x, T="treat.name", M="med.name", rho.by=.1, sims=1000, eps=.
     ## CASE 1: Continuous Outcome + Continuous Mediator
     #########################################################
     if(class.y=="lm" & class.m=="lm") {
+    #if("lm" %in% class.y & "lm" %in% class.m) {
         d0 <- matrix(NA, length(rho), 1)
         d1 <- matrix(NA, length(rho), 1)
         d0.var <- matrix(NA, length(rho), 1)
@@ -171,10 +172,10 @@ medsens <- function(x, T="treat.name", M="med.name", rho.by=.1, sims=1000, eps=.
         if(INT==TRUE){
         ii <- which(abs(d0-0)==min(abs(d0-0)))
         kk <- which(abs(d1-0)==min(abs(d1-0)))
-		err.cr.1 <- rho[ii]
-		err.cr.2 <- rho[kk]
-		err.cr <- c(err.cr.1, err.cr.2)
-		}
+        err.cr.1 <- rho[ii]
+        err.cr.2 <- rho[kk]
+        err.cr <- c(err.cr.1, err.cr.2)
+        }
         R2star.thresh <- err.cr^2
         R2tilde.thresh <- err.cr^2*(1-r.sq.m)*(1-r.sq.y)
 
@@ -194,7 +195,8 @@ medsens <- function(x, T="treat.name", M="med.name", rho.by=.1, sims=1000, eps=.
     #########################################################
     ## CASE 2: Continuous Outcome + Binary Mediator
     #########################################################
-    if(class.y=="lm" & class.m=="glm") {
+    if (class.y == "lm" & class.m == "glm") {
+    #if("lm" %in% class.y & "glm" %in% class.m) {
 
         # Step 0: Setting Variable labels
         ## Uppercase letters (e.g. T) = labels in the input matrix
@@ -336,13 +338,13 @@ medsens <- function(x, T="treat.name", M="med.name", rho.by=.1, sims=1000, eps=.
         if(INT==TRUE){
         ii <- which(abs(d0-0)==min(abs(d0-0)))
         kk <- which(abs(d1-0)==min(abs(d1-0)))
-		err.cr.1 <- rho[ii]
-		err.cr.2 <- rho[kk]
-		err.cr <- c(err.cr.1, err.cr.2)
-		} else {
-		ii <- which(abs(d0-0)==min(abs(d0-0)))
-		err.cr <- rho[ii]	
-			}
+        err.cr.1 <- rho[ii]
+        err.cr.2 <- rho[kk]
+        err.cr <- c(err.cr.1, err.cr.2)
+        } else {
+        ii <- which(abs(d0-0)==min(abs(d0-0)))
+        err.cr <- rho[ii]   
+            }
         R2star.thresh <- err.cr^2
         R2tilde.thresh <- err.cr^2*(1-r.sq.m)*(1-r.sq.y)
         
@@ -365,9 +367,9 @@ medsens <- function(x, T="treat.name", M="med.name", rho.by=.1, sims=1000, eps=.
     ## CASE 3: Binary Outcome + Continuous Mediator
     #########################################################
     if(class.y=="glm" & class.m=="lm") {
-        	if(INT==TRUE){
-		stop("Sensitivity Analysis Not Available Binary Mediator With Interactions \n")
-		}
+            if(INT==TRUE){
+        stop("Sensitivity Analysis Not Available Binary Mediator With Interactions \n")
+        }
         # Step 0: Setting Variable labels
         ## Uppercase letters (e.g. T) = labels in the input matrix
         ## Uppercase letters + ".out" (e.g. T.out) = labels in the regression output
@@ -491,13 +493,13 @@ medsens <- function(x, T="treat.name", M="med.name", rho.by=.1, sims=1000, eps=.
         if(INT==TRUE){
         ii <- which(abs(d0-0)==min(abs(d0-0)))
         kk <- which(abs(d1-0)==min(abs(d1-0)))
-		err.cr.1 <- rho[ii]
-		err.cr.2 <- rho[kk]
-		err.cr <- c(err.cr.1, err.cr.2)
-		} else {
-		ii <- which(abs(d0-0)==min(abs(d0-0)))
-		err.cr <- rho[ii]	
-			}
+        err.cr.1 <- rho[ii]
+        err.cr.2 <- rho[kk]
+        err.cr <- c(err.cr.1, err.cr.2)
+        } else {
+        ii <- which(abs(d0-0)==min(abs(d0-0)))
+        err.cr <- rho[ii]   
+            }
         
         ## Step 3: Output
         type <- "bo"
@@ -569,12 +571,12 @@ print.summary.medsens <- function(x, ...){
             colnames(tab.d1) <-  c("Rho", "Med. Eff.", "95% CI Lower", "95% CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.d1) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
-            cat("\nSensitivity Region: d0\n\n")
+            cat("\nSensitivity Region: ACME for Control Group\n\n")
             print(tab.d0)
             cat("\nRho at which Delta_0 = 0:", round(x$err.cr[1], 4), "\n\n")
             cat("\nR^2_M*R^2_Y* at which Delta_0 = 0:", round(x$R2star.thresh[1], 4), "\n\n")
             cat("\nR^2_M~R^2_Y~ at which Delta_0 = 0:", round(x$R2tilde.thresh[1], 4), "\n\n")
-            cat("\nSensitivity Region: d1\n\n")
+            cat("\nSensitivity Region: ACME for Treatment Group\n\n")
             print(tab.d1)
             cat("\nRho at which Delta_1 = 0:", round(x$err.cr[2], 4), "\n\n")
             cat("\nR^2_M*R^2_Y* at which Delta_1 = 0:", round(x$R2star.thresh[2], 4), "\n\n")
@@ -619,12 +621,12 @@ print.summary.medsens <- function(x, ...){
             colnames(tab.d1) <-  c("Rho","Med. Eff.", "95% CI Lower", "95% CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.d1) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
-            cat("\nSensitivity Region: d0\n\n")
+            cat("\nSensitivity Region: ACME for Control Group\n\n")
             print(tab.d0)
             cat("\nRho at which Delta_0 = 0:", round(x$err.cr[1], 4), "\n\n")
             cat("\nR^2_M*R^2_Y* at which Delta_0 = 0:", round(x$R2star.thresh[1], 4), "\n\n")
             cat("\nR^2_M~R^2_Y~ at which Delta_0 = 0:", round(x$R2tilde.thresh[1], 4), "\n\n")
-            cat("\nSensitivity Region: d1\n\n")
+            cat("\nSensitivity Region: ACME for Treatment Group\n\n")
             print(tab.d1)
             cat("\nRho at which Delta_1 = 0:", round(x$err.cr[2], 4), "\n\n")
             cat("\nR^2_M*R^2_Y* at which Delta_1 = 0:", round(x$R2star.thresh[2], 4), "\n\n")
@@ -669,12 +671,12 @@ print.summary.medsens <- function(x, ...){
             colnames(tab.d1) <-  c("Rho","Med. Eff.", "95% CI Lower", "95% CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.d1) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
-            cat("\nSensitivity Region: d0\n\n")
+            cat("\nSensitivity Region: ACME for Control Group\n\n")
             print(tab.d0)
             cat("\nRho at which Delta_0 = 0:", round(x$err.cr[1], 4), "\n\n")
             cat("\nR^2_M*R^2_Y* at which Delta_0 = 0:", round(x$R2star.thresh[1], 4), "\n\n")
             cat("\nR^2_M~R^2_Y~ at which Delta_0 = 0:", round(x$R2tilde.thresh[1], 4), "\n\n")
-            cat("\nSensitivity Region: d1\n\n")
+            cat("\nSensitivity Region: ACME for Treatment Group\n\n")
             print(tab.d1)
             cat("\nRho at which Delta_1 = 0:", round(x$err.cr[2], 4), "\n\n")
             cat("\nR^2_M*R^2_Y* at which Delta_1 = 0:", round(x$R2star.thresh[2], 4), "\n\n")
