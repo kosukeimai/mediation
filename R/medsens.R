@@ -2,8 +2,8 @@ medsens <- function(x, T="treat.name", M="med.name", rho.by=.1, sims=1000, eps=.
 {
     model.y <- eval(x$call.y, envir=x$env.y)
     model.m <- eval(x$call.m, envir=x$env.m)
-    class.y <- class(model.y)
-    class.m <- class(model.m)
+    class.y <- class(model.y)[1]
+    class.m <- class(model.m)[1]
     INT <- x$INT
     
     #########################################################
@@ -15,8 +15,8 @@ medsens <- function(x, T="treat.name", M="med.name", rho.by=.1, sims=1000, eps=.
     #########################################################
     ## CASE 1: Continuous Outcome + Continuous Mediator
     #########################################################
-    if(class.y=="lm" & class.m=="lm") {
-    #if("lm" %in% class.y & "lm" %in% class.m) {
+    #if(class.y=="lm" & class.m=="lm") {
+    if("lm" %in% class.y & "lm" %in% class.m) {
         d0 <- matrix(NA, length(rho), 1)
         d1 <- matrix(NA, length(rho), 1)
         d0.var <- matrix(NA, length(rho), 1)
@@ -195,8 +195,8 @@ medsens <- function(x, T="treat.name", M="med.name", rho.by=.1, sims=1000, eps=.
     #########################################################
     ## CASE 2: Continuous Outcome + Binary Mediator
     #########################################################
-    if (class.y == "lm" & class.m == "glm") {
-    #if("lm" %in% class.y & "glm" %in% class.m) {
+    #if (class.y == "lm" & class.m == "glm") {
+    if("lm" %in% class.y & "glm" %in% class.m) {
 
         # Step 0: Setting Variable labels
         ## Uppercase letters (e.g. T) = labels in the input matrix
@@ -366,7 +366,9 @@ medsens <- function(x, T="treat.name", M="med.name", rho.by=.1, sims=1000, eps=.
     #########################################################
     ## CASE 3: Binary Outcome + Continuous Mediator
     #########################################################
-    if(class.y=="glm" & class.m=="lm") {
+    #if(class.y=="glm" & class.m=="lm") {
+    if("glm" %in% class.y & "lm" %in% class.m) {
+
             if(INT==TRUE){
         stop("Sensitivity Analysis Not Available Binary Mediator With Interactions \n")
         }
