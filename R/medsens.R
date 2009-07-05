@@ -1,9 +1,11 @@
-medsens <- function(x, T="treat.name", M="med.name", rho.by=.1, sims=1000, eps=.Machine$double.eps)
+medsens <- function(x, rho.by=.1, sims=1000, eps=.Machine$double.eps)
 {
     model.y <- eval(x$call.y, envir=x$env.y)
     model.m <- eval(x$call.m, envir=x$env.m)
     class.y <- class(model.y)[1]
     class.m <- class(model.m)[1]
+    T <- x$T
+    M <- x$M
     INT <- x$INT
     
     #########################################################
@@ -15,8 +17,7 @@ medsens <- function(x, T="treat.name", M="med.name", rho.by=.1, sims=1000, eps=.
     #########################################################
     ## CASE 1: Continuous Outcome + Continuous Mediator
     #########################################################
-    #if(class.y=="lm" & class.m=="lm") {
-    if("lm" %in% class.y & "lm" %in% class.m) {
+    if(class.y=="lm" & class.m=="lm") {
         d0 <- matrix(NA, length(rho), 1)
         d1 <- matrix(NA, length(rho), 1)
         d0.var <- matrix(NA, length(rho), 1)
@@ -196,8 +197,7 @@ medsens <- function(x, T="treat.name", M="med.name", rho.by=.1, sims=1000, eps=.
     #########################################################
     ## CASE 2: Continuous Outcome + Binary Mediator
     #########################################################
-    #if (class.y == "lm" & class.m == "glm") {
-    if("lm" %in% class.y & "glm" %in% class.m) {
+    if (class.y == "lm" & class.m == "glm") {
 
         # Step 0: Setting Variable labels
         ## Uppercase letters (e.g. T) = labels in the input matrix
@@ -368,8 +368,7 @@ medsens <- function(x, T="treat.name", M="med.name", rho.by=.1, sims=1000, eps=.
     #########################################################
     ## CASE 3: Binary Outcome + Continuous Mediator
     #########################################################
-    #if(class.y=="glm" & class.m=="lm") {
-    if("glm" %in% class.y & "lm" %in% class.m) {
+    if(class.y=="glm" & class.m=="lm") {
 
             if(INT==TRUE){
         stop("Sensitivity Analysis Not Available Binary Outcome With Interactions \n")
@@ -705,8 +704,8 @@ plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NUL
         abline(v=0)
         title(xlab=expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
         title(ylab = expression(paste("Proportion Mediated: ", bar(delta))), cex.lab=.9)
-        } else {
-   if(x$INT==FALSE){
+    } else {
+    if(x$INT==FALSE){
         plot(x$rho, x$d0, type="n", xlab="", ylab = "", main=main, xlim=xlim, ylim=ylim)
         polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.d0, rev(x$upper.d0)), border=FALSE, col=8, lty=2)
         lines(x$rho, x$d0, lty=1)
@@ -716,7 +715,7 @@ plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NUL
             c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2)
         title(xlab=expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
         title(ylab = expression(paste("Average Mediation Effect: ", bar(delta)(t))), cex.lab=.9)
-        } else {
+    } else {
         par(mfrow=c(1,2))
         plot(x$rho, x$d0, type="n", xlab="", ylab = "", ylim = c(-.2,.2))
         polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.d0, rev(x$upper.d0)), border=FALSE, col=8, lty=2)
@@ -741,7 +740,6 @@ plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NUL
             }
         }
   } else if (sens.par=="R2"){
-    if(r.type == 1){
 
 #        if(x$type=="bo"){
 #            lev.1 <- c(0,.1)
@@ -753,98 +751,125 @@ plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NUL
 #            lev.1 = c(-.5,1.7)
 #            lev.2 = c(0,-3)
 #                    }
-                    
-        R2Mstar <- seq(0, 1-x$rho.by, x$rho.by^2)
-        R2Ystar <- seq(0, 1-x$rho.by, x$rho.by^2)
-        dlength <- length(seq(0, (1-x$rho.by)^2, x$rho.by^4))
-        R2prod.mat <- outer(R2Mstar, R2Ystar)
-        
-      if(x$INT==FALSE){
-        par(mar=c(4,7,4,2))  #(b,l,t,r)
-        if(sign.prod == 1){
-            d0.p <- approx(x$d0[((length(x$d0)-1)/2):length(x$d0)], n=dlength)$y
-            d0mat.p <- matrix(d0.p[R2prod.mat/x$rho.by^4+1], nrow=length(R2Mstar))
-            contour(R2Mstar, R2Ystar, d0mat.p, ylim=c(0,1), xlim=c(0,1))
-            title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
-            title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
-            title(main=expression(paste("Average Mediation Effect, sgn", (lambda[2]*lambda[3])==1)), cex.lab=.9)
-            axis(2,at=seq(0,1,by=.1))
-            axis(1,at=seq(0,1,by=.1))
-            mtext("Proportion of unexplained variance \n explained by an unobserved confounder", side=2, line=4, cex=.9)
-        } else if(sign.prod == -1){
-            d0.n <- approx(x$d0[1:((length(x$d0)-1)/2)], n=dlength)$y
-            d0mat.n <- matrix(d0.n[R2prod.mat/x$rho.by^4+1], nrow=length(R2Mstar))
-            contour(R2Mstar, R2Ystar, d0mat.n, ylim=c(0,1), xlim=c(0,1))
-            title(xlab=expression(paste(R[M]^2,"*")), line=2.5, cex.lab=.9)
-            title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
-            title(main=expression(paste("Average Mediation Effect, sgn", (lambda[2]*lambda[3])==-1)), cex.lab=.9)
-            axis(2,at=seq(0,1,by=.1))
-            axis(1,at=seq(0,1,by=.1))
-            mtext("Proportion of unexplained variance \n explained by an unobserved confounder", side=2, line=4, cex=.9)
-        }
-      } else {
-        par(mfrow=c(1,2), mar=c(4,7,4,2))  #(b,l,t,r)
-        if(sign.prod == 1){
-            d0.p <- approx(x$d0[((length(x$d0)-1)/2):length(x$d0)], n=dlength)$y
-            d0mat.p <- matrix(d0.p[R2prod.mat/x$rho.by^4+1], nrow=length(R2Mstar))
-            contour(R2Mstar, R2Ystar, d0mat.p, ylim=c(0,1), xlim=c(0,1))
-            title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
-            title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
-            title(main=expression(paste("Average Mediation Effect for Control Group, sgn", (lambda[2]*lambda[3])==1)), cex.lab=.9)
-            axis(2,at=seq(0,1,by=.1))
-            axis(1,at=seq(0,1,by=.1))
-            mtext("Proportion of unexplained variance \n explained by an unobserved confounder", side=2, line=4, cex=.9)
 
-            d1.p <- approx(x$d1[((length(x$d1)-1)/2):length(x$d1)], n=dlength)$y
-            d1mat.p <- matrix(d1.p[R2prod.mat/x$rho.by^4+1], nrow=length(R2Mstar))
-            contour(R2Mstar, R2Ystar, d1mat.p, ylim=c(0,1), xlim=c(0,1))
-            title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
-            title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
-            title(main=expression(paste("Average Mediation Effect for Treatment Group, sgn", (lambda[2]*lambda[3])==1)), cex.lab=.9)
+    if(r.type == 1){
+        R2M <- seq(0, 1-x$rho.by, x$rho.by^2)
+        R2Y <- seq(0, 1-x$rho.by, x$rho.by^2)
+    } else if(r.type == 2) {
+        R2M <- (1-x$R2M)*seq(0, 1-x$rho.by, x$rho.by^2)
+        R2Y <- (1-x$R2Y)*seq(0, 1-x$rho.by, x$rho.by^2)
+    } else stop("Invalid value for r.type\n")
+    
+    dlength <- length(seq(0, (1-x$rho.by)^2, x$rho.by^4))
+    R2prod.mat <- outer(R2M, R2Y)
+    
+    if(x$INT==FALSE){
+        par(mfrow=c(1,1), mar=c(4,4,1,1), oma=c(1,2,2,1))
+        if(sign.prod == 1){
+            d0.p <- approx(x$d0[((length(x$d0)-1)/2):length(x$d0)], n=dlength)$y
+            d0mat.p <- matrix(d0.p[R2prod.mat/x$rho.by^4+1], nrow=length(R2M))
+            contour(R2M, R2Y, d0mat.p, ylim=c(0,1), xlim=c(0,1))
+            if(r.type == 1){
+                title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
+                title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
+                mtext("Proportion of unexplained variance \n explained by an unobserved confounder", side=2, outer=TRUE)
+            } else if(r.type == 2){
+                title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
+                title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
+                mtext("Proportion of original variance \n explained by an unobserved confounder", side=2, outer=TRUE)
+            }
+            title(main=expression(paste("Average Causal Mediation Effect")), outer=TRUE)
+            mtext(expression(paste("sgn", (lambda[2]*lambda[3])==1)), side=1, outer=TRUE, cex.lab=.9)
             axis(2,at=seq(0,1,by=.1))
             axis(1,at=seq(0,1,by=.1))
-            mtext("Proportion of unexplained variance \n explained by an unobserved confounder", side=2, line=4, cex=.9)
         } else if(sign.prod == -1){
             d0.n <- approx(x$d0[1:((length(x$d0)-1)/2)], n=dlength)$y
-            d0mat.n <- matrix(d0.n[R2prod.mat/x$rho.by^4+1], nrow=length(R2Mstar))
-            contour(R2Mstar, R2Ystar, d0mat.n, ylim=c(0,1), xlim=c(0,1))
-            title(xlab=expression(paste(R[M]^2,"*")), line=2.5, cex.lab=.9)
-            title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
-            title(main=expression(paste("sgn", (lambda[2]*lambda[3])==-1)), cex.lab=.9)
+            d0mat.n <- matrix(d0.n[R2prod.mat/x$rho.by^4+1], nrow=length(R2M))
+            contour(R2M, R2Y, d0mat.n, ylim=c(0,1), xlim=c(0,1))
+            if(r.type == 1){
+                title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
+                title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
+                mtext("Proportion of unexplained variance \n explained by an unobserved confounder", side=2, outer=TRUE)
+            } else if(r.type == 2){
+                title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
+                title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
+                mtext("Proportion of original variance \n explained by an unobserved confounder", side=2, outer=TRUE)
+            }
+            title(main=expression(paste("Average Causal Mediation Effect")), outer=TRUE)
+            mtext(expression(paste("sgn", (lambda[2]*lambda[3])==-1)), side=1, outer=TRUE, cex.lab=.9)
             axis(2,at=seq(0,1,by=.1))
             axis(1,at=seq(0,1,by=.1))
-            mtext("Proportion of unexplained variance \n explained by an unobserved confounder", side=2, line=4, cex=.9)
+        } else stop("Invalid value for sign.prod\n")
+    } else {
+        par(mfrow=c(1,2), mar=c(4,4,2,1), oma=c(1,2,2,1))
+        if(sign.prod == 1){
+            d0.p <- approx(x$d0[((length(x$d0)-1)/2):length(x$d0)], n=dlength)$y
+            d0mat.p <- matrix(d0.p[R2prod.mat/x$rho.by^4+1], nrow=length(R2M))
+            contour(R2M, R2Y, d0mat.p, ylim=c(0,1), xlim=c(0,1))
+            if(r.type == 1){
+                title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
+                title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
+                mtext("Proportion of unexplained variance \n explained by an unobserved confounder", side=2, outer=TRUE)
+            } else if(r.type == 2){
+                title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
+                title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
+                mtext("Proportion of original variance \n explained by an unobserved confounder", side=2, outer=TRUE)
+            }
+            title(main=expression(paste("Average Causal Mediation Effects")), outer=TRUE)
+            title("Control Group", cex.lab=.9)
+            mtext(expression(paste("sgn", (lambda[2]*lambda[3])==1)), side=1, outer=TRUE, cex.lab=.9)
+            axis(2,at=seq(0,1,by=.1))
+            axis(1,at=seq(0,1,by=.1))
+        } else if(sign.prod == -1){
+            d0.n <- approx(x$d0[1:((length(x$d0)-1)/2)], n=dlength)$y
+            d0mat.n <- matrix(d0.n[R2prod.mat/x$rho.by^4+1], nrow=length(R2M))
+            contour(R2M, R2Y, d0mat.n, ylim=c(0,1), xlim=c(0,1))
+            if(r.type == 1){
+                title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
+                title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
+                mtext("Proportion of unexplained variance \n explained by an unobserved confounder", side=2, outer=TRUE)
+            } else if(r.type == 2){
+                title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
+                title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
+                mtext("Proportion of original variance \n explained by an unobserved confounder", side=2, outer=TRUE)
+            }
+            title(main=expression(paste("Average Causal Mediation Effects")), outer=TRUE)
+            title("Control Group", cex.lab=.9)
+            mtext(expression(paste("sgn", (lambda[2]*lambda[3])==-1)), side=1, outer=TRUE, cex.lab=.9)
+            axis(2,at=seq(0,1,by=.1))
+            axis(1,at=seq(0,1,by=.1))
+        } else stop("Invalid value for sign.prod\n")
+    #Delta_1
+        if(sign.prod == 1){
+            d1.p <- approx(x$d1[((length(x$d1)-1)/2):length(x$d1)], n=dlength)$y
+            d1mat.p <- matrix(d1.p[R2prod.mat/x$rho.by^4+1], nrow=length(R2M))
+            contour(R2M, R2Y, d1mat.p, ylim=c(0,1), xlim=c(0,1))
+            if(r.type == 1){
+                title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
+                title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
+            } else if(r.type == 2){
+                title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
+                title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
+            }
+            title("Treatment Group", cex.lab=.9)
+            axis(2,at=seq(0,1,by=.1))
+            axis(1,at=seq(0,1,by=.1))
+        } else if(sign.prod == -1){
+            d1.n <- approx(x$d1[1:((length(x$d1)-1)/2)], n=dlength)$y
+            d1mat.n <- matrix(d1.n[R2prod.mat/x$rho.by^4+1], nrow=length(R2M))
+            contour(R2M, R2Y, d1mat.n, ylim=c(0,1), xlim=c(0,1))
+            if(r.type == 1){
+                title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
+                title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
+            } else if(r.type == 2){
+                title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
+                title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
+            }
+            title("Treatment Group", cex.lab=.9)
+            axis(2,at=seq(0,1,by=.1))
+            axis(1,at=seq(0,1,by=.1))
         }
       }
-    } else if(r.type == 2) {
-        
-        R2Mtilde <- (1-x$R2M)*seq(0, 1-x$rho.by, x$rho.by^2)
-        R2Ytilde <- (1-x$R2Y)*seq(0, 1-x$rho.by, x$rho.by^2)
-        dlength <- length(seq(0, (1-x$rho.by)^2, x$rho.by^4))
-        R2prod.mat <- outer(R2Mtilde, R2Ytilde)
-    
-        if(sign.prod == 1){
-            d0.p <- approx(x$d0[((length(x$d0)-1)/2):length(x$d0)], n=dlength)$y
-            d0mat.p <- matrix(d0.p[R2prod.mat/x$rho.by^4+1], nrow=length(R2Mtilde))
-            contour(R2Mtilde, R2Ytilde, d0mat.p, ylim=c(0,1), xlim=c(0,1))
-            title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
-            title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9 )
-            title(main=expression(paste("sgn", (lambda[2]*lambda[3])==1)), cex.lab=.9)
-            axis(2,at=seq(0,1,by=.1))
-            axis(1,at=seq(0,1.1,by=.1))
-            mtext("Proportion of original variance \n explained by an unobserved confounder", side=2, line=4, cex=.9)
-        } else if(sign.prod == -1){
-            d0.n <- approx(x$d0[1:((length(x$d0)-1)/2)], n=dlength)$y
-            d0mat.n <- matrix(d0.n[R2prod.mat/x$rho.by^4+1], nrow=length(R2Mtilde))
-            contour(R2Mtilde, R2Ytilde, d0mat.n, ylim=c(0,1), xlim=c(0,1))
-            title(xlab=expression(paste(tilde(R)[M]^2)), line=2.5, cex.lab=.9)
-            title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9 )
-            title(main=expression(paste("sgn", (lambda[2]*lambda[3])==-1)), cex.lab=.9)
-            axis(2,at=seq(0,1,by=.1))
-            axis(1,at=seq(0,2,by=.1))
-            mtext("Proportion of original variance \n explained by an unobserved confounder", side=2, line=4, cex=.9)
-        }
-    }
   }
 }
 
