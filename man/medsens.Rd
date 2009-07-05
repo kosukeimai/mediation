@@ -6,24 +6,20 @@ Function to perform sensitivity analysis on mediation effect for violations of s
 } 
 \usage{
 
-medsens(model.m, model.y, T="treat.name", M="med.name", INT=FALSE, DETAIL=FALSE, sims=1000, eps=.Machine$double.eps)
+medsens(x,  rho.by=.1, sims=1000, eps=.Machine$double.eps)
 
 } 
 
 \arguments{ 
-\item{model.m}{R model object for mediator.  Can be of class lm or glm using a probit link function.} 
-\item{model.y}{R model object for outcome.  Can be of class lm or glm using a probit link function.} 
-\item{INT}{If TRUE this indicates that treatment is interacted with mediator in ymodel object. Default is FALSE. Interaction implemented by including a T:M interaction term in the outcome model. This option is currently only available for continuous outcome continuous mediator case.} 
-\item{T}{Name of binary treatment indicator, 1 for treatment and 0 if control. Variable name listed in quotations.}
-\item{M}{Name of mediator. Variable name listed in quotations.}
-\item{DETAIL}{If FALSE estimation is on .1 grid for rho (sensitivity parameter) vs. a grid of .01). Due to computational time FALSE is recommended.}
+\item{x}{Output from \code{mediate} function} 
+\item{rho.by}{Specifies the grid for rho (sensitivity parameter) on which estimation is calculated for. Due to computational time we do not recommend decreasing this.}
 \item{sims}{Number of draws for parametric bootstrap used to calculate 95 percent confidence intervals.}
 \item{eps}{Convergence parameter for FGLS estimation.}
 } 
 
 \details{This is the workhorse function for estimating sensitivity analyses for mediation effects. In fitting models for a binary variable a probit function must be used. In fitting the model.y object with a treatmentXmediator interaction the user must input the interation in the format treatment:mediator. Furthermore, the user must make sure to also include the main effect for the mediator in this case.  
 
-Users should note that computation time is several minutes for these functions. Setting DETAIL=TRUE significantly increases computational time, as does increasing the number of simulations.}
+Users should note that computation time is several minutes for these functions. Setting rho.by to smaller numbers significantly increases computational time, as does increasing the number of simulations.}
 
 \section{Warning}{These functions assume that all missing values have been removed from the data set.  This can be done using the \code{na.omit()} command before the outcome and mediation models are fitted.}
 
@@ -72,43 +68,15 @@ data(jobs)
 #fit parametric model
 model.m <- lm(job_seek ~ treat + depress1, data=jobs)
 model.y <- lm(depress2 ~ treat + job_seek + depress1, data=jobs)
-#pass model objects through medsens function
-sens.cont <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE, sims=1000)
+#pass model objects through mediate function
+med.cont <- mediate(model.m, model.y, T="treat", M="job_seek", INT=FALSE, sims=1000)
+#pass mediate output through medsens function
+sens.cont<-medsens(med.cont, sims=100, rho.by=.2)
 #use summary function to display values of rho where 95% confidence interval overlaps with 0.
 summary(sens.cont)
 #plot mediation effect and 95% CI's for each value of rho
 plot(sens.cont, main="JOBS", ylim=c(-.2,.2))
-
-\dontrun{
-#########################################
-#binary outcome and continuous mediator
-#########################################
-
-model.m <- lm(job_seek ~ treat + depress1, data=jobs)
-model.y <- glm(work1 ~ treat + job_seek + depress1, family=binomial(link="probit"), data=jobs)
-sens.dichO <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE)
-summary(sens.dichO)
-plot(sens.dichO, main="JOBS", ylim=c(-.2,.2))
-
-#########################################
-#continuous outcome and binary mediator w no interaction
-#########################################
-
-model.m <- glm(job_dich ~ treat + depress1, data=jobs, family=binomial(link="probit"))
-model.y <- lm(depress2 ~ treat + job_dich + depress1, data=jobs)
-sens.dichM <- medsens(model.m, model.y, T="treat", M="job_dich", INT=FALSE,  DETAIL=FALSE)
-summary(sens.dichM)
-plot(sens.dichM, main="JOBS", ylim=c(-.2,.2))
-
-#########################################
-#continuous outcome and binary mediator w interaction
-#########################################
-
-model.m <- glm(job_dich ~ treat + depress1, data=jobs, family=binomial(link="probit"))
-model.y <- lm(depress2 ~ treat + job_dich + treat:job_dich + depress1, data=jobs)
-sens.dichM.int <- medsens(model.m, model.y, T="treat", M="job_dich", INT=TRUE,  DETAIL=FALSE)
-summary(sens.dichM.int)
-plot(sens.dichM.int, main="JOBS", ylim=c(-.2,.2))
-}
+#plot sensitivity analysis using R^2 method. See plot.medsens for additional detail
+plot(sens.cont, sens.par="R2", r.type=2, sign.prod=1)
 
 } 
