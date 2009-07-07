@@ -185,7 +185,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=.Machine$double.eps)
         lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0,
         ind.d1=ind.d1, R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
         R2star.thresh=R2star.thresh, R2tilde.thresh=R2tilde.thresh,
-        R2Y=r.sq.y, R2M=r.sq.m,
+        r.square.y=r.sq.y, r.square.m=r.sq.m,
         rho.by=rho.by, INT=INT, sims=sims, 
         tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL, type=type)
         class(out) <- "medsens"
@@ -355,7 +355,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=.Machine$double.eps)
         lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0,
         ind.d1=ind.d1, R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
         R2star.thresh=R2star.thresh, R2tilde.thresh=R2tilde.thresh,
-        R2Y=r.sq.y, R2M=r.sq.m,
+        r.square.y=r.sq.y, r.square.m=r.sq.m,
         rho.by=rho.by, INT=INT, sims=sims, tau=NULL, upper.tau=NULL,
         lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL,type=type,
         err.cr=err.cr)
@@ -513,7 +513,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=.Machine$double.eps)
         lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0,
         ind.d1=ind.d1, R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
         R2star.thresh=R2star.thresh, R2tilde.thresh=R2tilde.thresh,
-        r.sq.y=r.sq.y, r.sq.m=r.sq.m,
+        r.square.y=r.sq.y, r.square.m=r.sq.m,
         tau=tau, upper.tau=upper.tau, lower.tau=lower.tau, nu=nu, upper.nu=upper.nu,
         lower.nu=lower.nu, INT=INT, rho.by=rho.by,
         sims=sims, type=type)
@@ -765,8 +765,8 @@ plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NUL
         R2M <- seq(0, 1-x$rho.by, x$rho.by^2)
         R2Y <- seq(0, 1-x$rho.by, x$rho.by^2)
     } else if(r.type == 2) {
-        R2M <- (1-x$R2M)*seq(0, 1-x$rho.by, x$rho.by^2)
-        R2Y <- (1-x$R2Y)*seq(0, 1-x$rho.by, x$rho.by^2)
+        R2M <- (1-x$r.square.m)*seq(0, 1-x$rho.by, x$rho.by^2)
+        R2Y <- (1-x$r.square.y)*seq(0, 1-x$rho.by, x$rho.by^2)
     } else stop("r.type must be either 1 or 2\n")
     
     dlength <- length(seq(0, (1-x$rho.by)^2, x$rho.by^4))
