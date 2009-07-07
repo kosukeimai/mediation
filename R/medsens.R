@@ -97,7 +97,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=.Machine$double.eps)
         
         I <- diag(1,n)
         omega.i <- solve(omega)
-        v.i <-  kronecker(omega.i, I)
+        v.i <-  kronecker(omega.i, I) # THIS LINE DOESN'T WORK FOR LARGE N
         
         X.sur <- crossprod(X, v.i) %*% X 
         b.sur <- solve(X.sur) %*% crossprod(X, v.i) %*% Y.c
@@ -776,17 +776,16 @@ plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NUL
         xlim <- c(0,1)
     if(is.null(ylim))
         ylim <- c(0,1)
-    if(is.null(xlab) & r.type==1)
-        xlab <- expression(paste(R[M]^{2},"*"))
-        else if(is.null(xlab) & r.type==2)
-        xlab <- expression(paste(tilde(R)[M]^{2}))
-    if(is.null(ylab) & r.type==1)
-        ylab <- expression(paste(R[Y]^2,"*"))
-        else if(is.null(ylab) & r.type==2)
-        ylab <- expression(paste(tilde(R)[Y]^2))
+#    if(is.null(xlab) & r.type==1)
+#        xlab <- expression(paste(R[M]^{2},"*"))
+#        else if(is.null(xlab) & r.type==2)
+#        xlab <- expression(paste(tilde(R)[M]^{2}))
+#    if(is.null(ylab) & r.type==1)
+#        ylab <- expression(paste(R[Y]^2,"*"))
+#        else if(is.null(ylab) & r.type==2)
+#        ylab <- expression(paste(tilde(R)[Y]^2))
     
     if(x$INT==FALSE){
-#        par(mfrow=c(1,1), mar=c(4,4,1,1), oma=c(1,2,2,1))
         if(sign.prod == 1){
             d0.p <- approx(x$d0[((length(x$d0)-1)/2):length(x$d0)], n=dlength)$y
             d0mat.p <- matrix(d0.p[R2prod.mat/x$rho.by^4+1], nrow=length(R2M))
@@ -804,8 +803,6 @@ plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NUL
 #            }
 #            title(main=expression(paste("Average Causal Mediation Effect")), outer=TRUE)
 #            mtext(expression(paste("sgn", (lambda[2]*lambda[3])==1)), side=1, outer=TRUE, cex.lab=.9)
-            axis(2,at=seq(0,1,by=.1))
-            axis(1,at=seq(0,1,by=.1))
         } else if(sign.prod == -1){
             d0.n <- approx(x$d0[1:((length(x$d0)-1)/2)], n=dlength)$y
             d0mat.n <- matrix(d0.n[R2prod.mat/x$rho.by^4+1], nrow=length(R2M))
@@ -823,9 +820,17 @@ plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NUL
 #            }
 #            title(main=expression(paste("Average Causal Mediation Effect")), outer=TRUE)
 #            mtext(expression(paste("sgn", (lambda[2]*lambda[3])==-1)), side=1, outer=TRUE, cex.lab=.9)
-            axis(2,at=seq(0,1,by=.1))
-            axis(1,at=seq(0,1,by=.1))
         } else stop("'sign.prod' must be either -1 or 1\n")
+        if(is.null(xlab) & r.type==1)
+            title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
+            else if(is.null(xlab) & r.type==2)
+            title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
+        if(is.null(ylab) & r.type==1)
+            title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
+            else if(is.null(ylab) & r.type==2)
+            title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
+        axis(2,at=seq(0,1,by=.1))
+        axis(1,at=seq(0,1,by=.1))
     } else {
 #        par(mfrow=c(1,2), mar=c(4,4,2,1), oma=c(1,2,2,1))
         if(prod(par("mfrow")==1) && dev.interactive()){
@@ -850,8 +855,6 @@ plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NUL
 #            title(main=expression(paste("Average Causal Mediation Effects")), outer=TRUE)
 #            title("Control Group", cex.lab=.9)
 #            mtext(expression(paste("sgn", (lambda[2]*lambda[3])==1)), side=1, outer=TRUE, cex.lab=.9)
-            axis(2,at=seq(0,1,by=.1))
-            axis(1,at=seq(0,1,by=.1))
         } else if(sign.prod == -1){
             d0.n <- approx(x$d0[1:((length(x$d0)-1)/2)], n=dlength)$y
             d0mat.n <- matrix(d0.n[R2prod.mat/x$rho.by^4+1], nrow=length(R2M))
@@ -870,9 +873,17 @@ plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NUL
 #            title(main=expression(paste("Average Causal Mediation Effects")), outer=TRUE)
 #            title("Control Group", cex.lab=.9)
 #            mtext(expression(paste("sgn", (lambda[2]*lambda[3])==-1)), side=1, outer=TRUE, cex.lab=.9)
-            axis(2,at=seq(0,1,by=.1))
-            axis(1,at=seq(0,1,by=.1))
         } else stop("sign.prod must be either -1 or 1\n")
+        if(is.null(xlab) & r.type==1)
+            title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
+            else if(is.null(xlab) & r.type==2)
+            title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
+        if(is.null(ylab) & r.type==1)
+            title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
+            else if(is.null(ylab) & r.type==2)
+            title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
+        axis(2,at=seq(0,1,by=.1))
+        axis(1,at=seq(0,1,by=.1))
     #Delta_1
         if(sign.prod == 1){
             d1.p <- approx(x$d1[((length(x$d1)-1)/2):length(x$d1)], n=dlength)$y
@@ -888,8 +899,6 @@ plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NUL
 #                title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
 #            }
 #            title("Treatment Group", cex.lab=.9)
-            axis(2,at=seq(0,1,by=.1))
-            axis(1,at=seq(0,1,by=.1))
         } else if(sign.prod == -1){
             d1.n <- approx(x$d1[1:((length(x$d1)-1)/2)], n=dlength)$y
             d1mat.n <- matrix(d1.n[R2prod.mat/x$rho.by^4+1], nrow=length(R2M))
@@ -904,9 +913,17 @@ plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NUL
 #                title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
 #            }
 #            title("Treatment Group", cex.lab=.9)
-            axis(2,at=seq(0,1,by=.1))
-            axis(1,at=seq(0,1,by=.1))
         }
+        if(is.null(xlab) & r.type==1)
+            title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
+            else if(is.null(xlab) & r.type==2)
+            title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
+        if(is.null(ylab) & r.type==1)
+            title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
+            else if(is.null(ylab) & r.type==2)
+            title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
+        axis(2,at=seq(0,1,by=.1))
+        axis(1,at=seq(0,1,by=.1))
       }
   }
 }
