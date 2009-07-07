@@ -40,8 +40,12 @@ Users should note that computation time is several minutes for these functions. 
       \item{nu}{Proportion of total effect mediated.}
 \item{upper.nu}{Upper confidence interval for proportion mediated.}
 \item{lower.nu}{Upper confidence interval for proportion mediated.}
-
-
+\item{R2star.prod}{Value of the product of R^2 terms for the percentage of additional variance left unexplained, corresponding to value of rho.}
+\item{R2tilda.prod}{Value of the product of R^2 terms for the percentage of total variance left unexplained, corresponding to value of rho.}
+\item{R2star.thresh}{Value of R^2 for percentage of additional variance left unexplained which corresponds to a ACME of 0.}
+\item{R2tilda.thresh}{Value of R^2 for percentage of total variance left unexplained which corresponds to a ACME of 0.}
+\item{r.square.y}{R^2 for the outcome model.}
+\item{r.square.m}{R^2 for the mediator model.}
 }
 
 \references{Imai, Kosuke, Luke Keele and Dustin Tingley (2009) A General Approach to Causal Mediation Analysis.

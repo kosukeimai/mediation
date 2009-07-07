@@ -42,14 +42,18 @@ data(jobs)
 #########################################
 
 #fit parametric model
-model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age  + occp + marital + nonwhite + educ + income, data=jobs)
-model.y <- lm(depress2 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=jobs)
-#pass model objects through medsens function
-sens.cont <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE, sims=1000)
-#use summary function to display values of rho where 95% confidence interval overlaps with 0.
+model.m <- lm(job_seek ~ treat + depress1, data=jobs)
+model.y <- lm(depress2 ~ treat + job_seek + depress1, data=jobs)
+#pass model objects through mediate function
+med.cont <- mediate(model.m, model.y, T="treat", M="job_seek", INT=FALSE, sims=1000)
+#pass mediate output through medsens function
+sens.cont<-medsens(med.cont, sims=100, rho.by=.2)
+#use summary function to display values of rho and R^2 where 95% confidence interval overlaps with 0.
 summary(sens.cont)
 #plot mediation effect and 95% CI's for each value of rho
 plot(sens.cont, main="JOBS", ylim=c(-.2,.2))
+#plot sensitivity analysis using R^2 method. See plot.medsens for additional detail
+plot(sens.cont, sens.par="R2", r.type=2, sign.prod=1)
 
 
 
@@ -60,9 +64,11 @@ plot(sens.cont, main="JOBS", ylim=c(-.2,.2))
 
 model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=jobs)
 model.y <- glm(work1 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, family=binomial(link="probit"), data=jobs)
-sens.dichO <- medsens(model.m, model.y, T="treat", M="job_seek", INT=FALSE,  DETAIL=FALSE)
-summary(sens.dichO)
-plot(sens.dichO, main="JOBS", ylim=c(-.2,.2))
+med.cont <- mediate(model.m, model.y, T="treat", M="job_seek", INT=FALSE, sims=1000)
+#pass mediate output through medsens function
+sens.cont<-medsens(med.cont, sims=100, rho.by=.2)
+#use summary function to display values of rho and R^2 where 95% confidence interval overlaps with 0.
+summary(sens.cont)
 }
 
 

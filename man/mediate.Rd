@@ -79,7 +79,7 @@ summary(continuous_boot)
 #INTERACTION TERM BTWN TREATEMENT AND MEDIATOR IS INCLUDED IN THE MODEL
 b <- lm(job_seek ~ treat + depress1, data=jobs)
 d <- lm(depress2 ~ treat + job_seek + treat:job_seek + depress1, data=jobs)
-cont.int <- mediate(b, d, sims=10, INT=TRUE, T="treat", M="job_seek")
+cont.int <- mediate(b, d, sims=1000, INT=TRUE, T="treat", M="job_seek")
 summary(cont.int)
 
 
