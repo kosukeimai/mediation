@@ -513,7 +513,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=.Machine$double.eps)
         lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0,
         ind.d1=ind.d1, R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
         R2star.thresh=R2star.thresh, R2tilde.thresh=R2tilde.thresh,
-        R2Y=r.sq.y, R2M=r.sq.m,
+        r.sq.y=r.sq.y, r.sq.m=r.sq.m,
         tau=tau, upper.tau=upper.tau, lower.tau=lower.tau, nu=nu, upper.nu=upper.nu,
         lower.nu=lower.nu, INT=INT, rho.by=rho.by,
         sims=sims, type=type)
@@ -776,14 +776,6 @@ plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NUL
         xlim <- c(0,1)
     if(is.null(ylim))
         ylim <- c(0,1)
-#    if(is.null(xlab) & r.type==1)
-#        xlab <- expression(paste(R[M]^{2},"*"))
-#        else if(is.null(xlab) & r.type==2)
-#        xlab <- expression(paste(tilde(R)[M]^{2}))
-#    if(is.null(ylab) & r.type==1)
-#        ylab <- expression(paste(R[Y]^2,"*"))
-#        else if(is.null(ylab) & r.type==2)
-#        ylab <- expression(paste(tilde(R)[Y]^2))
     
     if(x$INT==FALSE){
         if(sign.prod == 1){
@@ -792,34 +784,12 @@ plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NUL
             if(is.null(main))
                 main <- expression(paste("Average Causal Mediation Effect, sgn", (lambda[2]*lambda[3])==1))
             contour(R2M, R2Y, d0mat.p, main=main, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, ...)
-#            if(r.type == 1){
-#                title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
-#                title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
-#                mtext("Proportion of unexplained variance \n explained by an unobserved confounder", side=2, outer=TRUE)
-#            } else if(r.type == 2){
-#                title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
-#                title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
-#                mtext("Proportion of original variance \n explained by an unobserved confounder", side=2, outer=TRUE)
-#            }
-#            title(main=expression(paste("Average Causal Mediation Effect")), outer=TRUE)
-#            mtext(expression(paste("sgn", (lambda[2]*lambda[3])==1)), side=1, outer=TRUE, cex.lab=.9)
         } else if(sign.prod == -1){
             d0.n <- approx(x$d0[1:((length(x$d0)-1)/2)], n=dlength)$y
             d0mat.n <- matrix(d0.n[R2prod.mat/x$rho.by^4+1], nrow=length(R2M))
             if(is.null(main))
                 main <- expression(paste("Average Causal Mediation Effect, sgn", (lambda[2]*lambda[3])==-1))
             contour(R2M, R2Y, d0mat.n, main=main, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, ...)
-#            if(r.type == 1){
-#                title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
-#                title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
-#                mtext("Proportion of unexplained variance \n explained by an unobserved confounder", side=2, outer=TRUE)
-#            } else if(r.type == 2){
-#                title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
-#                title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
-#                mtext("Proportion of original variance \n explained by an unobserved confounder", side=2, outer=TRUE)
-#            }
-#            title(main=expression(paste("Average Causal Mediation Effect")), outer=TRUE)
-#            mtext(expression(paste("sgn", (lambda[2]*lambda[3])==-1)), side=1, outer=TRUE, cex.lab=.9)
         } else stop("'sign.prod' must be either -1 or 1\n")
         if(is.null(xlab) & r.type==1)
             title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
@@ -832,7 +802,6 @@ plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NUL
         axis(2,at=seq(0,1,by=.1))
         axis(1,at=seq(0,1,by=.1))
     } else {
-#        par(mfrow=c(1,2), mar=c(4,4,2,1), oma=c(1,2,2,1))
         if(prod(par("mfrow")==1) && dev.interactive()){
             oask <- devAskNewPage(TRUE)
             on.exit(devAskNewPage(oask))
@@ -843,36 +812,12 @@ plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NUL
             if(is.null(main))
                 main0 <- expression(paste("Average Causal Mediation Effect for Control Group, sgn", (lambda[2]*lambda[3])==1))
             contour(R2M, R2Y, d0mat.p, main=main0, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim)
-#            if(r.type == 1){
-#                title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
-#                title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
-#                mtext("Proportion of unexplained variance \n explained by an unobserved confounder", side=2, outer=TRUE)
-#            } else if(r.type == 2){
-#                title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
-#                title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
-#                mtext("Proportion of original variance \n explained by an unobserved confounder", side=2, outer=TRUE)
-#            }
-#            title(main=expression(paste("Average Causal Mediation Effects")), outer=TRUE)
-#            title("Control Group", cex.lab=.9)
-#            mtext(expression(paste("sgn", (lambda[2]*lambda[3])==1)), side=1, outer=TRUE, cex.lab=.9)
         } else if(sign.prod == -1){
             d0.n <- approx(x$d0[1:((length(x$d0)-1)/2)], n=dlength)$y
             d0mat.n <- matrix(d0.n[R2prod.mat/x$rho.by^4+1], nrow=length(R2M))
             if(is.null(main))
                 main0 <- expression(paste("Average Causal Mediation Effect for Control Group, sgn", (lambda[2]*lambda[3])==-1))
             contour(R2M, R2Y, d0mat.n, main=main0, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim)
-#            if(r.type == 1){
-#                title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
-#                title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
-#                mtext("Proportion of unexplained variance \n explained by an unobserved confounder", side=2, outer=TRUE)
-#            } else if(r.type == 2){
-#                title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
-#                title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
-#                mtext("Proportion of original variance \n explained by an unobserved confounder", side=2, outer=TRUE)
-#            }
-#            title(main=expression(paste("Average Causal Mediation Effects")), outer=TRUE)
-#            title("Control Group", cex.lab=.9)
-#            mtext(expression(paste("sgn", (lambda[2]*lambda[3])==-1)), side=1, outer=TRUE, cex.lab=.9)
         } else stop("sign.prod must be either -1 or 1\n")
         if(is.null(xlab) & r.type==1)
             title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
@@ -891,28 +836,12 @@ plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NUL
             if(is.null(main))
                 main1 <- expression(paste("Average Causal Mediation Effect for Treatment Group, sgn", (lambda[2]*lambda[3])==1))
             contour(R2M, R2Y, d1mat.p, main=main1, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim)
-#            if(r.type == 1){
-#                title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
-#                title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
-#            } else if(r.type == 2){
-#                title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
-#                title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
-#            }
-#            title("Treatment Group", cex.lab=.9)
         } else if(sign.prod == -1){
             d1.n <- approx(x$d1[1:((length(x$d1)-1)/2)], n=dlength)$y
             d1mat.n <- matrix(d1.n[R2prod.mat/x$rho.by^4+1], nrow=length(R2M))
             if(is.null(main))
                 main1 <- expression(paste("Average Causal Mediation Effect for Treatment Group, sgn", (lambda[2]*lambda[3])==-1))
             contour(R2M, R2Y, d1mat.n, main=main1, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim)
-#            if(r.type == 1){
-#                title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
-#                title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
-#            } else if(r.type == 2){
-#                title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
-#                title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
-#            }
-#            title("Treatment Group", cex.lab=.9)
         }
         if(is.null(xlab) & r.type==1)
             title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
@@ -927,5 +856,4 @@ plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NUL
       }
   }
 }
-
 
