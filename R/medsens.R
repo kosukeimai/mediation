@@ -691,7 +691,7 @@ print.summary.medsens <- function(x, ...){
         
 }
 
-plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE, ...){
+plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE, levels=NULL, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL, ...){
   if(sens.par=="rho"){
     if(pr.plot==TRUE){
         if(x$type!="bm"){
@@ -761,16 +761,21 @@ plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NUL
             }
         }
   } else if (sens.par=="R2"){
+  
+    R2Mstar <- seq(0, 1-x$rho.by, 0.01)
+    R2Ystar <- seq(0, 1-x$rho.by, 0.01)
+    R2Mtilde <- (1-x$r.square.m)*seq(0, 1-x$rho.by, 0.01)
+    R2Ytilde <- (1-x$r.square.y)*seq(0, 1-x$rho.by, 0.01)
+  
     if(r.type == 1){
-        R2M <- seq(0, 1-x$rho.by, x$rho.by^2)
-        R2Y <- seq(0, 1-x$rho.by, x$rho.by^2)
+        R2M <- R2Mstar; R2Y <- R2Ystar
     } else if(r.type == 2) {
-        R2M <- (1-x$r.square.m)*seq(0, 1-x$rho.by, x$rho.by^2)
-        R2Y <- (1-x$r.square.y)*seq(0, 1-x$rho.by, x$rho.by^2)
+        R2M <- R2Mtilde; R2Y <- R2Ytilde
     } else stop("r.type must be either 1 or 2\n")
     
-    dlength <- length(seq(0, (1-x$rho.by)^2, x$rho.by^4))
-    R2prod.mat <- outer(R2M, R2Y)
+    dlength <- length(seq(0, (1-x$rho.by)^2, 0.0001))
+    R2prod.mat <- outer(R2Mstar, R2Ystar)
+    Rprod.mat <- round(sqrt(R2prod.mat), digits=4)
     
     if(is.null(xlim))
         xlim <- c(0,1)
@@ -778,18 +783,20 @@ plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NUL
         ylim <- c(0,1)
     
     if(x$INT==FALSE){
+        if(is.null(levels))
+            levels <- pretty(quantile(x$d0, probs=c(0.1,0.9)), 10)
         if(sign.prod == 1){
-            d0.p <- approx(x$d0[((length(x$d0)-1)/2):length(x$d0)], n=dlength)$y
-            d0mat.p <- matrix(d0.p[R2prod.mat/x$rho.by^4+1], nrow=length(R2M))
+            d0.p <- approx(x$d0[((length(x$d0)+1)/2):length(x$d0)], n=dlength)$y
+            d0mat.p <- matrix(d0.p[Rprod.mat/0.0001+1], nrow=length(R2M))
             if(is.null(main))
                 main <- expression(paste("Average Causal Mediation Effect, sgn", (lambda[2]*lambda[3])==1))
-            contour(R2M, R2Y, d0mat.p, main=main, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, ...)
+            contour(R2M, R2Y, d0mat.p, levels=levels, main=main, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, ...)
         } else if(sign.prod == -1){
-            d0.n <- approx(x$d0[1:((length(x$d0)-1)/2)], n=dlength)$y
-            d0mat.n <- matrix(d0.n[R2prod.mat/x$rho.by^4+1], nrow=length(R2M))
+            d0.n <- rev(approx(x$d0[1:((length(x$d0)+1)/2)], n=dlength)$y)
+            d0mat.n <- matrix(d0.n[Rprod.mat/0.0001+1], nrow=length(R2M))
             if(is.null(main))
                 main <- expression(paste("Average Causal Mediation Effect, sgn", (lambda[2]*lambda[3])==-1))
-            contour(R2M, R2Y, d0mat.n, main=main, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, ...)
+            contour(R2M, R2Y, d0mat.n, levels=levels, main=main, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, ...)
         } else stop("'sign.prod' must be either -1 or 1\n")
         if(is.null(xlab) & r.type==1)
             title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
@@ -806,18 +813,20 @@ plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NUL
             oask <- devAskNewPage(TRUE)
             on.exit(devAskNewPage(oask))
         }
+        if(is.null(levels))
+            levels0 <- pretty(quantile(x$d0, probs=c(0.1,0.9)), 10)
         if(sign.prod == 1){
-            d0.p <- approx(x$d0[((length(x$d0)-1)/2):length(x$d0)], n=dlength)$y
-            d0mat.p <- matrix(d0.p[R2prod.mat/x$rho.by^4+1], nrow=length(R2M))
+            d0.p <- approx(x$d0[((length(x$d0)+1)/2):length(x$d0)], n=dlength)$y
+            d0mat.p <- matrix(d0.p[Rprod.mat/0.0001+1], nrow=length(R2M))
             if(is.null(main))
                 main0 <- expression(paste("Average Causal Mediation Effect for Control Group, sgn", (lambda[2]*lambda[3])==1))
-            contour(R2M, R2Y, d0mat.p, main=main0, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim)
+            contour(R2M, R2Y, d0mat.p, levels=levels0, main=main0, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim)
         } else if(sign.prod == -1){
-            d0.n <- approx(x$d0[1:((length(x$d0)-1)/2)], n=dlength)$y
-            d0mat.n <- matrix(d0.n[R2prod.mat/x$rho.by^4+1], nrow=length(R2M))
+            d0.n <- rev(approx(x$d0[1:((length(x$d0)+1)/2)], n=dlength)$y)
+            d0mat.n <- matrix(d0.n[Rprod.mat/0.0001+1], nrow=length(R2M))
             if(is.null(main))
                 main0 <- expression(paste("Average Causal Mediation Effect for Control Group, sgn", (lambda[2]*lambda[3])==-1))
-            contour(R2M, R2Y, d0mat.n, main=main0, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim)
+            contour(R2M, R2Y, d0mat.n, levels=levels0, main=main0, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim)
         } else stop("sign.prod must be either -1 or 1\n")
         if(is.null(xlab) & r.type==1)
             title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
@@ -830,18 +839,20 @@ plot.medsens <- function(x, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NUL
         axis(2,at=seq(0,1,by=.1))
         axis(1,at=seq(0,1,by=.1))
     #Delta_1
+        if(is.null(levels))
+            levels1 <- pretty(quantile(x$d1, probs=c(0.1,0.9)), 10)
         if(sign.prod == 1){
-            d1.p <- approx(x$d1[((length(x$d1)-1)/2):length(x$d1)], n=dlength)$y
-            d1mat.p <- matrix(d1.p[R2prod.mat/x$rho.by^4+1], nrow=length(R2M))
+            d1.p <- approx(x$d1[((length(x$d1)+1)/2):length(x$d1)], n=dlength)$y
+            d1mat.p <- matrix(d1.p[Rprod.mat/0.0001+1], nrow=length(R2M))
             if(is.null(main))
                 main1 <- expression(paste("Average Causal Mediation Effect for Treatment Group, sgn", (lambda[2]*lambda[3])==1))
-            contour(R2M, R2Y, d1mat.p, main=main1, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim)
+            contour(R2M, R2Y, d1mat.p, levels=levels1, main=main1, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim)
         } else if(sign.prod == -1){
-            d1.n <- approx(x$d1[1:((length(x$d1)-1)/2)], n=dlength)$y
-            d1mat.n <- matrix(d1.n[R2prod.mat/x$rho.by^4+1], nrow=length(R2M))
+            d1.n <- rev(approx(x$d1[1:((length(x$d1)+1)/2)], n=dlength)$y)
+            d1mat.n <- matrix(d1.n[Rprod.mat/0.0001+1], nrow=length(R2M))
             if(is.null(main))
                 main1 <- expression(paste("Average Causal Mediation Effect for Treatment Group, sgn", (lambda[2]*lambda[3])==-1))
-            contour(R2M, R2Y, d1mat.n, main=main1, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim)
+            contour(R2M, R2Y, d1mat.n, levels=levels1, main=main1, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim)
         }
         if(is.null(xlab) & r.type==1)
             title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
