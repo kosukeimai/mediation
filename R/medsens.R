@@ -701,22 +701,24 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             ylim <- c(min(x$nu), max(x$nu))
         if(is.null(main))
             main <- expression(paste("Proportion Mediated ", (rho)))
-        plot.default(x$rho, x$nu, type="n", xlab=xlab, ylab=ylab, main=main, xlim=xlim, ylim=ylim, ...)
+        plot.default(x$rho, x$nu, type="n", xlab="", ylab="", main=main, xlim=xlim, ylim=ylim, ...)
         polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.nu, rev(x$upper.nu)), border=FALSE, col=8, lty=2)
         lines(x$rho, x$d0, lty=1)
         abline(h=0)
         abline(v=0)
         if(is.null(xlab)) 
             title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
+            else title(xlab = xlab)
         if(is.null(ylab)) 
             title(ylab = expression(paste("Proportion Mediated: ", bar(nu))), line=2.5, cex.lab=.9)
+            else title(ylab = ylab)
     } else {
     if(x$INT==FALSE){
         if(is.null(ylim))
             ylim <- c(min(x$d0), max(x$d0))
         if(is.null(main))
             main <- expression(paste("ACME(", rho, ")"))
-        plot.default(x$rho, x$d0, type="n", xlab=xlab, ylab=ylab, main=main, xlim=xlim, ylim=ylim, ...)
+        plot.default(x$rho, x$d0, type="n", xlab="", ylab="", main=main, xlim=xlim, ylim=ylim, ...)
         polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.d0, rev(x$upper.d0)), border=FALSE, col=8, lty=2)
         lines(x$rho, x$d0, lty=1)
         abline(h=0)
@@ -725,8 +727,10 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2)
         if(is.null(xlab)) 
             title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
+            else title(xlab = xlab)
         if(is.null(ylab)) 
             title(ylab = expression(paste("Average Mediation Effect: ", bar(delta)(t))), line=2.5, cex.lab=.9)
+            else title(ylab = ylab)
     } else {
         if(prod(par("mfrow")==1) && dev.interactive()){
             oask <- devAskNewPage(TRUE)
@@ -737,7 +741,7 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         if(is.null(main))
             main0 <- expression(paste("ACME", (0), "(", rho, ")"))
             else main0 <- main
-        plot.default(x$rho, x$d0, type="n", xlab=xlab, ylab=ylab, main=main0, xlim=xlim, ylim=ylim, ...)
+        plot.default(x$rho, x$d0, type="n", xlab="", ylab="", main=main0, xlim=xlim, ylim=ylim, ...)
         polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.d0, rev(x$upper.d0)), border=FALSE, col=8, lty=2)
         lines(x$rho, x$d0, lty=1)
         abline(h=0)
@@ -746,8 +750,10 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2)
         if(is.null(xlab)) 
             title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
+            else title(xlab = xlab)
         if(is.null(ylab)) 
             title(ylab = expression(paste("Average Mediation Effect: ", bar(delta)(0))), line=2.5, cex.lab=.9)
+            else title(ylab = ylab)
 
         #Delta_1
         if(is.null(ylim))
@@ -755,7 +761,7 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         if(is.null(main))
             main1 <- expression(paste("ACME", (1), "(", rho, ")"))
             else main1 <- main
-        plot.default(x$rho, x$d1, type="n", xlab=xlab, ylab=ylab, main=main1, xlim=xlim, ylim=ylim,...)
+        plot.default(x$rho, x$d1, type="n", xlab="", ylab="", main=main1, xlim=xlim, ylim=ylim,...)
         polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.d1, rev(x$upper.d1)), border=FALSE, col=8, lty=2)
         lines(x$rho, x$d1, lty=1)
         abline(h=0)
@@ -764,8 +770,10 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2)
         if(is.null(xlab)) 
             title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
+            else title(xlab = xlab)
         if(is.null(ylab)) 
             title(ylab = expression(paste("Average Mediation Effect: ", bar(delta)(1))), line=2.5, cex.lab=.9)
+            else title(ylab = ylab)
             }
         }
   } else if (sens.par=="R2"){
