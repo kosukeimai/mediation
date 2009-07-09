@@ -697,29 +697,25 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         if(x$type!="bm"){
             stop("Proportion mediated is only implemented for binary mediator \n")
         }
-        if(is.null(xlab)) 
-            xlab <- expression(paste("Sensitivity Parameter: ", rho))
-        if(is.null(ylab)) 
-            ylab <- expression(paste("Proportion Mediated: ", bar(delta)))
         if(is.null(ylim)) 
             ylim <- c(min(x$nu), max(x$nu))
         if(is.null(main))
-            main <- expression(paste("Proportion Mediated in terms of", rho))
+            main <- expression(paste("Proportion Mediated ", (rho)))
         plot.default(x$rho, x$nu, type="n", xlab=xlab, ylab=ylab, main=main, xlim=xlim, ylim=ylim, ...)
         polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.nu, rev(x$upper.nu)), border=FALSE, col=8, lty=2)
         lines(x$rho, x$d0, lty=1)
         abline(h=0)
         abline(v=0)
+        if(is.null(xlab)) 
+            title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
+        if(is.null(ylab)) 
+            title(ylab = expression(paste("Proportion Mediated: ", bar(nu))), line=2.5, cex.lab=.9)
     } else {
     if(x$INT==FALSE){
-        if(is.null(xlab))
-            xlab <- expression(paste("Sensitivity Parameter: ", rho))
-        if(is.null(ylab))
-            ylab <- expression(paste("Average Mediation Effect: ", bar(delta)(t)))
         if(is.null(ylim))
             ylim <- c(min(x$d0), max(x$d0))
         if(is.null(main))
-            main <- expression(paste("ACME in terms of", rho))
+            main <- expression(paste("ACME(", rho, ")"))
         plot.default(x$rho, x$d0, type="n", xlab=xlab, ylab=ylab, main=main, xlim=xlim, ylim=ylim, ...)
         polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.d0, rev(x$upper.d0)), border=FALSE, col=8, lty=2)
         lines(x$rho, x$d0, lty=1)
@@ -727,45 +723,49 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         abline(v=0)
         abline(h=weighted.mean(c(x$d0[floor(1/x$rho.by)],x$d0[ceiling(1/x$rho.by)]), 
             c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2)
+        if(is.null(xlab)) 
+            title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
+        if(is.null(ylab)) 
+            title(ylab = expression(paste("Average Mediation Effect: ", bar(delta)(t))), line=2.5, cex.lab=.9)
     } else {
         if(prod(par("mfrow")==1) && dev.interactive()){
             oask <- devAskNewPage(TRUE)
             on.exit(devAskNewPage(oask))
         }
-        if(is.null(xlab))
-            xlab <- expression(paste("Sensitivity Parameter: ", rho))
-        if(is.null(ylab))
-            ylab0 <- expression(paste("Average Mediation Effect: ", bar(delta[0])))
-            else ylab0 <- ylab
         if(is.null(ylim))
             ylim <- c(min(x$d0), max(x$d0))
         if(is.null(main))
-            main0 <- expression(paste("ACME for Control Group in terms of", rho))
-        plot.default(x$rho, x$d0, type="n", xlab=xlab, ylab=ylab0, main=main0, xlim=xlim, ylim=ylim, ...)
+            main0 <- expression(paste("ACME", (0), "(", rho, ")"))
+            else main0 <- main
+        plot.default(x$rho, x$d0, type="n", xlab=xlab, ylab=ylab, main=main0, xlim=xlim, ylim=ylim, ...)
         polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.d0, rev(x$upper.d0)), border=FALSE, col=8, lty=2)
         lines(x$rho, x$d0, lty=1)
         abline(h=0)
         abline(v=0)
         abline(h=weighted.mean(c(x$d0[floor(1/x$rho.by)],x$d0[ceiling(1/x$rho.by)]), 
             c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2)
+        if(is.null(xlab)) 
+            title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
+        if(is.null(ylab)) 
+            title(ylab = expression(paste("Average Mediation Effect: ", bar(delta)(0))), line=2.5, cex.lab=.9)
 
         #Delta_1
-        if(is.null(xlab))
-            xlab <- expression(paste("Sensitivity Parameter: ", rho))
-        if(is.null(ylab))
-            ylab1 <- expression(paste("Average Mediation Effect: ", bar(delta[1])))
-            else ylab1 <- ylab
         if(is.null(ylim))
             ylim <- c(min(x$d1), max(x$d1))
         if(is.null(main))
-            main1 <- expression(paste("ACME for Treatment Group in terms of", rho))
-        plot.default(x$rho, x$d1, type="n", xlab=xlab, ylab=ylab1, main=main1, xlim=xlim, ylim=ylim,...)
+            main1 <- expression(paste("ACME", (1), "(", rho, ")"))
+            else main1 <- main
+        plot.default(x$rho, x$d1, type="n", xlab=xlab, ylab=ylab, main=main1, xlim=xlim, ylim=ylim,...)
         polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.d1, rev(x$upper.d1)), border=FALSE, col=8, lty=2)
         lines(x$rho, x$d1, lty=1)
         abline(h=0)
         abline(v=0)
         abline(h=weighted.mean(c(x$d1[floor(1/x$rho.by)],x$d1[ceiling(1/x$rho.by)]), 
             c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2)
+        if(is.null(xlab)) 
+            title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
+        if(is.null(ylab)) 
+            title(ylab = expression(paste("Average Mediation Effect: ", bar(delta)(1))), line=2.5, cex.lab=.9)
             }
         }
   } else if (sens.par=="R2"){
@@ -796,14 +796,18 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         if(sign.prod == 1){
             d0.p <- approx(x$d0[((length(x$d0)+1)/2):length(x$d0)], n=dlength)$y
             d0mat.p <- matrix(d0.p[Rprod.mat/0.0001+1], nrow=length(R2M))
-            if(is.null(main))
-                main <- expression(paste("ACME, sgn", (lambda[2]*lambda[3])==1))
+            if(is.null(main) & r.type=1)
+                main <- expression(paste("ACME(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==1))
+            else if(is.null(main) & r.type=2)
+                main <- expression(paste("ACME(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==1))
             contour(R2M, R2Y, d0mat.p, levels=levels, main=main, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, ...)
         } else if(sign.prod == -1){
             d0.n <- rev(approx(x$d0[1:((length(x$d0)+1)/2)], n=dlength)$y)
             d0mat.n <- matrix(d0.n[Rprod.mat/0.0001+1], nrow=length(R2M))
-            if(is.null(main))
-                main <- expression(paste("ACME, sgn", (lambda[2]*lambda[3])==-1))
+            if(is.null(main) & r.type=1)
+                main <- expression(paste("ACME(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==-1))
+            else if(is.null(main) & r.type=2)
+                main <- expression(paste("ACME(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==-1))
             contour(R2M, R2Y, d0mat.n, levels=levels, main=main, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, ...)
         } else stop("'sign.prod' must be either -1 or 1\n")
         if(is.null(xlab) & r.type==1)
@@ -823,17 +827,24 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         }
         if(is.null(levels))
             levels0 <- pretty(quantile(x$d0, probs=c(0.1,0.9)), 10)
+            else levels0 <- levels
         if(sign.prod == 1){
             d0.p <- approx(x$d0[((length(x$d0)+1)/2):length(x$d0)], n=dlength)$y
             d0mat.p <- matrix(d0.p[Rprod.mat/0.0001+1], nrow=length(R2M))
-            if(is.null(main))
-                main0 <- expression(paste("ACME for Control Group, sgn", (lambda[2]*lambda[3])==1))
+            if(is.null(main) & r.type=1)
+                main0 <- expression(paste("ACME",(0),"(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==1))
+            else if(is.null(main) & r.type=2)
+                main0 <- expression(paste("ACME",(0),"(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==1))
+            else main0 <- main
             contour(R2M, R2Y, d0mat.p, levels=levels0, main=main0, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim)
         } else if(sign.prod == -1){
             d0.n <- rev(approx(x$d0[1:((length(x$d0)+1)/2)], n=dlength)$y)
             d0mat.n <- matrix(d0.n[Rprod.mat/0.0001+1], nrow=length(R2M))
-            if(is.null(main))
-                main0 <- expression(paste("ACME for Control Group, sgn", (lambda[2]*lambda[3])==-1))
+            if(is.null(main) & r.type=1)
+                main0 <- expression(paste("ACME",(0),"(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==-1))
+            else if(is.null(main) & r.type=2)
+                main0 <- expression(paste("ACME",(0),"(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==-1))
+            else main0 <- main
             contour(R2M, R2Y, d0mat.n, levels=levels0, main=main0, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim)
         } else stop("sign.prod must be either -1 or 1\n")
         if(is.null(xlab) & r.type==1)
@@ -849,17 +860,24 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
     #Delta_1
         if(is.null(levels))
             levels1 <- pretty(quantile(x$d1, probs=c(0.1,0.9)), 10)
+            else levels1 <- levels
         if(sign.prod == 1){
             d1.p <- approx(x$d1[((length(x$d1)+1)/2):length(x$d1)], n=dlength)$y
             d1mat.p <- matrix(d1.p[Rprod.mat/0.0001+1], nrow=length(R2M))
-            if(is.null(main))
-                main1 <- expression(paste("ACME for Treatment Group, sgn", (lambda[2]*lambda[3])==1))
+            if(is.null(main) & r.type=1)
+                main1 <- expression(paste("ACME",(1),"(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==1))
+            else if(is.null(main) & r.type=2)
+                main1 <- expression(paste("ACME",(1),"(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==1))
+            else main1 <- main
             contour(R2M, R2Y, d1mat.p, levels=levels1, main=main1, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim)
         } else if(sign.prod == -1){
             d1.n <- rev(approx(x$d1[1:((length(x$d1)+1)/2)], n=dlength)$y)
             d1mat.n <- matrix(d1.n[Rprod.mat/0.0001+1], nrow=length(R2M))
-            if(is.null(main))
-                main1 <- expression(paste("ACME for Treatment Group, sgn", (lambda[2]*lambda[3])==-1))
+            if(is.null(main) & r.type=1)
+                main1 <- expression(paste("ACME",(1),"(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==-1))
+            else if(is.null(main) & r.type=2)
+                main1 <- expression(paste("ACME",(1),"(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==-1))
+            else main1 <- main
             contour(R2M, R2Y, d1mat.n, levels=levels1, main=main1, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim)
         }
         if(is.null(xlab) & r.type==1)
@@ -873,6 +891,6 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         axis(2,at=seq(0,1,by=.1))
         axis(1,at=seq(0,1,by=.1))
       }
-  }
+  } else stop("sens.par must be either 'rho' or 'R2'")
 }
 
