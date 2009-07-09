@@ -796,17 +796,17 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         if(sign.prod == 1){
             d0.p <- approx(x$d0[((length(x$d0)+1)/2):length(x$d0)], n=dlength)$y
             d0mat.p <- matrix(d0.p[Rprod.mat/0.0001+1], nrow=length(R2M))
-            if(is.null(main) & r.type=1)
+            if(is.null(main) & r.type == 1)
                 main <- expression(paste("ACME(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==1))
-            else if(is.null(main) & r.type=2)
+            else if(is.null(main) & r.type == 2)
                 main <- expression(paste("ACME(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==1))
             contour(R2M, R2Y, d0mat.p, levels=levels, main=main, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, ...)
         } else if(sign.prod == -1){
             d0.n <- rev(approx(x$d0[1:((length(x$d0)+1)/2)], n=dlength)$y)
             d0mat.n <- matrix(d0.n[Rprod.mat/0.0001+1], nrow=length(R2M))
-            if(is.null(main) & r.type=1)
+            if(is.null(main) & r.type == 1)
                 main <- expression(paste("ACME(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==-1))
-            else if(is.null(main) & r.type=2)
+            else if(is.null(main) & r.type == 2)
                 main <- expression(paste("ACME(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==-1))
             contour(R2M, R2Y, d0mat.n, levels=levels, main=main, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, ...)
         } else stop("'sign.prod' must be either -1 or 1\n")
@@ -831,18 +831,18 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         if(sign.prod == 1){
             d0.p <- approx(x$d0[((length(x$d0)+1)/2):length(x$d0)], n=dlength)$y
             d0mat.p <- matrix(d0.p[Rprod.mat/0.0001+1], nrow=length(R2M))
-            if(is.null(main) & r.type=1)
+            if(is.null(main) & r.type == 1)
                 main0 <- expression(paste("ACME",(0),"(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==1))
-            else if(is.null(main) & r.type=2)
+            else if(is.null(main) & r.type == 2)
                 main0 <- expression(paste("ACME",(0),"(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==1))
             else main0 <- main
             contour(R2M, R2Y, d0mat.p, levels=levels0, main=main0, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim)
         } else if(sign.prod == -1){
             d0.n <- rev(approx(x$d0[1:((length(x$d0)+1)/2)], n=dlength)$y)
             d0mat.n <- matrix(d0.n[Rprod.mat/0.0001+1], nrow=length(R2M))
-            if(is.null(main) & r.type=1)
+            if(is.null(main) & r.type == 1)
                 main0 <- expression(paste("ACME",(0),"(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==-1))
-            else if(is.null(main) & r.type=2)
+            else if(is.null(main) & r.type == 2)
                 main0 <- expression(paste("ACME",(0),"(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==-1))
             else main0 <- main
             contour(R2M, R2Y, d0mat.n, levels=levels0, main=main0, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim)
@@ -864,18 +864,18 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         if(sign.prod == 1){
             d1.p <- approx(x$d1[((length(x$d1)+1)/2):length(x$d1)], n=dlength)$y
             d1mat.p <- matrix(d1.p[Rprod.mat/0.0001+1], nrow=length(R2M))
-            if(is.null(main) & r.type=1)
+            if(is.null(main) & r.type == 1)
                 main1 <- expression(paste("ACME",(1),"(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==1))
-            else if(is.null(main) & r.type=2)
+            else if(is.null(main) & r.type == 2)
                 main1 <- expression(paste("ACME",(1),"(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==1))
             else main1 <- main
             contour(R2M, R2Y, d1mat.p, levels=levels1, main=main1, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim)
         } else if(sign.prod == -1){
             d1.n <- rev(approx(x$d1[1:((length(x$d1)+1)/2)], n=dlength)$y)
             d1mat.n <- matrix(d1.n[Rprod.mat/0.0001+1], nrow=length(R2M))
-            if(is.null(main) & r.type=1)
+            if(is.null(main) & r.type == 1)
                 main1 <- expression(paste("ACME",(1),"(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==-1))
-            else if(is.null(main) & r.type=2)
+            else if(is.null(main) & r.type == 2)
                 main1 <- expression(paste("ACME",(1),"(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==-1))
             else main1 <- main
             contour(R2M, R2Y, d1mat.n, levels=levels1, main=main1, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim)
