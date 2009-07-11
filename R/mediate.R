@@ -640,7 +640,7 @@ print.summary.mediate <- function(x, ...){
 	cat("Proportion of Total Effect via Mediation: ", format(x$pct.coef, digits=4),"95% CI ", format(x$pct.ci, digits=4),"\n")
     #cat("Proportion of Total Effect via Mediation: ", format(x$pct.coef, digits=4),"\n")
 		} else {
-			cat("\n Test For Mediation Effect \n\n")
+			cat("\n Causal Mediation Analysis \n\n")
 			if(x$boot==TRUE){
 		cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
 		} else {
