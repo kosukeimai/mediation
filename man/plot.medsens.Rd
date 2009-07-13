@@ -17,7 +17,7 @@ Plots results from medsens function. Y axis plots mediation effect and x-axis pl
 \arguments{ 
 \item{x}{output from \code{medsens} function.} 
 \item{sens.par}{type of sensitivity interpretation to be plotted. Default plots mediation effects in terms of sensitivity parameter rho. If "R2" is specified then in terms of variances explained by an unobserved pretreatment confounder.}
-\item{r.type}{type of R^2 interpretation to be used. If 1 is specified then proportion of previously unexplained variance is used. If 2 is specified then proportion of total unexplained variance is used. Only relevant if sens.par is set to "R2".}
+\item{r.type}{type of R square interpretation to be used. If 1 is specified then proportion of previously unexplained variance is used. If 2 is specified then proportion of total unexplained variance is used. Only relevant if sens.par is set to "R2".}
 \item{sign.prod}{whether the omitted variable affects the mediator and outcome variable in the same direction (1) or different directions (-1). Only relevant if sens.par is set to "R2".}
 \item{pr.plot}{if pr.plot=TRUE then proportion mediated will be plotted.}
 \item{smooth.effect}{whether the estimated mediation effects are smoothed via a lowess smoother before being plotted.}

@@ -26,7 +26,7 @@ Users should note that computation time is several minutes for these functions. 
 \section{Warning}{These functions assume that all missing values have been removed from the data set.  This can be done using the \code{na.omit()} command before the outcome and mediation models are fitted.}
 
 \value{\code{medsens} returns an object of class "\code{medsens}". Some of the below elements are not available depending on whether INT is
-     specified as TRUE or FALSE by the user or depending on the type of model fit. The function \code{summary} is used to obtain a table of the results. The function \code{plot} is used to plot the results.  
+     specified as TRUE or FALSE by the user or depending on the type of model fit. The function \code{summary} is used to obtain a table of the results. The function \code{plot} is used to plot the results.
 
       \item{d0}{vector of point estimates for mediation effect under control.}
       \item{d1}{vector of point estimates for mediation effect under treatment.}
@@ -45,12 +45,12 @@ Users should note that computation time is several minutes for these functions. 
 \item{rho}{vector of sensitivity parameter rho used.}
 \item{rho.by}{increment of rho used.}
 \item{err.cr}{value of rho corresponding to the mediation effect of zero.}
-\item{R2star.prod}{value of the product of R^2 terms for the proportion of additional variance left unexplained, corresponding to value of rho.}
-\item{R2tilda.prod}{value of the product of R^2 terms for the proportion of total variance left unexplained, corresponding to value of rho.}
-\item{R2star.thresh}{value of R^2 for the proportion of additional variance left unexplained which corresponds to the mediation effect of zero.}
-\item{R2tilda.thresh}{value of R^2 for the proportion of total variance left unexplained which corresponds to the mediation effect of zero.}
-\item{r.square.y}{R^2 for the outcome model.}
-\item{r.square.m}{R^2 for the mediator model.}
+\item{R2star.prod}{value of the product of R square terms for the proportion of additional variance left unexplained, corresponding to value of rho.}
+\item{R2tilda.prod}{value of the product of R square terms for the proportion of total variance left unexplained, corresponding to value of rho.}
+\item{R2star.thresh}{value of R square for the proportion of additional variance left unexplained which corresponds to the mediation effect of zero.}
+\item{R2tilda.thresh}{value of R square for the proportion of total variance left unexplained which corresponds to the mediation effect of zero.}
+\item{r.square.y}{R square for the outcome model.}
+\item{r.square.m}{R square for the mediator model.}
 \item{INT}{the INT argument used in the original mediate object.}
 \item{type}{type of the mediator and outcome models used. Currently either 'ct', 'bm' or 'bo'.}
 }
