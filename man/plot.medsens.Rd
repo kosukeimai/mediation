@@ -40,7 +40,6 @@ Imai, Kosuke, Luke Keele and Teppei Yamamoto (2009) Identification, Inference, a
 #Example with JOBS II Field experiment
 #For illustration purposes simulations set to low number.
 
-#Example with JOBS II Field experiment
 data(jobs)
 
 

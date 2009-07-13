@@ -185,7 +185,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=.Machine$double.eps)
         ind.d1=ind.d1, R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
         R2star.thresh=R2star.thresh, R2tilde.thresh=R2tilde.thresh,
         r.square.y=r.sq.y, r.square.m=r.sq.m,
-        rho.by=rho.by, INT=INT, sims=sims, 
+        rho.by=rho.by, INT=INT,
         tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL, type=type)
         class(out) <- "medsens"
         out
@@ -351,7 +351,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=.Machine$double.eps)
         ind.d1=ind.d1, R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
         R2star.thresh=R2star.thresh, R2tilde.thresh=R2tilde.thresh,
         r.square.y=r.sq.y, r.square.m=r.sq.m,
-        rho.by=rho.by, INT=INT, sims=sims, tau=NULL, upper.tau=NULL,
+        rho.by=rho.by, INT=INT, tau=NULL, upper.tau=NULL,
         lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL,type=type,
         err.cr=err.cr)
         class(out) <- "medsens"
@@ -510,8 +510,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=.Machine$double.eps)
         R2star.thresh=R2star.thresh, R2tilde.thresh=R2tilde.thresh,
         r.square.y=r.sq.y, r.square.m=r.sq.m,
         tau=tau, upper.tau=upper.tau, lower.tau=lower.tau, nu=nu, upper.nu=upper.nu,
-        lower.nu=lower.nu, INT=INT, rho.by=rho.by,
-        sims=sims, type=type)
+        lower.nu=lower.nu, INT=INT, rho.by=rho.by, type=type)
         class(out) <- "medsens"
         out
 
