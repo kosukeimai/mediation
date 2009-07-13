@@ -1,3 +1,4 @@
 version      date  description
 1.0      06/12/09  The first version on CRAN
-2.0      07/13/09 
+2.0      07/13/09  Various bugs fixed; R2 plot implemented
+
