@@ -30,14 +30,9 @@ Imai, Kosuke, Luke Keele and Teppei Yamamoto (2009) Identification, Inference, a
 
 \examples{ 
 
-#Example with JOBS II Field experiment
-
-#**For illustration purposes simulations set to low number**
-
-data(jobs)
-
+\dontrun{
 #########################################
-#continuous mediator and continuous outcome
+#Continuous mediator and continuous outcome
 #########################################
 
 #Fit parametric models
@@ -45,12 +40,12 @@ model.m <- lm(job_seek ~ treat + depress1, data=jobs)
 model.y <- lm(depress2 ~ treat + job_seek + depress1, data=jobs)
 
 #Pass model objects through mediate function
-med.cont <- mediate(model.m, model.y, treat="treat", mediator="job_seek", sims=10)
+med.cont <- mediate(model.m, model.y, treat="treat", mediator="job_seek", sims=1000)
 
 #Pass mediate output through medsens function
-sens.cont <- medsens(med.cont, rho.by=.2, eps=.01)
+sens.cont <- medsens(med.cont, sims=1000, rho.by=.1)
 
-#Use summary function to display values of rho and R^2 where 95% confidence interval overlaps with 0.
+#Use summary function to display values of rho where 95% confidence interval overlaps with 0
 summary(sens.cont)
 
 #########################################
@@ -59,8 +54,9 @@ summary(sens.cont)
 
 model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=jobs)
 model.y <- glm(work1 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, family=binomial(link="probit"), data=jobs)
-med.bin <- mediate(model.m, model.y, treat="treat", mediator="job_seek", sims=10)
-sens.bin <- medsens(med.bin, sims=10, rho.by=.2)
+med.bin <- mediate(model.m, model.y, treat="treat", mediator="job_seek", sims=1000)
+sens.bin <- medsens(med.bin, sims=1000, rho.by=.1)
 summary(sens.bin)
 
 } 
+}
