@@ -62,13 +62,14 @@ Imai, Kosuke, Luke Keele, Dustin Tingley and Teppei Yamamoto (2009) Causal Media
 \seealso{See also \code{\link{medsens}} }
 
 \examples{ 
-#For illustration purposes simulations set to low number.
-
 #Example with JOBS II Field experiment
+
+#**For illustration purposes simulations set to low number**
+
 data(jobs)
 
 ####################################################
-#Continuous Outcome - Continuous Mediator -- Equivalent to Baron-Kenny Method
+#Continuous Outcome and Continuous Mediator
 ####################################################
 
 b <- lm(job_seek ~ treat + econ_hard + sex + age, data=jobs)
@@ -77,20 +78,18 @@ c <- lm(depress2 ~ treat + job_seek + depress1 + econ_hard + sex + age, data=job
 #Calculates quantities using quasi-Bayesian approximation
 #The general format of the function is to record two model objects
 #The first for the mediator the second for the outcome variable 
-continuous <- mediate(b, c, sims=100, treat="treat", mediator="job_seek")
+continuous <- mediate(b, c, sims=10, treat="treat", mediator="job_seek")
 summary(continuous)
 
-\dontrun{
 #Calculates quantities using the non-parametric bootstrap - This takes several minutes
-continuous_boot <- mediate(b, c, boot=TRUE, sims=100, treat="treat", mediator="job_seek")
+continuous_boot <- mediate(b, c, boot=TRUE, sims=10, treat="treat", mediator="job_seek")
 summary(continuous_boot)
 
 #Interaction term between treatment and mediator is included in the model
 b <- lm(job_seek ~ treat + depress1, data=jobs)
 d <- lm(depress2 ~ treat + job_seek + treat:job_seek + depress1, data=jobs)
-cont.int <- mediate(b, d, sims=100, INT=TRUE, treat="treat", mediator="job_seek")
+cont.int <- mediate(b, d, sims=10, INT=TRUE, treat="treat", mediator="job_seek")
 summary(cont.int)
-
 
 ######################################################
 #Binary Outcome
@@ -98,9 +97,7 @@ summary(cont.int)
 
 b <- lm(job_seek ~ treat + depress1, data=jobs)
 c <- glm(work1 ~ treat + job_seek + depress1, family=binomial(link="probit"), data=jobs)
-binary <- mediate(b, c, treat="treat", mediator="job_seek")
+binary <- mediate(b, c, sims=10, treat="treat", mediator="job_seek")
 summary(binary)
-}
-
 
 } 

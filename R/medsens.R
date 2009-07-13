@@ -812,6 +812,7 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
   } else if (sens.par=="R2"){
     if(pr.plot==TRUE)
         stop("Proportion mediated is only plotted in terms of rho\n")
+        
     R2Mstar <- seq(0, 1-x$rho.by, 0.01)
     R2Ystar <- seq(0, 1-x$rho.by, 0.01)
     R2Mtilde <- (1-x$r.square.m)*seq(0, 1-x$rho.by, 0.01)

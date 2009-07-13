@@ -31,22 +31,19 @@ Imai, Kosuke, Luke Keele and Teppei Yamamoto (2009) Identification, Inference, a
 \examples{ 
 
 #Example with JOBS II Field experiment
-#For illustration purposes simulations set to low number.
+
+#**For illustration purposes simulations set to low number**
 
 data(jobs)
-
 
 #########################################
 #continuous mediator and continuous outcome
 #########################################
 
-#fit parametric model
 model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age  + occp + marital + nonwhite + educ + income, data=jobs)
 model.y <- lm(depress2 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=jobs)
-continuous <- mediate(model.m , model.y, sims=100, treat="treat", mediator="job_seek")
+continuous <- mediate(model.m, model.y, sims=10, treat="treat", mediator="job_seek")
 summary(continuous)
-
-
 
 
 } 

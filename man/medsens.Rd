@@ -66,27 +66,31 @@ Imai, Kosuke, Luke Keele, Dustin Tingley and Teppei Yamamoto (2009) Causal Media
 \examples{ 
 
 #Example with JOBS II Field experiment
-#For illustration purposes simulations set to low number.
 
 data(jobs)
 
-
+\dontrun{
 #########################################
-#continuous mediator and continuous outcome
+#Continuous mediator and continuous outcome
 #########################################
 
-#fit parametric model
+#Fit parametric models
 model.m <- lm(job_seek ~ treat + depress1, data=jobs)
 model.y <- lm(depress2 ~ treat + job_seek + depress1, data=jobs)
-#pass model objects through mediate function
-med.cont <- mediate(model.m, model.y, treat="treat", mediator="job_seek", sims=1000)
-#pass mediate output through medsens function
-sens.cont<-medsens(med.cont, rho.by=.2, eps=.01)
-#use summary function to display values of rho where 95% confidence interval overlaps with 0.
-summary(sens.cont)
-#plot mediation effect and 95% CI's for each value of rho
-plot(sens.cont, main="JOBS", ylim=c(-.2,.2))
-#plot sensitivity analysis using R^2 method. See plot.medsens for additional detail
-plot(sens.cont, sens.par="R2", r.type=2, sign.prod=1)
 
+#Pass model objects through mediate function
+med.cont <- mediate(model.m, model.y, treat="treat", mediator="job_seek", sims=1000)
+
+#Pass mediate output through medsens function
+sens.cont <- medsens(med.cont, sims=1000, rho.by=.1)
+
+#Use summary function to display values of rho where 95% confidence interval overlaps with 0
+summary(sens.cont)
+
+#Plot mediation effect and 95% CI's for each value of rho
+plot(sens.cont, main="JOBS", ylim=c(-.2,.2))
+
+#Plot sensitivity analysis using R^2 method. See plot.medsens for additional detail
+plot(sens.cont, sens.par="R2", r.type=2, sign.prod=1)
+}
 } 
