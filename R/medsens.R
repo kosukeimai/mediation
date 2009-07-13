@@ -4,8 +4,8 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=.Machine$double.eps)
     model.m <- eval(x$call.m, envir=x$env.m)
     class.y <- class(model.y)[1]
     class.m <- class(model.m)[1]
-    T <- x$T
-    M <- x$M
+    treat <- x$treat
+    mediator <- x$mediator
     INT <- x$INT
     
     #########################################################
@@ -24,26 +24,26 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=.Machine$double.eps)
         d1.var <- matrix(NA, length(rho), 1)
         
         y.t.data <- model.frame(model.y)    
-        if(is.factor(y.t.data[,paste(T)])==TRUE){
-            cat.c <- levels(y.t.data[,T])[1] 
-            cat.t <- levels(y.t.data[,T])[2]
-            T.cat <- paste(T,cat.t, sep="") 
+        if(is.factor(y.t.data[,paste(treat)])==TRUE){
+            cat.c <- levels(y.t.data[,treat])[1] 
+            cat.t <- levels(y.t.data[,treat])[2]
+            T.cat <- paste(treat,cat.t, sep="") 
             } else {
             cat.c <- NULL
             cat.t <- NULL
-            T.cat <- paste(T,cat.t, sep="")
+            T.cat <- paste(treat,cat.t, sep="")
             }
             
         if(INT==TRUE){
-        int.lab <- paste(T.cat,M, sep=":")
-        t.m <- paste(T,M, sep=":")
+        int.lab <- paste(T.cat,mediator, sep=":")
+        t.m <- paste(treat,mediator, sep=":")
             }
                 
         #Estimate Error Correlation
         if(INT==TRUE){
-            mod.y <- update(model.y,as.formula(paste(". ~ . -", t.m, "-", M)))
+            mod.y <- update(model.y,as.formula(paste(". ~ . -", t.m, "-", mediator)))
             } else {
-            mod.y <- update(model.y,as.formula(paste(". ~ . -", M)))
+            mod.y <- update(model.y,as.formula(paste(". ~ . -", mediator)))
                 }
         err.cr <- cor(model.m$resid, mod.y$resid)
                     
@@ -53,7 +53,6 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=.Machine$double.eps)
         e.cor <- rho[i]
         
         b.dif <- 1
-        #eps <- .001 #.Machine$double.eps
         
         #Stacked Equations
         m.mat <- model.matrix(model.m)
@@ -128,20 +127,20 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=.Machine$double.eps)
         
         #Save Estimates
         if(INT==TRUE){
-            d0[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(M),] 
-            d1[i,] <- m.coefs[paste(T.cat),]*(y.coefs[paste(M),] + y.coefs[paste(int.lab),])
+            d0[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(mediator),] 
+            d1[i,] <- m.coefs[paste(T.cat),]*(y.coefs[paste(mediator),] + y.coefs[paste(int.lab),])
             } else {
-                d0[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(M),]
-                d1[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(M),] 
+                d0[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(mediator),]
+                d1[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(mediator),] 
                 }
         
         #Save Variance Estimates
         if(INT==TRUE){
-            d0.var[i,] <- (y.coefs[paste(M),] + 0*y.coefs[paste(int.lab),])^2*v.m[T.cat,T.cat] + m.coefs[paste(T.cat),]^2*(v.y[M,M] + 0*v.y[int.lab, int.lab] + 0*2*v.y[M, int.lab])
-            d1.var[i,] <- (y.coefs[paste(M),] + y.coefs[paste(int.lab),])^2*v.m[T.cat,T.cat] + m.coefs[paste(T.cat),]^2*(v.y[M,M] + v.y[int.lab, int.lab] + 2*v.y[M, int.lab])
+            d0.var[i,] <- (y.coefs[paste(mediator),] + 0*y.coefs[paste(int.lab),])^2*v.m[T.cat,T.cat] + m.coefs[paste(T.cat),]^2*(v.y[mediator,mediator] + 0*v.y[int.lab, int.lab] + 0*2*v.y[mediator, int.lab])
+            d1.var[i,] <- (y.coefs[paste(mediator),] + y.coefs[paste(int.lab),])^2*v.m[T.cat,T.cat] + m.coefs[paste(T.cat),]^2*(v.y[mediator,mediator] + v.y[int.lab, int.lab] + 2*v.y[mediator, int.lab])
             } else {
-            d0.var[i,] <- (m.coefs[paste(T.cat),]^2*v.y[M,M]) + (y.coefs[paste(M),]^2*v.m[T.cat,T.cat])
-            d1.var[i,] <- (m.coefs[paste(T.cat),]^2*v.y[M,M]) + (y.coefs[paste(M),]^2*v.m[T.cat,T.cat])
+            d0.var[i,] <- (m.coefs[paste(T.cat),]^2*v.y[mediator,mediator]) + (y.coefs[paste(mediator),]^2*v.m[T.cat,T.cat])
+            d1.var[i,] <- (m.coefs[paste(T.cat),]^2*v.y[mediator,mediator]) + (y.coefs[paste(mediator),]^2*v.m[T.cat,T.cat])
                 }
                 
         rm(b.sur, m.coefs, y.coefs, v.cov, v.m, v.y)
@@ -205,28 +204,28 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=.Machine$double.eps)
         
         y.t.data <- model.frame(model.y)
         Y <- colnames(y.t.data)[1]
-        if(is.factor(y.t.data[,T])==TRUE){
-            cat.c <- levels(y.t.data[,T])[1] 
-            cat.t <- levels(y.t.data[,T])[2]
-            T.out <- paste(T,cat.t, sep="") 
+        if(is.factor(y.t.data[,treat])==TRUE){
+            cat.c <- levels(y.t.data[,treat])[1] 
+            cat.t <- levels(y.t.data[,treat])[2]
+            T.out <- paste(treat,cat.t, sep="") 
             } else {
             cat.c <- NULL
             cat.t <- NULL
-            T.out <- paste(T,cat.t, sep="")
+            T.out <- paste(treat,cat.t, sep="")
             }
         
-        if(is.factor(y.t.data[,M])==TRUE){
-            cat.m0 <- levels(y.t.data[,M])[1] 
-            cat.m1 <- levels(y.t.data[,M])[2]
-            M.out <- paste(M,cat.m1, sep="") 
+        if(is.factor(y.t.data[,mediator])==TRUE){
+            cat.m0 <- levels(y.t.data[,mediator])[1] 
+            cat.m1 <- levels(y.t.data[,mediator])[2]
+            M.out <- paste(mediator,cat.m1, sep="") 
             } else {
             cat.m0 <- NULL
             cat.m1 <- NULL
-            M.out <- paste(M,cat.m1, sep="")
+            M.out <- paste(mediator,cat.m1, sep="")
             }
         
         if(INT==TRUE){
-        TM <- paste(T,M, sep=":")
+        TM <- paste(treat,mediator, sep=":")
         TM.out <- paste(T.out,M.out, sep=":")
             }
         
@@ -283,7 +282,6 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=.Machine$double.eps)
             sigma.3 <- summary(model.y.adj)$sigma
             
             ## Step 2-2: Update the Y model via Iterative FGLS
-            #eps <- .Machine$double.eps
             sigma.dif <- 1
             while(abs(sigma.dif) > eps){
                 Y.star <- Y.value - sigma.3 * adj
@@ -298,9 +296,6 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=.Machine$double.eps)
             Ymodel.coef <- model.y.update$coef
             Ymodel.var.cov <- vcov(model.y.update)
             Ymodel.coef.boot[k,] <- mvrnorm(1, mu=Ymodel.coef, Sigma=Ymodel.var.cov) #draw one bootstrap sample of Y-model parameters for each k
-            #sig3.shape <- model.y.update$df/2
-            #sig3.invscale <- (model.y.update$df/2) * sigma.3^2
-            #sigma.3.boot[k] <- sqrt(1 / rgamma(1, shape = sig3.shape, scale = 1/sig3.invscale)) #one sample of sigma.3 via inverse-gamma posterior
             
             ## Step 2-4: Bootstrap ACMEs; means are over observations
             d0.boot[k] <- mean( (Ymodel.coef.boot[k,M.out]) * (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
@@ -370,7 +365,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=.Machine$double.eps)
     #########################################################
     if(class.y=="glm" & class.m=="lm") {
 
-            if(INT==TRUE){
+        if(INT==TRUE){
         stop("Sensitivity Analysis Not Available Binary Outcome With Interactions \n")
         }
         # Step 0: Setting Variable labels
@@ -379,28 +374,28 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=.Machine$double.eps)
         
         y.t.data <- model.frame(model.y)
         Y <- colnames(y.t.data)[1]
-        if(is.factor(y.t.data[,T])==TRUE){
-            cat.c <- levels(y.t.data[,T])[1] 
-            cat.t <- levels(y.t.data[,T])[2]
-            T.out <- paste(T,cat.t, sep="") 
+        if(is.factor(y.t.data[,treat])==TRUE){
+            cat.c <- levels(y.t.data[,treat])[1] 
+            cat.t <- levels(y.t.data[,treat])[2]
+            T.out <- paste(treat,cat.t, sep="") 
             } else {
             cat.c <- NULL
             cat.t <- NULL
-            T.out <- paste(T,cat.t, sep="")
+            T.out <- paste(treat,cat.t, sep="")
             }
         
-        if(is.factor(y.t.data[,M])==TRUE){
-            cat.m0 <- levels(y.t.data[,M])[1] 
-            cat.m1 <- levels(y.t.data[,M])[2]
-            M.out <- paste(M,cat.m1, sep="") 
+        if(is.factor(y.t.data[,mediator])==TRUE){
+            cat.m0 <- levels(y.t.data[,mediator])[1] 
+            cat.m1 <- levels(y.t.data[,mediator])[2]
+            M.out <- paste(mediator,cat.m1, sep="") 
             } else {
             cat.m0 <- NULL
             cat.m1 <- NULL
-            M.out <- paste(M,cat.m1, sep="")
+            M.out <- paste(mediator,cat.m1, sep="")
             }
         
         if(INT==TRUE){
-        TM <- paste(T,M, sep=":")
+        TM <- paste(treat,mediator, sep=":")
         TM.out <- paste(T.out,M.out, sep=":")
             }
         
@@ -410,10 +405,10 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=.Machine$double.eps)
         m.k <- length(model.m$coef)
         Mmodel.var.cov <- vcov(model.m)
         Mmodel.coef.boot <- mvrnorm(sims, mu=Mmodel.coef, Sigma=Mmodel.var.cov)
-        if(is.factor(y.t.data[,T])==TRUE){
+        if(is.factor(y.t.data[,treat])==TRUE){
          beta2.boot <- Mmodel.coef.boot[,T.out] 
             } else {
-          beta2.boot <- Mmodel.coef.boot[,T]    
+          beta2.boot <- Mmodel.coef.boot[,treat]    
                 }
 
         sigma.2 <- summary(model.m)$sigma
@@ -537,7 +532,7 @@ summary.medsens <- function(object, ...)
     structure(object, class = c("summary.medsens", class(object)))
  
 print.summary.medsens <- function(x, ...){
- if(x$type=="ct"){
+    if(x$type=="ct"){
         if(x$INT==FALSE){
             tab <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0, x$R2star.prod, round(x$R2tilde.prod,4))
             if(sum(x$ind.d0)==1){
@@ -555,7 +550,7 @@ print.summary.medsens <- function(x, ...){
             cat("\nR^2_M*R^2_Y* at which ACME = 0:", round(x$R2star.thresh, 4), "\n\n")
             cat("\nR^2_M~R^2_Y~ at which ACME = 0:", round(x$R2tilde.thresh, 4), "\n\n")
             invisible(x)    
-        } else { #Interaction Tables Start Here
+        } else {
             tab.d0 <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0, x$R2star.prod, round(x$R2tilde.prod, 4))
             if(sum(x$ind.d0)==1){
                 tab.d0 <- as.matrix(tab.d0[x$ind.d0==1, -5])
@@ -688,10 +683,9 @@ print.summary.medsens <- function(x, ...){
             invisible(x)        
             }
      }
-        
 }
 
-plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE, levels=NULL, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL, ...){
+plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE, smooth.effect=FALSE, smooth.ci=FALSE, levels=NULL, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL, ...){
   if(sens.par=="rho"){
     if(pr.plot==TRUE){
         if(x$type!="bm"){
@@ -701,9 +695,19 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             ylim <- c(min(x$nu), max(x$nu))
         if(is.null(main))
             main <- expression(paste("Proportion Mediated ", (rho)))
-        plot.default(x$rho, x$nu, type="n", xlab="", ylab="", main=main, xlim=xlim, ylim=ylim, ...)
-        polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.nu, rev(x$upper.nu)), border=FALSE, col=8, lty=2)
-        lines(x$rho, x$d0, lty=1)
+        if(smooth.effect==TRUE)
+            nu <- lowess(x$rho, x$nu)$y
+            else nu <- x$nu
+        if(smooth.ci==TRUE){
+            lower <- lowess(x$rho, x$lower.nu)$y
+            upper <- lowess(x$rho, x$upper.nu)$y
+        } else {
+            lower <- x$lower.nu
+            upper <- x$upper.nu
+        }
+        plot.default(x$rho, nu, type="n", xlab="", ylab="", main=main, xlim=xlim, ylim=ylim, ...)
+        polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2)
+        lines(x$rho, nu, lty=1)
         abline(h=0)
         abline(v=0)
         if(is.null(xlab)) 
@@ -718,12 +722,22 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             ylim <- c(min(x$d0), max(x$d0))
         if(is.null(main))
             main <- expression(paste("ACME(", rho, ")"))
-        plot.default(x$rho, x$d0, type="n", xlab="", ylab="", main=main, xlim=xlim, ylim=ylim, ...)
-        polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.d0, rev(x$upper.d0)), border=FALSE, col=8, lty=2)
-        lines(x$rho, x$d0, lty=1)
+        if(smooth.effect==TRUE)
+            d0 <- lowess(x$rho, x$d0)$y
+            else d0 <- x$d0
+        if(smooth.ci==TRUE){
+            lower <- lowess(x$rho, x$lower.d0)$y
+            upper <- lowess(x$rho, x$upper.d0)$y
+        } else {
+            lower <- x$lower.d0
+            upper <- x$upper.d0
+        }
+        plot.default(x$rho, d0, type="n", xlab="", ylab="", main=main, xlim=xlim, ylim=ylim, ...)
+        polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2)
+        lines(x$rho, d0, lty=1)
         abline(h=0)
         abline(v=0)
-        abline(h=weighted.mean(c(x$d0[floor(1/x$rho.by)],x$d0[ceiling(1/x$rho.by)]), 
+        abline(h=weighted.mean(c(d0[floor(1/x$rho.by)],d0[ceiling(1/x$rho.by)]), 
             c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2)
         if(is.null(xlab)) 
             title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
@@ -741,12 +755,22 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         if(is.null(main))
             main0 <- expression(paste("ACME"[0], "(", rho, ")"))
             else main0 <- main
-        plot.default(x$rho, x$d0, type="n", xlab="", ylab="", main=main0, xlim=xlim, ylim=ylim, ...)
-        polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.d0, rev(x$upper.d0)), border=FALSE, col=8, lty=2)
-        lines(x$rho, x$d0, lty=1)
+        if(smooth.effect==TRUE)
+            d0 <- lowess(x$rho, x$d0)$y
+            else d0 <- x$d0
+        if(smooth.ci==TRUE){
+            lower <- lowess(x$rho, x$lower.d0)$y
+            upper <- lowess(x$rho, x$upper.d0)$y
+        } else {
+            lower <- x$lower.d0
+            upper <- x$upper.d0
+        }
+        plot.default(x$rho, d0, type="n", xlab="", ylab="", main=main0, xlim=xlim, ylim=ylim, ...)
+        polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2)
+        lines(x$rho, d0, lty=1)
         abline(h=0)
         abline(v=0)
-        abline(h=weighted.mean(c(x$d0[floor(1/x$rho.by)],x$d0[ceiling(1/x$rho.by)]), 
+        abline(h=weighted.mean(c(d0[floor(1/x$rho.by)],d0[ceiling(1/x$rho.by)]), 
             c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2)
         if(is.null(xlab)) 
             title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
@@ -761,12 +785,22 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         if(is.null(main))
             main1 <- expression(paste("ACME"[1], "(", rho, ")"))
             else main1 <- main
-        plot.default(x$rho, x$d1, type="n", xlab="", ylab="", main=main1, xlim=xlim, ylim=ylim,...)
-        polygon(x=c(x$rho, rev(x$rho)), y=c(x$lower.d1, rev(x$upper.d1)), border=FALSE, col=8, lty=2)
-        lines(x$rho, x$d1, lty=1)
+        if(smooth.effect==TRUE)
+            d1 <- lowess(x$rho, x$d1)$y
+            else d1 <- x$d1
+        if(smooth.ci==TRUE){
+            lower <- lowess(x$rho, x$lower.d1)$y
+            upper <- lowess(x$rho, x$upper.d1)$y
+        } else {
+            lower <- x$lower.d1
+            upper <- x$upper.d1
+        }
+        plot.default(x$rho, d1, type="n", xlab="", ylab="", main=main1, xlim=xlim, ylim=ylim,...)
+        polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2)
+        lines(x$rho, d1, lty=1)
         abline(h=0)
         abline(v=0)
-        abline(h=weighted.mean(c(x$d1[floor(1/x$rho.by)],x$d1[ceiling(1/x$rho.by)]), 
+        abline(h=weighted.mean(c(d1[floor(1/x$rho.by)],d1[ceiling(1/x$rho.by)]), 
             c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2)
         if(is.null(xlab)) 
             title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
