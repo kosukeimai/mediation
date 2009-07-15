@@ -94,7 +94,6 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=.Machine$double.eps)
         omega[2,1] <- e.cor*sd.1*sd.2
         omega[1,2] <- e.cor*sd.1*sd.2
         
-#        I <- diag(1,n)
         I <- Diagonal(n)
         omega.i <- solve(omega)
         v.i <-  kronecker(omega.i, I) 
@@ -103,8 +102,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=.Machine$double.eps)
         b.sur <- solve(X.sur) %*% Xv.i %*% Y.c
         
         #Variance-Covariance Matrix
-        v.cov <- Xv.i %*% X
-        v.cov <- solve(v.cov)
+        v.cov <- solve(X.sur)
         
         b.old <- b.tmp
         b.dif <- sum((b.sur - b.old)^2)
