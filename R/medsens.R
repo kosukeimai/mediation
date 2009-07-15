@@ -94,15 +94,16 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=.Machine$double.eps)
         omega[2,1] <- e.cor*sd.1*sd.2
         omega[1,2] <- e.cor*sd.1*sd.2
         
-        I <- diag(1,n)
+#        I <- diag(1,n)
+        I <- Diagonal(n)
         omega.i <- solve(omega)
-        v.i <-  kronecker(omega.i, I) # THIS LINE DOESN'T WORK FOR LARGE N
-        
-        X.sur <- crossprod(X, v.i) %*% X 
-        b.sur <- solve(X.sur) %*% crossprod(X, v.i) %*% Y.c
+        v.i <-  kronecker(omega.i, I) 
+        Xv.i <- t(X) %*% v.i
+        X.sur <- Xv.i %*% X 
+        b.sur <- solve(X.sur) %*% Xv.i %*% Y.c
         
         #Variance-Covariance Matrix
-        v.cov <- crossprod(X, v.i) %*% X
+        v.cov <- Xv.i %*% X
         v.cov <- solve(v.cov)
         
         b.old <- b.tmp
