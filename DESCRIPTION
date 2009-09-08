@@ -7,7 +7,7 @@ Author: Luke Keele <keele.4@polisci.osu.edu>,
         Teppei Yamamoto <tyamamot@princeton.edu>,
         Kosuke Imai <kimai@princeton.edu>
 Maintainer: Luke Keele <keele.4@polisci.osu.edu>
-Depends: R (>= 2.7), MASS
+Depends: R (>= 2.7), MASS, Matrix
 Suggests: mgcv, quantreg
 Description: mediation is a publicly available R package that allows both parametric and nonparametric causal mediation analysis.  It implements the methods and suggestions in Imai, Keele, and Yamamoto (2008) and Imai, Keele, Tingley (2009).  In addition to the estimation of causal mediation effects, the software also allows researchers to conduct sensitivity analysis for certain parametric models.
 LazyLoad: yes
