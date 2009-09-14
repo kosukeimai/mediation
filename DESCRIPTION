@@ -1,6 +1,6 @@
 Package: mediation
-Version: 2.0
-Date: 2009-07-13
+Version: 2.1
+Date: 2009-09-14
 Title: R Package for Causal Mediation Analysis
 Author: Luke Keele <keele.4@polisci.osu.edu>,
         Dustin Tingley <dtingley@princeton.edu>,
