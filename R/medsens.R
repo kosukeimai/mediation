@@ -1,12 +1,13 @@
-medsens <- function(x, rho.by=.1, sims=1000, eps=.Machine$double.eps)
+medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps))
 {
-    model.y <- eval(x$call.y, envir=x$env.y)
-    model.m <- eval(x$call.m, envir=x$env.m)
+    model.y <- x$model.y
+    model.m <- x$model.m
     class.y <- class(model.y)[1]
     class.m <- class(model.m)[1]
     treat <- x$treat
     mediator <- x$mediator
     INT <- x$INT
+    low <- (1 - x$conf.level)/2; high <- 1 - low
     
     #########################################################
     ## Setting Up Sensitivity Parameters
@@ -147,17 +148,17 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=.Machine$double.eps)
         }
         
         if(INT==FALSE){
-        upper.d0 <- d0 + qnorm(0.975) * sqrt(d0.var)
-        lower.d0 <- d0 - qnorm(0.975) * sqrt(d0.var)
+        upper.d0 <- d0 + qnorm(high) * sqrt(d0.var)
+        lower.d0 <- d0 + qnorm(low) * sqrt(d0.var)
         upper.d1 <- NULL
         lower.d1 <- NULL
         ind.d0 <- as.numeric(lower.d0 < 0 & upper.d0 > 0)
         ind.d1 <- NULL  
             } else {
-        upper.d0 <- d0 + qnorm(0.975) * sqrt(d0.var)
-        lower.d0 <- d0 - qnorm(0.975) * sqrt(d0.var)
-        upper.d1 <- d1 + qnorm(0.975) * sqrt(d1.var)
-        lower.d1 <- d1 - qnorm(0.975) * sqrt(d1.var)    
+        upper.d0 <- d0 + qnorm(high) * sqrt(d0.var)
+        lower.d0 <- d0 + qnorm(low) * sqrt(d0.var)
+        upper.d1 <- d1 + qnorm(high) * sqrt(d1.var)
+        lower.d1 <- d1 + qnorm(low) * sqrt(d1.var)    
         ind.d0 <- as.numeric(lower.d0 < 0 & upper.d0 > 0)
         ind.d1 <- as.numeric(lower.d1 < 0 & upper.d1 > 0)
                 }
@@ -312,10 +313,10 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=.Machine$double.eps)
         ## Step 2-5: Compute Outputs
         d0[i] <- mean(d0.boot)
         d1[i] <- mean(d1.boot)
-        upper.d0[i] <- quantile(d0.boot, 0.975)
-        upper.d1[i] <- quantile(d1.boot, 0.975)
-        lower.d0[i] <- quantile(d0.boot, 0.025)
-        lower.d1[i] <- quantile(d1.boot, 0.025)
+        upper.d0[i] <- quantile(d0.boot, high)
+        upper.d1[i] <- quantile(d1.boot, high)
+        lower.d0[i] <- quantile(d0.boot, low)
+        lower.d1[i] <- quantile(d1.boot, low)
         ind.d0[i] <- as.numeric(lower.d0[i] < 0 & upper.d0[i] > 0)
         ind.d1[i] <- as.numeric(lower.d1[i] < 0 & upper.d1[i] > 0)
         
@@ -462,16 +463,16 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=.Machine$double.eps)
         ## Step 2-4: Compute Outputs
         d0[i] <- mean(d0.boot) # ACME(t=0)
         d1[i] <- mean(d1.boot) # ACME(t=1)
-        upper.d0[i] <- quantile(d0.boot, 0.975)
-        upper.d1[i] <- quantile(d1.boot, 0.975)
-        lower.d0[i] <- quantile(d0.boot, 0.025)
-        lower.d1[i] <- quantile(d1.boot, 0.025)
+        upper.d0[i] <- quantile(d0.boot, high)
+        upper.d1[i] <- quantile(d1.boot, high)
+        lower.d0[i] <- quantile(d0.boot, low)
+        lower.d1[i] <- quantile(d1.boot, low)
         tau[i] <- mean(tau.boot) # ATE
         nu[i] <- mean(nu.boot) # Proportion Mediated
-        upper.tau[i] <- quantile(tau.boot, 0.975)
-        upper.nu[i] <- quantile(nu.boot, 0.975)
-        lower.tau[i] <- quantile(tau.boot, 0.025)
-        lower.nu[i] <- quantile(nu.boot, 0.025)
+        upper.tau[i] <- quantile(tau.boot, high)
+        upper.nu[i] <- quantile(nu.boot, high)
+        lower.tau[i] <- quantile(tau.boot, low)
+        lower.nu[i] <- quantile(nu.boot, low)
         ind.d0[i] <- as.numeric(lower.d0[i] < 0 & upper.d0[i] > 0)
         ind.d1[i] <- as.numeric(lower.d1[i] < 0 & upper.d1[i] > 0)
         
@@ -539,7 +540,7 @@ print.summary.medsens <- function(x, ...){
             } else {
                 tab <- tab[x$ind.d0==1, -5] 
             }
-            colnames(tab) <-  c("Rho", "Med. Eff.", "95% CI Lower", "95% CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
+            colnames(tab) <-  c("Rho", "Med. Eff.", "CI Lower", "CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
             cat("\nSensitivity Region\n\n")
@@ -556,7 +557,7 @@ print.summary.medsens <- function(x, ...){
             } else {
                 tab.d0 <- tab.d0[x$ind.d0==1, -5] 
             }
-            colnames(tab.d0) <-  c("Rho", "Med. Eff.", "95% CI Lower", "95% CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
+            colnames(tab.d0) <-  c("Rho", "Med. Eff.", "CI Lower", "CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.d0) <- NULL
             tab.d1 <- cbind(x$rho, round(x$d1,4), round(x$lower.d1,4), round(x$upper.d1, 4), x$ind.d1, x$R2star.prod, round(x$R2tilde.prod, 4))
             if(sum(x$ind.d1)==1){
@@ -565,7 +566,7 @@ print.summary.medsens <- function(x, ...){
             } else {
                 tab.d1 <- tab.d1[x$ind.d1==1, -5] 
             }
-            colnames(tab.d1) <-  c("Rho", "Med. Eff.", "95% CI Lower", "95% CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
+            colnames(tab.d1) <-  c("Rho", "Med. Eff.", "CI Lower", "CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.d1) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
             cat("\nSensitivity Region: ACME for Control Group\n\n")
@@ -589,7 +590,7 @@ print.summary.medsens <- function(x, ...){
             } else {
                 tab <- tab[x$ind.d0==1, -5] 
             }
-            colnames(tab) <-  c("Rho", "Med. Eff.", "95% CI Lower", "95% CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
+            colnames(tab) <-  c("Rho", "Med. Eff.", "CI Lower", "CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
             cat("\nSensitivity Region\n\n")
@@ -606,7 +607,7 @@ print.summary.medsens <- function(x, ...){
             } else {
                 tab.d0 <- tab.d0[x$ind.d0==1, -5] 
             }
-            colnames(tab.d0) <-  c("Rho","Med. Eff.", "95% CI Lower", "95% CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
+            colnames(tab.d0) <-  c("Rho","Med. Eff.", "CI Lower", "CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.d0) <- NULL
             tab.d1 <- cbind(x$rho, round(x$d1,4), round(x$lower.d1,4), round(x$upper.d1, 4), x$ind.d1, x$R2star.prod, round(x$R2tilde.prod, 4))
             if(sum(x$ind.d1)==1){
@@ -615,7 +616,7 @@ print.summary.medsens <- function(x, ...){
             } else {
                 tab.d1 <- tab.d1[x$ind.d1==1, -5] 
             }
-            colnames(tab.d1) <-  c("Rho","Med. Eff.", "95% CI Lower", "95% CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
+            colnames(tab.d1) <-  c("Rho","Med. Eff.", "CI Lower", "CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.d1) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
             cat("\nSensitivity Region: ACME for Control Group\n\n")
@@ -639,7 +640,7 @@ print.summary.medsens <- function(x, ...){
             } else {
                 tab <- tab[x$ind.d0==1, -5] 
             }
-            colnames(tab) <-  c("Rho", "Med. Eff.", "95% CI Lower", "95% CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
+            colnames(tab) <-  c("Rho", "Med. Eff.", "CI Lower", "CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
             cat("\nSensitivity Region\n\n")
@@ -656,7 +657,7 @@ print.summary.medsens <- function(x, ...){
             } else {
                 tab <- tab[x$ind.d0==1, -5] 
             }
-            colnames(tab.d0) <-  c("Rho","Med. Eff.", "95% CI Lower", "95% CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
+            colnames(tab.d0) <-  c("Rho","Med. Eff.", "CI Lower", "CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.d0) <- NULL
             tab.d1 <- cbind(x$rho, round(x$d1,4), round(x$lower.d1,4), round(x$upper.d1, 4), x$ind.d1, x$R2star.prod, round(x$R2tilde.prod, 4))
             if(sum(x$ind.d1)==1){
@@ -665,7 +666,7 @@ print.summary.medsens <- function(x, ...){
             } else {
                 tab <- tab[x$ind.d1==1, -5] 
             }
-            colnames(tab.d1) <-  c("Rho","Med. Eff.", "95% CI Lower", "95% CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
+            colnames(tab.d1) <-  c("Rho","Med. Eff.", "CI Lower", "CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.d1) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
             cat("\nSensitivity Region: ACME for Control Group\n\n")
