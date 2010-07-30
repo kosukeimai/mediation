@@ -684,7 +684,7 @@ print.summary.medsens <- function(x, ...){
      }
 }
 
-plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE, smooth.effect=FALSE, smooth.ci=FALSE, levels=NULL, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL, ...){
+plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE, smooth.effect=FALSE, smooth.ci=FALSE, levels=NULL, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL, lwd=par("lwd"), ...){
   if(sens.par=="rho"){
     if(pr.plot==TRUE){
         if(x$type!="bm"){
@@ -705,8 +705,8 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             upper <- x$upper.nu
         }
         plot.default(x$rho, nu, type="n", xlab="", ylab="", main=main, xlim=xlim, ylim=ylim, ...)
-        polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2)
-        lines(x$rho, nu, lty=1)
+        polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
+        lines(x$rho, nu, lty=1, lwd=lwd)
         abline(h=0)
         abline(v=0)
         if(is.null(xlab)) 
@@ -732,12 +732,12 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             upper <- x$upper.d0
         }
         plot.default(x$rho, d0, type="n", xlab="", ylab="", main=main, xlim=xlim, ylim=ylim, ...)
-        polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2)
-        lines(x$rho, d0, lty=1)
+        polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
+        lines(x$rho, d0, lty=1, lwd=lwd)
         abline(h=0)
         abline(v=0)
         abline(h=weighted.mean(c(d0[floor(1/x$rho.by)],d0[ceiling(1/x$rho.by)]), 
-            c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2)
+            c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
         if(is.null(xlab)) 
             title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
             else title(xlab = xlab)
@@ -765,12 +765,12 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             upper <- x$upper.d0
         }
         plot.default(x$rho, d0, type="n", xlab="", ylab="", main=main0, xlim=xlim, ylim=ylim, ...)
-        polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2)
-        lines(x$rho, d0, lty=1)
+        polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
+        lines(x$rho, d0, lty=1, lwd=lwd)
         abline(h=0)
         abline(v=0)
         abline(h=weighted.mean(c(d0[floor(1/x$rho.by)],d0[ceiling(1/x$rho.by)]), 
-            c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2)
+            c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
         if(is.null(xlab)) 
             title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
             else title(xlab = xlab)
@@ -795,12 +795,12 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             upper <- x$upper.d1
         }
         plot.default(x$rho, d1, type="n", xlab="", ylab="", main=main1, xlim=xlim, ylim=ylim,...)
-        polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2)
-        lines(x$rho, d1, lty=1)
+        polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
+        lines(x$rho, d1, lty=1, lwd=lwd)
         abline(h=0)
         abline(v=0)
         abline(h=weighted.mean(c(d1[floor(1/x$rho.by)],d1[ceiling(1/x$rho.by)]), 
-            c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2)
+            c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
         if(is.null(xlab)) 
             title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
             else title(xlab = xlab)
@@ -843,7 +843,8 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
                 main <- expression(paste("ACME(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==1))
             else if(is.null(main) & r.type == 2)
                 main <- expression(paste("ACME(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==1))
-            contour(R2M, R2Y, d0mat.p, levels=levels, main=main, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, ...)
+            contour(R2M, R2Y, d0mat.p, levels=levels, main=main, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
+            contour(R2M, R2Y, d0mat.p, levels=0, lwd=lwd+1, add=TRUE)
         } else if(sign.prod == -1){
             d0.n <- rev(approx(x$d0[1:((length(x$d0)+1)/2)], n=dlength)$y)
             d0mat.n <- matrix(d0.n[Rprod.mat/0.0001+1], nrow=length(R2M))
@@ -851,7 +852,8 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
                 main <- expression(paste("ACME(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==-1))
             else if(is.null(main) & r.type == 2)
                 main <- expression(paste("ACME(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==-1))
-            contour(R2M, R2Y, d0mat.n, levels=levels, main=main, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, ...)
+            contour(R2M, R2Y, d0mat.n, levels=levels, main=main, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
+            contour(R2M, R2Y, d0mat.n, levels=0, lwd=lwd+1, add=TRUE)
         } else stop("'sign.prod' must be either -1 or 1\n")
         if(is.null(xlab) & r.type==1)
             title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
@@ -879,7 +881,8 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             else if(is.null(main) & r.type == 2)
                 main0 <- expression(paste("ACME"[0], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==1))
             else main0 <- main
-            contour(R2M, R2Y, d0mat.p, levels=levels0, main=main0, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim)
+            contour(R2M, R2Y, d0mat.p, levels=levels0, main=main0, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
+            contour(R2M, R2Y, d0mat.p, levels=0, lwd=lwd+1, add=TRUE)
         } else if(sign.prod == -1){
             d0.n <- rev(approx(x$d0[1:((length(x$d0)+1)/2)], n=dlength)$y)
             d0mat.n <- matrix(d0.n[Rprod.mat/0.0001+1], nrow=length(R2M))
@@ -888,7 +891,8 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             else if(is.null(main) & r.type == 2)
                 main0 <- expression(paste("ACME"[0], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==-1))
             else main0 <- main
-            contour(R2M, R2Y, d0mat.n, levels=levels0, main=main0, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim)
+            contour(R2M, R2Y, d0mat.n, levels=levels0, main=main0, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
+            contour(R2M, R2Y, d0mat.n, levels=0, lwd=lwd+1, add=TRUE)
         } else stop("sign.prod must be either -1 or 1\n")
         if(is.null(xlab) & r.type==1)
             title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
@@ -912,7 +916,8 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             else if(is.null(main) & r.type == 2)
                 main1 <- expression(paste("ACME"[1], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==1))
             else main1 <- main
-            contour(R2M, R2Y, d1mat.p, levels=levels1, main=main1, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim)
+            contour(R2M, R2Y, d1mat.p, levels=levels1, main=main1, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd, ...)
+            contour(R2M, R2Y, d1mat.p, levels=0, lwd=lwd+1, add=TRUE)
         } else if(sign.prod == -1){
             d1.n <- rev(approx(x$d1[1:((length(x$d1)+1)/2)], n=dlength)$y)
             d1mat.n <- matrix(d1.n[Rprod.mat/0.0001+1], nrow=length(R2M))
@@ -921,7 +926,8 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             else if(is.null(main) & r.type == 2)
                 main1 <- expression(paste("ACME"[1], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==-1))
             else main1 <- main
-            contour(R2M, R2Y, d1mat.n, levels=levels1, main=main1, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim)
+            contour(R2M, R2Y, d1mat.n, levels=levels1, main=main1, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd, ...)
+            contour(R2M, R2Y, d1mat.n, levels=0, lwd=lwd+1, add=TRUE)
         }
         if(is.null(xlab) & r.type==1)
             title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
