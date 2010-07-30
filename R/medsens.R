@@ -23,11 +23,11 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=.Machine$double.eps)
         d0.var <- matrix(NA, length(rho), 1)
         d1.var <- matrix(NA, length(rho), 1)
         
-        y.t.data <- model.frame(model.y)    
+        y.t.data <- model.frame(model.y)
         if(is.factor(y.t.data[,paste(treat)])==TRUE){
-            cat.c <- levels(y.t.data[,treat])[1] 
+            cat.c <- levels(y.t.data[,treat])[1]
             cat.t <- levels(y.t.data[,treat])[2]
-            T.cat <- paste(treat,cat.t, sep="") 
+            T.cat <- paste(treat,cat.t, sep="")
             } else {
             cat.c <- NULL
             cat.t <- NULL

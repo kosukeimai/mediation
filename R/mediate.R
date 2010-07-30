@@ -1,4 +1,6 @@
 mediate <- function(model.m, model.y, sims=1000, boot=FALSE, INT=FALSE, treat="treat.name", mediator="med.name", control=NULL){
+    #Check: This should replace the INT option:
+    #INT <- paste(treat,mediator,sep=":") %in% attr(model.y$terms,"term.labels")
 	B <- sims
 	#model.m <- z
 	model.y.t <- model.y
@@ -6,17 +8,17 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, INT=FALSE, treat="t
 	m.data <- model.frame(model.m)  #Call.M$data
     y.t.data <- model.frame(model.y.t) #Call.Y$data
     k.t <- ncol(y.t.data)
-	k.m <- ncol(m.data)
-	n.m <- model.frame(model.m)
-	n.y <- model.frame(model.y)	
+	k.m <- ncol(m.data) # Is this necessary?
+	n.m <- model.frame(model.m) # Isn't this = m.data?
+	n.y <- model.frame(model.y)	 # Isn't this = y.t.data?
 	k.y <- ncol(n.y)
 	k.m <- ncol(n.m)
 	k <- k.y + k.m
 	n.m <- length(m.data[,1])
 	n.y <- length(y.t.data[,1])
-	n <- length(y.t.data[,1])
+	n <- length(y.t.data[,1]) # Isn't this = n.y?
 	m <- length(sort(unique(model.frame(model.m)[,1])))
-	m.min <- as.numeric(sort(unique(model.frame(model.m)[,1]))[1])
+	m.min <- as.numeric(sort(unique(model.frame(model.m)[,1]))[1]) # Seems unnecessarily complicated
 	if(class(model.m[1])=="gam"){
 		test <- class(model.m)[2]
 		} else {
@@ -26,7 +28,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, INT=FALSE, treat="t
 	if(class(model.y.t[1])=="gam"){
 		test2 <- class(model.y.t)[2]
 		} else {
-		test2 <- class(model.y.t)[1]	
+		test2 <- class(model.y.t)[1]
 			}
 	test3 <- class(model.y)[1]
 	if(is.factor(y.t.data[,paste(treat)])==TRUE){
@@ -41,8 +43,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, INT=FALSE, treat="t
 
 	if(n.m != n.y){
 	stop("Error: Missing Values Present in Data")
-	} else {
-	if(boot == FALSE){ 
+	} else { # Is this "else" necessary?
+	if(boot == FALSE){ #@@@@@@@@@@@@@@Quasi-Bayesian Monte Carlo@@@@@@@@@@@@@@@@@@@
 	cat.0 <- 0
 	cat.1 <- 1
 	MModel.coef <- model.m$coef
@@ -133,7 +135,7 @@ for(i in 1:sims){
 	draws_m1 <- matrix(NA, n, m)
 	draws_m0 <- matrix(NA, n, m)
 
-	for(ii in 1:n){	
+	for(ii in 1:n){
 		draws_m1[ii,] <- t(rmultinom(1, 1, prob = probs_m1[ii,]))
 		draws_m0[ii,] <- t(rmultinom(1, 1, prob = probs_m0[ii,]))
 		}
@@ -142,7 +144,7 @@ for(i in 1:sims){
 		PredictM0[i,] <- apply(draws_m0, 1, indexmax)
 		}
 	} else {
-	sigma <- summary(model.m)$sigma			    
+	sigma <- summary(model.m)$sigma
 	error <- rnorm(n, mean=0, sd=sigma)
 	PredictM1 <- MModel %*% t(mmat.t)
 	PredictM0 <- MModel %*% t(mmat.c)
@@ -249,8 +251,8 @@ for(i in 1:sims){
 	pred.data.t[,treat] <- list(factor(unique(y.t.data[,treat])[1], levels = levels(y.t.data[,treat])))
 	pred.data.c[,treat] <- list(factor(unique(y.t.data[,treat])[2], levels = levels(y.t.data[,treat])))
 	} else {
-	pred.data.t[,treat] <- cat.1	#Treatment
-	pred.data.c[,treat] <- cat.0    #Control
+	pred.data.t[,treat] <- cat.1 #Treatment
+	pred.data.c[,treat] <- cat.0  #Control
 	}
 	
 	if(is.factor(y.t.data[,paste(mediator)])==TRUE) {
@@ -291,7 +293,7 @@ for(i in 1:sims){
 	pred.data.c[,treat] <- list(factor(unique(y.t.data[,treat])[2], levels = levels(y.t.data[,treat])))
 	} else {
 	pred.data.t[,treat] <- cat.1
-	pred.data.c[,treat] <- cat.0	
+	pred.data.c[,treat] <- cat.0
 		}
 	
 	if(is.factor(y.t.data[,paste(mediator)])==TRUE) {
@@ -310,7 +312,7 @@ for(i in 1:sims){
 	Pr0[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.c)
 	
 	rm(ymat.t, ymat.c, pred.data.t,pred.data.c)
-	}	
+	}
 	
 	if(test2=="glm"){
 		Pr1 <- apply(Pr1, 2, model.y$family$linkinv);		Pr0 <- apply(Pr0, 2, model.y$family$linkinv);
@@ -398,7 +400,7 @@ for(i in 1:sims){
 		draws_m1 <- matrix(NA, n, m)
 		draws_m0 <- matrix(NA, n, m)
 
-		for(ii in 1:n){	
+		for(ii in 1:n){
 			draws_m1[ii,] <- t(rmultinom(1, 1, prob = probs_m1[ii,]))
 			draws_m0[ii,] <- t(rmultinom(1, 1, prob = probs_m0[ii,]))
 			}
@@ -477,7 +479,7 @@ for(i in 1:sims){
 			pred.data.c[,control] <- list(factor(unique(y.t.data[,treat])[1], levels = levels(y.t.data[,treat])))
 			}
 	} else{
-			pred.data.t[,treat] <- cat.0	
+			pred.data.t[,treat] <- cat.0
 			pred.data.c[,treat] <- cat.0
 	if(is.null(control)!=TRUE){
 			pred.data.t[,control] <- cat.1
@@ -493,13 +495,13 @@ if(is.factor(y.t.data[,paste(mediator)])==TRUE) {
 	pred.data.c[,mediator] <- PredictM0
 	}
 			
-		#Controls Predictions	
+		#Controls Predictions
 		if(test3=="rq"){
 		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t, interval="none");		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c, interval="none");
 			} else {
 		pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t)
 		pr.0 <- predict(new.fit.t, type="response", newdata=pred.data.c)
-				}	
+				}
 		pr.mat <- as.matrix(cbind(pr.1, pr.0))
 		delta.0.tmp <-pr.mat[,1] - pr.mat[,2]
 
@@ -555,7 +557,7 @@ if(is.factor(y.t.data[,paste(mediator)])==TRUE) {
 			pred.data.c[,control] <- list(factor(unique(y.t.data[,treat])[2], levels = levels(y.t.data[,treat])))
 			}
 	} else{
-	pred.data.t[,treat] <- cat.1	
+	pred.data.t[,treat] <- cat.1
 	pred.data.c[,treat] <- cat.0
 	if(is.null(control)!=TRUE){
 			pred.data.t[,control] <- cat.0
@@ -580,7 +582,7 @@ if(is.factor(y.t.data[,paste(mediator)])==TRUE) {
 		zeta.0.tmp <-pr.mat[,1] - pr.mat[,2]
 		
 		zeta.1[b] <- mean(zeta.1.tmp)
-		zeta.0[b] <- mean(zeta.0.tmp)		
+		zeta.0[b] <- mean(zeta.0.tmp)
 		delta.1[b] <- mean(delta.1.tmp)
 		delta.0[b] <- mean(delta.0.tmp)
 		tau[b] <- (zeta.1[b] + zeta.0[b] + delta.0[b] + delta.1[b])/2
@@ -607,6 +609,7 @@ if(is.factor(y.t.data[,paste(mediator)])==TRUE) {
 call.y <- model.y$call
 call.m <- model.m$call
 env.y <- environment(model.y$terms)
+    # Check: Does this correctly pass the parent frame of model.y? 
 env.m <- environment(model.m$terms)
 
 out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci, pct.coef=pct.coef, pct.ci=pct.ci, 
