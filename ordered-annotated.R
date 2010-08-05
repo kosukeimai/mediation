@@ -89,11 +89,21 @@ model.y.t <- model.y
 		pred.data.c[,treat] <- as.numeric(pred.data.c[,treat])
 		} 
 		
-		sigma <- summary(new.fit.M)$sigma
+#Data set up complete #Now generate model predictions.
+		if(test=="glm"){
+		PredictM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
+		PredictM0 <- predict(new.fit.M, type="response", newdata=pred.data.c)
+		} else {
+		if(class(model.m)[1]=="gam"){
+			sigma <- summary(new.fit.M)$scale
+			} else {
+			sigma <- summary(new.fit.M)$sigma
+				}
 		error <- rnorm(n, mean=0, sd=sigma)
 		PredictM1 <- predict(new.fit.M, type="response", newdata=pred.data.t) + error
 		PredictM0 <- predict(new.fit.M, type="response", newdata=pred.data.c) + error
 		rm(error)
+		}
 		
 	
 #####################################################################################		
