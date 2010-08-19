@@ -1,5 +1,13 @@
 mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name", mediator="med.name", control=NULL, conf.level=.95){
     INT <- paste(treat,mediator,sep=":") %in% attr(model.y$terms,"term.labels")
+    
+    
+########
+if (class(model.y)[1]!="polr") {#sense whether an ordered outcome model or not?
+########
+
+    
+    
     B <- sims
     #model.m <- z
     model.y.t <- model.y
@@ -631,7 +639,316 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
         model.y=model.y, model.m=model.m)
     class(out) <- "mediate"
     out
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    #ordered outcome 
+    ##########
+    } else {
+    ##########
+    boot<-TRUE
+    
+      
+    
+        B <- sims
+    model.y.t <- model.y
+    m.data <- model.frame(model.m)  #Call.M$data
+    y.t.data <- model.frame(model.y.t) #Call.Y$data
+    n <- length(y.t.data[,1])
+    m <- length(sort(unique(model.frame(model.y)[,1])))
+    #m.min <- as.numeric(sort(unique(model.frame(model.m)[,1]))[1]) #What Do I Need This For?
+    form.y <- formula(model.y)
+    form.m <- formula(model.m)
+    cat.0 <- 0
+    cat.1 <- 1
+    
+    if(class(model.m[1])=="gam"){
+        test <- class(model.m)[2]
+        } else {
+        test <- class(model.m)[1]   
+            }
+            
+    if(class(model.y.t[1])=="gam"){
+        test2 <- class(model.y.t)[2]
+        } else {
+        test2 <- class(model.y.t)[1]    
+            }
+    test3 <- class(model.y)[1]
+    if(is.factor(y.t.data[,paste(treat)])==TRUE){
+                cat.c <- levels(y.t.data[,treat])[1] 
+                cat.t <- levels(y.t.data[,treat])[2]
+                T.cat <- paste(treat,cat.t, sep="") 
+            } else {
+                cat.c <- NULL
+                cat.t <- NULL
+                T.cat <- paste(treat,cat.t, sep="")
+                }
 
+    #Storage - Now Dynamic
+    delta.1 <- matrix(NA, B, m)
+    delta.0 <- matrix(NA, B, m)
+    zeta.1 <- matrix(NA, B, m)
+    zeta.0 <- matrix(NA, B, m)
+    tau <- matrix(NA, B, m)
+
+    for(b in 1:B){#Bootstrap Loop
+        if(test=="polr"){
+            if(length(unique(y.t.data[index,mediator]))!=m){
+            cat("Insufficient Variation on Mediator")
+            break
+            }
+            }
+        
+        #Resampling Step
+        data.star.m <- m.data[sample(1:nrow(m.data),n,replace=TRUE),] #Pull off data.star.
+        data.star.y <- y.t.data[sample(1:nrow(y.t.data),n,replace=TRUE),] #Pull off data.star.
+        new.fit.M <- update(model.m, data=data.star.m)
+        new.fit.t <- update(model.y, data=data.star.y)
+           
+        #data.star <- im_emo[sample(1:nrow(im_emo),n,replace=TRUE),] #Pull off data.star.
+        #new.fit.M <- lm(paste(form.m[2], form.m[1], form.m[3]), data=data.star) #replace with update
+        #new.fit.t <- polr(paste(form.y[2], form.y[1], form.y[3]), data=data.star, method="probit", Hess=TRUE) #replace with update
+        #d <- data[i,]
+        #d.glm <- update(model,data=d)
+
+        #Generate Mediation Model Predictions
+        pred.data.t <- m.data
+        pred.data.t[,treat] <- cat.1
+        pred.data.c <- m.data
+        pred.data.c[,treat] <- cat.0
+        
+        
+        if(is.factor(m.data[,treat])==TRUE){
+        pred.data.t[,treat] <- as.factor(pred.data.t[,treat])
+        pred.data.c[,treat] <- as.factor(pred.data.c[,treat])
+        } else { 
+        pred.data.t[,treat] <- as.numeric(pred.data.t[,treat])
+        pred.data.c[,treat] <- as.numeric(pred.data.c[,treat])
+        } 
+                
+        if(test=="glm"){
+        PredictM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
+        PredictM0 <- predict(new.fit.M, type="response", newdata=pred.data.c)
+       
+       #above new.fit.M was from a linear model...
+        } else if(test=="polr") {
+        probs_m1 <- predict(new.fit.M, newdata=pred.data.t, type="probs")
+        probs_m0 <- predict(new.fit.M, newdata=pred.data.c, type="probs")
+        draws_m1 <- matrix(NA, n, m)
+        draws_m0 <- matrix(NA, n, m)
+
+        for(ii in 1:n){ 
+            draws_m1[ii,] <- t(rmultinom(1, 1, prob = probs_m1[ii,]))
+            draws_m0[ii,] <- t(rmultinom(1, 1, prob = probs_m0[ii,]))
+            }
+        max.pr_m1 <- apply(probs_m1, 1, max)
+        max.pr_m0 <- apply(probs_m0, 1, max)
+        cat.m1 <- predict(new.fit.M, newdata=pred.data.t)
+        cat.m0 <- predict(new.fit.M, newdata=pred.data.c)
+        draws_m1 <- round(runif(n, m.min, m), 0)
+        draws_m0 <- round(runif(n, m.min, m), 0)
+        #where is .75 from?
+        PredictM1 <- ifelse(max.pr_m1 > runif(n, 0, .75), draws_m1, cat.m1)
+        PredictM0 <- ifelse(max.pr_m0 > runif(n, 0, .75), draws_m0, cat.m0)
+        } else {
+        if(class(model.m)[1]=="gam"){
+            sigma <- summary(new.fit.M)$scale
+            } else {
+            sigma <- summary(new.fit.M)$sigma
+                }
+        error <- rnorm(n, mean=0, sd=sigma)
+        PredictM1 <- predict(new.fit.M, type="response", newdata=pred.data.t) + error
+        PredictM0 <- predict(new.fit.M, type="response", newdata=pred.data.c) + error
+        rm(error)
+        }
+        
+    
+#####################################################################################       
+        #Treatment Predictions Data
+        pred.data.t <- y.t.data
+        pred.data.c <- y.t.data
+
+    if(is.factor(y.t.data[,paste(treat)])==TRUE){
+            pred.data.t[,treat] <- list(factor(unique(y.t.data[,treat])[1], levels = levels(y.t.data[,treat])))
+            pred.data.c[,treat] <- list(factor(unique(y.t.data[,treat])[1], levels = levels(y.t.data[,treat])))
+    if(is.null(control)!=TRUE){
+            pred.data.t[,control] <- list(factor(unique(y.t.data[,treat])[2], levels = levels(y.t.data[,treat])))
+            pred.data.c[,control] <- list(factor(unique(y.t.data[,treat])[2], levels = levels(y.t.data[,treat])))
+            }
+        } else{
+        #please annotate what these loops are doing...cat.1 etc were just 1 or 0, so what were the above doing? allowing for multivalued treatments?
+            pred.data.t[,treat] <- cat.1    
+            pred.data.c[,treat] <- cat.1
+            if(is.null(control)!=TRUE){
+            pred.data.t[,control] <- cat.0
+            pred.data.c[,control] <- cat.0
+            }
+        } 
+        
+    if(is.factor(y.t.data[,paste(mediator)])==TRUE) {
+            pred.data.t[,mediator] <- factor(PredictM1, labels = levels(y.t.data[,mediator]))
+            pred.data.c[,mediator] <- factor(PredictM0, labels = levels(y.t.data[,mediator]))
+        } else {
+            pred.data.t[,mediator] <- PredictM1
+            pred.data.c[,mediator] <- PredictM0
+    }           
+        #Treatment Predictions
+        probs_p1 <- predict(new.fit.t, newdata=pred.data.t, type="probs")
+        probs_p0 <- predict(new.fit.t, newdata=pred.data.c, type="probs")
+                        
+        delta.1.tmp <-  probs_p1 - probs_p0     
+        rm(pred.data.t, pred.data.c, probs_p1, probs_p0)
+
+        #Control Predictions Data
+        pred.data.t <- y.t.data
+        pred.data.c <- y.t.data
+
+            if(is.factor(y.t.data[,paste(treat)])==TRUE){
+            pred.data.t[,treat] <- list(factor(unique(y.t.data[,treat])[2], levels = levels(y.t.data[,treat])))
+            pred.data.c[,treat] <- list(factor(unique(y.t.data[,treat])[2], levels = levels(y.t.data[,treat])))
+    if(is.null(control)!=TRUE){
+            pred.data.t[,control] <- list(factor(unique(y.t.data[,treat])[1], levels = levels(y.t.data[,treat])))
+            pred.data.c[,control] <- list(factor(unique(y.t.data[,treat])[1], levels = levels(y.t.data[,treat])))
+            }
+    } else{
+            pred.data.t[,treat] <- cat.0    
+            pred.data.c[,treat] <- cat.0
+    if(is.null(control)!=TRUE){
+            pred.data.t[,control] <- cat.1
+            pred.data.c[,control] <- cat.1
+            }
+        } 
+
+if(is.factor(y.t.data[,paste(mediator)])==TRUE) {
+    pred.data.t[,mediator] <- factor(PredictM1, labels = levels(y.t.data[,mediator]))
+    pred.data.c[,mediator] <- factor(PredictM0, labels = levels(y.t.data[,mediator]))
+            } else {
+    pred.data.t[,mediator] <- PredictM1
+    pred.data.c[,mediator] <- PredictM0
+    }
+            
+        #Controls Predictions   
+        probs_p1 <- predict(new.fit.t, newdata=pred.data.t, type="probs")
+        probs_p0 <- predict(new.fit.t, newdata=pred.data.c, type="probs")
+
+        delta.0.tmp <- probs_p1 - probs_p0
+
+        rm(pred.data.t, pred.data.c, probs_p1, probs_p0)
+########################################################################
+        #Direct Effects 
+########################################################################    
+        pred.data.t <- y.t.data
+        pred.data.c <- y.t.data
+        
+        #Zeta.1
+if(is.factor(y.t.data[,paste(treat)])==TRUE){
+    pred.data.t[,treat] <- list(factor(unique(y.t.data[,treat])[1], levels = levels(y.t.data[,treat])))
+    pred.data.c[,treat] <- list(factor(unique(y.t.data[,treat])[2], levels = levels(y.t.data[,treat])))
+    if(is.null(control)!=TRUE){
+            pred.data.t[,control] <- list(factor(unique(y.t.data[,treat])[2], levels = levels(y.t.data[,treat])))
+            pred.data.c[,control] <- list(factor(unique(y.t.data[,treat])[1], levels = levels(y.t.data[,treat])))
+            }
+    } else{
+    pred.data.t[,treat] <- cat.1    
+    pred.data.c[,treat] <- cat.0
+    if(is.null(control)!=TRUE){
+            pred.data.t[,control] <- cat.0
+            pred.data.c[,control] <- cat.1
+            }
+        } 
+
+        if(is.factor(y.t.data[,paste(mediator)])==TRUE) {
+    pred.data.t[,mediator] <- factor(PredictM1, labels = levels(y.t.data[,mediator]))
+    pred.data.c[,mediator] <- factor(PredictM1, labels = levels(y.t.data[,mediator]))
+            } else {
+    pred.data.t[,mediator] <- PredictM1
+    pred.data.c[,mediator] <- PredictM1
+    }
+
+            
+        probs_p1 <- predict(new.fit.t, newdata=pred.data.t, type="probs")
+        probs_p0 <- predict(new.fit.t, newdata=pred.data.c, type="probs")
+        zeta.1.tmp <- probs_p1 - probs_p0
+
+        rm(pred.data.t, pred.data.c, probs_p1, probs_p0)
+        
+        #Zeta.0
+        pred.data.t <- y.t.data
+        pred.data.c <- y.t.data
+        
+        if(is.factor(y.t.data[,paste(treat)])==TRUE){
+    pred.data.t[,treat] <- list(factor(unique(y.t.data[,treat])[1], levels = levels(y.t.data[,treat])))
+    pred.data.c[,treat] <- list(factor(unique(y.t.data[,treat])[2], levels = levels(y.t.data[,treat])))
+    if(is.null(control)!=TRUE){
+            pred.data.t[,control] <- list(factor(unique(y.t.data[,treat])[1], levels = levels(y.t.data[,treat])))
+            pred.data.c[,control] <- list(factor(unique(y.t.data[,treat])[2], levels = levels(y.t.data[,treat])))
+            }
+    } else{
+    pred.data.t[,treat] <- cat.1    
+    pred.data.c[,treat] <- cat.0
+    if(is.null(control)!=TRUE){
+            pred.data.t[,control] <- cat.0
+            pred.data.c[,control] <- cat.1
+            }
+        } 
+
+        if(is.factor(y.t.data[,paste(mediator)])==TRUE) {
+    pred.data.t[,mediator] <- factor(PredictM0, labels = levels(y.t.data[,mediator]))
+    pred.data.c[,mediator] <- factor(PredictM0, labels = levels(y.t.data[,mediator]))
+            } else {
+    pred.data.t[,mediator] <- PredictM0
+    pred.data.c[,mediator] <- PredictM0
+    }
+
+        #Predictions
+        probs_p1 <- predict(new.fit.t, newdata=pred.data.t, type="probs")
+        probs_p0 <- predict(new.fit.t, newdata=pred.data.c, type="probs")
+
+        zeta.0.tmp <- probs_p1 - probs_p0
+        rm(pred.data.t, pred.data.c, probs_p1, probs_p0)
+        
+        zeta.1[b,] <- apply(zeta.1.tmp, 2, median)
+        zeta.0[b,] <- apply(zeta.0.tmp, 2, median)
+        delta.1[b,] <- apply(delta.1.tmp, 2, median)
+        delta.0[b,] <- apply(delta.0.tmp, 2, median)
+        tau[b,] <- delta.0[b,] + zeta.1[b,]
+        } 
+        
+    #Results 
+    low <- (1 - conf.level)/2; high <- 1 - low
+    d0 <- apply(delta.0, 2, mean)
+    d1 <- apply(delta.1, 2, mean)
+    d0.ci <- apply(delta.0, 2, quantile, c(low,high))
+    d1.ci <- apply(delta.1, 2, quantile, c(low,high))
+    
+    z1 <- apply(zeta.1, 2, mean)
+    z0 <- apply(zeta.0,2, mean)     
+    z1.ci <- apply(zeta.1,2, quantile, c(low,high))
+    z0.ci <- apply(zeta.0,2, quantile, c(low,high))
+    
+    tau.coef <- apply(tau, 2, mean)
+    tau.ci <- apply(tau, 2, quantile, c(low,high))
+    
+    #avg.delta <- (d0 + d1)/2
+    #pct.dist <- avg.delta/tau
+    #pct.coef <- median(pct.dist)
+    #pct.ci <- quantile(pct.dist,c(.025,.975), na.rm=TRUE)
+    m.lab <- sort(unique(levels(model.frame(model.y)[,1])))
+    
+out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci, d0.sims=delta.0, d1.sims=delta.1, z1=z1, z0=z0, z1.ci=z1.ci, z0.ci=z0.ci,tau.coef=tau.coef, tau.ci=tau.ci, treat=treat, mediator=mediator, INT=INT, m.lab=m.lab)
+class(out) <- "mediate.order"
+out
+
+    ###
+    #Else closing loop for ordered outcome
+    }
+    ###
 }
 
 print.mediate <- function(x, ...){
@@ -641,6 +958,8 @@ print.mediate <- function(x, ...){
 
 summary.mediate <- function(object, ...)
     structure(object, class = c("summary.mediate", class(object)))
+    
+    
 
 print.summary.mediate <- function(x, ...){
     clp <- 100 * x$conf.level
@@ -676,3 +995,68 @@ print.summary.mediate <- function(x, ...){
 
 
 
+
+
+################
+#SUMMARY FUNCTIONS FOR ORDERED OUTCOME CASE
+################
+
+print.mediate.order <- function(x, ...){
+    print(unlist(x[1:50]))
+    invisible(x)
+    }
+
+summary.mediate.order <- function(object, ...)
+    structure(object, class = c("summary.mediate.order", class(object)))
+
+print.summary.mediate.order <- function(x, ...){
+    
+    tab.d0 <- rbind(x$d0, x$d0.ci)
+    tab.d1 <- rbind(x$d1, x$d1.ci)
+    tab.z0 <- rbind(x$d0, x$d0.ci)
+    tab.z1 <- rbind(x$d1, x$d1.ci)
+    tab.tau <- rbind(x$tau.coef, x$tau.ci)
+    #Outcome Table Labels
+    out.names <- c()
+
+        for(i in 1:length(x$m.lab)){
+            out.names.tmp <- paste("Pr(Y=",x$m.lab[i],")",sep="")
+            out.names <- c(out.names, out.names.tmp)
+            }
+    #Label Tables
+    rownames(tab.d0)[1] <- "Mediation Effect_0: "
+    colnames(tab.d0) <- out.names
+    rownames(tab.d1)[1] <- "Mediation Effect_1: "
+    colnames(tab.d1) <- out.names
+    rownames(tab.z0)[1] <- "Direct Effect_0: "
+    colnames(tab.z0) <- out.names
+    rownames(tab.z1)[1] <- "Direct Effect_1: "
+    colnames(tab.z1) <- out.names
+    rownames(tab.tau)[1] <- "Total Effect: "
+    colnames(tab.tau) <- out.names
+
+
+#actually, given the nonlinear models its possible for d0 not = d1 even if no interaction. we have to fix this in the regular code too.
+    if(x$INT==TRUE){
+        cat("\n Causal Mediation Analysis \n\n")
+        cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
+        print(tab.d0, digits=4)
+        print(tab.d1, digits=4)
+        print(tab.z0, digits=4)
+        print(tab.z1, digits=4)
+        print(tab.tau, digits=4)
+        } else {
+            cat("\n Causal Mediation Analysis \n\n")
+        cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
+        print(tab.d0, digits=4) 
+        cat("\n")
+        print(tab.z0, digits=4)
+        cat("\n")
+        print(tab.tau, digits=4)
+                }
+    invisible(x)
+    }
+    
+        
+    
+  
