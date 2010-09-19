@@ -1,5 +1,6 @@
 mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name", mediator="med.name", control=NULL, conf.level=.95){
-    INT <- paste(treat,mediator,sep=":") %in% attr(model.y$terms,"term.labels")
+    INT <- paste(treat,mediator,sep=":") %in% attr(model.y$terms,"term.labels") 
+        ## TODO: Generalize to allow both t:m and m:t
     
     
 ########

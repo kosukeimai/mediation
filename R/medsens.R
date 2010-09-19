@@ -36,8 +36,8 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps))
             }
             
         if(INT==TRUE){
-        int.lab <- paste(T.cat,mediator, sep=":")
-        t.m <- paste(treat,mediator, sep=":")
+        int.lab <- paste(T.cat,mediator, sep=":")  ## TODO: Generalize to allow both t:m and m:t
+        t.m <- paste(treat,mediator, sep=":")  ## TODO: Generalize to allow both t:m and m:t
             }
                 
         #Estimate Error Correlation
@@ -46,7 +46,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps))
             } else {
             mod.y <- update(model.y,as.formula(paste(". ~ . -", mediator)))
                 }
-        err.cr <- cor(model.m$resid, mod.y$resid)
+        err.cr <- cor(model.m$resid, mod.y$resid)  ## FIX: This is only used for INT=F which is also unnecessary
                     
         
         for(i in 1:length(rho)){
@@ -83,7 +83,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps))
         e.hat <- as.matrix(Y.c - (X %*% b.tmp))
         
         e.1 <- e.hat[1:n]
-        e.2 <- e.hat[(n+1): (2*n)]
+        e.2 <- e.hat[(n+1):(2*n)]
         
         sd.1 <- sd(e.1)
         sd.2 <- sd(e.2)
