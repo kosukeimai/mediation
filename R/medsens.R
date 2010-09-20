@@ -1,4 +1,4 @@
-medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps))
+medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), type=type)
 {
     model.y <- x$model.y
     model.m <- x$model.m
@@ -19,10 +19,17 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps))
     ## CASE 1: Continuous Outcome + Continuous Mediator
     #########################################################
     if(class.y=="lm" & class.m=="lm") {
+        # For Indirect Effects
         d0 <- matrix(NA, length(rho), 1)
         d1 <- matrix(NA, length(rho), 1)
         d0.var <- matrix(NA, length(rho), 1)
         d1.var <- matrix(NA, length(rho), 1)
+        # For Direct Effects
+        z0 <- martix(NA, length(rho), 1)
+        z1 <- matrix(NA, length(rho), 1)
+        z0.var <- matrix(NA, length(rho), 1)
+        z1.var <- matrix(NA, length(rho), 1)
+       
         
         y.t.data <- model.frame(model.y)
         if(is.factor(y.t.data[,paste(treat)])==TRUE){
@@ -126,16 +133,25 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps))
         v.y <- v.cov[(m.k+1):(m.k+y.k),(m.k+1):(m.k+y.k)]
         
         #Save Estimates
-        if(INT==TRUE){
+        if(INT==TRUE){if(type == "indirect"){
             d0[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(mediator),] 
             d1[i,] <- m.coefs[paste(T.cat),]*(y.coefs[paste(mediator),] + y.coefs[paste(int.lab),])
-            } else {
-                d0[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(mediator),]
-                d1[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(mediator),] 
+            }
+            else { # direct effects with interaction
+            	z0[i,] <- y.coefs[paste(treat),]
+            	z1[i,] <- y.coefs[paste(treat),] + (m.coefs[paste(T.cat),] * y.coefs[paste(int.lab),])
+            	}
+            	} else {if(type == "indirect"){
+            			d0[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(mediator),]
+                		d1[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(mediator),]
+                		} else {
+                			z0[i,] <- y.coefs[paste(treat),]
+                			z1[i,] <- y.coefs[paste(treat),]
+                			}
                 }
         
         #Save Variance Estimates
-        if(INT==TRUE){
+        if(INT==TRUE){if(type == "indirect")
             d0.var[i,] <- (y.coefs[paste(mediator),] + 0*y.coefs[paste(int.lab),])^2*v.m[T.cat,T.cat] + m.coefs[paste(T.cat),]^2*(v.y[mediator,mediator] + 0*v.y[int.lab, int.lab] + 0*2*v.y[mediator, int.lab])
             d1.var[i,] <- (y.coefs[paste(mediator),] + y.coefs[paste(int.lab),])^2*v.m[T.cat,T.cat] + m.coefs[paste(T.cat),]^2*(v.y[mediator,mediator] + v.y[int.lab, int.lab] + 2*v.y[mediator, int.lab])
             } else {
