@@ -1,4 +1,4 @@
-medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), type=type)
+medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), type=c("direct","indirect"))
 {
     model.y <- x$model.y
     model.m <- x$model.m
