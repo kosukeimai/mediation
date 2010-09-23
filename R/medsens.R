@@ -133,30 +133,35 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), type
         v.y <- v.cov[(m.k+1):(m.k+y.k),(m.k+1):(m.k+y.k)]
         
         #Save Estimates
-        if(INT==TRUE){if(type == "indirect"){
+        if(INT==TRUE){if("indirect" %in% type){
             d0[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(mediator),] 
             d1[i,] <- m.coefs[paste(T.cat),]*(y.coefs[paste(mediator),] + y.coefs[paste(int.lab),])
             }
-            else { # direct effects with interaction
-            	z0[i,] <- y.coefs[paste(treat),]
-            	z1[i,] <- y.coefs[paste(treat),] + (m.coefs[paste(T.cat),] * y.coefs[paste(int.lab),])
+            if("direct" %in% type){ # direct effects with interaction
+            	z0[i,] <- y.coefs[paste(T.cat),]
+            	z1[i,] <- y.coefs[paste(T.cat),] + (m.coefs[paste(T.cat),] * y.coefs[paste(int.lab),])
             	}
-            	} else {if(type == "indirect"){
+            	} else {if("indirect" %in% type){
             			d0[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(mediator),]
                 		d1[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(mediator),]
-                		} else {
-                			z0[i,] <- y.coefs[paste(treat),]
-                			z1[i,] <- y.coefs[paste(treat),]
+                		} 
+                		if("direct" %in% type) {
+                			z0[i,] <- y.coefs[paste(T.cat),]
+                			z1[i,] <- y.coefs[paste(T.cat),]
                 			}
                 }
         
         #Save Variance Estimates
-        if(INT==TRUE){if(type == "indirect")
+        if(INT==TRUE){if("indirect" %in% type){
             d0.var[i,] <- (y.coefs[paste(mediator),] + 0*y.coefs[paste(int.lab),])^2*v.m[T.cat,T.cat] + m.coefs[paste(T.cat),]^2*(v.y[mediator,mediator] + 0*v.y[int.lab, int.lab] + 0*2*v.y[mediator, int.lab])
             d1.var[i,] <- (y.coefs[paste(mediator),] + y.coefs[paste(int.lab),])^2*v.m[T.cat,T.cat] + m.coefs[paste(T.cat),]^2*(v.y[mediator,mediator] + v.y[int.lab, int.lab] + 2*v.y[mediator, int.lab])
-            } else {
+            }
+            # if("direct" %in% type){}
+            } else {if("indirect" %in% type){
             d0.var[i,] <- (m.coefs[paste(T.cat),]^2*v.y[mediator,mediator]) + (y.coefs[paste(mediator),]^2*v.m[T.cat,T.cat])
             d1.var[i,] <- (m.coefs[paste(T.cat),]^2*v.y[mediator,mediator]) + (y.coefs[paste(mediator),]^2*v.m[T.cat,T.cat])
+            }
+            # if("direct" %in% type){}
                 }
                 
         rm(b.sur, m.coefs, y.coefs, v.cov, v.m, v.y)
