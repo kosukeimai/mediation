@@ -156,12 +156,18 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), type
             d0.var[i,] <- (y.coefs[paste(mediator),] + 0*y.coefs[paste(int.lab),])^2*v.m[T.cat,T.cat] + m.coefs[paste(T.cat),]^2*(v.y[mediator,mediator] + 0*v.y[int.lab, int.lab] + 0*2*v.y[mediator, int.lab])
             d1.var[i,] <- (y.coefs[paste(mediator),] + y.coefs[paste(int.lab),])^2*v.m[T.cat,T.cat] + m.coefs[paste(T.cat),]^2*(v.y[mediator,mediator] + v.y[int.lab, int.lab] + 2*v.y[mediator, int.lab])
             }
-            # if("direct" %in% type){}
+            if("direct" %in% type){### This is not complete
+            	z0.var[i,] <- v.y[T.cat, T.cat]  
+            	z1.var[i,] <- v.y[T.cat, T.cat]
+            	}
             } else {if("indirect" %in% type){
             d0.var[i,] <- (m.coefs[paste(T.cat),]^2*v.y[mediator,mediator]) + (y.coefs[paste(mediator),]^2*v.m[T.cat,T.cat])
             d1.var[i,] <- (m.coefs[paste(T.cat),]^2*v.y[mediator,mediator]) + (y.coefs[paste(mediator),]^2*v.m[T.cat,T.cat])
             }
-            # if("direct" %in% type){}
+            if("direct" %in% type){
+            	z0.var[i,] <- v.y[T.cat, T.cat]
+            	z1.var[i,] <- v.y[T.cat, T.cat]
+            	}
                 }
                 
         rm(b.sur, m.coefs, y.coefs, v.cov, v.m, v.y)
@@ -169,12 +175,17 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), type
         }
         
         if(INT==FALSE){
+        ## Indirect
         upper.d0 <- d0 + qnorm(high) * sqrt(d0.var)
         lower.d0 <- d0 + qnorm(low) * sqrt(d0.var)
         upper.d1 <- NULL
         lower.d1 <- NULL
         ind.d0 <- as.numeric(lower.d0 < 0 & upper.d0 > 0)
-        ind.d1 <- NULL  
+        ind.d1 <- NULL
+        ## Direct
+        upper.z0 <- z0 + qnorm(high) * sqrt(z0.var)
+        lower.z0 <- z0 + qnorm(low) * sqrt(z0.var)
+        
             } else {
         upper.d0 <- d0 + qnorm(high) * sqrt(d0.var)
         lower.d0 <- d0 + qnorm(low) * sqrt(d0.var)
