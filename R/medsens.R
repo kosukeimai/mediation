@@ -75,6 +75,8 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), type
         X.1 <- cbind(m.mat, m.zero)
         X.2 <- cbind(y.zero, y.mat)
         X <- rbind(X.1, X.2)
+        X.1bar <- apply(X.1, 2, mean)
+        X.2bar <- apply(X.2, 2, mean)
         
         m.frame <- model.frame(model.m)
         y.frame <- model.frame(model.y)
@@ -157,7 +159,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), type
             d1.var[i,] <- (y.coefs[paste(mediator),] + y.coefs[paste(int.lab),])^2*v.m[T.cat,T.cat] + m.coefs[paste(T.cat),]^2*(v.y[mediator,mediator] + v.y[int.lab, int.lab] + 2*v.y[mediator, int.lab])
             }
             if("direct" %in% type){### This is not complete
-            	z0.var[i,] <- v.y[T.cat, T.cat]  
+            	z0.var[i,] <- v.y[T.cat, T.cat] + (m.coefs[paste("(Intercept)"),] + m.coefs[paste(T.cat),]*0 + m.coefs[-(match(c("(Intercept)", paste(T.cat)), names(vars))),]*X.1bar)*v.y[int.lab,int.lab] +  
             	z1.var[i,] <- v.y[T.cat, T.cat]
             	}
             } else {if("indirect" %in% type){
