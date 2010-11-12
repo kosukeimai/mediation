@@ -191,14 +191,25 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), type
         ## Direct
         upper.z0 <- z0 + qnorm(high) * sqrt(z0.var)
         lower.z0 <- z0 + qnorm(low) * sqrt(z0.var)
-        
+        upper.z1 <- NULL
+        lower.z1 <- NULL
+        dir.z0 <- as.numeric(lower.z0 < 0 & upper.z0 > 0)
+        dir.z1 <- NULL
             } else {
+        # Indirect
         upper.d0 <- d0 + qnorm(high) * sqrt(d0.var)
         lower.d0 <- d0 + qnorm(low) * sqrt(d0.var)
         upper.d1 <- d1 + qnorm(high) * sqrt(d1.var)
         lower.d1 <- d1 + qnorm(low) * sqrt(d1.var)    
         ind.d0 <- as.numeric(lower.d0 < 0 & upper.d0 > 0)
         ind.d1 <- as.numeric(lower.d1 < 0 & upper.d1 > 0)
+        # Direct
+        upper.z0 <- z0 + qnorm(high) * sqrt(z0.var)
+        lower.z0 <- z0 + qnorm(low) * sqrt(z0.var)
+        upper.z1 <- z1 + qnorm(high) * sqrt(z1.var)
+        lower.z1 <- z1 + qnorm(low) * sqrt(z1.var)    
+        ind.z0 <- as.numeric(lower.z0 < 0 & upper.z0 > 0)
+        ind.z1 <- as.numeric(lower.z1 < 0 & upper.z1 > 0)        
                 }
                 
         # Save R2 tilde values
@@ -220,7 +231,9 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), type
         type <- "ct"
         out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0,
         lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0,
-        ind.d1=ind.d1, R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
+        ind.d1=ind.d1, z0=z0, z1=z1, upper.z0=upper.z0, lower.z0=lower.z0, 
+        upper.z1=upper.z1, lower.z1=lower.z1, ind.z0=ind.z0, ind.z1=ind.z1, 
+        R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
         R2star.thresh=R2star.thresh, R2tilde.thresh=R2tilde.thresh,
         r.square.y=r.sq.y, r.square.m=r.sq.m,
         rho.by=rho.by, INT=INT,
