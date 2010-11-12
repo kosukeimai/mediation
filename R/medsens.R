@@ -25,7 +25,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), type
         d0.var <- matrix(NA, length(rho), 1)
         d1.var <- matrix(NA, length(rho), 1)
         # For Direct Effects
-        z0 <- martix(NA, length(rho), 1)
+        z0 <- matrix(NA, length(rho), 1)
         z1 <- matrix(NA, length(rho), 1)
         z0.var <- matrix(NA, length(rho), 1)
         z1.var <- matrix(NA, length(rho), 1)
@@ -159,8 +159,12 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), type
             d1.var[i,] <- (y.coefs[paste(mediator),] + y.coefs[paste(int.lab),])^2*v.m[T.cat,T.cat] + m.coefs[paste(T.cat),]^2*(v.y[mediator,mediator] + v.y[int.lab, int.lab] + 2*v.y[mediator, int.lab])
             }
             if("direct" %in% type){### This is not complete
-            	z0.var[i,] <- v.y[T.cat, T.cat] + (m.coefs[paste("(Intercept)"),] + m.coefs[paste(T.cat),]*0 + m.coefs[-(match(c("(Intercept)", paste(T.cat)), names(vars))),]*X.1bar)*v.y[int.lab,int.lab] +  
-            	z1.var[i,] <- v.y[T.cat, T.cat]
+            	z0.var[i,] <- v.y[T.cat, T.cat] + (m.coefs[paste("(Intercept)"),] + 0 * m.coefs[paste(T.cat),])^2*v.y[int.lab, int.lab] + 
+            		2 * (m.coefs[paste("(Intercept)"),] + 0 * m.coefs[paste(T.cat),])*v.y[T.cat, int.lab] + 
+            		(y.coefs[paste(int.lab), ]^2) * (v.m[paste("(Intercept)"), paste("(Intercept)")] + 0 * v.m[T.cat, T.cat] + 2*0*v.m[paste("(Intercept)"), T.cat]
+            	z1.var[i,] <- v.y[T.cat, T.cat] + (m.coefs[paste("(Intercept)"),] + 0 * m.coefs[paste(T.cat),])^2*v.y[int.lab, int.lab] + 
+            		2 * (m.coefs[paste("(Intercept)"),] + m.coefs[paste(T.cat),])*v.y[T.cat, int.lab] + 
+            		(y.coefs[paste(int.lab), ]^2) * (v.m[paste("(Intercept)"), paste("(Intercept)")] + v.m[T.cat, T.cat] + 2*v.m[paste("(Intercept)"), T.cat]
             	}
             } else {if("indirect" %in% type){
             d0.var[i,] <- (m.coefs[paste(T.cat),]^2*v.y[mediator,mediator]) + (y.coefs[paste(mediator),]^2*v.m[T.cat,T.cat])
