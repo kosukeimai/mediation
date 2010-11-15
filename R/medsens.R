@@ -157,9 +157,10 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), type
             d0.var[i,] <- (y.coefs[paste(mediator),] + 0*y.coefs[paste(int.lab),])^2*v.m[T.cat,T.cat] + m.coefs[paste(T.cat),]^2*(v.y[mediator,mediator] + 0*v.y[int.lab, int.lab] + 0*2*v.y[mediator, int.lab])
             d1.var[i,] <- (y.coefs[paste(mediator),] + y.coefs[paste(int.lab),])^2*v.m[T.cat,T.cat] + m.coefs[paste(T.cat),]^2*(v.y[mediator,mediator] + v.y[int.lab, int.lab] + 2*v.y[mediator, int.lab])
             }
-            if("direct" %in% type){
-            	z0.var[i,] <- v.y[T.cat, T.cat] + 
-            	z1.var[i,] <- 
+            if("direct" %in% type){## Issue here with generalizing variance of Xi
+            	z0.var[i,] <- v.y[T.cat, T.cat] + (m.coefs[paste("(Intercept)"), ] + 0*m.coefs[paste(T.cat), ] + m.coefs[-(match(c("(Intercept)", paste(T.cat)), names(model.m$coefficients))),]*X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))])^2*v.y[int.lab, int.lab] + y.coefs[paste(int.lab),]^2*(v.m[paste("(Intercept)"),paste("(Intercept)")] + 0*v.m[T.cat,T.cat] + sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]^2*diag(v.m[-(match(c("(Intercept)", T.cat), names(model.m$coefficients))),-(match(c("(Intercept)", T.cat), names(model.m$coefficients)))])) + 2*0*v.m["(Intercept)",T.cat] + 2*0*sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]*v.m[T.cat,]) + 2*0*sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]*v.m["(Intercept)",])) + v.y[int.lab, int.lab]*(v.m[paste("(Intercept)"),paste("(Intercept)")] + 0*v.m[T.cat,T.cat] + sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]^2*diag(v.m[-(match(c("(Intercept)", T.cat), names(model.m$coefficients))),-(match(c("(Intercept)", T.cat), names(model.m$coefficients)))])) + 2*0*v.m["(Intercept)",T.cat] + 2*0*sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]*v.m[T.cat,]) + 2*0*sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]*v.m["(Intercept)",])) + (m.coefs[paste("(Intercept)"), ] + 0*m.coefs[paste(T.cat), ] + m.coefs[-(match(c("(Intercept)", paste(T.cat)), names(model.m$coefficients))),]*X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))])*v.y[T.cat,int.lab]
+            	
+            	z1.var[i,] <- v.y[T.cat, T.cat] + (m.coefs[paste("(Intercept)"), ] + m.coefs[paste(T.cat), ] + m.coefs[-(match(c("(Intercept)", paste(T.cat)), names(model.m$coefficients))),]*X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))])^2*v.y[int.lab, int.lab] + y.coefs[paste(int.lab),]^2*(v.m[paste("(Intercept)"),paste("(Intercept)")] + v.m[T.cat,T.cat] + sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]^2*diag(v.m[-(match(c("(Intercept)", T.cat), names(model.m$coefficients))),-(match(c("(Intercept)", T.cat), names(model.m$coefficients)))])) + 2*v.m["(Intercept)",T.cat] + 2*sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]*v.m[T.cat,]) + 2*sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]*v.m["(Intercept)",])) + v.y[int.lab, int.lab]*(v.m[paste("(Intercept)"),paste("(Intercept)")] + v.m[T.cat,T.cat] + sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]^2*diag(v.m[-(match(c("(Intercept)", T.cat), names(model.m$coefficients))),-(match(c("(Intercept)", T.cat), names(model.m$coefficients)))])) + 2*v.m["(Intercept)",T.cat] + 2*sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]*v.m[T.cat,]) + 2*sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]*v.m["(Intercept)",])) + (m.coefs[paste("(Intercept)"), ] + m.coefs[paste(T.cat), ] + m.coefs[-(match(c("(Intercept)", paste(T.cat)), names(model.m$coefficients))),]*X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))])*v.y[T.cat,int.lab]
             	}
             } else {if("indirect" %in% type){
             d0.var[i,] <- (m.coefs[paste(T.cat),]^2*v.y[mediator,mediator]) + (y.coefs[paste(mediator),]^2*v.m[T.cat,T.cat])
@@ -188,8 +189,8 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), type
         lower.z0 <- z0 + qnorm(low) * sqrt(z0.var)
         upper.z1 <- z1 + qnorm(high) * sqrt(z1.var)
         lower.z1 <- z1 + qnorm(low) * sqrt(z1.var)    
-        ind.z0 <- as.numeric(lower.z0 < 0 & upper.z0 > 0)
-        ind.z1 <- as.numeric(lower.z1 < 0 & upper.z1 > 0)
+        dir.z0 <- as.numeric(lower.z0 < 0 & upper.z0 > 0)
+        dir.z1 <- as.numeric(lower.z1 < 0 & upper.z1 > 0)
                     } else {
         ## Indirect
         upper.d0 <- d0 + qnorm(high) * sqrt(d0.var)
