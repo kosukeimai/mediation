@@ -189,8 +189,8 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), type
         lower.z0 <- z0 + qnorm(low) * sqrt(z0.var)
         upper.z1 <- z1 + qnorm(high) * sqrt(z1.var)
         lower.z1 <- z1 + qnorm(low) * sqrt(z1.var)    
-        dir.z0 <- as.numeric(lower.z0 < 0 & upper.z0 > 0)
-        dir.z1 <- as.numeric(lower.z1 < 0 & upper.z1 > 0)
+        ind.z0 <- as.numeric(lower.z0 < 0 & upper.z0 > 0)
+        ind.z1 <- as.numeric(lower.z1 < 0 & upper.z1 > 0)
                     } else {
         ## Indirect
         upper.d0 <- d0 + qnorm(high) * sqrt(d0.var)
@@ -204,8 +204,8 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), type
         lower.z0 <- z0 + qnorm(low) * sqrt(z0.var)
         upper.z1 <- NULL
         lower.z1 <- NULL
-        dir.z0 <- as.numeric(lower.z0 < 0 & upper.z0 > 0)
-        dir.z1 <- NULL        
+        ind.z0 <- as.numeric(lower.z0 < 0 & upper.z0 > 0)
+        ind.z1 <- NULL        
                 }
                 
         # Save R2 tilde values
