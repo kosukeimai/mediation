@@ -1,4 +1,4 @@
-medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), type=c("direct","indirect"))
+medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effect.type=c("direct","indirect"))
 {
     model.y <- x$model.y
     model.m <- x$model.m
@@ -135,38 +135,38 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), type
         v.y <- v.cov[(m.k+1):(m.k+y.k),(m.k+1):(m.k+y.k)]
         
         #Save Estimates
-        if(INT==TRUE){if("indirect" %in% type){
+        if(INT==TRUE){if("indirect" %in% effect.type){
             d0[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(mediator),] 
             d1[i,] <- m.coefs[paste(T.cat),]*(y.coefs[paste(mediator),] + y.coefs[paste(int.lab),])
             }
-            if("direct" %in% type){ # direct effects with interaction
+            if("direct" %in% effect.type){ # direct effects with interaction
             	z0[i,] <- y.coefs[paste(T.cat),]
-            	z1[i,] <- y.coefs[paste(T.cat),] + m.coefs[paste(int.lab),]*(m.coefs[paste("(Intercept)"), ] + m.coefs[paste(T.cat), ] + m.coefs[-(match(c("(Intercept)", paste(T.cat)), names(model.m$coefficients))),]*X.1[-(match(c("(Intercept)", paste(T.cat)), names(X.1)))])            	
-            	} else {if("indirect" %in% type){
+            	z1[i,] <- y.coefs[paste(T.cat),] + m.coefs[paste(int.lab),]*(m.coefs[paste("(Intercept)"), ] + m.coefs[paste(T.cat), ] + m.coefs[-(match(c("(Intercept)", paste(T.cat)), names(model.m$coefficients))),]*m.mat[-(match(c("(Intercept)", paste(T.cat)), names(m.mat)))])            	
+            	} else {if("indirect" %in% effect.type){
             			d0[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(mediator),]
                 		d1[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(mediator),]
                 		} 
-                		if("direct" %in% type) {
+                		if("direct" %in% effect.type) {
                 			z0[i,] <- y.coefs[paste(T.cat),]
                 			z1[i,] <- y.coefs[paste(T.cat),]
                 			}
                 }
         
         #Save Variance Estimates
-        if(INT==TRUE){if("indirect" %in% type){
+        if(INT==TRUE){if("indirect" %in% effect.type){
             d0.var[i,] <- (y.coefs[paste(mediator),] + 0*y.coefs[paste(int.lab),])^2*v.m[T.cat,T.cat] + m.coefs[paste(T.cat),]^2*(v.y[mediator,mediator] + 0*v.y[int.lab, int.lab] + 0*2*v.y[mediator, int.lab])
             d1.var[i,] <- (y.coefs[paste(mediator),] + y.coefs[paste(int.lab),])^2*v.m[T.cat,T.cat] + m.coefs[paste(T.cat),]^2*(v.y[mediator,mediator] + v.y[int.lab, int.lab] + 2*v.y[mediator, int.lab])
             }
-            if("direct" %in% type){## Issue here with generalizing variance of Xi
-            	z0.var[i,] <- v.y[T.cat, T.cat] + (m.coefs[paste("(Intercept)"), ] + 0*m.coefs[paste(T.cat), ] + m.coefs[-(match(c("(Intercept)", paste(T.cat)), names(model.m$coefficients))),]*X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))])^2*v.y[int.lab, int.lab] + y.coefs[paste(int.lab),]^2*(v.m[paste("(Intercept)"),paste("(Intercept)")] + 0*v.m[T.cat,T.cat] + sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]^2*diag(v.m[-(match(c("(Intercept)", T.cat), names(model.m$coefficients))),-(match(c("(Intercept)", T.cat), names(model.m$coefficients)))])) + 2*0*v.m["(Intercept)",T.cat] + 2*0*sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]*v.m[T.cat,]) + 2*0*sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]*v.m["(Intercept)",])) + v.y[int.lab, int.lab]*(v.m[paste("(Intercept)"),paste("(Intercept)")] + 0*v.m[T.cat,T.cat] + sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]^2*diag(v.m[-(match(c("(Intercept)", T.cat), names(model.m$coefficients))),-(match(c("(Intercept)", T.cat), names(model.m$coefficients)))])) + 2*0*v.m["(Intercept)",T.cat] + 2*0*sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]*v.m[T.cat,]) + 2*0*sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]*v.m["(Intercept)",])) + (m.coefs[paste("(Intercept)"), ] + 0*m.coefs[paste(T.cat), ] + m.coefs[-(match(c("(Intercept)", paste(T.cat)), names(model.m$coefficients))),]*X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))])*v.y[T.cat,int.lab]
+            if("direct" %in% effect.type){## NOTE: TAKE OUT DIAG AND USE M.MAT FOR DATA VALUES
+            	z0.var[i,] <- v.y[T.cat, T.cat] + (m.coefs[paste("(Intercept)"), ] + 0*m.coefs[paste(T.cat), ] + m.coefs[-(match(c("(Intercept)", paste(T.cat)), names(model.m$coefficients))),]*X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))])^2*v.y[int.lab, int.lab] + y.coefs[paste(int.lab),]^2*(v.m[paste("(Intercept)"),paste("(Intercept)")] + 0*v.m[T.cat,T.cat] + sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]^2*diag(v.m[-(match(c("(Intercept)", T.cat), names(model.m$coefficients))),-(match(c("(Intercept)", T.cat), names(model.m$coefficients)))])) + 2*0*v.m["(Intercept)",T.cat] + 2*0*sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]*v.m[T.cat,]) + 2*0*sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]*v.m["(Intercept)",])) + v.y[int.lab, int.lab]*(v.m[paste("(Intercept)"),paste("(Intercept)")] + 0*v.m[T.cat,T.cat] + sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]^2*(v.m[-(match(c("(Intercept)", T.cat), names(model.m$coefficients))),-(match(c("(Intercept)", T.cat), names(model.m$coefficients)))])) + 2*0*v.m["(Intercept)",T.cat] + 2*0*sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]*v.m[T.cat,]) + 2*0*sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]*v.m["(Intercept)",])) + (m.coefs[paste("(Intercept)"), ] + 0*m.coefs[paste(T.cat), ] + m.coefs[-(match(c("(Intercept)", paste(T.cat)), names(model.m$coefficients))),]*X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))])*v.y[T.cat,int.lab]
             	
             	z1.var[i,] <- v.y[T.cat, T.cat] + (m.coefs[paste("(Intercept)"), ] + m.coefs[paste(T.cat), ] + m.coefs[-(match(c("(Intercept)", paste(T.cat)), names(model.m$coefficients))),]*X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))])^2*v.y[int.lab, int.lab] + y.coefs[paste(int.lab),]^2*(v.m[paste("(Intercept)"),paste("(Intercept)")] + v.m[T.cat,T.cat] + sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]^2*diag(v.m[-(match(c("(Intercept)", T.cat), names(model.m$coefficients))),-(match(c("(Intercept)", T.cat), names(model.m$coefficients)))])) + 2*v.m["(Intercept)",T.cat] + 2*sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]*v.m[T.cat,]) + 2*sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]*v.m["(Intercept)",])) + v.y[int.lab, int.lab]*(v.m[paste("(Intercept)"),paste("(Intercept)")] + v.m[T.cat,T.cat] + sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]^2*diag(v.m[-(match(c("(Intercept)", T.cat), names(model.m$coefficients))),-(match(c("(Intercept)", T.cat), names(model.m$coefficients)))])) + 2*v.m["(Intercept)",T.cat] + 2*sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]*v.m[T.cat,]) + 2*sum(X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))]*v.m["(Intercept)",])) + (m.coefs[paste("(Intercept)"), ] + m.coefs[paste(T.cat), ] + m.coefs[-(match(c("(Intercept)", paste(T.cat)), names(model.m$coefficients))),]*X.1bar[-(match(c("(Intercept)", paste(T.cat)), names(X.1bar)))])*v.y[T.cat,int.lab]
             	}
-            } else {if("indirect" %in% type){
+            } else {if("indirect" %in% effect.type){
             d0.var[i,] <- (m.coefs[paste(T.cat),]^2*v.y[mediator,mediator]) + (y.coefs[paste(mediator),]^2*v.m[T.cat,T.cat])
             d1.var[i,] <- (m.coefs[paste(T.cat),]^2*v.y[mediator,mediator]) + (y.coefs[paste(mediator),]^2*v.m[T.cat,T.cat])
             }
-            if("direct" %in% type){
+            if("direct" %in% effect.type){
             	z0.var[i,] <- v.y[T.cat, T.cat]
             	z1.var[i,] <- v.y[T.cat, T.cat]
             	}
@@ -221,8 +221,8 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), type
         err.cr.2 <- rho[kk]
         err.cr <- c(err.cr.1, err.cr.2)
         }
-        R2star.thresh <- err.cr^2
-        R2tilde.thresh <- err.cr^2*(1-r.sq.m)*(1-r.sq.y)
+        R2star.d.thresh <- err.cr^2
+        R2tilde.d.thresh <- err.cr^2*(1-r.sq.m)*(1-r.sq.y)
 
         type <- "ct"
         out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0,
@@ -230,7 +230,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), type
         ind.d1=ind.d1, z0=z0, z1=z1, upper.z0=upper.z0, lower.z0=lower.z0, 
         upper.z1=upper.z1, lower.z1=lower.z1, ind.z0=ind.z0, ind.z1=ind.z1, 
         R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
-        R2star.thresh=R2star.thresh, R2tilde.thresh=R2tilde.thresh,
+        R2star.d.thresh=R2star.d.thresh, R2tilde.d.thresh=R2tilde.d.thresh,
         r.square.y=r.sq.y, r.square.m=r.sq.m,
         rho.by=rho.by, INT=INT,
         tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL, type=type)
