@@ -143,7 +143,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
             }
             if("direct" %in% effect.type){ # direct effects with interaction
             	z0[i,] <- y.coefs[paste(T.cat),]
-            	z1[i,] <- y.coefs[paste(T.cat),] + m.coefs[paste(int.lab),]*(m.coefs[paste("(Intercept)"), ] + m.coefs[paste(T.cat), ] + m.coefs[-(match(c("(Intercept)", paste(T.cat)), names(model.m$coefficients))),]*m.mat[-(match(c("(Intercept)", paste(T.cat)), names(m.mat)))])            	
+            	z1[i,] <- y.coefs[paste(T.cat),] + y.coefs[paste(int.lab),]*(m.coefs[paste("(Intercept)"), ] + m.coefs[paste(T.cat), ] + sum(m.coefs[-(match(c("(Intercept)", paste(T.cat)), names(model.m$coefficients))),]*m.bar[-(match(c("(Intercept)", paste(T.cat)), names(m.bar)))]))            	
             	} else {if("indirect" %in% effect.type){
             			d0[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(mediator),]
                 		d1[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(mediator),]
