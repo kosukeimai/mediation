@@ -217,15 +217,25 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
         
         # Calculate rho at which ACME=0
         if(INT==TRUE){
-        ii <- which(abs(d0-0)==min(abs(d0-0)))
-        kk <- which(abs(d1-0)==min(abs(d1-0)))
-        err.cr.1 <- rho[ii]
-        err.cr.2 <- rho[kk]
-        err.cr <- c(err.cr.1, err.cr.2)
+        	if("indirect" %in% effect.type){
+        		ii <- which(abs(d0-0)==min(abs(d0-0)))
+		        kk <- which(abs(d1-0)==min(abs(d1-0)))
+        		err.cr.1 <- rho[ii]
+        		err.cr.2 <- rho[kk]
+        		err.cr <- c(err.cr.1, err.cr.2)
+        		}
+        	if("direct" %in% effect.type){
+        		ii.z <- which(abs(z0-0)==min(abs(z0-0)))
+		        kk.z <- which(abs(z1-0)==min(abs(z1-0)))
+        		err.cr.1.z <- rho[ii.z]
+        		err.cr.2.z <- rho[kk.z]
+        		err.cr.z <- c(err.cr.1.z, err.cr.2.z)
+        		}	 
         }
         R2star.d.thresh <- err.cr^2
         R2tilde.d.thresh <- err.cr^2*(1-r.sq.m)*(1-r.sq.y)
-
+		R2star.z.thresh <- err.cr.z^2
+        R2tilde.z.thresh <- err.cr.z^2*(1-r.sq.m)*(1-r.sq.y)
         type <- "ct"
         out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0,
         lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0,
@@ -233,6 +243,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
         upper.z1=upper.z1, lower.z1=lower.z1, ind.z0=ind.z0, ind.z1=ind.z1, 
         R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
         R2star.d.thresh=R2star.d.thresh, R2tilde.d.thresh=R2tilde.d.thresh,
+        R2star.z.thresh=R2star.z.thresh, R2tilde.z.thresh=R2tilde.z.thresh,
         r.square.y=r.sq.y, r.square.m=r.sq.m,
         rho.by=rho.by, INT=INT,
         tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL, type=type)
