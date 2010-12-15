@@ -154,7 +154,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
                 			}
                 }
         
-        #Save Variance Estimates ## Simplify by creating objects for match() first
+        #Save Variance Estimates ## Simplify by creating objects for match()'s and "(Intercept)" first
         if(INT==TRUE){if("indirect" %in% effect.type){
             d0.var[i,] <- (y.coefs[paste(mediator),] + 0*y.coefs[paste(int.lab),])^2*v.m[T.cat,T.cat] + m.coefs[paste(T.cat),]^2*(v.y[mediator,mediator] + 0*v.y[int.lab, int.lab] + 0*2*v.y[mediator, int.lab])
             d1.var[i,] <- (y.coefs[paste(mediator),] + y.coefs[paste(int.lab),])^2*v.m[T.cat,T.cat] + m.coefs[paste(T.cat),]^2*(v.y[mediator,mediator] + v.y[int.lab, int.lab] + 2*v.y[mediator, int.lab])
@@ -302,12 +302,12 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
         y.k <- length(model.y$coef)
         
         # Step 1: Pre-loop computations
-        # Step 1-1: Bootstrap M model parameters
+        # Step 1-1: Sample M model parameters
         Mmodel.coef <- model.m$coef
         Mmodel.var.cov <- vcov(model.m)
         Mmodel.coef.boot <- mvrnorm(sims, mu=Mmodel.coef, Sigma=Mmodel.var.cov) # bootstrap M-model parameters
         
-        # Step 1-2: Bootstrap lambda_0 and lambda_1; lambdas are (n x sims) matrix
+        # Step 1-2: Sample lambda_0 and lambda_1; lambdas are (n x sims) matrix
         m.mat <- model.matrix(model.m)
         m.mat.1 <- model.matrix(model.m)
         m.mat.1[,T.out] <- 1 # M-model matrix with t=1
