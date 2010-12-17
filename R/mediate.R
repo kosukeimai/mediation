@@ -1,24 +1,30 @@
 mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name", mediator="med.name", control=NULL, conf.level=.95){
+    if(class(model.y)[1]!="vglm") {
     INT <- paste(treat,mediator,sep=":") %in% attr(model.y$terms,"term.labels") 
+    } else {
+    INT <- paste(treat,mediator,sep=":") %in% attr(model.y@terms,"term.labels")
+    }
         ## TODO: Generalize to allow both t:m and m:t
     
-    
+      
 ########
 if (class(model.y)[1]!="polr") {#sense whether an ordered outcome model or not?
 ########
 
-    
+     
     
     B <- sims
     #model.m <- z
     model.y.t <- model.y
-    
-    m.data <- model.frame(model.m)  #Call.M$data
-    y.t.data <- model.frame(model.y.t) #Call.Y$data
+    if(class(model.y)[1]!="tobit"){ 
+    n.m <-m.data <- model.frame(model.m)  #Call.M$data
+    n.y <-y.t.data <- model.frame(model.y.t) #Call.Y$data
+    }
+
     k.t <- ncol(y.t.data)
     k.m <- ncol(m.data) # Is this necessary?
-    n.m <- model.frame(model.m) # Isn't this = m.data?
-    n.y <- model.frame(model.y)     # Isn't this = y.t.data?
+    #n.m <- model.frame(model.m) # Isn't this = m.data?
+    #n.y <- model.frame(model.y)     # Isn't this = y.t.data?
     k.y <- ncol(n.y)
     k.m <- ncol(n.m)
     k <- k.y + k.m
@@ -27,17 +33,25 @@ if (class(model.y)[1]!="polr") {#sense whether an ordered outcome model or not?
     n <- length(y.t.data[,1]) # Isn't this = n.y?
     m <- length(sort(unique(model.frame(model.m)[,1])))
     m.min <- as.numeric(sort(unique(model.frame(model.m)[,1]))[1]) # Seems unnecessarily complicated
-
+   
     if(class(model.m[1])=="gam"){
         test <- class(model.m)[2]
     } else {
         test <- class(model.m)[1]    
     }
-    if(class(model.y.t[1])=="gam"){
-        test2 <- class(model.y.t)[2]
+if(class(model.y.t)[1]!="vglm") {
+            test2 <- class(model.y.t)[1]
+            if(class(model.y.t[1])=="gam"){#note how the[1] is on the object as opposed to outside class. this messes up vglm which uses S4 objects; is this a mistake?
+                test2 <- class(model.y.t)[2] 
+                }  
+            if(class(model.y.t)[1]!="gam"){
+                test2 <- class(model.y.t)[1]
+                }               
     } else {
-        test2 <- class(model.y.t)[1]
+    test2 <- class(model.y.t)[1]
+    tobit.ind<-model.y.t@family@vfamily #indicates whether the vglm model used is a tobit.
     }
+#print(tobit.ind)
     test3 <- class(model.y)[1]
 
     if(is.factor(y.t.data[,paste(treat)])==TRUE){
@@ -72,11 +86,15 @@ if (class(model.y)[1]!="polr") {#sense whether an ordered outcome model or not?
     } else {
         MModel.var.cov <- vcov(model.m)
     }
+    if(isS4(model.y)){
+    TMmodel.coef <- model.y@coefficients
+    } else {
     TMmodel.coef <- model.y$coef
+    }
     TMmodel.var.cov <- vcov(model.y)
     MModel <- mvrnorm(sims, mu=MModel.coef, Sigma=MModel.var.cov)
     TMmodel <- mvrnorm(sims, mu=TMmodel.coef, Sigma=TMmodel.var.cov)
-    
+    #print(TMmodel)
     ############################################################################
     ##  Mediator Predictions
     ############################################################################
@@ -195,13 +213,47 @@ if (class(model.y)[1]!="polr") {#sense whether an ordered outcome model or not?
             pred.data.t[,mediator] <- PredictM1[j,]
             pred.data.c[,mediator] <- PredictM0[j,]
         }
-        
+        if(class(model.y)[1]!="vglm"){
         ymat.t <- model.matrix(terms(model.y), data=pred.data.t) 
         ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
-        
+        } else {
+        ymat.t <- model.matrix(model.y@terms, data=pred.data.t) #there seems to be a problem here in how things work
+        ymat.c <- model.matrix(model.y@terms, data=pred.data.c)        
+        }
+       
         #Treatment Predictions
+        #print(as.matrix(TMmodel[j,])) #the second row of this is a Log(scale) parameter from tobit.
+        #print(t(ymat.t))#this only has 3 rows
+        #print(dim(ymat.t))        
+        #print(as.matrix(TMmodel[j,]))        
+        #print(dim(as.matrix(TMmodel[j,])))
+
+      
+        if(class(model.y)[1]=="vglm"){
+                if(tobit.ind=="tobit") {
+                TMmodel.tmp<-TMmodel[,-2]
+                Pr1[,j] <- t(as.matrix(TMmodel.tmp[j,])) %*% t(ymat.t)
+                Pr0[,j] <- t(as.matrix(TMmodel.tmp[j,])) %*% t(ymat.c)
+                
+                model.y.upper<-model.y@misc$Upper#THIS SHOULD BE MADE INTO A LITTLE FUNCTION
+                model.y.lower<-model.y@misc$Lower
+                logical<-(Pr1[,j]>model.y.upper)
+                Pr1[logical,j]<-model.y.upper
+                logical<-(Pr1[,j]<model.y.lower)
+                Pr1[logical,j]<-model.y.lower
+                logical<-(Pr0[,j]>model.y.upper)
+                Pr0[logical,j]<-model.y.upper
+                logical<-(Pr0[,j]<model.y.lower)
+                Pr0[logical,j]<-model.y.lower
+                }        
+
+        } else {
+
         Pr1[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.t)
         Pr0[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.c)
+        
+        }
+        
         
         rm(ymat.t, ymat.c, pred.data.t,pred.data.c)
     }    
@@ -241,9 +293,27 @@ if (class(model.y)[1]!="polr") {#sense whether an ordered outcome model or not?
         ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
 
         #Control Predictions
+        if(class(model.y)[1]=="vglm"){
+                        if(tobit.ind=="tobit") {
+                        TMmodel.tmp<-TMmodel[,-2]
+                        Pr1[,j] <- t(as.matrix(TMmodel.tmp[j,])) %*% t(ymat.t)
+                        Pr0[,j] <- t(as.matrix(TMmodel.tmp[j,])) %*% t(ymat.c)
+
+                        model.y.upper<-model.y@misc$Upper#THIS SHOULD BE MADE INTO A LITTLE FUNCTION
+                        model.y.lower<-model.y@misc$Lower
+                        logical<-(Pr1[,j]>model.y.upper)
+                        Pr1[logical,j]<-model.y.upper
+                        logical<-(Pr1[,j]<model.y.lower)
+                        Pr1[logical,j]<-model.y.lower
+                        logical<-(Pr0[,j]>model.y.upper)
+                        Pr0[logical,j]<-model.y.upper
+                        logical<-(Pr0[,j]<model.y.lower)
+                        Pr0[logical,j]<-model.y.lower
+                    }
+        } else {
         Pr1[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.t)
         Pr0[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.c)
-        
+        }
         rm(ymat.t, ymat.c)
     }
     
@@ -286,9 +356,27 @@ if (class(model.y)[1]!="polr") {#sense whether an ordered outcome model or not?
         ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
         
         #Direct Predictions
+        if(class(model.y)[1]=="vglm"){
+                    if(tobit.ind=="tobit") {
+                    TMmodel.tmp<-TMmodel[,-2]
+                    Pr1[,j] <- t(as.matrix(TMmodel.tmp[j,])) %*% t(ymat.t)
+                    Pr0[,j] <- t(as.matrix(TMmodel.tmp[j,])) %*% t(ymat.c)
+            
+                    model.y.upper<-model.y@misc$Upper#THIS SHOULD BE MADE INTO A LITTLE FUNCTION
+                    model.y.lower<-model.y@misc$Lower
+                    logical<-(Pr1[,j]>model.y.upper)
+                    Pr1[logical,j]<-model.y.upper
+                    logical<-(Pr1[,j]<model.y.lower)
+                    Pr1[logical,j]<-model.y.lower
+                    logical<-(Pr0[,j]>model.y.upper)
+                    Pr0[logical,j]<-model.y.upper
+                    logical<-(Pr0[,j]<model.y.lower)
+                    Pr0[logical,j]<-model.y.lower
+                    }
+        } else {
         Pr1[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.t)
         Pr0[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.c)
-        
+        }
         #rm(ymat.t, ymat.c, pred.data.t,pred.data.c)
     }    
     
@@ -328,12 +416,30 @@ if (class(model.y)[1]!="polr") {#sense whether an ordered outcome model or not?
         ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
 
         #Direct Predictions
+        if(class(model.y)[1]=="vglm"){
+                    if(tobit.ind=="tobit") {
+                    TMmodel.tmp<-TMmodel[,-2]
+                    Pr1[,j] <- t(as.matrix(TMmodel.tmp[j,])) %*% t(ymat.t)
+                    Pr0[,j] <- t(as.matrix(TMmodel.tmp[j,])) %*% t(ymat.c)
+                    
+                    model.y.upper<-model.y@misc$Upper#THIS SHOULD BE MADE INTO A LITTLE FUNCTION
+                    model.y.lower<-model.y@misc$Lower
+                    logical<-(Pr1[,j]>model.y.upper)
+                    Pr1[logical,j]<-model.y.upper
+                    logical<-(Pr1[,j]<model.y.lower)
+                    Pr1[logical,j]<-model.y.lower
+                    logical<-(Pr0[,j]>model.y.upper)
+                    Pr0[logical,j]<-model.y.upper
+                    logical<-(Pr0[,j]<model.y.lower)
+                    Pr0[logical,j]<-model.y.lower
+                    }
+        } else {        
         Pr1[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.t)
         Pr0[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.c)
-        
+        }
         rm(ymat.t, ymat.c, pred.data.t,pred.data.c)
     }
-    
+    #print(summary(Pr1[,j])) #why only one summary gets printed?
     if(test2=="glm"){
         Pr1 <- apply(Pr1, 2, model.y$family$linkinv)
         Pr0 <- apply(Pr0, 2, model.y$family$linkinv)
@@ -358,9 +464,14 @@ if (class(model.y)[1]!="polr") {#sense whether an ordered outcome model or not?
 ################################################################################
 # @@@@@@@@@@@@@@ Nonparametric Bootstrap @@@@@@@@@@@@@@@@@@@
 ################################################################################
+
     n <- n.m
     Call.M <- model.m$call
+    if(isS4(model.y.t)){
+    Call.Y.t <- model.y.t@call
+    } else {
     Call.Y.t <- model.y.t$call
+    }
     
     if(is.factor(y.t.data[,treat])==TRUE){
         cat.0 <- levels(y.t.data[,treat])[1]
@@ -380,18 +491,20 @@ if (class(model.y)[1]!="polr") {#sense whether an ordered outcome model or not?
         index <- sample(1:n,n, repl=TRUE)
         Call.M$data <- m.data[index,]
         Call.Y.t$data <- y.t.data[index,]
-        
+      
         if(test=="polr"){
             if(length(unique(y.t.data[index,mediator]))!=m){
                 cat("Insufficient Variation on Mediator")
                 break
             }
         }
-
+   #print("here tobit error") #after X iterations, where X can vary, we get the following: Error in lm.fit(X_vlm, z_vlm, ...) :   NA/NaN/Inf in foreign function call (arg 4)
+        #printing the call objects doesn't indicate an issue.
         #Refit Models with Resampled Data
         new.fit.M <- eval.parent(Call.M)
         new.fit.t <- eval.parent(Call.Y.t)
-
+        print(eval.parent(Call.M))
+        print(eval.parent(Call.Y.t))
         #Generate Mediation Model Predictions
         pred.data.t <- m.data
         pred.data.t[,treat] <- cat.1
@@ -399,7 +512,7 @@ if (class(model.y)[1]!="polr") {#sense whether an ordered outcome model or not?
         pred.data.c <- m.data
         pred.data.c[,treat] <- cat.0
         #pred.data.c[,control] <- cat.1
-        
+      
         if(is.factor(m.data[,treat])==TRUE){
             pred.data.t[,treat] <- as.factor(pred.data.t[,treat])
             pred.data.c[,treat] <- as.factor(pred.data.c[,treat])
@@ -407,7 +520,7 @@ if (class(model.y)[1]!="polr") {#sense whether an ordered outcome model or not?
             pred.data.t[,treat] <- as.numeric(pred.data.t[,treat])
             pred.data.c[,treat] <- as.numeric(pred.data.c[,treat])
         } 
-        
+#print(b)
         if(test=="glm"){
             PredictM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
             PredictM0 <- predict(new.fit.M, type="response", newdata=pred.data.c)
@@ -438,14 +551,22 @@ if (class(model.y)[1]!="polr") {#sense whether an ordered outcome model or not?
             if(class(model.m)[1]=="gam"){
                 sigma <- summary(new.fit.M)$scale
             } else {
+                #print(summary(new.fit.M))#when of class rq (quantile regression) there is not such sigma variable
+                #print(names(summary(new.fit.M))), this produces  "call"         "terms"        "coefficients" "rdf"          "tau" 
                 sigma <- summary(new.fit.M)$sigma
             }
+            if(class(model.m)[1]!="rq"){
             error <- rnorm(n, mean=0, sd=sigma)
             PredictM1 <- predict(new.fit.M, type="response", newdata=pred.data.t) + error
             PredictM0 <- predict(new.fit.M, type="response", newdata=pred.data.c) + error
             rm(error)
+            } else {
+            PredictM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
+            PredictM0 <- predict(new.fit.M, type="response", newdata=pred.data.c)             
+            }
         }
-        
+
+       
         ############################################################################
         #Treatment Predictions Data
         pred.data.t <- y.t.data
@@ -475,7 +596,7 @@ if (class(model.y)[1]!="polr") {#sense whether an ordered outcome model or not?
             pred.data.c[,mediator] <- PredictM0
         }
         
-                
+               
         #Treatment Predictions
         if(test3=="rq"){#Why not test2?
             pr.1 <- predict(new.fit.t, type="response", newdata=pred.data.t, interval="none")
@@ -530,7 +651,7 @@ if (class(model.y)[1]!="polr") {#sense whether an ordered outcome model or not?
         delta.0.tmp <-pr.mat[,1] - pr.mat[,2]
         
         rm(pred.data.t, pred.data.c, pr.1, pr.0, pr.mat)
-        
+       
         ########################################################################
         #Direct Effects 
         #Zeta.1
@@ -569,7 +690,7 @@ if (class(model.y)[1]!="polr") {#sense whether an ordered outcome model or not?
         }
         pr.mat <- as.matrix(cbind(pr.1, pr.0))
         zeta.1.tmp <- pr.mat[,1] - pr.mat[,2]
-        
+          
         rm(pred.data.t, pred.data.c, pr.1, pr.0,pr.mat)
         
         #Zeta.0
@@ -614,6 +735,7 @@ if (class(model.y)[1]!="polr") {#sense whether an ordered outcome model or not?
         delta.1[b] <- mean(delta.1.tmp)
         delta.0[b] <- mean(delta.0.tmp)
         tau[b] <- (zeta.1[b] + zeta.0[b] + delta.0[b] + delta.1[b])/2
+        print("tobitbootend")
     } #bootstrap loop ends
     } #nonpara boot branch ends
     
@@ -1058,6 +1180,118 @@ print.summary.mediate.order <- function(x, ...){
     invisible(x)
     }
     
-        
+
+
+
+plot.process<-function(model) {
+coef.vec.1 <- c(model$d1, model$z1, model$tau.coef)
+lower.vec.1<- c(model$d1.ci[1], model$z1.ci[1],model$tau.ci[1])
+upper.vec.1<- c(model$d1.ci[2], model$z1.ci[2],model$tau.ci[2])
+range.1<-range(model$d1.ci[1], model$z1.ci[1],model$tau.ci[1],model$d1.ci[2], model$z1.ci[2],model$tau.ci[2] )
+
+coef.vec.0 <- c(model$d0, model$z0, model$tau.coef)
+lower.vec.0<- c(model$d0.ci[1], model$z0.ci[1],model$tau.ci[1])
+upper.vec.0<- c(model$d0.ci[2], model$z0.ci[2],model$tau.ci[2])
+range.0<-range(model$d0.ci[1], model$z0.ci[1],model$tau.ci[1],model$d0.ci[2], model$z0.ci[2],model$tau.ci[2] )
+return(list(coef.vec.1=coef.vec.1, lower.vec.1=lower.vec.1, upper.vec.1=upper.vec.1, coef.vec.0=coef.vec.0, lower.vec.0=lower.vec.0, upper.vec.0=upper.vec.0, range.1=range.1, range.0=range.0) )
+}
+
+plot.effects<-function(param,title=NULL,both=FALSE,reset=TRUE,xlim=NULL, lwd =  1.5, xlab="",cex=1,cex.main=1.5,cex.axis=1.5,cex.lab=1.5) {
+var.names<-c("ACME","Direct Effect","Total Effect")
+y.axis <- c(length(param$coef.vec.1):.5)#create indicator for y.axis, descending so that R orders vars from top to bottom on y-axis
+#pdf("MediationPlots.pdf", width=8.5, height=11, onefile=FALSE, paper="special")
+if(reset){
+par(mfrow=c(1,1))#reset graphical window
+}
+par(mar=c(3, 5.5, 2, 0))#set margins for plot, leaving lots of room on left-margin (2nd number in margin command) for variable names
+
+if(is.null(xlim)){
+if(both) {
+xlim<-range(param$range.1,param$range.0)
+} else {
+xlim<-param$range.1
+}
+} else {
+xlim<-xlim
+}
+plot(param$coef.vec.1, y.axis, type = "p", axes = F, xlab = xlab, ylab = "", pch = 19, cex = cex,#plot coefficients as points, turning off axes and labels. 
+    xlim = xlim, xaxs = "r", main = "") #set limits of x-axis so that they include mins and maxs of 
+segments(param$lower.vec.1, y.axis, param$upper.vec.1, y.axis, lwd=lwd)#coef +/-1.96*se = 95% interval, lwd adjusts line thickness      
+if(both) {
+points(param$coef.vec.0, y.axis-.1, type = "p",pch = 1, cex = cex#,#plot coefficients as points, turning off axes and labels. 
+    )
+segments(param$lower.vec.0, y.axis-.1, param$upper.vec.0, y.axis-.1, lwd =  lwd, lty=3)#coef +/-1.96*se = 95% interval, lwd adjusts line thickness      
+    
+}
+axis(1, at = seq(-2,2,by=.5), labels =  seq(-2,2,by=.5), tick = T,#draw x-axis and labels with tick marks
+    cex.axis = cex.axis, cex.lab=cex.lab, mgp = c(2,.5,0))#reduce label size, moves labels closer to tick marks
+axis(2, at = y.axis, label = var.names, las = 1, tick = T, 
+    cex.axis = cex.axis) #draw y-axis with tick marks, make labels perpendicular to axis and closer to axis
+segments(0,0,0,length(var.names),lty=2) # draw dotted line through 0
+mtext(xlab,side=1,line=1.3,cex=cex.lab)
+ti<-title
+title(ti)
+}
+
+
+
+##Assume list of mediators, treatments as character vector
+##Assume datasets as named list in same order as treatment
+##Covariate specification as a single character vector, e.g., covariates <- c("gender_p+Trust_GSS_pre+ideo7")
+
+
+mediations <- function(datasets, treatment, mediators, covariates, family=c("gaussian", "gaussian"),LowerY=NULL,UpperY=NULL, interaction=FALSE, conf.level=.95, sims=500) {
+  covariates<-covariates
+  data <- names(datasets)
+  labels <- c()
+  out <- list()
+  count<-1
+  for (i in 1:length(treatment)) {
+    d1 <- sprintf("datasets$%s", data[i])
+    dataarg<- eval(parse(text=d1))
+    for (j in 1:length(mediators)) {
+      f1 <- sprintf("%s ~ %s + %s", mediators[j], treatment[i], covariates)
+      f2 <- sprintf("Y ~ %s + %s + %s", treatment[i], mediators[j], covariates)
+      if (interaction==TRUE) {
+        f2 <- sprintf("Y ~ %s*%s + %s", treatment[i], mediators[j], covariates)
+      }
+      fmla <- as.formula(paste(f1))
+      fmla2 <- as.formula(paste(f2))
+      if(family[1] == "binomial") {
+        result1 <- glm(fmla, family=binomial("probit"), data=dataarg)
+      } else {
+        result1 <- glm(fmla, family=family[1], data=dataarg)
+      }
+      if(family[2] == "binomial") {
+        result2 <- glm(fmla2, family=binomial("probit"), data=dataarg)
+      } else if(family[2] == "tobit") {
+        result2 <- vglm(fmla2, tobit(Lower=LowerY,Upper=UpperY), data=dataarg)    
+      } else {  
+        result2 <- glm(fmla2, family=family[2], data=dataarg)
+      }
+      #print(result1)
+      #print(result2)
+      #if (interaction==TRUE) out[[(count)]] <- mediate(result1, result2, sims=sims, treat=treatment[i], mediator=mediators[j], INT=TRUE, conf.level=conf.level)
+      #if (interaction==FALSE) out[[(count)]] <- mediate(result1, result2, sims=sims, treat=treatment[i], mediator=mediators[j], conf.level=conf.level)
+      out[[(count)]] <- mediate(result1, result2, sims=sims, treat=treatment[i], mediator=mediators[j], conf.level=conf.level)
+      rm(result1)
+      rm(result2)
+      labels[(count)] <- sprintf("%s.%s", data[i], mediators[j])   
+      count<-count+1 
+    }
+  }
+  names(out) <- labels
+
+                    #generates what is necessary for plotting and an additional output.  
+                    names<-names(out)
+                    plot<-list()
+                    for(i in 1:length(names)){
+                    plot[[i]]<-plot.process(out[[i]])
+                    }
+                    names(plot)<-names
+  
+  return(list(out=out,plot=plot))
+}
+      
     
   
