@@ -503,8 +503,8 @@ if(class(model.y.t)[1]!="vglm") {
         #Refit Models with Resampled Data
         new.fit.M <- eval.parent(Call.M)
         new.fit.t <- eval.parent(Call.Y.t)
-        print(eval.parent(Call.M))
-        print(eval.parent(Call.Y.t))
+        #print(eval.parent(Call.M))
+        #print(eval.parent(Call.Y.t))
         #Generate Mediation Model Predictions
         pred.data.t <- m.data
         pred.data.t[,treat] <- cat.1
@@ -735,7 +735,6 @@ if(class(model.y.t)[1]!="vglm") {
         delta.1[b] <- mean(delta.1.tmp)
         delta.0[b] <- mean(delta.0.tmp)
         tau[b] <- (zeta.1[b] + zeta.0[b] + delta.0[b] + delta.1[b])/2
-        print("tobitbootend")
     } #bootstrap loop ends
     } #nonpara boot branch ends
     
