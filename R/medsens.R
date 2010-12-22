@@ -43,8 +43,13 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
             }
             
         if(INT==TRUE){
-        int.lab <- paste(T.cat,mediator, sep=":")  ## TODO: Generalize to allow both t:m and m:t
-        t.m <- paste(treat,mediator, sep=":")  ## TODO: Generalize to allow both t:m and m:t
+            if(paste(treat,mediator,sep=":") %in% attr(model.y$terms,"term.labels")){ # T:M
+                int.lab <- paste(T.cat,mediator, sep=":")
+                t.m <- paste(treat,mediator, sep=":")
+                } else { # M:T
+                int.lab <- paste(mediator,T.cat, sep=":")
+                t.m <- paste(mediator,treat, sep=":")
+                }
             }
                 
         #Estimate Error Correlation
