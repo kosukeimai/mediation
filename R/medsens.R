@@ -141,14 +141,22 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
         m.bar <- apply(m.mat, 2, mean)
         m.covt.coefs <- -(match(c("(Intercept)", paste(T.cat)), names(model.m$coefficients)))
         m.bar.covts <- -(match(c("(Intercept)", paste(T.cat)), names(m.bar)))
-        model.m.bar.z0 <- m.coefs["(Intercept)", ] + 0*m.coefs[paste(T.cat), ] + sum(m.coefs[m.covt.coefs, ] * m.bar[m.bar.covts])
-        v.model.m.bar.z0 <- (v.m["(Intercept)","(Intercept)"] + 0*v.m[T.cat,T.cat] 
-            	+ sum(t(m.bar[m.bar.covts])%*%(v.m[m.covt.coefs, m.covt.coefs])%*%(m.bar[m.bar.covts])) + 2*0*v.m["(Intercept)",T.cat] 
+        
+        if(length(m.coefs[m.covt.coefs, ]) != 0){
+        	model.m.bar.z0 <- m.coefs["(Intercept)", ] + 0*m.coefs[paste(T.cat), ] + sum(t(m.coefs[m.covt.coefs, ]) %*% m.bar[m.bar.covts])
+        	v.model.m.bar.z0 <- (v.m["(Intercept)","(Intercept)"] + 0*v.m[T.cat,T.cat] 
+        		+ sum(t(m.bar[m.bar.covts])%*%(v.m[m.covt.coefs, m.covt.coefs])%*%(m.bar[m.bar.covts])) + 2*0*v.m["(Intercept)",T.cat] 
             	+ 2*0*sum(t(m.bar[m.bar.covts])%*%(v.m[T.cat,][m.bar.covts])) + 2*0*sum(t(m.bar[m.bar.covts])%*%v.m["(Intercept)",][m.bar.covts])) 
-        model.m.bar.z1 <- m.coefs["(Intercept)", ] + 1*m.coefs[paste(T.cat), ] + sum(m.coefs[m.covt.coefs, ] * m.bar[m.bar.covts])
-        v.model.m.bar.z1 <- (v.m["(Intercept)","(Intercept)"] + 1*v.m[T.cat,T.cat] 
+        	model.m.bar.z1 <- m.coefs["(Intercept)", ] + 1*m.coefs[paste(T.cat), ] + sum(m.coefs[m.covt.coefs, ] * m.bar[m.bar.covts])
+        	v.model.m.bar.z1 <- (v.m["(Intercept)","(Intercept)"] + 1*v.m[T.cat,T.cat] 
             	+ sum(t(m.bar[m.bar.covts])%*%(v.m[m.covt.coefs, m.covt.coefs])%*%(m.bar[m.bar.covts])) + 2*1*v.m["(Intercept)",T.cat] 
             	+ 2*1*sum(t(m.bar[m.bar.covts])%*%(v.m[T.cat,][m.bar.covts])) + 2*1*sum(t(m.bar[m.bar.covts])%*%v.m["(Intercept)",][m.bar.covts]))
+            	} else {
+            		model.m.bar.z0 <- m.coefs["(Intercept)", ] + 0*m.coefs[paste(T.cat), ]
+            		v.model.m.bar.z0 <- (v.m["(Intercept)","(Intercept)"] + 0*v.m[T.cat,T.cat] + 2*0*v.m["(Intercept)",T.cat] 
+            		model.m.bar.z1 <- m.coefs["(Intercept)", ] + 1*m.coefs[paste(T.cat), ]
+            		v.model.m.bar.z1 <- (v.m["(Intercept)","(Intercept)"] + 1*v.m[T.cat,T.cat] + 2*1*v.m["(Intercept)",T.cat]
+            		}
             	
         #Save Estimates
         if(INT==TRUE){if("indirect" %in% effect.type){
@@ -156,9 +164,14 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
             d1[i,] <- m.coefs[paste(T.cat),]*(y.coefs[paste(mediator),] + y.coefs[paste(int.lab),]) 
             }
             if("direct" %in% effect.type){ # direct effects with interaction
+            	if(length(m.coefs[m.covt.coefs, ]) != 0){ # with covariates
             	z0[i,] <- y.coefs[paste(T.cat),]
             	z1[i,] <- y.coefs[paste(T.cat),] + y.coefs[paste(int.lab),] * (m.coefs[paste("(Intercept)"), ] + m.coefs[paste(T.cat), ] + 
             		sum(m.coefs[m.covt.coefs, ] * m.bar[m.bar.covts]))
+            		} else { # no covariates
+            		z0[i,] <- y.coefs[paste(T.cat),]
+            		z1[i,] <- y.coefs[paste(T.cat),] + y.coefs[paste(int.lab),] * (m.coefs[paste("(Intercept)"), ] + m.coefs[paste(T.cat), ])
+            			}
             		}            
             	} else {if("indirect" %in% effect.type){
             			d0[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(mediator),]
