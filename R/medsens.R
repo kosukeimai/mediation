@@ -191,10 +191,10 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
             }
             if("direct" %in% effect.type){
             	z0.var[i,] <- v.y[T.cat, T.cat] + model.m.bar.z0^2 * v.y[int.lab, int.lab] + y.coefs[paste(int.lab), ]^2 * v.model.m.bar.z0
-            	+ v.y[int.lab, int.lab] * v.model.m.bar.z0 + 2 * model.m.bar.z0 * v.y[T.cat,int.lab]
-            	#### clean up z1 once z0 is revised
+            		+ v.y[int.lab, int.lab] * v.model.m.bar.z0 + 2 + model.m.bar.z0 * v.y[T.cat,int.lab]
+            	
             	z1.var[i,] <- v.y[T.cat, T.cat] + model.m.bar.z1^2 * v.y[int.lab, int.lab] + y.coefs[paste(int.lab), ]^2 * v.model.m.bar.z1
-            	+ v.y[int.lab, int.lab] * v.model.m.bar.z1 + 2 * model.m.bar.z1 * v.y[T.cat,int.lab]
+            		+ v.y[int.lab, int.lab] * v.model.m.bar.z1 + 2 + model.m.bar.z1 * v.y[T.cat,int.lab]
             	}
             } else {if("indirect" %in% effect.type){
             d0.var[i,] <- (m.coefs[paste(T.cat),]^2*v.y[mediator,mediator]) + (y.coefs[paste(mediator),]^2*v.m[T.cat,T.cat])
