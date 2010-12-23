@@ -167,7 +167,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
             	if(length(m.coefs[m.covt.coefs, ]) != 0){ # with covariates
             	z0[i,] <- y.coefs[paste(T.cat),]
             	z1[i,] <- y.coefs[paste(T.cat),] + y.coefs[paste(int.lab),] * (m.coefs[paste("(Intercept)"), ] + m.coefs[paste(T.cat), ] + 
-            		sum(m.coefs[m.covt.coefs, ] * m.bar[m.bar.covts]))
+            		sum(t(m.coefs[m.covt.coefs, ]) %*% m.bar[m.bar.covts]))
             		} else { # no covariates
             		z0[i,] <- y.coefs[paste(T.cat),]
             		z1[i,] <- y.coefs[paste(T.cat),] + y.coefs[paste(int.lab),] * (m.coefs[paste("(Intercept)"), ] + m.coefs[paste(T.cat), ])
