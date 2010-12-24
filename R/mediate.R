@@ -1,5 +1,5 @@
-mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name", mediator="med.name", control=NULL, conf.level=.95){
-    if(class(model.y)[1]!="vglm") {
+mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name", mediator="med.name", control=NULL, conf.level=.95, treat.0=0, treat.1=1){
+    if(isS4(model.y)!=TRUE) {
     INT <- paste(treat,mediator,sep=":") %in% attr(model.y$terms,"term.labels") | 
          paste(mediator,treat,sep=":") %in% attr(model.y$terms,"term.labels") 
     } else {
@@ -23,9 +23,6 @@ if (class(model.y)[1]!="polr") {#sense whether an ordered outcome model or not?
     }
 
     k.t <- ncol(y.t.data)
-    k.m <- ncol(m.data) # Is this necessary?
-    #n.m <- model.frame(model.m) # Isn't this = m.data?
-    #n.y <- model.frame(model.y)     # Isn't this = y.t.data?
     k.y <- ncol(n.y)
     k.m <- ncol(n.m)
     k <- k.y + k.m
@@ -52,7 +49,7 @@ if(class(model.y.t)[1]!="vglm") {
     test2 <- class(model.y.t)[1]
     tobit.ind<-model.y.t@family@vfamily #indicates whether the vglm model used is a tobit.
     }
-#print(tobit.ind)
+
     test3 <- class(model.y)[1]
 
     if(is.factor(y.t.data[,paste(treat)])==TRUE){
@@ -78,8 +75,8 @@ if(class(model.y.t)[1]!="vglm") {
 ################################################################################
 # @@@@@@@@@@@@@@ Quasi-Bayesian Monte Carlo @@@@@@@@@@@@@@@@@@@
 ################################################################################
-    cat.0 <- 0
-    cat.1 <- 1
+    cat.0 <- treat.0#defines the values of the treatment; 0 and 1 by default
+    cat.1 <- treat.1
     MModel.coef <- model.m$coef
     if(test=="polr"){
         k <- length(model.m$coef)
@@ -95,7 +92,7 @@ if(class(model.y.t)[1]!="vglm") {
     TMmodel.var.cov <- vcov(model.y)
     MModel <- mvrnorm(sims, mu=MModel.coef, Sigma=MModel.var.cov)
     TMmodel <- mvrnorm(sims, mu=TMmodel.coef, Sigma=TMmodel.var.cov)
-    #print(TMmodel)
+    
     ############################################################################
     ##  Mediator Predictions
     ############################################################################
@@ -478,8 +475,8 @@ if(class(model.y.t)[1]!="vglm") {
         cat.0 <- levels(y.t.data[,treat])[1]
         cat.1 <- levels(y.t.data[,treat])[2]
     } else {
-        cat.0 <- 0
-        cat.1 <- 1
+        cat.0 <- treat.0
+        cat.1 <- treat.1
     }
 
     #Storage
@@ -562,8 +559,15 @@ if(class(model.y.t)[1]!="vglm") {
             PredictM0 <- predict(new.fit.M, type="response", newdata=pred.data.c) + error
             rm(error)
             } else {
-            PredictM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
-            PredictM0 <- predict(new.fit.M, type="response", newdata=pred.data.c)             
+            #for quantile regression we are unable to introduce error into the prediction. Hence sample quantiles from 0 1 and then predict.         
+            tau.list<-runif(n)
+                    PredictM1<-PredictM0<-vector(length=n)
+                    for(zz in 1:n){
+                    PredictM1[zz] <- predict(update(new.fit.M, tau=tau.list[zz]), type="response", newdata=pred.data.t)
+                    PredictM0[zz] <- predict(update(new.fit.M, tau=tau.list[zz]), type="response", newdata=pred.data.c)
+                    
+                    }
+            
             }
         }
 
@@ -788,8 +792,8 @@ if(class(model.y.t)[1]!="vglm") {
     #m.min <- as.numeric(sort(unique(model.frame(model.m)[,1]))[1]) #What Do I Need This For?
     form.y <- formula(model.y)
     form.m <- formula(model.m)
-    cat.0 <- 0
-    cat.1 <- 1
+    cat.0 <- treat.0
+    cat.1 <- treat.1
     
     if(class(model.m[1])=="gam"){
         test <- class(model.m)[2]
@@ -834,11 +838,6 @@ if(class(model.y.t)[1]!="vglm") {
         new.fit.M <- update(model.m, data=data.star.m)
         new.fit.t <- update(model.y, data=data.star.y)
            
-        #data.star <- im_emo[sample(1:nrow(im_emo),n,replace=TRUE),] #Pull off data.star.
-        #new.fit.M <- lm(paste(form.m[2], form.m[1], form.m[3]), data=data.star) #replace with update
-        #new.fit.t <- polr(paste(form.y[2], form.y[1], form.y[3]), data=data.star, method="probit", Hess=TRUE) #replace with update
-        #d <- data[i,]
-        #d.glm <- update(model,data=d)
 
         #Generate Mediation Model Predictions
         pred.data.t <- m.data
@@ -1182,7 +1181,7 @@ print.summary.mediate.order <- function(x, ...){
     
 
 
-
+#function the processes output of mediate model.
 plot.process<-function(model) {
 coef.vec.1 <- c(model$d1, model$z1, model$tau.coef)
 lower.vec.1<- c(model$d1.ci[1], model$z1.ci[1],model$tau.ci[1])
@@ -1196,7 +1195,8 @@ range.0<-range(model$d0.ci[1], model$z0.ci[1],model$tau.ci[1],model$d0.ci[2], mo
 return(list(coef.vec.1=coef.vec.1, lower.vec.1=lower.vec.1, upper.vec.1=upper.vec.1, coef.vec.0=coef.vec.0, lower.vec.0=lower.vec.0, upper.vec.0=upper.vec.0, range.1=range.1, range.0=range.0) )
 }
 
-plot.effects<-function(param,title=NULL,both=FALSE,reset=TRUE,xlim=NULL, lwd =  1.5, xlab="",cex=1,cex.main=1.5,cex.axis=1.5,cex.lab=1.5) {
+#plotting function that takes output of plot.process
+plot.mediate<-function(param,title=NULL,both=FALSE,reset=TRUE,xlim=NULL, lwd =  1.5, xlab="",cex=1,cex.main=1.5,cex.axis=1.5,cex.lab=1.5) {
 var.names<-c("ACME","Direct Effect","Total Effect")
 y.axis <- c(length(param$coef.vec.1):.5)#create indicator for y.axis, descending so that R orders vars from top to bottom on y-axis
 #pdf("MediationPlots.pdf", width=8.5, height=11, onefile=FALSE, paper="special")
@@ -1238,8 +1238,6 @@ title(ti)
 ##Assume list of mediators, treatments as character vector
 ##Assume datasets as named list in same order as treatment
 ##Covariate specification as a single character vector, e.g., covariates <- c("gender_p+Trust_GSS_pre+ideo7")
-
-
 mediations <- function(datasets, treatment, mediators, covariates, family=c("gaussian", "gaussian"),LowerY=NULL,UpperY=NULL, interaction=FALSE, conf.level=.95, sims=500) {
   covariates<-covariates
   data <- names(datasets)
