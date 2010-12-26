@@ -221,7 +221,7 @@ if(class(model.y.t)[1]!="vglm") {
        
         #Treatment Predictions
         #print(as.matrix(TMmodel[j,])) #the second row of this is a Log(scale) parameter from tobit.
-        #print(t(ymat.t))#this only has 3 rows
+        #print(t(ymat.t))#this only has 3 rows, hence we must take this second row ou in order to create the predictions we want
         #print(dim(ymat.t))        
         #print(as.matrix(TMmodel[j,]))        
         #print(dim(as.matrix(TMmodel[j,])))
@@ -496,20 +496,17 @@ if(class(model.y.t)[1]!="vglm") {
                 break
             }
         }
-   #print("here tobit error") #after X iterations, where X can vary, we get the following: Error in lm.fit(X_vlm, z_vlm, ...) :   NA/NaN/Inf in foreign function call (arg 4)
-        #printing the call objects doesn't indicate an issue.
+   #print("here tobit error") #after X iterations, where X can vary, we get the following: Error in lm.fit(X_vlm, z_vlm, ...) :   NA/NaN/Inf in foreign function call (arg 4)         #printing the call objects doesn't indicate an issue.#print(eval.parent(Call.M))#print(eval.parent(Call.Y.t))
+
         #Refit Models with Resampled Data
         new.fit.M <- eval.parent(Call.M)
         new.fit.t <- eval.parent(Call.Y.t)
-        #print(eval.parent(Call.M))
-        #print(eval.parent(Call.Y.t))
+        
         #Generate Mediation Model Predictions
         pred.data.t <- m.data
         pred.data.t[,treat] <- cat.1
-        #pred.data.t[,control] <- cat.0
         pred.data.c <- m.data
         pred.data.c[,treat] <- cat.0
-        #pred.data.c[,control] <- cat.1
       
         if(is.factor(m.data[,treat])==TRUE){
             pred.data.t[,treat] <- as.factor(pred.data.t[,treat])
@@ -518,7 +515,7 @@ if(class(model.y.t)[1]!="vglm") {
             pred.data.t[,treat] <- as.numeric(pred.data.t[,treat])
             pred.data.c[,treat] <- as.numeric(pred.data.c[,treat])
         } 
-#print(b)
+
         if(test=="glm"){
             PredictM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
             PredictM0 <- predict(new.fit.M, type="response", newdata=pred.data.c)
@@ -536,14 +533,7 @@ if(class(model.y.t)[1]!="vglm") {
             PredictM1 <- apply(draws_m1, 1, indexmax)
             PredictM0 <- apply(draws_m0, 1, indexmax)
             
-            #max.pr_m1 <- apply(probs_m1, 1, max)
-            #max.pr_m0 <- apply(probs_m0, 1, max)
-            #cat.m1 <- predict(new.fit.M, newdata=pred.data.t)
-            #cat.m0 <- predict(new.fit.M, newdata=pred.data.c)
-            #draws_m1 <- round(runif(n, m.min, m), 0)
-            #draws_m0 <- round(runif(n, m.min, m), 0)
-            #PredictM1 <- ifelse(max.pr_m1 > runif(n, 0, .75), draws_m1, cat.m1)
-            #PredictM0 <- ifelse(max.pr_m0 > runif(n, 0, .75), draws_m0, cat.m0)
+
         
         } else {
             if(class(model.m)[1]=="gam"){
@@ -1196,10 +1186,15 @@ return(list(coef.vec.1=coef.vec.1, lower.vec.1=lower.vec.1, upper.vec.1=upper.ve
 }
 
 #plotting function that takes output of plot.process
-plot.mediate<-function(param,title=NULL,both=FALSE,reset=TRUE,xlim=NULL, lwd =  1.5, xlab="",cex=1,cex.main=1.5,cex.axis=1.5,cex.lab=1.5) {
+plot.mediate<-function(model,title=NULL,both=FALSE,reset=TRUE,xlim=NULL, lwd =  1.5, xlab="",cex=1,cex.main=1.5,cex.axis=1.5,cex.lab=1.5) {
+model<-model
+if(is.null(model$coef.vec.1)){
+param<-plot.process(model)
+} else{
+param<-model
+}
 var.names<-c("ACME","Direct Effect","Total Effect")
 y.axis <- c(length(param$coef.vec.1):.5)#create indicator for y.axis, descending so that R orders vars from top to bottom on y-axis
-#pdf("MediationPlots.pdf", width=8.5, height=11, onefile=FALSE, paper="special")
 if(reset){
 par(mfrow=c(1,1))#reset graphical window
 }
@@ -1267,10 +1262,6 @@ mediations <- function(datasets, treatment, mediators, covariates, family=c("gau
       } else {  
         result2 <- glm(fmla2, family=family[2], data=dataarg)
       }
-      #print(result1)
-      #print(result2)
-      #if (interaction==TRUE) out[[(count)]] <- mediate(result1, result2, sims=sims, treat=treatment[i], mediator=mediators[j], INT=TRUE, conf.level=conf.level)
-      #if (interaction==FALSE) out[[(count)]] <- mediate(result1, result2, sims=sims, treat=treatment[i], mediator=mediators[j], conf.level=conf.level)
       out[[(count)]] <- mediate(result1, result2, sims=sims, treat=treatment[i], mediator=mediators[j], conf.level=conf.level)
       rm(result1)
       rm(result2)
