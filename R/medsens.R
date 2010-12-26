@@ -153,9 +153,9 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
             	+ 2*1*sum(t(m.bar[m.bar.covts])%*%(v.m[T.cat,][m.bar.covts])) + 2*1*sum(t(m.bar[m.bar.covts])%*%v.m["(Intercept)",][m.bar.covts]))
             	} else {
             		model.m.bar.z0 <- m.coefs["(Intercept)", ] + 0*m.coefs[paste(T.cat), ]
-            		v.model.m.bar.z0 <- (v.m["(Intercept)","(Intercept)"] + 0*v.m[T.cat,T.cat] + 2*0*v.m["(Intercept)",T.cat] 
+            		v.model.m.bar.z0 <- v.m["(Intercept)","(Intercept)"] + 0*v.m[T.cat,T.cat] + 2*0*v.m["(Intercept)",T.cat] 
             		model.m.bar.z1 <- m.coefs["(Intercept)", ] + 1*m.coefs[paste(T.cat), ]
-            		v.model.m.bar.z1 <- (v.m["(Intercept)","(Intercept)"] + 1*v.m[T.cat,T.cat] + 2*1*v.m["(Intercept)",T.cat]
+            		v.model.m.bar.z1 <- v.m["(Intercept)","(Intercept)"] + 1*v.m[T.cat,T.cat] + 2*1*v.m["(Intercept)",T.cat]
             		}
             	
         #Save Estimates
@@ -190,11 +190,9 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
             d1.var[i,] <- (y.coefs[paste(mediator),] + y.coefs[paste(int.lab),])^2*v.m[T.cat,T.cat] + m.coefs[paste(T.cat),]^2*(v.y[mediator,mediator] + v.y[int.lab, int.lab] + 2*v.y[mediator, int.lab])
             }
             if("direct" %in% effect.type){
-            	z0.var[i,] <- v.y[T.cat, T.cat] + model.m.bar.z0^2 * v.y[int.lab, int.lab] + y.coefs[paste(int.lab), ]^2 * v.model.m.bar.z0
-            		+ v.y[int.lab, int.lab] * v.model.m.bar.z0 + 2 + model.m.bar.z0 * v.y[T.cat,int.lab]
+            	z0.var[i,] <- v.y[T.cat, T.cat] + model.m.bar.z0^2 * v.y[int.lab, int.lab] + y.coefs[paste(int.lab), ]^2 * v.model.m.bar.z0 + v.y[int.lab, int.lab] * v.model.m.bar.z0 + 2 + model.m.bar.z0 * v.y[T.cat,int.lab]
             	
-            	z1.var[i,] <- v.y[T.cat, T.cat] + model.m.bar.z1^2 * v.y[int.lab, int.lab] + y.coefs[paste(int.lab), ]^2 * v.model.m.bar.z1
-            		+ v.y[int.lab, int.lab] * v.model.m.bar.z1 + 2 + model.m.bar.z1 * v.y[T.cat,int.lab]
+            	z1.var[i,] <- v.y[T.cat, T.cat] + model.m.bar.z1^2 * v.y[int.lab, int.lab] + y.coefs[paste(int.lab), ]^2 * v.model.m.bar.z1 + v.y[int.lab, int.lab] * v.model.m.bar.z1 + 2 + model.m.bar.z1 * v.y[T.cat,int.lab]
             	}
             } else {if("indirect" %in% effect.type){
             d0.var[i,] <- (m.coefs[paste(T.cat),]^2*v.y[mediator,mediator]) + (y.coefs[paste(mediator),]^2*v.m[T.cat,T.cat])
