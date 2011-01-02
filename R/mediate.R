@@ -1,4 +1,4 @@
-mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name", mediator="med.name", control=NULL, conf.level=.95, treat.0=0, treat.1=1){
+mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name", mediator="med.name", control=NULL, conf.level=.95, treat.0=0, treat.1=1, INT=NULL){
     if(isS4(model.y)!=TRUE) {
     INT <- paste(treat,mediator,sep=":") %in% attr(model.y$terms,"term.labels") | 
          paste(mediator,treat,sep=":") %in% attr(model.y$terms,"term.labels") 
@@ -1185,8 +1185,9 @@ range.0<-range(model$d0.ci[1], model$z0.ci[1],model$tau.ci[1],model$d0.ci[2], mo
 return(list(coef.vec.1=coef.vec.1, lower.vec.1=lower.vec.1, upper.vec.1=upper.vec.1, coef.vec.0=coef.vec.0, lower.vec.0=lower.vec.0, upper.vec.0=upper.vec.0, range.1=range.1, range.0=range.0) )
 }
 
+#cex=1,cex.main=1.5,cex.axis=1.2,cex.lab=2
 #plotting function that takes output of plot.process
-plot.mediate<-function(model,title=NULL,both=FALSE,reset=TRUE,xlim=NULL, lwd =  1.5, xlab="",cex=1,cex.main=1.5,cex.axis=1.5,cex.lab=1.5) {
+plot.mediate<-function(model,title=NULL,both=FALSE,reset=TRUE,xlim=NULL, lwd =  1.5, xlab="", cex=.85, cex.main=.85,cex.axis=1 ,cex.lab=.85) {
 model<-model
 if(is.null(model$coef.vec.1)){
 param<-plot.process(model)
@@ -1196,9 +1197,10 @@ param<-model
 var.names<-c("ACME","Direct Effect","Total Effect")
 y.axis <- c(length(param$coef.vec.1):.5)#create indicator for y.axis, descending so that R orders vars from top to bottom on y-axis
 if(reset){
-par(mfrow=c(1,1))#reset graphical window
+par(mfrow=c(1,1), oma=c(.25,1.2,1,.1))#reset graphical window
 }
 par(mar=c(3, 5.5, 2, 0))#set margins for plot, leaving lots of room on left-margin (2nd number in margin command) for variable names
+#oma=c(.25,1.2,1,.1)
 
 if(is.null(xlim)){
 if(both) {
