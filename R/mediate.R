@@ -1075,7 +1075,7 @@ summary.mediate <- function(object, ...)
 
 print.summary.mediate <- function(x, ...){
     clp <- 100 * x$conf.level
-    if(x$INT==TRUE){
+    if(x$INT==TRUE | (class(model.m[1])!="lm"|class(model.y[1])!="lm")){
         cat("\n Causal Mediation Analysis \n\n")
     if(x$boot==TRUE){
         cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
