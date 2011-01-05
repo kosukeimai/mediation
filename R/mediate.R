@@ -1,4 +1,4 @@
-mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name", mediator="med.name", control=NULL, conf.level=.95, treat.0=0, treat.1=1, INT=NULL){
+mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name", mediator="med.name", control=NULL, conf.level=.95, control.value=0, treat.value=1, long=TRUE, INT=NULL){
     if(isS4(model.y)!=TRUE) {
     INT <- paste(treat,mediator,sep=":") %in% attr(model.y$terms,"term.labels") | 
          paste(mediator,treat,sep=":") %in% attr(model.y$terms,"term.labels") 
@@ -75,8 +75,8 @@ if(class(model.y.t)[1]!="vglm") {
 ################################################################################
 # @@@@@@@@@@@@@@ Quasi-Bayesian Monte Carlo @@@@@@@@@@@@@@@@@@@
 ################################################################################
-    cat.0 <- treat.0#defines the values of the treatment; 0 and 1 by default
-    cat.1 <- treat.1
+    cat.0 <- control.value#defines the values of the treatment; 0 and 1 by default
+    cat.1 <- treat.value
     MModel.coef <- model.m$coef
     if(test=="polr"){
         k <- length(model.m$coef)
@@ -475,8 +475,8 @@ if(class(model.y.t)[1]!="vglm") {
         cat.0 <- levels(y.t.data[,treat])[1]
         cat.1 <- levels(y.t.data[,treat])[2]
     } else {
-        cat.0 <- treat.0
-        cat.1 <- treat.1
+        cat.0 <- control.value
+        cat.1 <- treat.value
     }
 
     #Storage
@@ -749,11 +749,19 @@ if(class(model.y.t)[1]!="vglm") {
     z0 <- mean(zeta.0)    
     z0.ci <- quantile(zeta.0,c(low,high), na.rm=TRUE)
     
+    if(long==TRUE) {
     out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci, d0.sims=delta.0, d1.sims=delta.1,
         pct.coef=pct.coef, pct.ci=pct.ci,
-        tau.coef=tau.coef, tau.ci=tau.ci, z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci,
+        tau.coef=tau.coef, tau.ci=tau.ci, z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci, z1.sims=zeta.1, z0.sims=zeta.0,
         boot=boot, treat=treat, mediator=mediator, INT=INT, conf.level=conf.level,
-        model.y=model.y, model.m=model.m)
+        model.y=model.y, model.m=model.m, control.value=control.value, treat.value=treat.value)
+    } else {
+    out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci, 
+        pct.coef=pct.coef, pct.ci=pct.ci,
+        tau.coef=tau.coef, tau.ci=tau.ci, z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci,  
+        boot=boot, treat=treat, mediator=mediator, INT=INT, conf.level=conf.level,
+        model.y=model.y, model.m=model.m, control.value=control.value, treat.value=treat.value)    
+    }
     class(out) <- "mediate"
     out
     
@@ -782,8 +790,8 @@ if(class(model.y.t)[1]!="vglm") {
     #m.min <- as.numeric(sort(unique(model.frame(model.m)[,1]))[1]) #What Do I Need This For?
     form.y <- formula(model.y)
     form.m <- formula(model.m)
-    cat.0 <- treat.0
-    cat.1 <- treat.1
+    cat.0 <- control.value
+    cat.1 <- treat.value
     
     if(class(model.m[1])=="gam"){
         test <- class(model.m)[2]
@@ -1052,8 +1060,12 @@ if(is.factor(y.t.data[,paste(treat)])==TRUE){
     #pct.coef <- median(pct.dist)
     #pct.ci <- quantile(pct.dist,c(.025,.975), na.rm=TRUE)
     m.lab <- sort(unique(levels(model.frame(model.y)[,1])))
-    
-out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci, d0.sims=delta.0, d1.sims=delta.1, z1=z1, z0=z0, z1.ci=z1.ci, z0.ci=z0.ci,tau.coef=tau.coef, tau.ci=tau.ci, treat=treat, mediator=mediator, INT=INT, m.lab=m.lab)
+
+if(long==TRUE){    
+out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci, d0.sims=delta.0, d1.sims=delta.1, z1=z1, z0=z0, z1.ci=z1.ci, z0.ci=z0.ci, z1.sims=zeta.1, z0.sims=zeta.0, tau.coef=tau.coef, tau.ci=tau.ci, tau.sims=tau, treat=treat, mediator=mediator, INT=INT, m.lab=m.lab,control.value=control.value, treat.value=treat.value)
+} else {
+out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,  z1=z1, z0=z0, z1.ci=z1.ci, z0.ci=z0.ci, tau.coef=tau.coef, tau.ci=tau.ci,  treat=treat, mediator=mediator, INT=INT, m.lab=m.lab,control.value=control.value, treat.value=treat.value)
+}
 class(out) <- "mediate.order"
 out
 
