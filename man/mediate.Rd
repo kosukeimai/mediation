@@ -6,7 +6,7 @@ Function to estimate causal mediation effects.
 } 
 \usage{
 
-mediate(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name", mediator="med.name", control=NULL, conf.level=.95, treat.0=0, treat.1=1)
+mediate(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name", mediator="med.name", control=NULL, conf.level=.95, control.value=0, treat.value=1)
 
 } 
 
@@ -19,8 +19,9 @@ mediate(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name", mediator="m
 \item{treat}{ Name of binary treatment indicator.}
 \item{mediator}{ Name of mediator variable.}
 \item{control}{ Name of binary treatment indicator for control. Only necessary for gam() object with interaction.}
-\item{treat.0}{ Value of the treatment variable in the control condition. Default is 0.}
-\item{treat.1}{ Value of the treatment variable in the treatment condition. Default is 1.}
+\item{control.value}{ Value of the treatment variable in the control condition. Default is 0.}
+\item{treat.value}{ Value of the treatment variable in the treatment condition. Default is 1.}
+\item{long}{Whether or not the output of the function should contain the entire posterior distribution of the the ACME, direct, and total effects. Default is TRUE.}
 
 }
 
@@ -28,7 +29,7 @@ mediate(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name", mediator="m
 
 In fitting the model.y object with an interaction between treatment and mediator, the user must input the interation in the format treatment:mediator.  Furthermore, the user must make sure to set the INT option to TRUE since the current function does not sense the existence of the interaction term automatically. 
 
-Users should note that use of the nonparametric bootstrap requires several minutes of computing time.}
+Users should note that use of the nonparametric bootstrap requires several minutes of computing time. The current version does not require specifying the INT option as the function senses whether there is a treatment by mediator interaction specified.}
 
 \section{Warning}{These functions assume that all missing values have been removed from the data set.  This can be done using the \code{na.omit()} command before the outcome and mediation models are fitted.}
 
@@ -41,10 +42,13 @@ Users should note that use of the nonparametric bootstrap requires several minut
 \item{d1.sims}{Vector for mediation effect under treatment.}
 \item{tau.coef}{point estimate for total effect.}
 \item{tau.ci}{confidence interval for total effect.}
+\item{tau.sims}{Vector for total effect.}
 \item{z0}{point estimate for direct effect under control.}
 \item{z1}{point estimate for direct effect under treatment.}
 \item{z0.ci}{confidence interval for direct effect under control.}
 \item{z1.ci}{confidence interval for direct effect under control.}
+\item{z0.sims}{Vector for direct effect under control.}
+\item{z1.sims}{Vector for direct effect under treatment.}
 \item{pct.coef}{percentage of total effect due to mediation.}
 \item{pct.ci}{confidence interval for percentage of total effect due to mediation.}
 \item{boot}{the boot argument used.}
@@ -54,6 +58,8 @@ Users should note that use of the nonparametric bootstrap requires several minut
 \item{conf.level}{Confidence interval used.}
 \item{model.m}{call of the mediator model used.}
 \item{model.y}{call of the outcome model used.}
+\item{treat.value}{Value of treatment variable, default is 1.}
+\item{control.value}{Value of control variable, default is 0.}
 \item{env.m}{environment in which the mediator model was fitted.}
 \item{env.y}{environment in which the outcome model was fitted.}
 }
