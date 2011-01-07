@@ -663,10 +663,25 @@ print.summary.medsens <- function(x, ...){
             		cat("\nR^2_M~R^2_Y~ at which ACDE = 0:", round(x$R2tilde.z.thresh, 4), "\n\n")
             		invisible(x)
         			} else {
-        				### HERE: NO IND, SO FULL TAB
+        				tab <- cbind(x$rho, round(x$z0, 4), round(x$lower.z0, 4), round(x$upper.z0, 4), x$ind.z0, x$R2star.prod, round(x$R2tilde.prod,4))
+            			if(sum(x$ind.d0)==1){
+                			tab <- as.matrix(tab[x$ind.z0==1, -5])
+               				tab <- t(tab)
+           				 } else {
+            			    tab <- tab[x$ind.z0==1, -5] 
+            				}
+          				    colnames(tab) <-  c("Rho", "Dir. Eff.", "Dir. Eff. CI Lower", "Dir. Eff. CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
+            				rownames(tab) <- NULL
+     				        cat("\nMediation Sensitivity Analysis\n")
+    				        cat("\nSensitivity Region\n\n")
+            				print(tab)
+            				cat("\nRho at which ACME = 0:", round(x$err.cr.z, 4), "\n\n")
+            				cat("\nR^2_M*R^2_Y* at which ACME = 0:", round(x$R2star.z.thresh, 4), "\n\n")
+            				cat("\nR^2_M~R^2_Y~ at which ACME = 0:", round(x$R2tilde.z.thresh, 4), "\n\n")
+            				invisible(x) 
         				}
         		}
-        } else {
+        } else {if("indirect" %in% effect.type){
             tab.d0 <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0, x$R2star.prod, round(x$R2tilde.prod, 4))
             if(sum(x$ind.d0)==1){
                 tab.d0 <- as.matrix(tab.d0[x$ind.d0==1, -5])
@@ -674,7 +689,7 @@ print.summary.medsens <- function(x, ...){
             } else {
                 tab.d0 <- tab.d0[x$ind.d0==1, -5] 
             }
-            colnames(tab.d0) <-  c("Rho", "Med. Eff.", "CI Lower", "CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
+            colnames(tab.d0) <-  c("Rho", "Med. Eff.", "Med. Eff. CI Lower", "Med. Eff. CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.d0) <- NULL
             tab.d1 <- cbind(x$rho, round(x$d1,4), round(x$lower.d1,4), round(x$upper.d1, 4), x$ind.d1, x$R2star.prod, round(x$R2tilde.prod, 4))
             if(sum(x$ind.d1)==1){
@@ -683,21 +698,54 @@ print.summary.medsens <- function(x, ...){
             } else {
                 tab.d1 <- tab.d1[x$ind.d1==1, -5] 
             }
-            colnames(tab.d1) <-  c("Rho", "Med. Eff.", "CI Lower", "CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
+            colnames(tab.d1) <-  c("Rho", "Med. Eff.", "Med. Eff. CI Lower", "Med. Eff. CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.d1) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
             cat("\nSensitivity Region: ACME for Control Group\n\n")
             print(tab.d0)
             cat("\nRho at which Delta_0 = 0:", round(x$err.cr[1], 4), "\n\n")
-            cat("\nR^2_M*R^2_Y* at which ACME for Control Group = 0:", round(x$R2star.thresh[1], 4), "\n\n")
-            cat("\nR^2_M~R^2_Y~ at which ACME for Control Group = 0:", round(x$R2tilde.thresh[1], 4), "\n\n")
+            cat("\nR^2_M*R^2_Y* at which ACME for Control Group = 0:", round(x$R2star.d.thresh[1], 4), "\n\n")
+            cat("\nR^2_M~R^2_Y~ at which ACME for Control Group = 0:", round(x$R2tilde.d.thresh[1], 4), "\n\n")
             cat("\nSensitivity Region: ACME for Treatment Group\n\n")
             print(tab.d1)
             cat("\nRho at which ACME for Treatment Group = 0:", round(x$err.cr[2], 4), "\n\n")
-            cat("\nR^2_M*R^2_Y* at which ACME for Treatment Group = 0:", round(x$R2star.thresh[2], 4), "\n\n")
-            cat("\nR^2_M~R^2_Y~ at which ACME for Treatment Group = 0:", round(x$R2tilde.thresh[2], 4), "\n\n")
+            cat("\nR^2_M*R^2_Y* at which ACME for Treatment Group = 0:", round(x$R2star.d.thresh[2], 4), "\n\n")
+            cat("\nR^2_M~R^2_Y~ at which ACME for Treatment Group = 0:", round(x$R2tilde.d.thresh[2], 4), "\n\n")
             invisible(x)        
             }
+            if("direct" %in% effect.type){
+            	tab.z0 <- cbind(x$rho, round(x$z0,4), round(x$lower.z0,4), round(x$upper.z0, 4), x$ind.z0, x$R2star.prod, round(x$R2tilde.prod, 4))
+            if(sum(x$ind.z0)==1){
+                tab.z0 <- as.matrix(tab.z0[x$ind.z0==1, -5])
+                tab.z0 <- t(tab.z0)
+            } else {
+                tab.z0 <- tab.z0[x$ind.z0==1, -5] 
+            }
+            colnames(tab.z0) <-  c("Rho", "Dir. Eff.", "Dir. Eff. CI Lower", "Dir. Eff. CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
+            rownames(tab.z0) <- NULL
+            tab.z1 <- cbind(x$rho, round(x$z1,4), round(x$lower.z1,4), round(x$upper.z1, 4), x$ind.z1, x$R2star.prod, round(x$R2tilde.prod, 4))
+            if(sum(x$ind.z1)==1){
+                tab.z1 <- as.matrix(tab.z1[x$ind.z1==1, -5])
+                tab.z1 <- t(tab.z1)
+            } else {
+                tab.z1 <- tab.z1[x$ind.z1==1, -5] 
+            }
+            colnames(tab.z1) <-  c("Rho", "Dir. Eff.", "Dir. Eff. CI Lower", "Dir. Eff. CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
+            rownames(tab.z1) <- NULL
+            cat("\nMediation Sensitivity Analysis\n")
+            cat("\nSensitivity Region: ACDE for Control Group\n\n")
+            print(tab.d0)
+            cat("\nRho at which Delta_0 = 0:", round(x$err.cr.z[1], 4), "\n\n")
+            cat("\nR^2_M*R^2_Y* at which ACDE for Control Group = 0:", round(x$R2star.z.thresh[1], 4), "\n\n")
+            cat("\nR^2_M~R^2_Y~ at which ACDE for Control Group = 0:", round(x$R2tilde.z.thresh[1], 4), "\n\n")
+            cat("\nSensitivity Region: ACDE for Treatment Group\n\n")
+            print(tab.d1)
+            cat("\nRho at which ACDE for Treatment Group = 0:", round(x$err.cr.z[2], 4), "\n\n")
+            cat("\nR^2_M*R^2_Y* at which ACDE for Treatment Group = 0:", round(x$R2star.z.thresh[2], 4), "\n\n")
+            cat("\nR^2_M~R^2_Y~ at which ACDE for Treatment Group = 0:", round(x$R2tilde.z.thresh[2], 4), "\n\n")
+            invisible(x)
+            	}
+            } ### Case I Summary Ends Here
     } else if(x$type=="bm") {
         if(x$INT==FALSE){
             tab <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0, x$R2star.prod, round(x$R2tilde.prod, 4))
