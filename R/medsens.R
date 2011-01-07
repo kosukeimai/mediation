@@ -650,9 +650,9 @@ print.summary.medsens <- function(x, ...){
                 		tab.z <- tab.z[x$ind.z0==1, -4] 
             		}
             		tab <- cbind(tab[1], tab.z, tab[2:5])
-            		colnames(tab) <- c("Rho", "Dir. Eff.", "Dir. Eff. CI Lower", "Dir. Eff. CI Upper", "Med. Eff.", "Med. Eff. CI Lower", "Med. Eff. CI Upper", 
-            							"R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
-            		rownames(tab) <- NULL							cat("\nMediation Sensitivity Analysis\n")
+            		colnames(tab) <- c("Rho", "Dir. Eff.", "Dir. Eff. CI Lower", "Dir. Eff. CI Upper", "Med. Eff.", "Med. Eff. CI Lower", "Med. Eff. CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
+            		rownames(tab) <- NULL
+            		cat("\nMediation Sensitivity Analysis\n")
             		cat("\nSensitivity Region\n\n")
             		print(tab)
             		cat("\nRho at which ACME = 0:", round(x$err.cr, 4), "\n\n")
