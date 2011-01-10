@@ -340,7 +340,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 Pr0 <- apply(Pr0, 2, model.y$family$linkinv)
                 delta.0.tmp <- Pr1 - Pr0
             } else {
-                delta.0.tmp <- Pr1 - Pr0 #Binary Mediator
+                delta.0.tmp <- Pr1 - Pr0
             }
             rm(Pr1, Pr0)
             
@@ -523,8 +523,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 Call.Y.t$data <- y.t.data[index,]
                 
                 if(test=="polr" && length(unique(y.t.data[index,mediator]))!=m){
-                        cat("Insufficient Variation on Mediator")
-                        break
+                        stop("Insufficient Variation on Mediator")
                 }
                 
                #print("here tobit error")  # After X iterations, where X can vary, 
