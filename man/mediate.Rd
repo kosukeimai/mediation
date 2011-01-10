@@ -21,7 +21,7 @@ mediate(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name", mediator="m
 \item{control}{ Name of binary treatment indicator for control. Only necessary for gam() object with interaction.}
 \item{control.value}{ Value of the treatment variable in the control condition. Default is 0.}
 \item{treat.value}{ Value of the treatment variable in the treatment condition. Default is 1.}
-\item{long}{Whether or not the output of the function should contain the entire posterior distribution of the the ACME, direct, and total effects. Default is TRUE.}
+\item{long}{Whether or not the output of the function should contain the entire sets of simulation draws of the the ACME, direct, and total effects. Default is TRUE.}
 
 }
 

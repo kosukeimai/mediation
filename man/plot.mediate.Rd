@@ -19,7 +19,7 @@ Plots results from mediate function. Y axis lists indirect, direct, and total ef
 }
 
 \arguments{ 
-\item{model}{output from \code{mediate} or \code{mediations} function.}
+\item{x}{object of class \code{mediate} as produced by \code{mediate} or \code{mediations} function.}
 \item{both}{Whether plot should include estimates for both the treatment and control conditions.}
 \item{reset}{Whether the graphical call should be reset (par). If putting multiple plots on one page, TRUE for first plot and FALSE for others.} 
 }
