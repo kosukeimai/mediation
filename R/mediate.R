@@ -1468,26 +1468,24 @@ mediations <- function(datasets, treatment, mediators, outcome,
                                     conf.level=conf.level)
           rm(result1)
           rm(result2)
-          labels[(count)] <- sprintf("%s.%s", data[i], mediators[j])
+          labels[(count)] <- sprintf("%s.%s.%s", outcome,data[i], mediators[j])
           count <- count + 1
         }
     }
     names(out) <- labels
-    
-    # Generates what is necessary for plotting with plot.mediate.
-    names <- names(out)
-    plot <- list()
-    for(i in 1:length(names)){
-      plot[[i]] <- plot.process(out[[i]])
+    class(out) <- "mediations"
+    out
+}
+
+
+
+plot.mediations <- function(x, ask = prod(par("mfcol")) < length(which) && dev.interactive(),...){
+    name.list<-names(x)
+        if (ask) {
+        oask <- devAskNewPage(TRUE)
+        on.exit(devAskNewPage(oask))
     }
-    names(plot) <- names
-    
-    return(list(out=out,plot=plot))
+    for(i in 1:length(name.list)){
+    plot.mediate(x[[i]],xlab=name.list[i], ...)
+    }
 }
-
-
-
-plot.mediations <- function(x, ...){
-    plot.mediate(x, ...)
-}
-
