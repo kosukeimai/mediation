@@ -10,6 +10,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
              paste(mediator,treat,sep=":") %in% attr(model.y@terms,"term.labels") 
     }
     
+    # TODO: Print warning when control is given but meaningless
+    
     ############################################################################
     ############################################################################
     ### CASE I: EVERYTHING EXCEPT ORDERED OUTCOME
