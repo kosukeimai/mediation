@@ -1408,7 +1408,7 @@ plot.mediate <- function(x, both = FALSE, reset = TRUE,
 
 mediations <- function(datasets, treatment, mediators, outcome, 
                     covariates=NULL, family=c("gaussian", "gaussian"),
-                    tau=.5, LowerY=NULL, UpperY=NULL, interaction=FALSE,
+                    tau_m=.5,tau_y=.5, LowerY=NULL, UpperY=NULL, interaction=FALSE,
                     conf.level=.95, sims=500) {
     data <- names(datasets)
     labels <- c()
@@ -1448,7 +1448,7 @@ mediations <- function(datasets, treatment, mediators, outcome,
             if(family[1] == "binomial") {  # run Mediator model using new data/specification
                 result1 <- glm(fmla, family=binomial("probit"), data=dataarg)
             } else if(family[1] == "quantile") {
-                result1 <- rq(fmla, data=dataarg, tau=tau)
+                result1 <- rq(fmla, data=dataarg, tau=tau_m)
             } else {
                 result1 <- glm(fmla, family=family[1], data=dataarg)
             }
@@ -1456,7 +1456,7 @@ mediations <- function(datasets, treatment, mediators, outcome,
             if(family[2] == "binomial") {  # run Outcome model using new data/specification
                 result2 <- glm(fmla2, family=binomial("probit"), data=dataarg)
             } else if(family[1] == "quantile") {
-                result2 <- rq(fmla2, data=dataarg, tau=tau)
+                result2 <- rq(fmla2, data=dataarg, tau=tau_y)
             } else if(family[2] == "tobit") {
                 result2 <- vglm(fmla2, tobit(Lower=LowerY,Upper=UpperY), data=dataarg)
             } else {
