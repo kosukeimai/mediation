@@ -2,29 +2,29 @@
 \alias{mediations} 
 \title{Processing of multiple treatment variable/mediator variable combinations by mediate function.} 
 \description{ 
-Processes a set of treatment variable/mediator combinations through the mediate function for several standard models.} 
+Processes a set of treatment variable/mediator combinations through the mediate function for a range models handeled by mediate.} 
 \usage{
 
-mediations(datasets, treatment, mediators, covariates, family=c("gaussian", "gaussian"),LowerY=NULL,UpperY=NULL, interaction=FALSE, conf.level=.95, sims=1000) {
+mediations(datasets, treatment, mediators, outcome, covariates=NULL, family=c("gaussian", "gaussian"), tau_m=.5,tau_y=.5, LowerY=NULL,UpperY=NULL, interaction=FALSE, conf.level=.95, sims=1000) {
 
 } 
 
-\arguments{ 
-\item{model}{Output from function mediate or function mediations.} 
 
+
+\details{This function processes multiple sets of data/treatment variables/mediators to produce a collected set of output ready for analysis or graphing. For example, if you have 3 different treatment variables and a control condition, as well as 4 different mediators that you want to see if they mediate the effect of the different treatment conditions, this function estimates all of the combinations instead of separate lines of code being written for each one.
+Individual elements of the output may be passed through plot.mediate for graphing. Or the entire output may be passed through plot.mediations to inspect all results. 
 }
 
-\details{This function processes multiple sets of data/treatment variables/mediators to produce a collected set of output ready for analysis or graphing. For example, if you have 3 different treatment variables and a control condition, as well as 4 different mediators that you want to see if they mediate the effect of the different treatment conditions, this function estimates all of the combinations instead of separate lines of code being written for each one. Calling the $plot object can be passed through plot.mediate
-}
-
-\section{Warning}{Users wishing additional functionalities can easily update the function.}
 
 \value{
-\item{datasets}{List of dataset names, each using a naming convention that includes the treatment variable name.}
+\item{datasets}{List of dataset names. Each dataset has a separate treatment/control contrast. Names of datasets must begin the the exact name of the treatment variable (see example below).}
 \item{treatment}{Vector of treatment names.}
 \item{mediators}{Vector of mediators names to be used with each treatment variable.}
-\item{covariates}{Set of pre-treatment covariates to be included in each model.}
-\item{family}{Two element list specifying the link function to be used in the mediator and outcome models, respectively. Currently only supports gaussian and binomial (for a probit link) for the mediator. For the outcome equation tobit is also available.}
+\item{outcome}{Single outcome variable to estimate all treatment/mediation combinations for.}
+\item{covariates}{Set of pre-treatment covariates to be included in each model. Default is NULL but users typically should have pre-treatment variables to control for to the make the sequential ignorability assumption more plausible.}
+\item{family}{Two element list specifying the link function to be used in the mediator and outcome models, respectively. Currently only supports "gaussian", "binomial" (for a probit link), and "quantile" (for quantile regression, see tau) for the mediator. For the outcome equation tobit is also available in addition to the mediator model options.}
+\item{tau_m}{Specifies the quantile to be used for a quantile regression for the mediator model.}
+\item{tau_y}{Specifies the quantile to be used for a quantile regression for the outcome model.}
 \item{LowerY}{Lower bound for tobit model.}
 \item{UpperY}{Upper bound for tobit model.}
 \item{interaction}{Whether the treatment and mediator variables should be interacted.}
