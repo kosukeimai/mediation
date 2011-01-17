@@ -1404,13 +1404,10 @@ plot.mediate <- function(x, both = FALSE, reset = TRUE,
 
 
 
-##Assume list of mediators, treatments as character vector
-##Assume datasets as named list in same order as treatment
-##Covariate specification as a single character vector, e.g., covariates <- c("gender_p+Trust_GSS_pre+ideo7")
-mediations <- function(datasets, treatment, mediators, covariates, 
-                       family=c("gaussian", "gaussian"), LowerY=NULL, UpperY=NULL,
-                       interaction=FALSE, conf.level=.95, sims=500) {
-    covariates <- covariates
+mediations <- function(datasets, treatment, mediators, outcome, 
+                    covariates=NULL, family=c("gaussian", "gaussian"),
+                    tau=.5, LowerY=NULL, UpperY=NULL, interaction=FALSE,
+                    conf.level=.95, sims=500) {
     data <- names(datasets)
     labels <- c()
     out <- list()
@@ -1419,46 +1416,71 @@ mediations <- function(datasets, treatment, mediators, covariates,
         d1 <- sprintf("datasets$%s", data[i])
         dataarg <- eval(parse(text=d1))
         for (j in 1:length(mediators)) {
-            f1 <- sprintf("%s ~ %s + %s", mediators[j], treatment[i], covariates)
-            f2 <- sprintf("Y ~ %s + %s + %s", treatment[i], mediators[j], covariates)
-            if (interaction) {
-                f2 <- sprintf("Y ~ %s*%s + %s", treatment[i], mediators[j], covariates)
+            #create model formulas
+            if(is.null(covariates)) {
+                f1 <- sprintf("%s ~ %s + %s", mediators[j], treatment[i])
+                f2 <- sprintf("%s ~ %s + %s ", outcome, treatment[i], mediators[j])
+                if (interaction) {
+                    f2 <- sprintf("%s ~ %s*%s ",outcome, treatment[i], mediators[j])
+                }
+            } else {
+                f1 <- sprintf("%s ~ %s + %s", mediators[j], treatment[i], covariates)
+                f2 <- sprintf("%s ~ %s + %s + %s", outcome, treatment[i], 
+                                                            mediators[j], covariates)
+                if (interaction) {
+                    f2 <- sprintf("%s ~ %s*%s + %s", outcome, treatment[i], 
+                                                            mediators[j], covariates)
+                }
             }
             fmla <- as.formula(paste(f1))
             fmla2 <- as.formula(paste(f2))
-            if(family[1] == "binomial") {
+            
+            # Depending on the family chosen for the mediator or outcome model, 
+            # this generates the correct formulas.
+            # NOTE: mediations is a WRAPPER function for mediate--things like 
+            # "update" etc. have no use here!
+            # Mediations does not currently support the use of GAM's. Logits 
+            # are not supported bc. users should use probits so they can do 
+            # sensitivity analyses.  
+            
+            if(family[1] == "binomial") {  # run Mediator model using new data/specification
                 result1 <- glm(fmla, family=binomial("probit"), data=dataarg)
+            } else if(family[1] == "quantile") {
+                result1 <- rq(fmla, data=dataarg, tau=tau)
             } else {
                 result1 <- glm(fmla, family=family[1], data=dataarg)
             }
-            if(family[2] == "binomial") {
+            
+            if(family[2] == "binomial") {  # run Outcome model using new data/specification
                 result2 <- glm(fmla2, family=binomial("probit"), data=dataarg)
+            } else if(family[1] == "quantile") {
+                result2 <- rq(fmla2, data=dataarg, tau=tau)
             } else if(family[2] == "tobit") {
                 result2 <- vglm(fmla2, tobit(Lower=LowerY,Upper=UpperY), data=dataarg)
-            } else {  
+            } else {
                 result2 <- glm(fmla2, family=family[2], data=dataarg)
             }
-            out[[count]] <- mediate(result1, result2, sims=sims,
+          
+          out[[(count)]] <- mediate(result1, result2, sims=sims, 
                                     treat=treatment[i], mediator=mediators[j],
                                     conf.level=conf.level)
-            rm(result1)
-            rm(result2)
-            labels[count] <- sprintf("%s.%s", data[i], mediators[j])  
-            count <- count + 1 
+          rm(result1)
+          rm(result2)
+          labels[(count)] <- sprintf("%s.%s", data[i], mediators[j])
+          count <- count + 1
         }
     }
     names(out) <- labels
     
-    # Generates what is necessary for plotting and an additional output.  
-    plots <- list()
-    for(i in 1:length(labels)){
-        plots[[i]] <- plot.process(out[[i]])
+    # Generates what is necessary for plotting with plot.mediate.
+    names <- names(out)
+    plot <- list()
+    for(i in 1:length(names)){
+      plot[[i]] <- plot.process(out[[i]])
     }
-    names(plots) <- labels
+    names(plot) <- names
     
-    output <- list(out=out, plots=plots)
-    class(output) <- "mediations"
-    output
+    return(list(out=out,plot=plot))
 }
 
 
