@@ -1,7 +1,14 @@
 mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                     mediator="med.name", control=NULL, conf.level=.95, 
                     control.value=0, treat.value=1, long=TRUE, INT=NULL){
-    # Sense whether models include interaction term
+    
+    # Warn users who still use INT option
+    if(!is.null(INT)){
+        warning("Argument INT no longer necessary; existence of interaction term
+        is now automatically detected.")
+    }
+    
+    # Detect whether models include interaction term
     if(!isS4(model.y)) {
         INT <- paste(treat,mediator,sep=":") %in% attr(model.y$terms,"term.labels") | 
              paste(mediator,treat,sep=":") %in% attr(model.y$terms,"term.labels") 
