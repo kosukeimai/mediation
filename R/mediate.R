@@ -1396,18 +1396,19 @@ plot.mediate <- function(x, both = FALSE, reset = TRUE,
     plot(param$coef.vec.1, y.axis, type = "p", xlab = xlab, ylab = ylab,
          yaxt = "n", pch = 19, cex = cex, 
          xlim = xlim, ylim = ylim, main = main, ...) 
-                                            # set limits of x-axis so that they include mins and maxs of
+         # set limits of x-axis so that they include mins and maxs of
     segments(param$lower.vec.1, y.axis, param$upper.vec.1, y.axis, lwd = lwd) 
-                                             # coef +/-1.96*se = 95% interval, lwd adjusts line thickness
+         # coef +/-1.96*se = 95% interval, lwd adjusts line thickness
     
     if(both) {
         points(param$coef.vec.0, y.axis-.1, type = "p",pch = 1, cex = cex)
-                                   # plot coefficients as points, turning off axes and labels. 
+         # plot coefficients as points, turning off axes and labels. 
         segments(param$lower.vec.0, y.axis-.1, param$upper.vec.0, y.axis-.1, 
-                lwd = lwd, lty = 3)  # coef +/-1.96*se = 95% interval, lwd adjusts line thickness
+                lwd = lwd, lty = 3)
+         # coef +/-1.96*se = 95% interval, lwd adjusts line thickness
     }
     axis(2, at = y.axis, label = var.names, las = 1, tick = TRUE, ...)
-        # draw y-axis with tick marks, make labels perpendicular to axis and closer to axis
+         # draw y-axis with tick marks, make labels perpendicular to axis and closer to axis
     abline(v = 0, lty = 2)
 }
 
@@ -1489,18 +1490,16 @@ mediations <- function(datasets, treatment, mediators, outcome,
 
 
 
-plot.mediations <- function(x, ask = prod(par("mfcol")) < length(which) && dev.interactive(),...){
-    name.list<-names(x)
-        if (ask) {
+plot.mediations <- function(x, which = names(x),
+            ask = prod(par("mfcol")) < length(which) && dev.interactive(), ...){
+    if (ask) {
         oask <- devAskNewPage(TRUE)
         on.exit(devAskNewPage(oask))
     }
-    for(i in 1:length(name.list)){
-    plot.mediate(x[[i]],xlab=name.list[i], ...)
+    for(i in 1:length(which)){
+        plot.mediate(x[[i]], xlab = which[i], ...)
     }
 }
-
-
 
 
 
@@ -1512,7 +1511,7 @@ summary.mediations <- function(object, ...){
 
 print.summary.mediations <- function(x, ...){
     clp <- 100 * x[[1]]$conf.level
-    name.list<-names(x)
+    name.list <- names(x)
     for(i in 1:length(name.list)){
         cat("\n Causal Mediation Analysis \n\n")
         cat("Specification",name.list[i], "\n\n")
