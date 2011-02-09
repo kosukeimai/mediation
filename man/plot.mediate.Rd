@@ -20,11 +20,9 @@ Plots results from mediate function. Y axis lists indirect, direct, and total ef
 
 \arguments{ 
 \item{x}{object of class \code{mediate} as produced by \code{mediate} or \code{mediations} function.}
-\item{both}{Whether plot should include estimates for both the treatment and control conditions.}
-\item{reset}{Whether the graphical call should be reset (par). If putting multiple plots on one page, TRUE for first plot and FALSE for others.} 
+\item{treatment}{baseline treatment value of the estimated ACME to plot. Can take either 0, 1 or c(0,1). Default is to plot both treatment and control conditions only when these values differ.}
+\item{...}{additional graphical parameters.}
 }
-
-\section{Warning}{Users wishing additional functionalities can easily update the function.}
 
 \value{\code{mediate} returns an object of class "\code{mediate}".  The function \code{summary} is used to obtain a table of the results. The plot function plots these quantities.  
 

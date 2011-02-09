@@ -8,8 +8,14 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
         is now automatically detected.")
     }
     
+    # GAM indicators
+    isGam.y <- class(model.y)[1] == "gam"
+    isGam.m <- class(model.m)[1] == "gam"
+        
     # Detect whether models include interaction term
-    if(!isS4(model.y)) {
+    if(isGam.y){
+        INT <- !is.null(control)
+    } else if(!isS4(model.y)) {
         INT <- paste(treat,mediator,sep=":") %in% attr(model.y$terms,"term.labels") | 
              paste(mediator,treat,sep=":") %in% attr(model.y$terms,"term.labels") 
     } else {
@@ -17,7 +23,10 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
              paste(mediator,treat,sep=":") %in% attr(model.y@terms,"term.labels") 
     }
     
-    # TODO: Print warning when control is given but meaningless
+    if(!is.null(control)){
+        warning("argument control meaningless except for GAM outcome model 
+            with interactions, ignored")
+    }
     
     ############################################################################
     ############################################################################
@@ -47,7 +56,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
         m.min <- as.numeric(sort(model.frame(model.m)[,1])[1])
         
         # Record class of model.m as "test"
-        if(class(model.m)[1]=="gam"){
+        if(isGam.m){
             test <- class(model.m)[2]
         } else {
             test <- class(model.m)[1]
@@ -55,7 +64,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
         
         # Record class of model.y.t as "test2"
         if(class(model.y.t)[1]!="vglm") {
-            if(class(model.y.t)[1]=="gam"){
+            if(isGam.y){
                 test2 <- class(model.y.t)[2]
             } else {
                 test2 <- class(model.y.t)[1]
@@ -92,6 +101,11 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
         ## Case I-1: Quasi-Bayesian Monte Carlo
         ########################################################################
         if(boot == FALSE){
+            # Error if gam
+            if(isGam.y){
+                stop("boot must be TRUE for gam models")
+            }
+            
             cat.0 <- control.value  # defines the values of the treatment; 0 and 1 by default
             cat.1 <- treat.value
             MModel.coef <- model.m$coef
@@ -582,7 +596,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                     
                 ### Case I-2-c: Other
                 } else {
-                    if(class(model.m)[1]=="gam"){
+                    if(isGam.m){
                         sigma <- summary(new.fit.M)$scale
                     } else {
                         # print(summary(new.fit.M))  # when of class rq (quantile regression)
@@ -894,13 +908,13 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
         cat.0 <- control.value
         cat.1 <- treat.value
         
-        if(class(model.m[1])=="gam"){
+        if(isGam.m){
             test <- class(model.m)[2]
         } else {
             test <- class(model.m)[1]   
         }
         
-        if(class(model.y.t[1])=="gam"){
+        if(isGam.y){
             test2 <- class(model.y.t)[2]
         } else {
             test2 <- class(model.y.t)[1]    
@@ -979,7 +993,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             
             ### Case II-c: Other
             } else {
-                if(class(model.m)[1]=="gam"){
+                if(isGam.m){
                     sigma <- summary(new.fit.M)$scale
                 } else {
                     sigma <- summary(new.fit.M)$sigma
@@ -1231,13 +1245,25 @@ summary.mediate <- function(object, ...){
 
 print.summary.mediate <- function(x, ...){
     clp <- 100 * x$conf.level
-    if(x$INT==TRUE | (class(model.m[1])!="lm"|class(model.y[1])!="lm")){
-        cat("\n Causal Mediation Analysis \n\n")
-        if(x$boot==TRUE){
-            cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
-        } else {
-            cat("Quasi-Bayesian Confidence Intervals\n\n")
-        }
+    cat("\n Causal Mediation Analysis \n\n")
+    if(x$boot==TRUE){
+        cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
+    } else {
+        cat("Quasi-Bayesian Confidence Intervals\n\n")
+    }
+    if (x$INT == FALSE && 
+            (class(x$model.m)[1] == "lm" & class(x$model.y)[1] == "lm" | 
+                class(x$model.y)[1] == "gam") ){
+        cat("Mediation Effect: ", format(x$d1, digits=4), clp, "% CI ", 
+                format(x$d1.ci, digits=4), "\n")
+        cat("Direct Effect: ", format(x$z0, digits=4), clp, "% CI ", 
+                format(x$z0.ci, digits=4), "\n")
+        cat("Total Effect: ", format(x$tau.coef, digits=4), clp, "% CI ", 
+                format(x$tau.ci, digits=4), "\n")
+        cat("Proportion of Total Effect via Mediation: ", format(x$pct.coef, digits=4), 
+                clp, "% CI ", format(x$pct.ci, digits=4),"\n")
+        #cat("Proportion of Total Effect via Mediation: ", format(x$pct.coef, digits=4),"\n")
+    } else {
         cat("Mediation Effect_0: ", format(x$d0, digits=4), clp, "% CI ", 
                 format(x$d0.ci, digits=4), "\n")
         cat("Mediation Effect_1: ", format(x$d1, digits=4), clp, "% CI ", 
@@ -1251,23 +1277,7 @@ print.summary.mediate <- function(x, ...){
         cat("Proportion of Total Effect via Mediation: ", format(x$pct.coef, digits=4), 
                 clp, "% CI ", format(x$pct.ci, digits=4),"\n")
         #cat("Proportion of Total Effect via Mediation: ", format(x$pct.coef, digits=4),"\n")
-    } else {
-        cat("\n Causal Mediation Analysis \n\n")
-        if(x$boot==TRUE){
-            cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
-        } else {
-            cat("Quasi-Bayesian Confidence Intervals\n\n")
-        }
-        cat("Mediation Effect: ", format(x$d1, digits=4), clp, "% CI ", 
-                format(x$d1.ci, digits=4), "\n")
-        cat("Direct Effect: ", format(x$z0, digits=4), clp, "% CI ", 
-                format(x$z0.ci, digits=4), "\n")
-        cat("Total Effect: ", format(x$tau.coef, digits=4), clp, "% CI ", 
-                format(x$tau.ci, digits=4), "\n")
-        cat("Proportion of Total Effect via Mediation: ", format(x$pct.coef, digits=4), 
-                clp, "% CI ", format(x$pct.ci, digits=4),"\n")
-        #cat("Proportion of Total Effect via Mediation: ", format(x$pct.coef, digits=4),"\n")
-    }
+    } 
     invisible(x)
 }
 
@@ -1337,7 +1347,6 @@ print.summary.mediate.order <- function(x, ...){
 
 
 
-# Function to process output of mediate model for plotting:
 plot.process <- function(model) {
     coef.vec.1 <- c(model$d1, model$z1, model$tau.coef)
     lower.vec.1 <- c(model$d1.ci[1], model$z1.ci[1],model$tau.ci[1])
@@ -1359,55 +1368,66 @@ plot.process <- function(model) {
 
 
 
-# cex=1,cex.main=1.5,cex.axis=1.2,cex.lab=2
-# Plotting function that takes output of plot.process:
-plot.mediate <- function(x, both = FALSE, reset = TRUE, 
+plot.mediate <- function(x, treatment = NULL,
                         xlim = NULL, xlab = "", ylim = NULL, ylab = "",
-                        main = NULL, lwd = 1.5, cex = .85, ...){
-    if(is.null(x$coef.vec.1)){
-        param <- plot.process(x)
-    } else {
-        param <- x
-    }
-    var.names <- c("ACME","Direct\nEffect","Total\nEffect")
-    y.axis <- c(length(param$coef.vec.1):.5)
-        # create indicator for y.axis, descending so labels go from top to bottom
-        
-#    if(reset){
-#        par(mfrow=c(1,1), oma=c(.25,1.2,1,.1))  # reset graphical window
-#    }
-#    par(mar=c(3, 5.5, 2, 0))  # set margins for plot, leaving lots of room on 
-#                              # left-margin (2nd number in margin command) 
-#                              # for variable names
-#    #oma=c(.25,1.2,1,.1)
-    
-    if(is.null(xlim)){
-        if(both) {
-            xlim <- range(param$range.1, param$range.0) * 1.2
+                        labels = c("ACME","Direct\nEffect","Total\nEffect"), 
+                        main = NULL, lwd = 1.5, cex = .85,
+                        col = "black", ...){
+    # Determine which graph to plot
+    if(is.null(treatment)){
+        if(x$INT){
+            treatment <- c(0,1)
         } else {
-            xlim <- param$range.1 * 1.2
+            treatment <- 1
         }
     }
     
+    param <- plot.process(x)
+    y.axis <- c(length(param$coef.vec.1):.5)
+        # create indicator for y.axis, descending so labels go from top to bottom
+    
+    # Set xlim
+    if(is.null(xlim)){
+        if(length(treatment) > 1) {
+            xlim <- range(param$range.1, param$range.0) * 1.2
+        } else if (treatment == 1){
+            xlim <- param$range.1 * 1.2
+        } else {
+            xlim <- param$range.0 * 1.2
+        }
+    }
+    
+    # Set ylim
     if(is.null(ylim)){
-        ylim <- c(min(y.axis)-0.5, max(y.axis)+0.5)
+        ylim <- c(min(y.axis) - 0.5, max(y.axis) + 0.5)
     }
     
-    plot(param$coef.vec.1, y.axis, type = "p", xlab = xlab, ylab = ylab,
-         yaxt = "n", pch = 19, cex = cex, 
-         xlim = xlim, ylim = ylim, main = main, ...) 
-         # set limits of x-axis so that they include mins and maxs of
-    segments(param$lower.vec.1, y.axis, param$upper.vec.1, y.axis, lwd = lwd) 
-         # coef +/-1.96*se = 95% interval, lwd adjusts line thickness
+    # Plot
+    plot(param$coef.vec.1, y.axis, type = "n", xlab = xlab, ylab = ylab,
+            yaxt = "n", xlim = xlim, ylim = ylim, main = main, ...) 
+            # create empty plot with labels
     
-    if(both) {
-        points(param$coef.vec.0, y.axis-.1, type = "p",pch = 1, cex = cex)
+    # Set offset values depending on number of bars to plot
+    if(length(treatment) == 1){
+        adj <- 0
+    } else {
+        adj <- 0.05
+    }
+    
+    if(1 %in% treatment){
+        points(param$coef.vec.1, y.axis + adj, type = "p", pch = 19, cex = cex, col = col)
+        segments(param$lower.vec.1, y.axis + adj, param$upper.vec.1, y.axis + adj, 
+                lwd = lwd, col = col) 
+             # coef +/-1.96*se = 95% interval, lwd adjusts line thickness
+    }
+    if(0 %in% treatment) {
+        points(param$coef.vec.0, y.axis - adj, type = "p", pch = 1, cex = cex, col = col)
          # plot coefficients as points, turning off axes and labels. 
-        segments(param$lower.vec.0, y.axis-.1, param$upper.vec.0, y.axis-.1, 
-                lwd = lwd, lty = 3)
+        segments(param$lower.vec.0, y.axis - adj, param$upper.vec.0, y.axis - adj, 
+                lwd = lwd, lty = 3, col = col)
          # coef +/-1.96*se = 95% interval, lwd adjusts line thickness
     }
-    axis(2, at = y.axis, label = var.names, las = 1, tick = TRUE, ...)
+    axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
          # draw y-axis with tick marks, make labels perpendicular to axis and closer to axis
     abline(v = 0, lty = 2)
 }
