@@ -80,19 +80,19 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
         cat.1 <- treat.value
     }
             
+    # Define functions
+    
+    indexmax <- function(x){
+        ## Return position of largest element in vector x
+        order(x)[length(x)]
+    }
+        
     ############################################################################
     ############################################################################
     ### CASE I: EVERYTHING EXCEPT ORDERED OUTCOME
     ############################################################################
     ############################################################################
     if (!isOrdered.y) {
-        
-        # Define functions
-        
-        indexmax <- function(x){
-            ## Return position of largest element in vector x
-            order(x)[length(x)]
-        }
         
         ########################################################################
         ## Case I-1: Quasi-Bayesian Monte Carlo
@@ -906,8 +906,10 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             }
             
             # Resampling Step
-            data.star.m <- m.data[sample(1:nrow(m.data),n,replace=TRUE),]  # Pull off data.star.
-            data.star.y <- y.data[sample(1:nrow(y.data),n,replace=TRUE),]  # Pull off data.star.
+            # Pull off data.star.
+            index <- sample(1:n, n, repl=TRUE)
+            data.star.m <- m.data[index,]
+            data.star.y <- y.data[index,]
             new.fit.M <- update(model.m, data=data.star.m)
             new.fit.t <- update(model.y, data=data.star.y)
             
@@ -929,12 +931,11 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             if(ClassM=="glm"){
                 PredictM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
                 PredictM0 <- predict(new.fit.M, type="response", newdata=pred.data.c)
-                # above new.fit.M was from a linear model...
             
             ### Case II-b: Ordered Mediator
             } else if(ClassM=="polr") {
-                probs_m1 <- predict(new.fit.M, newdata=pred.data.t, type="probs")
-                probs_m0 <- predict(new.fit.M, newdata=pred.data.c, type="probs")
+                probs_m1 <- predict(new.fit.M, type="probs", newdata=pred.data.t)
+                probs_m0 <- predict(new.fit.M, type="probs", newdata=pred.data.c)
                 draws_m1 <- matrix(NA, n, m)
                 draws_m0 <- matrix(NA, n, m)
                 
@@ -942,15 +943,17 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                     draws_m1[ii,] <- t(rmultinom(1, 1, prob = probs_m1[ii,]))
                     draws_m0[ii,] <- t(rmultinom(1, 1, prob = probs_m0[ii,]))
                 }
-                max.pr_m1 <- apply(probs_m1, 1, max)
-                max.pr_m0 <- apply(probs_m0, 1, max)
-                cat.m1 <- predict(new.fit.M, newdata=pred.data.t)
-                cat.m0 <- predict(new.fit.M, newdata=pred.data.c)
-                draws_m1 <- round(runif(n, m.min, m), 0)
-                draws_m0 <- round(runif(n, m.min, m), 0)
-                # where is .75 from?
-                PredictM1 <- ifelse(max.pr_m1 > runif(n, 0, .75), draws_m1, cat.m1)
-                PredictM0 <- ifelse(max.pr_m0 > runif(n, 0, .75), draws_m0, cat.m0)
+#                max.pr_m1 <- apply(probs_m1, 1, max)
+#                max.pr_m0 <- apply(probs_m0, 1, max)
+#                cat.m1 <- predict(new.fit.M, newdata=pred.data.t)
+#                cat.m0 <- predict(new.fit.M, newdata=pred.data.c)
+#                draws_m1 <- round(runif(n, m.min, m), 0)
+#                draws_m0 <- round(runif(n, m.min, m), 0)
+#                # where is .75 from?
+#                PredictM1 <- ifelse(max.pr_m1 > runif(n, 0, .75), draws_m1, cat.m1)
+#                PredictM0 <- ifelse(max.pr_m0 > runif(n, 0, .75), draws_m0, cat.m0)
+                PredictM1 <- apply(draws_m1, 1, indexmax)
+                PredictM0 <- apply(draws_m0, 1, indexmax)
             
             ### Case II-c: Other
             } else {
@@ -1134,11 +1137,11 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             rm(pred.data.t, pred.data.c, probs_p1, probs_p0)
             
             # Compute all QoIs
-            zeta.1[b,] <- apply(zeta.1.tmp, 2, median)
-            zeta.0[b,] <- apply(zeta.0.tmp, 2, median)
-            delta.1[b,] <- apply(delta.1.tmp, 2, median)
-            delta.0[b,] <- apply(delta.0.tmp, 2, median)
-            tau[b,] <- delta.0[b,] + zeta.1[b,]
+            zeta.1[b,] <- apply(zeta.1.tmp, 2, mean)
+            zeta.0[b,] <- apply(zeta.0.tmp, 2, mean)
+            delta.1[b,] <- apply(delta.1.tmp, 2, mean)
+            delta.0[b,] <- apply(delta.0.tmp, 2, mean)
+            tau[b,] <- (zeta.1[b,] + zeta.0[b,] + delta.0[b,] + delta.1[b,])/2
             
         }  # Bootstrap loop ends
             
