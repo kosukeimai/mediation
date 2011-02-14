@@ -50,8 +50,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
         therefore ignored")
     }
     
-    B <- sims
-    
+    # Model frames for M and Y models
     m.data <- model.frame(model.m)  # Call.M$data
     y.data <- model.frame(model.y)  # Call.Y$data
     
@@ -59,7 +58,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
     n.m <- length(m.data[,1])
     n <- n.y <- length(y.data[,1])
     if(n.m != n.y){
-        stop("Error: Missing Values Present in Data")
+        stop("number of observations do not match between mediator and outcome models")
     }
     m <- length(sort(unique(model.frame(model.m)[,1])))
     m.min <- as.numeric(sort(model.frame(model.m)[,1])[1])
@@ -68,18 +67,28 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
     isFactorT.m <- is.factor(m.data[,treat])
     isFactorT.y <- is.factor(y.data[,treat])
     
-    # Factor mediator indicator
-    isFactorM <- is.factor(y.data[,mediator])
-    
     if(isFactorT.y){
         # TODO: Allow non-binary factor treatment
-        cat.0 <- levels(y.data[,treat])[1]
-        cat.1 <- levels(y.data[,treat])[2]
+        t.levels <- levels(y.data[,treat])
+        if(sum(c(treat.value, control.value) %in% t.levels)){
+            cat.0 <- control.value
+            cat.1 <- treat.value
+        } else {
+            cat.0 <- t.levels[1]
+            cat.1 <- t.levels[2]
+        }
     } else {
         cat.0 <- control.value
         cat.1 <- treat.value
     }
-            
+    
+    # Factor mediator indicator
+    isFactorM <- is.factor(y.data[,mediator])
+    
+    if(isFactorM){
+        m.levels <- levels(y.data[,mediator])
+    }
+    
     # Define functions
     
     indexmax <- function(x){
@@ -103,8 +112,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 stop("boot must be TRUE for gam models")
             }
             
-            cat.0 <- control.value  # defines the values of the treatment; 0 and 1 by default
-            cat.1 <- treat.value
+            # Get mean and variance parameters for simulations
             MModel.coef <- model.m$coef
             if(ClassM=="polr"){  # TRUE if model.m is ordered
                 if(is.null(model.m$Hess)){
@@ -121,21 +129,21 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 TMmodel.coef <- model.y$coef
             }
             TMmodel.var.cov <- vcov(model.y)
+            
+            # Draw model coefficients from normal
             MModel <- mvrnorm(sims, mu=MModel.coef, Sigma=MModel.var.cov)
             TMmodel <- mvrnorm(sims, mu=TMmodel.coef, Sigma=TMmodel.var.cov)
             
-            ##  Mediator Predictions
+            #####################################
+            #  Mediator Predictions
+            #####################################
+            pred.data.t <- m.data
+            pred.data.c <- m.data
             if(isFactorT.m){
-                pred.data.t <- m.data
-                pred.data.t[,treat] <- list(factor(unique(m.data[,treat])[1],
-                                            levels = levels(m.data[,treat])))
-                pred.data.c <- m.data
-                pred.data.c[,treat] <- list(factor(unique(m.data[,treat])[2],
-                                            levels = levels(m.data[,treat])))
+                pred.data.t[,treat] <- factor(cat.1, levels = t.levels)
+                pred.data.c[,treat] <- factor(cat.0, levels = t.levels)
             } else {
-                pred.data.t <- m.data
                 pred.data.t[,treat] <- cat.1
-                pred.data.c <- m.data
                 pred.data.c[,treat] <- cat.0
             }
             
@@ -166,7 +174,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 
                 PredictM1 <- matrix(,nrow=sims, ncol=n)
                 PredictM0 <- matrix(,nrow=sims, ncol=n)
-
+                
                 for(i in 1:sims){
                         
                     cprobs_m1 <- matrix(NA,n,m)
@@ -189,17 +197,9 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                         probs_m0[,j] <- cprobs_m0[,j]-cprobs_m0[,j-1]
                     }
                     
-                    ## Random Prediction Draws:
-                    #max.pr_m1 <- apply(probs_m1, 1, max)
-                    #max.pr_m0 <- apply(probs_m0, 1, max)
-                    #cat.m1 <- apply(probs_m1,1,indexmax)
-                    #cat.m0 <- apply(probs_m0,1,indexmax)
-                    #draws_m1 <- round(runif(n, 1, m), 0)
-                    #draws_m0 <- round(runif(n, 1, m), 0)
-                    
                     draws_m1 <- matrix(NA, n, m)
                     draws_m0 <- matrix(NA, n, m)
-
+                    
                     for(ii in 1:n){
                         draws_m1[ii,] <- t(rmultinom(1, 1, prob = probs_m1[ii,]))
                         draws_m0[ii,] <- t(rmultinom(1, 1, prob = probs_m0[ii,]))
@@ -212,7 +212,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             ### Case I-1-c: Other 
             } else {
                 sigma <- summary(model.m)$sigma
-                error <- rnorm(n.m, mean=0, sd=sigma)
+                error <- rnorm(n, mean=0, sd=sigma)
                 PredictM1 <- MModel %*% t(mmat.t)
                 PredictM0 <- MModel %*% t(mmat.c)
                 PredictM1 <- PredictM1 + error
@@ -221,29 +221,27 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             }
             rm(mmat.t, mmat.c)
             
+            #####################################
             ##  Outcome Predictions
+            #####################################
             # ACME(1) Predictions Data
-            Pr1 <- matrix(, nrow=n.y, ncol=sims)
-            Pr0 <- matrix(, nrow=n.y, ncol=sims)
+            Pr1 <- matrix(, nrow=n, ncol=sims)
+            Pr0 <- matrix(, nrow=n, ncol=sims)
             
             for(j in 1:sims){
                 pred.data.t <- y.data
                 pred.data.c <- y.data
                 if(isFactorT.y){
-                    pred.data.t[,treat] <- list(factor(unique(y.data[,treat])[1],
-                                                levels = levels(y.data[,treat])))
-                    pred.data.c[,treat] <- list(factor(unique(y.data[,treat])[1],
-                                                levels = levels(y.data[,treat])))
+                    pred.data.t[,treat] <- factor(cat.1, levels = t.levels)
+                    pred.data.c[,treat] <- factor(cat.1, levels = t.levels)
                 } else {
                     pred.data.t[,treat] <- cat.1
                     pred.data.c[,treat] <- cat.1
                 }
                 
                 if(isFactorM) {
-                    pred.data.t[,mediator] <- factor(PredictM1[j,],
-                                                labels = levels(y.data[,mediator]))
-                    pred.data.c[,mediator] <- factor(PredictM0[j,],
-                                                labels = levels(y.data[,mediator]))
+                    pred.data.t[,mediator] <- factor(PredictM1[j,], labels = m.levels)
+                    pred.data.c[,mediator] <- factor(PredictM0[j,], labels = m.levels)
                 } else {
                     pred.data.t[,mediator] <- PredictM1[j,]
                     pred.data.c[,mediator] <- PredictM0[j,]
@@ -303,27 +301,23 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             rm(Pr1, Pr0)
                     
             # ACME(0) Predictions Data
-            Pr1 <- matrix(, nrow=n.y, ncol=sims)
-            Pr0 <- matrix(, nrow=n.y, ncol=sims)
+            Pr1 <- matrix(, nrow=n, ncol=sims)
+            Pr0 <- matrix(, nrow=n, ncol=sims)
             
             for(j in 1:sims){
                 pred.data.t <- y.data
                 pred.data.c <- y.data
                 if(isFactorT.y){
-                    pred.data.t[,treat] <- list(factor(unique(y.data[,treat])[2],
-                                                levels = levels(y.data[,treat])))
-                    pred.data.c[,treat] <- list(factor(unique(y.data[,treat])[2],
-                                                levels = levels(y.data[,treat])))
+                    pred.data.t[,treat] <- factor(cat.0, levels = t.levels)
+                    pred.data.c[,treat] <- factor(cat.0, levels = t.levels)
                 } else{
                     pred.data.t[,treat] <- cat.0
                     pred.data.c[,treat] <- cat.0
                 }
                 
                 if(isFactorM) {
-                    pred.data.t[,mediator] <- factor(PredictM1[j,],
-                                            labels = levels(y.data[,mediator]))
-                    pred.data.c[,mediator] <- factor(PredictM0[j,],
-                                            labels = levels(y.data[,mediator]))
+                    pred.data.t[,mediator] <- factor(PredictM1[j,], labels = m.levels)
+                    pred.data.c[,mediator] <- factor(PredictM0[j,], labels = m.levels)
                 } else {
                     pred.data.t[,mediator] <- PredictM1[j,]
                     pred.data.c[,mediator] <- PredictM0[j,]
@@ -368,27 +362,23 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             rm(Pr1, Pr0)
             
             # DE(1) Predictions Data
-            Pr1 <- matrix(, nrow=n.y, ncol=sims)
-            Pr0 <- matrix(, nrow=n.y, ncol=sims)
+            Pr1 <- matrix(, nrow=n, ncol=sims)
+            Pr0 <- matrix(, nrow=n, ncol=sims)
             
             for(j in 1:sims){
                 pred.data.t <- y.data
                 pred.data.c <- y.data
                 if(isFactorT.y){
-                    pred.data.t[,treat] <- list(factor(unique(y.data[,treat])[1],
-                                                levels = levels(y.data[,treat])))
-                    pred.data.c[,treat] <- list(factor(unique(y.data[,treat])[2],
-                                                levels = levels(y.data[,treat])))
+                    pred.data.t[,treat] <- factor(cat.1, levels = t.levels)
+                    pred.data.c[,treat] <- factor(cat.0, levels = t.levels)
                 } else {
-                    pred.data.t[,treat] <- cat.1  # Treatment
-                    pred.data.c[,treat] <- cat.0  # Control
+                    pred.data.t[,treat] <- cat.1
+                    pred.data.c[,treat] <- cat.0
                 }
                 
                 if(isFactorM) {
-                    pred.data.t[,mediator] <- factor(PredictM1[j,],
-                                                labels = levels(y.data[,mediator]))
-                    pred.data.c[,mediator] <- factor(PredictM1[j,],
-                                                labels = levels(y.data[,mediator]))
+                    pred.data.t[,mediator] <- factor(PredictM1[j,], labels = m.levels)
+                    pred.data.c[,mediator] <- factor(PredictM1[j,], labels = m.levels)
                 } else {
                     pred.data.t[,mediator] <- PredictM1[j,]
                     pred.data.c[,mediator] <- PredictM1[j,]
@@ -433,27 +423,23 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             rm(Pr1, Pr0)
             
             # DE(0) Predictions Data
-            Pr1 <- matrix(, nrow=n.y, ncol=sims)
-            Pr0 <- matrix(, nrow=n.y, ncol=sims)
+            Pr1 <- matrix(, nrow=n, ncol=sims)
+            Pr0 <- matrix(, nrow=n, ncol=sims)
             
             for(j in 1:sims){
                 pred.data.t <- y.data
                 pred.data.c <- y.data
                 if(isFactorT.y){
-                    pred.data.t[,treat] <- list(factor(unique(y.data[,treat])[1], 
-                                                levels = levels(y.data[,treat])))
-                    pred.data.c[,treat] <- list(factor(unique(y.data[,treat])[2], 
-                                                levels = levels(y.data[,treat])))
+                    pred.data.t[,treat] <- factor(cat.1, levels = t.levels)
+                    pred.data.c[,treat] <- factor(cat.0, levels = t.levels)
                 } else {
                     pred.data.t[,treat] <- cat.1
                     pred.data.c[,treat] <- cat.0
                 }
                 
                 if(isFactorM) {
-                    pred.data.t[,mediator] <- factor(PredictM0[j,], 
-                                                labels = levels(y.data[,mediator]))
-                    pred.data.c[,mediator] <- factor(PredictM0[j,], 
-                                                labels = levels(y.data[,mediator]))
+                    pred.data.t[,mediator] <- factor(PredictM0[j,], labels = m.levels)
+                    pred.data.c[,mediator] <- factor(PredictM0[j,], labels = m.levels)
                 } else {
                     pred.data.t[,mediator] <- PredictM0[j,]
                     pred.data.c[,mediator] <- PredictM0[j,]
@@ -521,14 +507,14 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             }
             
             # Storage
-            delta.1 <- matrix(NA, B, 1)
-            delta.0 <- matrix(NA, B, 1)
-            zeta.1 <- matrix(NA, B, 1)
-            zeta.0 <- matrix(NA, B, 1)
-            tau <- matrix(NA, B, 1)
+            delta.1 <- matrix(NA, sims, 1)
+            delta.0 <- matrix(NA, sims, 1)
+            zeta.1 <- matrix(NA, sims, 1)
+            zeta.0 <- matrix(NA, sims, 1)
+            tau <- matrix(NA, sims, 1)
             
             # Bootstrap loop begins
-            for(b in 1:B){
+            for(b in 1:sims){
                 index <- sample(1:n, n, repl=TRUE)
                 Call.M$data <- m.data[index,]
                 Call.Y.t$data <- y.data[index,]
@@ -550,7 +536,9 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 new.fit.M <- eval.parent(Call.M)
                 new.fit.t <- eval.parent(Call.Y.t)
                 
-                ##  Mediator Predictions
+                #####################################
+                #  Mediator Predictions
+                #####################################
                 pred.data.t <- m.data
                 pred.data.t[,treat] <- cat.1
                 pred.data.c <- m.data
@@ -619,21 +607,19 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                     }
                 }
                
-                ##  Outcome Predictions
+                #####################################
+                #  Outcome Predictions
+                #####################################
                 # ACME(1) Predictions Data
                 pred.data.t <- y.data
                 pred.data.c <- y.data
                     
                 if(isFactorT.y){
-                    pred.data.t[,treat] <- list(factor(unique(y.data[,treat])[1],
-                                                levels = levels(y.data[,treat])))
-                    pred.data.c[,treat] <- list(factor(unique(y.data[,treat])[1],
-                                                levels = levels(y.data[,treat])))
+                    pred.data.t[,treat] <- factor(cat.1, levels = t.levels)
+                    pred.data.c[,treat] <- factor(cat.1, levels = t.levels)
                     if(!is.null(control)){
-                        pred.data.t[,control] <- list(factor(unique(y.data[,treat])[2],
-                                                    levels = levels(y.data[,treat])))
-                        pred.data.c[,control] <- list(factor(unique(y.data[,treat])[2],
-                                                    levels = levels(y.data[,treat])))
+                        pred.data.t[,control] <- factor(cat.0, levels = t.levels)
+                        pred.data.c[,control] <- factor(cat.0, levels = t.levels)
                     }
                 } else {
                     pred.data.t[,treat] <- cat.1
@@ -645,10 +631,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 }
                 
                 if(isFactorM) {
-                    pred.data.t[,mediator] <- factor(PredictM1,
-                                                    labels = levels(y.data[,mediator]))
-                    pred.data.c[,mediator] <- factor(PredictM0,
-                                                    labels = levels(y.data[,mediator]))
+                    pred.data.t[,mediator] <- factor(PredictM1, labels = m.levels)
+                    pred.data.c[,mediator] <- factor(PredictM0, labels = m.levels)
                 } else {
                     pred.data.t[,mediator] <- PredictM1
                     pred.data.c[,mediator] <- PredictM0
@@ -677,15 +661,11 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 pred.data.c <- y.data
                     
                 if(isFactorT.y){
-                    pred.data.t[,treat] <- list(factor(unique(y.data[,treat])[2],
-                                                levels = levels(y.data[,treat])))
-                    pred.data.c[,treat] <- list(factor(unique(y.data[,treat])[2],
-                                                levels = levels(y.data[,treat])))
+                    pred.data.t[,treat] <- factor(cat.0, levels = t.levels)
+                    pred.data.c[,treat] <- factor(cat.0, levels = t.levels)
                     if(!is.null(control)){
-                        pred.data.t[,control] <- list(factor(unique(y.data[,treat])[1],
-                                                    levels = levels(y.data[,treat])))
-                        pred.data.c[,control] <- list(factor(unique(y.data[,treat])[1],
-                                                    levels = levels(y.data[,treat])))
+                        pred.data.t[,control] <- factor(cat.1, levels = t.levels)
+                        pred.data.c[,control] <- factor(cat.1, levels = t.levels)
                     }
                 } else {
                     pred.data.t[,treat] <- cat.0
@@ -697,10 +677,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 }
                 
                 if(isFactorM) {
-                    pred.data.t[,mediator] <- factor(PredictM1, 
-                                                    labels = levels(y.data[,mediator]))
-                    pred.data.c[,mediator] <- factor(PredictM0, 
-                                                    labels = levels(y.data[,mediator]))
+                    pred.data.t[,mediator] <- factor(PredictM1, labels = m.levels)
+                    pred.data.c[,mediator] <- factor(PredictM0, labels = m.levels)
                 } else {
                     pred.data.t[,mediator] <- PredictM1
                     pred.data.c[,mediator] <- PredictM0
@@ -728,15 +706,11 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 pred.data.t <- y.data
                 pred.data.c <- y.data
                 if(isFactorT.y){
-                    pred.data.t[,treat] <- list(factor(unique(y.data[,treat])[1],
-                                                levels = levels(y.data[,treat])))
-                    pred.data.c[,treat] <- list(factor(unique(y.data[,treat])[2],
-                                                levels = levels(y.data[,treat])))
+                    pred.data.t[,treat] <- factor(cat.1, levels = t.levels)
+                    pred.data.c[,treat] <- factor(cat.0, levels = t.levels)
                     if(!is.null(control)){
-                        pred.data.t[,control] <- list(factor(unique(y.data[,treat])[2],
-                                                    levels = levels(y.data[,treat])))
-                        pred.data.c[,control] <- list(factor(unique(y.data[,treat])[1],
-                                                    levels = levels(y.data[,treat])))
+                        pred.data.t[,control] <- factor(cat.0, levels = t.levels)
+                        pred.data.c[,control] <- factor(cat.1, levels = t.levels)
                     }
                 } else {
                     pred.data.t[,treat] <- cat.1
@@ -748,10 +722,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 }
                 
                 if(isFactorM) {
-                    pred.data.t[,mediator] <- factor(PredictM1,
-                                                    labels = levels(y.data[,mediator]))
-                    pred.data.c[,mediator] <- factor(PredictM1,
-                                                    labels = levels(y.data[,mediator]))
+                    pred.data.t[,mediator] <- factor(PredictM1, labels = m.levels)
+                    pred.data.c[,mediator] <- factor(PredictM1, labels = m.levels)
                 } else {
                     pred.data.t[,mediator] <- PredictM1
                     pred.data.c[,mediator] <- PredictM1
@@ -779,15 +751,11 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 pred.data.t <- y.data
                 pred.data.c <- y.data
                 if(isFactorT.y){
-                    pred.data.t[,treat] <- list(factor(unique(y.data[,treat])[1],
-                                                levels = levels(y.data[,treat])))
-                    pred.data.c[,treat] <- list(factor(unique(y.data[,treat])[2],
-                                                levels = levels(y.data[,treat])))
+                    pred.data.t[,treat] <- factor(cat.1, levels = t.levels)
+                    pred.data.c[,treat] <- factor(cat.0, levels = t.levels)
                     if(!is.null(control)){
-                        pred.data.t[,control] <- list(factor(unique(y.data[,treat])[1],
-                                                    levels = levels(y.data[,treat])))
-                        pred.data.c[,control] <- list(factor(unique(y.data[,treat])[2],
-                                                    levels = levels(y.data[,treat])))
+                        pred.data.t[,control] <- factor(cat.0, levels = t.levels)
+                        pred.data.c[,control] <- factor(cat.1, levels = t.levels)
                     }
                 } else {
                     pred.data.t[,treat] <- cat.1
@@ -799,10 +767,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 }
                 
                 if(isFactorM) {
-                    pred.data.t[,mediator] <- factor(PredictM0,
-                                                labels = levels(y.data[,mediator]))
-                    pred.data.c[,mediator] <- factor(PredictM0,
-                                                labels = levels(y.data[,mediator]))
+                    pred.data.t[,mediator] <- factor(PredictM0, labels = m.levels)
+                    pred.data.c[,mediator] <- factor(PredictM0, labels = m.levels)
                 } else {
                     pred.data.t[,mediator] <- PredictM0
                     pred.data.c[,mediator] <- PredictM0
@@ -893,14 +859,14 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
         }
         
         # Storage - Now Dynamic
-        delta.1 <- matrix(NA, B, m)
-        delta.0 <- matrix(NA, B, m)
-        zeta.1 <- matrix(NA, B, m)
-        zeta.0 <- matrix(NA, B, m)
-        tau <- matrix(NA, B, m)
+        delta.1 <- matrix(NA, sims, m)
+        delta.0 <- matrix(NA, sims, m)
+        zeta.1 <- matrix(NA, sims, m)
+        zeta.0 <- matrix(NA, sims, m)
+        tau <- matrix(NA, sims, m)
         
         # Bootstrap loop begins
-        for(b in 1:B){
+        for(b in 1:sims){
             if(ClassM=="polr" && length(unique(y.data[index,mediator]))!=m){
                 stop("Insufficient Variation on Mediator")
             }
@@ -913,7 +879,9 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             new.fit.M <- update(model.m, data=data.star.m)
             new.fit.t <- update(model.y, data=data.star.y)
             
-            ## Mediator Predictions
+            #####################################
+            # Mediator Predictions
+            #####################################
             pred.data.t <- m.data
             pred.data.t[,treat] <- cat.1
             pred.data.c <- m.data
@@ -970,21 +938,19 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 rm(error)
             }
             
-            ##  Outcome Predictions
+            #####################################
+            #  Outcome Predictions
+            #####################################
             # ACME(1) Predictions Data
             pred.data.t <- y.data
             pred.data.c <- y.data
             
             if(isFactorT.y){
-                pred.data.t[,treat] <- list(factor(unique(y.data[,treat])[1],
-                                            levels = levels(y.data[,treat])))
-                pred.data.c[,treat] <- list(factor(unique(y.data[,treat])[1],
-                                            levels = levels(y.data[,treat])))
+                pred.data.t[,treat] <- factor(cat.1, levels = t.levels)
+                pred.data.c[,treat] <- factor(cat.1, levels = t.levels)
                 if(!is.null(control)){
-                    pred.data.t[,control] <- list(factor(unique(y.data[,treat])[2],
-                                                levels = levels(y.data[,treat])))
-                    pred.data.c[,control] <- list(factor(unique(y.data[,treat])[2],
-                                                levels = levels(y.data[,treat])))
+                    pred.data.t[,control] <- factor(cat.0, levels = t.levels)
+                    pred.data.c[,control] <- factor(cat.0, levels = t.levels)
                 }
             } else {
                 pred.data.t[,treat] <- cat.1
@@ -996,10 +962,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             }
             
             if(isFactorM) {
-                pred.data.t[,mediator] <- factor(PredictM1, 
-                                            labels = levels(y.data[,mediator]))
-                pred.data.c[,mediator] <- factor(PredictM0, 
-                                            labels = levels(y.data[,mediator]))
+                pred.data.t[,mediator] <- factor(PredictM1, labels = m.levels)
+                pred.data.c[,mediator] <- factor(PredictM0, labels = m.levels)
             } else {
                 pred.data.t[,mediator] <- PredictM1
                 pred.data.c[,mediator] <- PredictM0
@@ -1017,15 +981,11 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             pred.data.c <- y.data
             
             if(isFactorT.y){
-                pred.data.t[,treat] <- list(factor(unique(y.data[,treat])[2],
-                                            levels = levels(y.data[,treat])))
-                pred.data.c[,treat] <- list(factor(unique(y.data[,treat])[2],
-                                            levels = levels(y.data[,treat])))
+                pred.data.t[,treat] <- factor(cat.0, levels = t.levels)
+                pred.data.c[,treat] <- factor(cat.0, levels = t.levels)
                 if(!is.null(control)){
-                    pred.data.t[,control] <- list(factor(unique(y.data[,treat])[1],
-                                                levels = levels(y.data[,treat])))
-                    pred.data.c[,control] <- list(factor(unique(y.data[,treat])[1],
-                                                levels = levels(y.data[,treat])))
+                    pred.data.t[,control] <- factor(cat.1, levels = t.levels)
+                    pred.data.c[,control] <- factor(cat.1, levels = t.levels)
                 }
             } else {
                 pred.data.t[,treat] <- cat.0    
@@ -1037,10 +997,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             }
             
             if(isFactorM) {
-                pred.data.t[,mediator] <- factor(PredictM1,
-                                            labels = levels(y.data[,mediator]))
-                pred.data.c[,mediator] <- factor(PredictM0,
-                                            labels = levels(y.data[,mediator]))
+                pred.data.t[,mediator] <- factor(PredictM1, labels = m.levels)
+                pred.data.c[,mediator] <- factor(PredictM0, labels = m.levels)
             } else {
                 pred.data.t[,mediator] <- PredictM1
                 pred.data.c[,mediator] <- PredictM0
@@ -1059,15 +1017,11 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             pred.data.c <- y.data
             
             if(isFactorT.y){
-                pred.data.t[,treat] <- list(factor(unique(y.data[,treat])[1], 
-                                            levels = levels(y.data[,treat])))
-                pred.data.c[,treat] <- list(factor(unique(y.data[,treat])[2], 
-                                            levels = levels(y.data[,treat])))
+                pred.data.t[,treat] <- factor(cat.1, levels = t.levels)
+                pred.data.c[,treat] <- factor(cat.0, levels = t.levels)
                 if(!is.null(control)){
-                    pred.data.t[,control] <- list(factor(unique(y.data[,treat])[2],
-                                            levels = levels(y.data[,treat])))
-                    pred.data.c[,control] <- list(factor(unique(y.data[,treat])[1],
-                                            levels = levels(y.data[,treat])))
+                    pred.data.t[,control] <- factor(cat.0, levels = t.levels)
+                    pred.data.c[,control] <- factor(cat.1, levels = t.levels)
                 }
             } else {
                 pred.data.t[,treat] <- cat.1
@@ -1079,10 +1033,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             }
             
             if(isFactorM) {
-                pred.data.t[,mediator] <- factor(PredictM1, 
-                                            labels = levels(y.data[,mediator]))
-                pred.data.c[,mediator] <- factor(PredictM1, 
-                                            labels = levels(y.data[,mediator]))
+                pred.data.t[,mediator] <- factor(PredictM1, labels = m.levels)
+                pred.data.c[,mediator] <- factor(PredictM1, labels = m.levels)
             } else {
                 pred.data.t[,mediator] <- PredictM1 
                 pred.data.c[,mediator] <- PredictM1
@@ -1100,15 +1052,11 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             pred.data.c <- y.data
             
             if(isFactorT.y){
-                pred.data.t[,treat] <- list(factor(unique(y.data[,treat])[1], 
-                                            levels = levels(y.data[,treat])))
-                pred.data.c[,treat] <- list(factor(unique(y.data[,treat])[2], 
-                                            levels = levels(y.data[,treat])))
+                pred.data.t[,treat] <- factor(cat.1, levels = t.levels)
+                pred.data.c[,treat] <- factor(cat.0, levels = t.levels)
                 if(!is.null(control)){
-                    pred.data.t[,control] <- list(factor(unique(y.data[,treat])[1], 
-                                            levels = levels(y.data[,treat])))
-                    pred.data.c[,control] <- list(factor(unique(y.data[,treat])[2], 
-                                            levels = levels(y.data[,treat])))
+                    pred.data.t[,control] <- factor(cat.0, levels = t.levels)
+                    pred.data.c[,control] <- factor(cat.1, levels = t.levels)
                 }
             } else {
                 pred.data.t[,treat] <- cat.1
@@ -1120,10 +1068,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             }
             
             if(isFactorM) {
-                pred.data.t[,mediator] <- factor(PredictM0, 
-                                                labels = levels(y.data[,mediator]))
-                pred.data.c[,mediator] <- factor(PredictM0, 
-                                                labels = levels(y.data[,mediator]))
+                pred.data.t[,mediator] <- factor(PredictM0, labels = m.levels)
+                pred.data.c[,mediator] <- factor(PredictM0, labels = m.levels)
             } else {
                 pred.data.t[,mediator] <- PredictM0
                 pred.data.c[,mediator] <- PredictM0
