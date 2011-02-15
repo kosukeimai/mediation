@@ -849,10 +849,13 @@ print.summary.medsens <- function(x, ...){
      }
 }
 
+
+### Plot Function ###
+
 plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE, smooth.effect=FALSE, smooth.ci=FALSE, levels=NULL, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL, lwd=par("lwd"), ...){
   if(sens.par=="rho"){
     if(pr.plot==TRUE){
-        if(x$type!="bm"){
+        if(x$type != "bm"){
             stop("Proportion mediated is only implemented for binary mediator \n")
         }
         if(is.null(ylim)) 
@@ -881,7 +884,8 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             title(ylab = expression(paste("Proportion Mediated: ", bar(nu))), line=2.5, cex.lab=.9)
             else title(ylab = ylab)
     } else {
-    if(x$INT==FALSE){
+    if(x$INT == FALSE){
+    	if("indirect" %in% effect.type){
         if(is.null(ylim))
             ylim <- c(min(x$d0), max(x$d0))
         if(is.null(main))
@@ -909,7 +913,38 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         if(is.null(ylab)) 
             title(ylab = expression(paste("Average Mediation Effect: ", bar(delta)(t))), line=2.5, cex.lab=.9)
             else title(ylab = ylab)
-    } else {
+    } 
+    if("direct" %in% effect.type){
+    	if(is.null(ylim))
+            ylim <- c(min(x$z0), max(x$z0))
+        if(is.null(main))
+            main <- expression(paste("ADE(", rho, ")"))
+        if(smooth.effect==TRUE)
+            z0 <- lowess(x$rho, x$z0)$y
+            else z0 <- x$z0
+        if(smooth.ci==TRUE){
+            lower <- lowess(x$rho, x$lower.z0)$y
+            upper <- lowess(x$rho, x$upper.z0)$y
+        } else {
+            lower <- x$lower.z0
+            upper <- x$upper.z0
+        }
+        plot.default(x$rho, z0, type="n", xlab="", ylab="", main=main, xlim=xlim, ylim=ylim, ...)
+        polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
+        lines(x$rho, z0, lty=1, lwd=lwd)
+        abline(h=0)
+        abline(v=0)
+        abline(h=weighted.mean(c(z0[floor(1/x$rho.by)],z0[ceiling(1/x$rho.by)]), 
+            c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
+        if(is.null(xlab)) 
+            title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
+            else title(xlab = xlab)
+        if(is.null(ylab)) 
+            title(ylab = expression(paste("Average Direct Effect: ", bar(delta)(t))), line=2.5, cex.lab=.9)
+            else title(ylab = ylab)
+    	}
+    } else {### With Interaction
+     if("indirect" %in% effect.type){
         if(prod(par("mfrow")==1) && dev.interactive()){
             oask <- devAskNewPage(TRUE)
             on.exit(devAskNewPage(oask))
@@ -973,8 +1008,73 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             title(ylab = expression(paste("Average Mediation Effect: ", bar(delta)(1))), line=2.5, cex.lab=.9)
             else title(ylab = ylab)
             }
+     if("direct" %in% effect.type){
+     	if(prod(par("mfrow")==1) && dev.interactive()){
+            oask <- devAskNewPage(TRUE)
+            on.exit(devAskNewPage(oask))
         }
-  } else if (sens.par=="R2"){
+        if(is.null(ylim))
+            ylim <- c(min(x$z0), max(x$z0))
+        if(is.null(main))
+            main0 <- expression(paste("ADE"[0], "(", rho, ")"))
+            else main0 <- main
+        if(smooth.effect==TRUE)
+            z0 <- lowess(x$rho, x$z0)$y
+            else z0 <- x$z0
+        if(smooth.ci==TRUE){
+            lower <- lowess(x$rho, x$lower.z0)$y
+            upper <- lowess(x$rho, x$upper.z0)$y
+        } else {
+            lower <- x$lower.z0
+            upper <- x$upper.z0
+        }
+        plot.default(x$rho, z0, type="n", xlab="", ylab="", main=main0, xlim=xlim, ylim=ylim, ...)
+        polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
+        lines(x$rho, z0, lty=1, lwd=lwd)
+        abline(h=0)
+        abline(v=0)
+        abline(h=weighted.mean(c(z0[floor(1/x$rho.by)],z0[ceiling(1/x$rho.by)]), 
+            c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
+        if(is.null(xlab)) 
+            title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
+            else title(xlab = xlab)
+        if(is.null(ylab)) 
+            title(ylab = expression(paste("Average Direct Effect: ", bar(delta)(0))), line=2.5, cex.lab=.9)
+            else title(ylab = ylab)
+
+        #Delta_1
+        if(is.null(ylim))
+            ylim <- c(min(x$z1), max(x$z1))
+        if(is.null(main))
+            main1 <- expression(paste("ADE"[1], "(", rho, ")"))
+            else main1 <- main
+        if(smooth.effect==TRUE)
+            z1 <- lowess(x$rho, x$z1)$y
+            else z1 <- x$z1
+        if(smooth.ci==TRUE){
+            lower <- lowess(x$rho, x$lower.z1)$y
+            upper <- lowess(x$rho, x$upper.z1)$y
+        } else {
+            lower <- x$lower.z1
+            upper <- x$upper.z1
+        }
+        plot.default(x$rho, z1, type="n", xlab="", ylab="", main=main1, xlim=xlim, ylim=ylim,...)
+        polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
+        lines(x$rho, z1, lty=1, lwd=lwd)
+        abline(h=0)
+        abline(v=0)
+        abline(h=weighted.mean(c(z1[floor(1/x$rho.by)],z1[ceiling(1/x$rho.by)]), 
+            c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
+        if(is.null(xlab)) 
+            title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
+            else title(xlab = xlab)
+        if(is.null(ylab)) 
+            title(ylab = expression(paste("Average Direct Effect: ", bar(delta)(1))), line=2.5, cex.lab=.9)
+            else title(ylab = ylab)
+     	}       
+            }
+        }
+  } else if (sens.par=="R2"){## Different Sensitivity Parameter BEGIN HERE
     if(pr.plot==TRUE)
         stop("Proportion mediated is only plotted in terms of rho\n")
         
@@ -998,7 +1098,7 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
     if(is.null(ylim))
         ylim <- c(0,1)
     
-    if(x$INT==FALSE){
+    if(x$INT==FALSE){## No Interaction, R2, Continuous
         if(is.null(levels))
             levels <- pretty(quantile(x$d0, probs=c(0.1,0.9)), 10)
         if(sign.prod == 1){
@@ -1030,7 +1130,7 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
         axis(2,at=seq(0,1,by=.1))
         axis(1,at=seq(0,1,by=.1))
-    } else {
+    } else {## Interaction, R2, Continuous
         if(prod(par("mfrow")==1) && dev.interactive()){
             oask <- devAskNewPage(TRUE)
             on.exit(devAskNewPage(oask))
