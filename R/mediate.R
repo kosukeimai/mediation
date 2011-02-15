@@ -100,25 +100,6 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
         order(x)[length(x)]
     }
     
-    tobitpred <- function(Pr0,Pr1){
-        ## Compute predicted outcome for censored outcome regression
-        ## Objects that must exist in surrounding environment:
-        ##    TMmodel, ymat.t, y.mat.c, model.y, j
-        Pr1[,j] <- t(as.matrix(TMmodel[j,-2])) %*% t(ymat.t)
-        Pr0[,j] <- t(as.matrix(TMmodel[j,-2])) %*% t(ymat.c)
-        model.y.upper <- model.y@misc$Upper
-        model.y.lower <- model.y@misc$Lower
-        censored <- (Pr1[,j] > model.y.upper)
-        Pr1[censored,j] <- model.y.upper
-        censored <- (Pr1[,j] < model.y.lower)
-        Pr1[censored,j] <- model.y.lower
-        censored <- (Pr0[,j] > model.y.upper)
-        Pr0[censored,j] <- model.y.upper
-        censored <- (Pr0[,j] < model.y.lower)
-        Pr0[censored,j] <- model.y.lower
-        
-    }
-    
     predictY.dataprep <- function(T.t,T.c,M.t,M.c){
         ## Prepare model matrix for outcome predictions; arguments 0 or 1
         ## Objects that must exist in surrounding environment:
@@ -331,13 +312,13 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
 #                    pred.data.t[,mediator] <- PredictM1[j,]
 #                    pred.data.c[,mediator] <- PredictM0[j,]
 #                }
-                if(!isVglm.y){
-                    ymat.t <- model.matrix(terms(model.y), data=pred.data.t) 
-                    ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
-                } else {
+                if(isVglm.y){
                     ymat.t <- model.matrix(model.y@terms, data=pred.data.t) 
                         # There seems to be a problem here in how things work
                     ymat.c <- model.matrix(model.y@terms, data=pred.data.c)        
+                } else {
+                    ymat.t <- model.matrix(terms(model.y), data=pred.data.t) 
+                    ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
                 }
                
                 #print(as.matrix(TMmodel[j,]))  # the second row of this is a Log(scale) 
@@ -351,19 +332,10 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
               
                 if(isVglm.y){
                     if(vfamily=="tobit") {
-                        tobitpred()
-#                        Pr1[,j] <- t(as.matrix(TMmodel[j,-2])) %*% t(ymat.t)
-#                        Pr0[,j] <- t(as.matrix(TMmodel[j,-2])) %*% t(ymat.c)
-#                        model.y.upper <- model.y@misc$Upper
-#                        model.y.lower <- model.y@misc$Lower
-#                        censored <- (Pr1[,j] > model.y.upper)
-#                        Pr1[censored,j] <- model.y.upper
-#                        censored <- (Pr1[,j] < model.y.lower)
-#                        Pr1[censored,j] <- model.y.lower
-#                        censored <- (Pr0[,j] > model.y.upper)
-#                        Pr0[censored,j] <- model.y.upper
-#                        censored <- (Pr0[,j] < model.y.lower)
-#                        Pr0[censored,j] <- model.y.lower
+                        Pr1.tmp <- ymat.t %*% TMmodel[j,-2]
+                        Pr0.tmp <- ymat.c %*% TMmodel[j,-2]
+                        Pr1[,j] <- pmin(pmax(Pr1.tmp, model.y@misc$Lower), model.y@misc$Upper)
+                        Pr0[,j] <- pmin(pmax(Pr0.tmp, model.y@misc$Lower), model.y@misc$Upper)
                     } else {
                         stop("outcome model is in unsupported vglm family")
                     }
@@ -414,19 +386,10 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 
                 if(isVglm.y){
                     if(vfamily=="tobit") {
-                        tobitpred()
-#                        Pr1[,j] <- t(as.matrix(TMmodel[j,-2])) %*% t(ymat.t)
-#                        Pr0[,j] <- t(as.matrix(TMmodel[j,-2])) %*% t(ymat.c)
-#                        model.y.upper <- model.y@misc$Upper
-#                        model.y.lower <- model.y@misc$Lower
-#                        censored <- (Pr1[,j] > model.y.upper)
-#                        Pr1[censored,j] <- model.y.upper
-#                        censored <- (Pr1[,j] < model.y.lower)
-#                        Pr1[censored,j] <- model.y.lower
-#                        censored <- (Pr0[,j] > model.y.upper)
-#                        Pr0[censored,j] <- model.y.upper
-#                        censored <- (Pr0[,j] < model.y.lower)
-#                        Pr0[censored,j] <- model.y.lower
+                        Pr1.tmp <- ymat.t %*% TMmodel[j,-2]
+                        Pr0.tmp <- ymat.c %*% TMmodel[j,-2]
+                        Pr1[,j] <- pmin(pmax(Pr1.tmp, model.y@misc$Lower), model.y@misc$Upper)
+                        Pr0[,j] <- pmin(pmax(Pr0.tmp, model.y@misc$Lower), model.y@misc$Upper)
                     } else {
                         stop("outcome model is in unsupported vglm family")
                     }
@@ -476,19 +439,10 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 
                 if(isVglm.y){
                     if(vfamily=="tobit") {
-                        tobitpred()
-#                        Pr1[,j] <- t(as.matrix(TMmodel[j,-2])) %*% t(ymat.t)
-#                        Pr0[,j] <- t(as.matrix(TMmodel[j,-2])) %*% t(ymat.c)
-#                        model.y.upper <- model.y@misc$Upper
-#                        model.y.lower <- model.y@misc$Lower
-#                        censored <- (Pr1[,j] > model.y.upper)
-#                        Pr1[censored,j] <- model.y.upper
-#                        censored <- (Pr1[,j] < model.y.lower)
-#                        Pr1[censored,j] <- model.y.lower
-#                        censored <- (Pr0[,j] > model.y.upper)
-#                        Pr0[censored,j] <- model.y.upper
-#                        censored <- (Pr0[,j] < model.y.lower)
-#                        Pr0[censored,j] <- model.y.lower
+                        Pr1.tmp <- ymat.t %*% TMmodel[j,-2]
+                        Pr0.tmp <- ymat.c %*% TMmodel[j,-2]
+                        Pr1[,j] <- pmin(pmax(Pr1.tmp, model.y@misc$Lower), model.y@misc$Upper)
+                        Pr0[,j] <- pmin(pmax(Pr0.tmp, model.y@misc$Lower), model.y@misc$Upper)
                     } else {
                         stop("outcome model is in unsupported vglm family")
                     }
@@ -538,19 +492,10 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 
                 if(isVglm.y){
                     if(vfamily=="tobit") {
-                        tobitpred()
-#                        Pr1[,j] <- t(as.matrix(TMmodel[j,-2])) %*% t(ymat.t)
-#                        Pr0[,j] <- t(as.matrix(TMmodel[j,-2])) %*% t(ymat.c)
-#                        model.y.upper <- model.y@misc$Upper
-#                        model.y.lower <- model.y@misc$Lower
-#                        censored <- (Pr1[,j] > model.y.upper)
-#                        Pr1[censored,j] <- model.y.upper
-#                        censored <- (Pr1[,j] < model.y.lower)
-#                        Pr1[censored,j] <- model.y.lower
-#                        censored <- (Pr0[,j] > model.y.upper)
-#                        Pr0[censored,j] <- model.y.upper
-#                        censored <- (Pr0[,j] < model.y.lower)
-#                        Pr0[censored,j] <- model.y.lower
+                        Pr1.tmp <- ymat.t %*% TMmodel[j,-2]
+                        Pr0.tmp <- ymat.c %*% TMmodel[j,-2]
+                        Pr1[,j] <- pmin(pmax(Pr1.tmp, model.y@misc$Lower), model.y@misc$Upper)
+                        Pr0[,j] <- pmin(pmax(Pr0.tmp, model.y@misc$Lower), model.y@misc$Upper)
                     } else {
                         stop("outcome model is in unsupported vglm family")
                     }
