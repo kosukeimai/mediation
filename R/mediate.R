@@ -329,7 +329,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                     Pr0[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.c)
                 }
                 
-                rm(ymat.t, ymat.c, pred.data.t,pred.data.c)
+                rm(ymat.t, ymat.c, pred.data.t, pred.data.c, pred.data)
             }
             
             if(ClassY=="glm"){
@@ -366,7 +366,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                         Pr1[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.t)
                         Pr0[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.c)
                 }
-                rm(ymat.t, ymat.c)
+                rm(ymat.t, ymat.c, pred.data.t, pred.data.c, pred.data)
             }
             
             if(ClassY=="glm"){
@@ -403,7 +403,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                     Pr1[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.t)
                     Pr0[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.c)
                 }
-                rm(ymat.t, ymat.c, pred.data.t,pred.data.c)
+                rm(ymat.t, ymat.c, pred.data.t, pred.data.c, pred.data)
             }    
             
             if(ClassY=="glm"){
@@ -440,7 +440,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                     Pr1[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.t)
                     Pr0[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.c)
                 }
-                rm(ymat.t, ymat.c, pred.data.t,pred.data.c)
+                rm(ymat.t, ymat.c, pred.data.t, pred.data.c, pred.data)
             }
             
             if(ClassY=="glm"){
@@ -589,7 +589,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 pr.mat <- as.matrix(cbind(pr.1, pr.0))
                 delta.1.tmp <- pr.mat[,1] - pr.mat[,2]
                 
-                rm(pred.data.t, pred.data.c, pr.1, pr.0, pr.mat)
+                rm(pred.data.t, pred.data.c, pred.data, pr.1, pr.0, pr.mat)
                 
                 
                 # ACME(0)
@@ -611,7 +611,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 pr.mat <- as.matrix(cbind(pr.1, pr.0))
                 delta.0.tmp <-pr.mat[,1] - pr.mat[,2]
                 
-                rm(pred.data.t, pred.data.c, pr.1, pr.0, pr.mat)
+                rm(pred.data.t, pred.data.c, pred.data, pr.1, pr.0, pr.mat)
                
                 
                 # DE(1)
@@ -633,7 +633,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 pr.mat <- as.matrix(cbind(pr.1, pr.0))
                 zeta.1.tmp <- pr.mat[,1] - pr.mat[,2]
                 
-                rm(pred.data.t, pred.data.c, pr.1, pr.0, pr.mat)
+                rm(pred.data.t, pred.data.c, pred.data, pr.1, pr.0, pr.mat)
                 
                 
                 # DE(0)
@@ -655,7 +655,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 pr.mat <- as.matrix(cbind(pr.1, pr.0))
                 zeta.0.tmp <-pr.mat[,1] - pr.mat[,2]
                 
-                rm(pred.data.t, pred.data.c, pr.1, pr.0, pr.mat)
+                rm(pred.data.t, pred.data.c, pred.data, pr.1, pr.0, pr.mat)
                 
                 
                 # Compute all QoIs
@@ -816,7 +816,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             probs_p1 <- predict(new.fit.t, newdata=pred.data.t, type="probs")
             probs_p0 <- predict(new.fit.t, newdata=pred.data.c, type="probs")
             delta.1.tmp <-  probs_p1 - probs_p0
-            rm(pred.data.t, pred.data.c, probs_p1, probs_p0)
+            rm(pred.data.t, pred.data.c, pred.data, probs_p1, probs_p0)
             
             # ACME(0)
             pred.data <- predictY.dataprep(0,0,1,0)
@@ -826,7 +826,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             probs_p1 <- predict(new.fit.t, newdata=pred.data.t, type="probs")
             probs_p0 <- predict(new.fit.t, newdata=pred.data.c, type="probs")
             delta.0.tmp <- probs_p1 - probs_p0
-            rm(pred.data.t, pred.data.c, probs_p1, probs_p0)
+            rm(pred.data.t, pred.data.c, pred.data, probs_p1, probs_p0)
             
             # DE(1)
             pred.data <- predictY.dataprep(1,0,1,1)
@@ -836,7 +836,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             probs_p1 <- predict(new.fit.t, newdata=pred.data.t, type="probs")
             probs_p0 <- predict(new.fit.t, newdata=pred.data.c, type="probs")
             zeta.1.tmp <- probs_p1 - probs_p0
-            rm(pred.data.t, pred.data.c, probs_p1, probs_p0)
+            rm(pred.data.t, pred.data.c, pred.data, probs_p1, probs_p0)
             
             # DE(0)
             pred.data <- predictY.dataprep(1,0,0,0)
@@ -846,7 +846,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             probs_p1 <- predict(new.fit.t, newdata=pred.data.t, type="probs")
             probs_p0 <- predict(new.fit.t, newdata=pred.data.c, type="probs")
             zeta.0.tmp <- probs_p1 - probs_p0
-            rm(pred.data.t, pred.data.c, probs_p1, probs_p0)
+            rm(pred.data.t, pred.data.c, pred.data, probs_p1, probs_p0)
             
             # Compute all QoIs
             zeta.1[b,] <- apply(zeta.1.tmp, 2, mean)
