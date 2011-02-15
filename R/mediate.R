@@ -547,9 +547,11 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                     m.c <- model.frame(tt, pred.data.c, xlev = new.fit.M$xlevels)
                     X.t <- model.matrix(tt, m.t, contrasts = new.fit.M$contrasts)
                     X.c <- model.matrix(tt, m.c, contrasts = new.fit.M$contrasts)
+                    rm(tt, m.t, m.c)
                     PredictM1 <- rowSums(X.t * t(newfits$coefficients))
                     PredictM0 <- rowSums(X.c * t(newfits$coefficients))
-                        
+                    rm(newfits, X.t, X.c)
+                    
                 ### Case I-2-d: Other
                 } else {
                     if(isGam.m){
