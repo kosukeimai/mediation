@@ -190,8 +190,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
         ########################################################################
         if(boot == FALSE){
             # Error if gam
-            if(isGam.y){
-                stop("boot must be TRUE for gam models")
+            if(isGam.y | isRq.m){
+                stop("boot must be TRUE for models used")
             }
             
             # Get mean and variance parameters for simulations
@@ -623,7 +623,6 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 new.fit.M <- eval.parent(Call.M)
                 new.fit.t <- eval.parent(Call.Y.t)
                 
-print(new.fit.t)
                 #####################################
                 #  Mediator Predictions
                 #####################################
@@ -656,46 +655,32 @@ print(new.fit.t)
                     }
                     PredictM1 <- apply(draws_m1, 1, indexmax)
                     PredictM0 <- apply(draws_m0, 1, indexmax)
-                    
-                ### Case I-2-c: Other
+                
+                ### Case I-2-c: Quantile Regression for Mediator
+                } else if(isRq.m){
+                    # Use inverse transform sampling to predict M
+                    newfits <- update(new.fit.M, tau = runif(n))
+                    tt <- delete.response(terms(new.fit.M))
+                    m.t <- model.frame(tt, pred.data.t, xlev = new.fit.M$xlevels)
+                    m.c <- model.frame(tt, pred.data.c, xlev = new.fit.M$xlevels)
+                    X.t <- model.matrix(tt, m.t, contrasts = new.fit.M$contrasts)
+                    X.c <- model.matrix(tt, m.c, contrasts = new.fit.M$contrasts)
+                    PredictM1 <- rowSums(X.t * t(newfits$coefficients))
+                    PredictM0 <- rowSums(X.c * t(newfits$coefficients))
+                        
+                ### Case I-2-d: Other
                 } else {
                     if(isGam.m){
                         sigma <- summary(new.fit.M)$scale
                     } else {
-                        # print(summary(new.fit.M))  # when of class rq (quantile regression)
-                                                     # there is not such sigma variable
-                        # print(names(summary(new.fit.M)))  # this produces  
-                                                            #   "call"
-                                                            #   "terms"
-                                                            #   "coefficients"
-                                                            #   "rdf"
-                                                            #   "tau"
                         sigma <- summary(new.fit.M)$sigma
                     }
-                    if(!isRq.m){
-                        error <- rnorm(n, mean=0, sd=sigma)
-                        PredictM1 <- predict(new.fit.M, type="response", 
-                                              newdata=pred.data.t) + error
-                        PredictM0 <- predict(new.fit.M, type="response", 
-                                              newdata=pred.data.c) + error
-                        rm(error)
-                    } else {
-                        # For quantile regression we are unable to introduce error 
-                        # into the prediction. Hence sample quantiles from 0 1 and
-                        # then predict.
-                        tau.list <- runif(n)
-                        PredictM1 <- predict(update(new.fit.M, tau=tau.list),
-                                                    type="response", newdata=pred.data.t)
-                        PredictM0 <- predict(update(new.fit.M, tau=tau.list),
-                                                    type="response", newdata=pred.data.c)
-#                        PredictM1 <- PredictM0 <- vector(length=n)
-#                        for(zz in 1:n){
-#                            PredictM1[zz] <- predict(update(new.fit.M, tau=tau.list[zz]),
-#                                                      type="response", newdata=pred.data.t)
-#                            PredictM0[zz] <- predict(update(new.fit.M, tau=tau.list[zz]),
-#                                                      type="response", newdata=pred.data.c)
-#                        }
-                    }
+                    error <- rnorm(n, mean=0, sd=sigma)
+                    PredictM1 <- predict(new.fit.M, type="response", 
+                                          newdata=pred.data.t) + error
+                    PredictM0 <- predict(new.fit.M, type="response", 
+                                          newdata=pred.data.c) + error
+                    rm(error)
                 }
                
                 #####################################
@@ -706,7 +691,6 @@ print(new.fit.t)
                 pred.data.t <- pred.data$t
                 pred.data.c <- pred.data$c
                 
-print(head(pred.data.t))
 #                if(isFactorT.y){
 #                    pred.data.t[,treat] <- factor(cat.1, levels = t.levels)
 #                    pred.data.c[,treat] <- factor(cat.1, levels = t.levels)
