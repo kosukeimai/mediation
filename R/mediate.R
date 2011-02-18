@@ -724,12 +724,14 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             boot <- TRUE
         }
         
+        n.ycat <- length(unique(model.response(y.data)))
+        
         # Storage - Now Dynamic
-        delta.1 <- matrix(NA, sims, m)
-        delta.0 <- matrix(NA, sims, m)
-        zeta.1 <- matrix(NA, sims, m)
-        zeta.0 <- matrix(NA, sims, m)
-        tau <- matrix(NA, sims, m)
+        delta.1 <- matrix(NA, sims, n.ycat)
+        delta.0 <- matrix(NA, sims, n.ycat)
+        zeta.1 <- matrix(NA, sims, n.ycat)
+        zeta.0 <- matrix(NA, sims, n.ycat)
+        tau <- matrix(NA, sims, n.ycat)
         
         # Bootstrap loop begins
         for(b in 1:sims){
@@ -967,15 +969,15 @@ summary.mediate.order <- function(object, ...){
 print.summary.mediate.order <- function(x, ...){
     tab.d0 <- rbind(x$d0, x$d0.ci)
     tab.d1 <- rbind(x$d1, x$d1.ci)
-    tab.z0 <- rbind(x$d0, x$d0.ci)
-    tab.z1 <- rbind(x$d1, x$d1.ci)
+    tab.z0 <- rbind(x$z0, x$z0.ci)
+    tab.z1 <- rbind(x$z1, x$z1.ci)
     tab.tau <- rbind(x$tau.coef, x$tau.ci)
     
     # Outcome Table Labels
-    m.lab <- sort(unique(levels(model.frame(x$model.y)[,1])))
+    y.lab <- sort(unique(levels(model.frame(x$model.y)[,1])))
     out.names <- c()
-    for(i in 1:length(x$m.lab)){
-        out.names.tmp <- paste("Pr(Y=",x$m.lab[i],")",sep="")
+    for(i in 1:length(y.lab)){
+        out.names.tmp <- paste("Pr(Y=",y.lab[i],")",sep="")
         out.names <- c(out.names, out.names.tmp)
     }
     
@@ -991,26 +993,19 @@ print.summary.mediate.order <- function(x, ...){
     rownames(tab.tau)[1] <- "Total Effect: "
     colnames(tab.tau) <- out.names
     
-    # TODO: Given the nonlinear models its possible for d0 not = d1 even if
-    # no interaction. we have to fix this in the regular code too.
+    cat("\n Causal Mediation Analysis \n\n")
+    cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
+    print(tab.d0, digits=4)
+    cat("\n")
+    print(tab.d1, digits=4)
+    cat("\n")
+    print(tab.z0, digits=4)
+    cat("\n")
+    print(tab.z1, digits=4)
+    cat("\n")
+    print(tab.tau, digits=4)
+    cat("\n")
     
-    if(x$INT==TRUE){
-        cat("\n Causal Mediation Analysis \n\n")
-        cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
-        print(tab.d0, digits=4)
-        print(tab.d1, digits=4)
-        print(tab.z0, digits=4)
-        print(tab.z1, digits=4)
-        print(tab.tau, digits=4)
-    } else {
-        cat("\n Causal Mediation Analysis \n\n")
-        cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
-        print(tab.d0, digits=4) 
-        cat("\n")
-        print(tab.z0, digits=4)
-        cat("\n")
-        print(tab.tau, digits=4)
-    }
     invisible(x)
 }
 
@@ -1101,7 +1096,7 @@ plot.mediate <- function(x, treatment = NULL,
     abline(v = 0, lty = 2)
 }
 
-
+## TODO: plot.mediate.order()
 
 mediations <- function(datasets, treatment, mediators, outcome, 
                     covariates=NULL, family=c("gaussian", "gaussian"),
