@@ -1096,7 +1096,107 @@ plot.mediate <- function(x, treatment = NULL,
     abline(v = 0, lty = 2)
 }
 
-## TODO: plot.mediate.order()
+
+plot.process.order <- function(model){
+    length <- length(model$d1)
+    coef.vec.1 <- lower.vec.1 <- upper.vec.1 <- 
+        coef.vec.0 <- lower.vec.0 <- upper.vec.0 <- matrix(NA,ncol=3,nrow=length)
+    for(j in 1:length){
+        coef.vec.1[j,] <- c(model$d1[j], model$z1[j], model$tau.coef[j])
+        lower.vec.1[j,] <- c(model$d1.ci[1,j], model$z1.ci[1,j],model$tau.ci[1,j])
+        upper.vec.1[j,] <- c(model$d1.ci[2,j], model$z1.ci[2,j],model$tau.ci[2,j])
+        
+        coef.vec.0[j,] <- c(model$d0[j], model$z0[j], model$tau.coef[j])
+        lower.vec.0[j,] <- c(model$d0.ci[1,j], model$z0.ci[1,j],model$tau.ci[1,j])
+        upper.vec.0[j,] <- c(model$d0.ci[2,j], model$z0.ci[2,j],model$tau.ci[2,j])
+    }
+    range.1 <- range(model$d1.ci[1,], model$z1.ci[1,],model$tau.ci[1,],
+                      model$d1.ci[2,], model$z1.ci[2,],model$tau.ci[2,])
+    range.0 <- range(model$d0.ci[1,], model$z0.ci[1,],model$tau.ci[1,],
+                      model$d0.ci[2,], model$z0.ci[2,],model$tau.ci[2,])
+                          
+    return(list(coef.vec.1=coef.vec.1, lower.vec.1=lower.vec.1, 
+                upper.vec.1=upper.vec.1, coef.vec.0=coef.vec.0,
+                lower.vec.0=lower.vec.0, upper.vec.0=upper.vec.0,
+                range.1=range.1, range.0=range.0, length=length))
+}
+
+
+plot.mediate.order <- function(x, treatment = NULL,
+                        xlim = NULL, xlab = "", ylim = NULL, ylab = "",
+                        labels = c("ACME","Direct\nEffect","Total\nEffect"), 
+                        main = NULL, lwd = 1.5, cex = .85,
+                        col = "black", ...){
+    # Determine which graph to plot
+    if(is.null(treatment)){
+        if(x$INT){
+            treatment <- c(0,1)
+        } else {
+            treatment <- 1
+        }
+    }
+    
+    param <- plot.process.order(x)
+    y.axis <- c(ncol(param$coef.vec.1):.5)
+        # create indicator for y.axis, descending so labels go from top to bottom
+    
+    # Set xlim
+    if(is.null(xlim)){
+        if(length(treatment) > 1) {
+            xlim <- range(param$range.1, param$range.0) * 1.2
+        } else if (treatment == 1){
+            xlim <- param$range.1 * 1.2
+        } else {
+            xlim <- param$range.0 * 1.2
+        }
+    }
+    
+    # Set ylim
+    if(is.null(ylim)){
+        ylim <- c(min(y.axis) - 0.5, max(y.axis) + 0.5)
+    }
+    
+    # Plot
+    plot(param$coef.vec.1[1,], y.axis, type = "n", xlab = xlab, ylab = ylab,
+            yaxt = "n", xlim = xlim, ylim = ylim, main = main, ...) 
+            # create empty plot with labels
+    
+    # Set offset values depending on number of bars to plot
+    if(length(treatment) == 1){
+        adj <- 0
+    } else {
+        adj <- 0.05
+    }
+    
+    if(1 %in% treatment){
+        adj.1 <- adj * nrow(param$coef.vec.1)
+        for(z in 1:nrow(param$coef.vec.1)){
+            points(param$coef.vec.1[z,], y.axis + adj.1, 
+                    type = "p", pch = 19, cex = cex, col = col)
+            segments(param$lower.vec.1[z,], y.axis + adj.1,
+                    param$upper.vec.1[z,], y.axis + adj.1, 
+                    lwd = lwd, col = col)
+            adj.1 <- adj.1 - 0.05
+        }
+    }
+    if(0 %in% treatment) {
+        adj.0 <- adj
+        for(z in 1:nrow(param$coef.vec.0)){
+            points(param$coef.vec.0[z,], y.axis - adj.0, 
+                    type = "p", pch = 1, cex = cex, col = col)
+             # plot coefficients as points, turning off axes and labels. 
+            segments(param$lower.vec.0[z,], y.axis - adj.0, 
+                    param$upper.vec.0[z,], y.axis - adj.0, 
+                    lwd = lwd, lty = 3, col = col)
+             # coef +/-1.96*se = 95% interval, lwd adjusts line thickness
+            adj.0 <- adj.0 + 0.05 
+        }
+    }
+    axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
+         # draw y-axis with tick marks, make labels perpendicular to axis and closer to axis
+    abline(v = 0, lty = 2)
+}
+
 
 mediations <- function(datasets, treatment, mediators, outcome, 
                     covariates=NULL, family=c("gaussian", "gaussian"),
@@ -1185,6 +1285,17 @@ plot.mediations <- function(x, which = names(x),
     }
 }
 
+
+plot.mediations.order <- function(x, which = names(x),
+            ask = prod(par("mfcol")) < length(which) && dev.interactive(), ...){
+    if (ask) {
+        oask <- devAskNewPage(TRUE)
+        on.exit(devAskNewPage(oask))
+    }
+    for(i in 1:length(which)){
+        plot.order.mediate(x[[i]], xlab = which[i], ...)
+    }
+}
 
 
 summary.mediations <- function(object, ...){
