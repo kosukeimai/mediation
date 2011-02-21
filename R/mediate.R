@@ -1012,21 +1012,22 @@ print.summary.mediate.order <- function(x, ...){
 
 
 plot.process <- function(model) {
-    coef.vec.1 <- c(model$d1, model$z1, model$tau.coef)
-    lower.vec.1 <- c(model$d1.ci[1], model$z1.ci[1],model$tau.ci[1])
-    upper.vec.1 <- c(model$d1.ci[2], model$z1.ci[2],model$tau.ci[2])
+    coef.vec.1 <- c(model$d1, model$z1)
+    lower.vec.1 <- c(model$d1.ci[1], model$z1.ci[1])
+    upper.vec.1 <- c(model$d1.ci[2], model$z1.ci[2])
+    tau.vec<-c(model$tau.coef,model$tau.ci[1],model$tau.ci[2])
     range.1 <- range(model$d1.ci[1], model$z1.ci[1],model$tau.ci[1],
                       model$d1.ci[2], model$z1.ci[2],model$tau.ci[2])
     
-    coef.vec.0 <- c(model$d0, model$z0, model$tau.coef)
-    lower.vec.0 <- c(model$d0.ci[1], model$z0.ci[1],model$tau.ci[1])
-    upper.vec.0 <- c(model$d0.ci[2], model$z0.ci[2],model$tau.ci[2])
+    coef.vec.0 <- c(model$d0, model$z0)
+    lower.vec.0 <- c(model$d0.ci[1], model$z0.ci[1])
+    upper.vec.0 <- c(model$d0.ci[2], model$z0.ci[2])
     range.0 <- range(model$d0.ci[1], model$z0.ci[1],model$tau.ci[1],
                       model$d0.ci[2], model$z0.ci[2],model$tau.ci[2])
     
     return(list(coef.vec.1=coef.vec.1, lower.vec.1=lower.vec.1, 
                 upper.vec.1=upper.vec.1, coef.vec.0=coef.vec.0,
-                lower.vec.0=lower.vec.0, upper.vec.0=upper.vec.0,
+                lower.vec.0=lower.vec.0, upper.vec.0=upper.vec.0, tau.vec=tau.vec,
                 range.1=range.1, range.0=range.0))
 }
 
@@ -1048,6 +1049,7 @@ plot.mediate <- function(x, treatment = NULL,
     
     param <- plot.process(x)
     y.axis <- c(length(param$coef.vec.1):.5)
+    y.axis<-y.axis+1
         # create indicator for y.axis, descending so labels go from top to bottom
     
     # Set xlim
@@ -1063,7 +1065,7 @@ plot.mediate <- function(x, treatment = NULL,
     
     # Set ylim
     if(is.null(ylim)){
-        ylim <- c(min(y.axis) - 0.5, max(y.axis) + 0.5)
+        ylim <- c(min(y.axis) -1- 0.5, max(y.axis) + 0.5)
     }
     
     # Plot
@@ -1081,7 +1083,11 @@ plot.mediate <- function(x, treatment = NULL,
     if(1 %in% treatment){
         points(param$coef.vec.1, y.axis + adj, type = "p", pch = 19, cex = cex, col = col)
         segments(param$lower.vec.1, y.axis + adj, param$upper.vec.1, y.axis + adj, 
-                lwd = lwd, col = col) 
+                lwd = lwd, col = col)
+        points(param$tau.vec[1], 1, type = "p", pch = 19, cex = cex, col = col)
+        segments(param$tau.vec[2], 1 , param$tau.vec[3], 1 , 
+                lwd = lwd, col = col)
+         
              # coef +/-1.96*se = 95% interval, lwd adjusts line thickness
     }
     if(0 %in% treatment) {
@@ -1091,7 +1097,13 @@ plot.mediate <- function(x, treatment = NULL,
                 lwd = lwd, lty = 3, col = col)
          # coef +/-1.96*se = 95% interval, lwd adjusts line thickness
     }
-    axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
+    if(treatment[1]==0 & length(treatment)==1) {
+        points(param$tau.vec[1], 1 , type = "p", pch = 19, cex = cex, col = col)
+        segments(param$tau.vec[2], 1 , param$tau.vec[3], 1 , 
+                lwd = lwd, col = col) 
+    }
+    y.axis.new<-c(3,2,1)
+    axis(2, at = y.axis.new, labels = labels, las = 1, tick = TRUE, ...)
          # draw y-axis with tick marks, make labels perpendicular to axis and closer to axis
     abline(v = 0, lty = 2)
 }
@@ -1100,16 +1112,21 @@ plot.mediate <- function(x, treatment = NULL,
 plot.process.order <- function(model){
     length <- length(model$d1)
     coef.vec.1 <- lower.vec.1 <- upper.vec.1 <- 
-        coef.vec.0 <- lower.vec.0 <- upper.vec.0 <- matrix(NA,ncol=3,nrow=length)
+        coef.vec.0 <- lower.vec.0 <- upper.vec.0 <- matrix(NA,ncol=2,nrow=length)
+    tau.vec<-matrix(NA,ncol=3,nrow=length)    
     for(j in 1:length){
-        coef.vec.1[j,] <- c(model$d1[j], model$z1[j], model$tau.coef[j])
-        lower.vec.1[j,] <- c(model$d1.ci[1,j], model$z1.ci[1,j],model$tau.ci[1,j])
-        upper.vec.1[j,] <- c(model$d1.ci[2,j], model$z1.ci[2,j],model$tau.ci[2,j])
+        coef.vec.1[j,] <- c(model$d1[j], model$z1[j])
+        lower.vec.1[j,] <- c(model$d1.ci[1,j], model$z1.ci[1,j])
+        upper.vec.1[j,] <- c(model$d1.ci[2,j], model$z1.ci[2,j])
         
-        coef.vec.0[j,] <- c(model$d0[j], model$z0[j], model$tau.coef[j])
-        lower.vec.0[j,] <- c(model$d0.ci[1,j], model$z0.ci[1,j],model$tau.ci[1,j])
-        upper.vec.0[j,] <- c(model$d0.ci[2,j], model$z0.ci[2,j],model$tau.ci[2,j])
+        coef.vec.0[j,] <- c(model$d0[j], model$z0[j])
+        lower.vec.0[j,] <- c(model$d0.ci[1,j], model$z0.ci[1,j])
+        upper.vec.0[j,] <- c(model$d0.ci[2,j], model$z0.ci[2,j])
+        
+        tau.vec[j,]<-c(model$tau.coef[j],model$tau.ci[1,j],model$tau.ci[2,j])
+       
     }
+    
     range.1 <- range(model$d1.ci[1,], model$z1.ci[1,],model$tau.ci[1,],
                       model$d1.ci[2,], model$z1.ci[2,],model$tau.ci[2,])
     range.0 <- range(model$d0.ci[1,], model$z0.ci[1,],model$tau.ci[1,],
@@ -1118,8 +1135,10 @@ plot.process.order <- function(model){
     return(list(coef.vec.1=coef.vec.1, lower.vec.1=lower.vec.1, 
                 upper.vec.1=upper.vec.1, coef.vec.0=coef.vec.0,
                 lower.vec.0=lower.vec.0, upper.vec.0=upper.vec.0,
+                tau.vec=tau.vec,
                 range.1=range.1, range.0=range.0, length=length))
 }
+
 
 
 plot.mediate.order <- function(x, treatment = NULL,
@@ -1138,6 +1157,8 @@ plot.mediate.order <- function(x, treatment = NULL,
     
     param <- plot.process.order(x)
     y.axis <- c(ncol(param$coef.vec.1):.5)
+    y.axis<-y.axis+1
+    
         # create indicator for y.axis, descending so labels go from top to bottom
     
     # Set xlim
@@ -1153,7 +1174,7 @@ plot.mediate.order <- function(x, treatment = NULL,
     
     # Set ylim
     if(is.null(ylim)){
-        ylim <- c(min(y.axis) - 0.5, max(y.axis) + 0.5)
+        ylim <- c(min(y.axis) - 1 - 0.5, max(y.axis) + 0.5)
     }
     
     # Plot
@@ -1176,8 +1197,14 @@ plot.mediate.order <- function(x, treatment = NULL,
             segments(param$lower.vec.1[z,], y.axis + adj.1,
                     param$upper.vec.1[z,], y.axis + adj.1, 
                     lwd = lwd, col = col)
+            points(param$tau.vec[z,1], 1+adj.1 , 
+                    type = "p", pch = 19, cex = cex, col = col)
+            segments(param$tau.vec[z,2], 1+adj.1 ,
+                    param$tau.vec[z,3], 1 +adj.1 , 
+                    lwd = lwd, col = col)
             adj.1 <- adj.1 - 0.05
         }
+        
     }
     if(0 %in% treatment) {
         adj.0 <- adj
@@ -1192,7 +1219,21 @@ plot.mediate.order <- function(x, treatment = NULL,
             adj.0 <- adj.0 + 0.05 
         }
     }
-    axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
+        if (treatment[1]==0 & length(treatment)==1){
+        print("test")
+        adj.1 <- adj * nrow(param$coef.vec.1)
+        for(z in 1:nrow(param$tau.vec)){
+            points(param$tau.vec[z,1], 1+adj.1 , 
+                    type = "p", pch = 19, cex = cex, col = col)
+            segments(param$tau.vec[z,2], 1+adj.1 ,
+                    param$tau.vec[z,3], 1 +adj.1 , 
+                    lwd = lwd, col = col)
+                    adj.1 <- adj.1 - 0.05
+                    }
+            }
+                    
+    y.axis.new<-c(3,2,1)
+    axis(2, at = y.axis.new, labels = labels, las = 1, tick = TRUE, ...)
          # draw y-axis with tick marks, make labels perpendicular to axis and closer to axis
     abline(v = 0, lty = 2)
 }
