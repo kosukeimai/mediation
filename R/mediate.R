@@ -170,7 +170,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
         ## Case I-1: Quasi-Bayesian Monte Carlo
         ########################################################################
         if(boot == FALSE){
-            # Error if gam
+            # Error if gam outcome or quantile mediator
             if(isGam.y | isRq.m){
                 stop("boot must be TRUE for models used")
             }
@@ -191,7 +191,11 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             } else {
                 TMmodel.coef <- model.y$coef
             }
-            TMmodel.var.cov <- vcov(model.y)
+            if(isRq.y){
+                TMmodel.var.cov <- summary(model.y, covariance=TRUE)$cov
+            } else{
+                TMmodel.var.cov <- vcov(model.y)
+            }
             
             # Draw model coefficients from normal
             MModel <- mvrnorm(sims, mu=MModel.coef, Sigma=MModel.var.cov)
@@ -492,15 +496,6 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                         stop("Insufficient Variation on Mediator")
                 }
                 
-               #print("here tobit error")  # After X iterations, where X can vary, 
-                                           # we get the following: 
-                                           # Error in lm.fit(X_vlm, z_vlm, ...) :   
-                                           #     NA/NaN/Inf in foreign function call (arg 4)
-                                           # Printing the call objects doesn't 
-                                           # indicate an issue.
-                                           # print(eval.parent(Call.M))
-                                           # print(eval.parent(Call.Y.t))
-                                       
                 # Refit Models with Resampled Data
                 new.fit.M <- eval.parent(Call.M)
                 new.fit.t <- eval.parent(Call.Y.t)
@@ -780,19 +775,24 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                     draws_m1[ii,] <- t(rmultinom(1, 1, prob = probs_m1[ii,]))
                     draws_m0[ii,] <- t(rmultinom(1, 1, prob = probs_m0[ii,]))
                 }
-#                max.pr_m1 <- apply(probs_m1, 1, max)
-#                max.pr_m0 <- apply(probs_m0, 1, max)
-#                cat.m1 <- predict(new.fit.M, newdata=pred.data.t)
-#                cat.m0 <- predict(new.fit.M, newdata=pred.data.c)
-#                draws_m1 <- round(runif(n, m.min, m), 0)
-#                draws_m0 <- round(runif(n, m.min, m), 0)
-#                # where is .75 from?
-#                PredictM1 <- ifelse(max.pr_m1 > runif(n, 0, .75), draws_m1, cat.m1)
-#                PredictM0 <- ifelse(max.pr_m0 > runif(n, 0, .75), draws_m0, cat.m0)
                 PredictM1 <- apply(draws_m1, 1, indexmax)
                 PredictM0 <- apply(draws_m0, 1, indexmax)
             
-            ### Case II-c: Other
+            ### Case II-c: Quantile Regression for Mediator
+            } else if(isRq.m){
+                # Use inverse transform sampling to predict M
+                newfits <- update(new.fit.M, tau = runif(n))
+                tt <- delete.response(terms(new.fit.M))
+                m.t <- model.frame(tt, pred.data.t, xlev = new.fit.M$xlevels)
+                m.c <- model.frame(tt, pred.data.c, xlev = new.fit.M$xlevels)
+                X.t <- model.matrix(tt, m.t, contrasts = new.fit.M$contrasts)
+                X.c <- model.matrix(tt, m.c, contrasts = new.fit.M$contrasts)
+                rm(tt, m.t, m.c)
+                PredictM1 <- rowSums(X.t * t(newfits$coefficients))
+                PredictM0 <- rowSums(X.c * t(newfits$coefficients))
+                rm(newfits, X.t, X.c)
+                    
+            ### Case II-d: Other
             } else {
                 if(isGam.m){
                     sigma <- summary(new.fit.M)$scale
@@ -922,8 +922,8 @@ print.summary.mediate <- function(x, ...){
     } else {
         cat("Quasi-Bayesian Confidence Intervals\n\n")
     }
-    if (x$INT == FALSE && class(x$model.y)[1] == "lm"){
-        # Print only one set of values if lm without interaction
+    if (x$INT == FALSE && class(x$model.y)[1] %in% c("lm", "gam", "rq")){
+        # Print only one set of values if lmY/gamY/quanY without interaction
         cat("Mediation Effect: ", format(x$d1, digits=4), clp, "% CI ", 
                 format(x$d1.ci, digits=4), "\n")
         cat("Direct Effect: ", format(x$z0, digits=4), clp, "% CI ", 
@@ -932,7 +932,6 @@ print.summary.mediate <- function(x, ...){
                 format(x$tau.ci, digits=4), "\n")
         cat("Proportion of Total Effect via Mediation: ", format(x$pct.coef, digits=4), 
                 clp, "% CI ", format(x$pct.ci, digits=4),"\n")
-        #cat("Proportion of Total Effect via Mediation: ", format(x$pct.coef, digits=4),"\n")
     } else {
         cat("Mediation Effect_0: ", format(x$d0, digits=4), clp, "% CI ", 
                 format(x$d0.ci, digits=4), "\n")
@@ -946,7 +945,6 @@ print.summary.mediate <- function(x, ...){
                 format(x$tau.ci, digits=4), "\n")
         cat("Proportion of Total Effect via Mediation: ", format(x$pct.coef, digits=4), 
                 clp, "% CI ", format(x$pct.ci, digits=4),"\n")
-        #cat("Proportion of Total Effect via Mediation: ", format(x$pct.coef, digits=4),"\n")
     } 
     invisible(x)
 }
