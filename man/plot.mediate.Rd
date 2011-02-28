@@ -6,7 +6,11 @@ Plots results from mediate function. Y axis lists indirect, direct, and total ef
 } 
 \usage{
 
-\method{plot}{mediate}(model,title=NULL,both=FALSE,reset=TRUE,xlim=NULL, lwd =  1.5, xlab="",cex=1,cex.main=1.5,cex.axis=1.5,cex.lab=1.5) {
+\method{plot}{mediate}(model, treatment = NULL,
+                        xlim = NULL, xlab = "", ylim = NULL, ylab = "",
+                        labels = c("ACME","Direct\nEffect","Total\nEffect"), 
+                        main = NULL, lwd = 1.5, cex = .85,
+                        col = "black", ...) {
 
 } 
 
@@ -15,12 +19,12 @@ Plots results from mediate function. Y axis lists indirect, direct, and total ef
 
 }
 
-\details{This function plots the indirect, direct, and total effects from the mediate function using horizontal bars to represent confidence intervals.
+\details{This function plots the indirect, direct, and total effects from the mediate function using horizontal bars to represent confidence intervals. If outcome variable is ordered, plot.mediate.order is used and quantities of interested for the various outcomes are graphed.
 }
 
 \arguments{ 
-\item{x}{object of class \code{mediate} as produced by \code{mediate} or \code{mediations} function.}
-\item{treatment}{baseline treatment value of the estimated ACME to plot. Can take either 0, 1 or c(0,1). Default is to plot both treatment and control conditions only when these values differ.}
+\item{model}{object of class \code{mediate} as produced by \code{mediate} or \code{mediations} function.}
+\item{treatment}{baseline treatment value of the estimated ACME to plot. Can take either 0 (control), 1 (treatment) or c(0,1) (both). Default is to plot treatment condition only.}
 \item{...}{additional graphical parameters.}
 }
 
