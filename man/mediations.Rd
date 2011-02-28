@@ -5,7 +5,10 @@
 Processes a set of treatment variable/mediator combinations through the mediate function for a range models handeled by mediate.} 
 \usage{
 
-mediations(datasets, treatment, mediators, outcome, covariates=NULL, family=c("gaussian", "gaussian"), tau_m=.5,tau_y=.5, LowerY=NULL,UpperY=NULL, interaction=FALSE, conf.level=.95, sims=1000) {
+mediations(datasets, treatment, mediators, outcome, 
+                    covariates=NULL, family=c("gaussian", "gaussian"),
+                    tau_m=.5,tau_y=.5, LowerY=NULL, UpperY=NULL, interaction=FALSE,
+                    conf.level=.95, sims=500) {
 
 } 
 
@@ -43,10 +46,11 @@ Imai, Kosuke, Luke Keele, Dustin Tingley, and Teppei Yamamoto. (2009) "Causal Me
 \examples{ 
 #Hypothetical example
 
-#datasets <- list(Anxiety=Anxiety, Guilt=Guilt, Anger=Anger)  This gives a list of the names of different data sets that contain a particular treatment/control condition as well as any mediators (can be multiple)
-#mediators <- c("BasNeg_Hostility", "BasNeg_Guilt", "GD_NegAff", "GD_PosAff","BasNeg_Fear","BasPos_Joviality") A set of mediator that are used with each of the treatment variables. This permits investigation of multiple treatment variables for a single treatment variable.
-#treatment <- c("AnxietyVsCont", "GuiltVsCont", "AngerVsCont")#A list of the treatment variables, each of which belongs to one of the data sets. Further, note that the first word corresponds to the name of each data set. Preprocess your datasets to take advantage of this program. 
-#covariates <- c("gender_p+Trust_GSS_pre+ideo7") #Pre-treatment covariates contained in each model.
-#plot.int <- mediations(datasets, treatment, mediators, covariates,family=c("gaussian","tobit"),interaction=TRUE,UpperY=5,LowerY=0,conf.level=.90, sims=5000)$plot
-#above model uses lm for mediator model and tobit for outcome model. Interaction between T and M is included.
+#datasets <- list(T1=T1, T2=T2) List of dataset names corresponding to the two different treatment variables T1 and T2
+#mediators <- c("M1", "M2" ) List of mediators (in each data set)
+#outcome<-c("Ycont1","Ycont2") List of outcome variables.
+#treatment <- c("T1", "T2") List of treatment variables
+#covariates <- c("X1+X2") Set of conditioning pre-treatment covariates
+#x <- mediations(datasets, treatment, mediators,outcome, covariates,family=c("gaussian","gaussian"),interaction=FALSE,conf.level=.90, sims=50)
+
 } 
