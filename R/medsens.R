@@ -1074,7 +1074,7 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
      	}       
             }
         }
-  } else if (sens.par=="R2"){## Different Sensitivity Parameter BEGIN HERE
+  } else if (sens.par=="R2"){## R2 Sensitivity Parameter BEGIN HERE
     if(pr.plot==TRUE)
         stop("Proportion mediated is only plotted in terms of rho\n")
         
@@ -1099,7 +1099,8 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         ylim <- c(0,1)
     
     if(x$INT==FALSE){## No Interaction, R2, Continuous
-        if(is.null(levels))
+        if("indirect" %in% effect.type){
+        	if(is.null(levels))
             levels <- pretty(quantile(x$d0, probs=c(0.1,0.9)), 10)
         if(sign.prod == 1){
             d0.p <- approx(x$d0[((length(x$d0)+1)/2):length(x$d0)], n=dlength)$y
@@ -1130,11 +1131,45 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
         axis(2,at=seq(0,1,by=.1))
         axis(1,at=seq(0,1,by=.1))
+    } 
+    if("direct" %in% effect.type){
+    	levels <- pretty(quantile(x$z0, probs=c(0.1,0.9)), 10)
+        if(sign.prod == 1){
+            z0.p <- approx(x$z0[((length(x$z0)+1)/2):length(x$z0)], n=dlength)$y
+            z0mat.p <- matrix(z0.p[Rprod.mat/0.0001+1], nrow=length(R2M))
+            if(is.null(main) & r.type == 1)
+                main <- expression(paste("ADE(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==1))
+            else if(is.null(main) & r.type == 2)
+                main <- expression(paste("ADE(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==1))
+            contour(R2M, R2Y, z0mat.p, levels=levels, main=main, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
+            contour(R2M, R2Y, z0mat.p, levels=0, lwd=lwd+1, add=TRUE)
+        } else if(sign.prod == -1){
+            z0.n <- rev(approx(x$z0[1:((length(x$z0)+1)/2)], n=dlength)$y)
+            z0mat.n <- matrix(z0.n[Rprod.mat/0.0001+1], nrow=length(R2M))
+            if(is.null(main) & r.type == 1)
+                main <- expression(paste("ADE(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==-1))
+            else if(is.null(main) & r.type == 2)
+                main <- expression(paste("ADE(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==-1))
+            contour(R2M, R2Y, z0mat.n, levels=levels, main=main, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
+            contour(R2M, R2Y, z0mat.n, levels=0, lwd=lwd+1, add=TRUE)
+        } else stop("'sign.prod' must be either -1 or 1\n")
+        if(is.null(xlab) & r.type==1)
+            title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
+            else if(is.null(xlab) & r.type==2)
+            title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
+        if(is.null(ylab) & r.type==1)
+            title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
+            else if(is.null(ylab) & r.type==2)
+            title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
+        axis(2,at=seq(0,1,by=.1))
+        axis(1,at=seq(0,1,by=.1))
+    	}
     } else {## Interaction, R2, Continuous
         if(prod(par("mfrow")==1) && dev.interactive()){
             oask <- devAskNewPage(TRUE)
             on.exit(devAskNewPage(oask))
         }
+        if("indirect" %in% effect.type){
         if(is.null(levels))
             levels0 <- pretty(quantile(x$d0, probs=c(0.1,0.9)), 10)
             else levels0 <- levels
@@ -1205,6 +1240,77 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         axis(2,at=seq(0,1,by=.1))
         axis(1,at=seq(0,1,by=.1))
       }
+  } 
+	if("direct" %in% effect.type){
+		if(is.null(levels))
+            levels0 <- pretty(quantile(x$z0, probs=c(0.1,0.9)), 10)
+            else levels0 <- levels
+        if(sign.prod == 1){
+            z0.p <- approx(x$z0[((length(x$z0)+1)/2):length(x$z0)], n=dlength)$y
+            z0mat.p <- matrix(z0.p[Rprod.mat/0.0001+1], nrow=length(R2M))
+            if(is.null(main) & r.type == 1)
+                main0 <- expression(paste("ADE"[0], "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==1))
+            else if(is.null(main) & r.type == 2)
+                main0 <- expression(paste("ADE"[0], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==1))
+            else main0 <- main
+            contour(R2M, R2Y, z0mat.p, levels=levels0, main=main0, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
+            contour(R2M, R2Y, z0mat.p, levels=0, lwd=lwd+1, add=TRUE)
+        } else if(sign.prod == -1){
+            z0.n <- rev(approx(x$z0[1:((length(x$z0)+1)/2)], n=dlength)$y)
+            z0mat.n <- matrix(z0.n[Rprod.mat/0.0001+1], nrow=length(R2M))
+            if(is.null(main) & r.type == 1)
+                main0 <- expression(paste("ADE"[0],"(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==-1))
+            else if(is.null(main) & r.type == 2)
+                main0 <- expression(paste("ADE"[0], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==-1))
+            else main0 <- main
+            contour(R2M, R2Y, z0mat.n, levels=levels0, main=main0, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
+            contour(R2M, R2Y, z0mat.n, levels=0, lwd=lwd+1, add=TRUE)
+        } else stop("sign.prod must be either -1 or 1\n")
+        if(is.null(xlab) & r.type==1)
+            title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
+            else if(is.null(xlab) & r.type==2)
+            title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
+        if(is.null(ylab) & r.type==1)
+            title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
+            else if(is.null(ylab) & r.type==2)
+            title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
+        axis(2,at=seq(0,1,by=.1))
+        axis(1,at=seq(0,1,by=.1))
+    #Delta_1
+        if(is.null(levels))
+            levels1 <- pretty(quantile(x$z1, probs=c(0.1,0.9)), 10)
+            else levels1 <- levels
+        if(sign.prod == 1){
+            z1.p <- approx(x$z1[((length(x$z1)+1)/2):length(x$z1)], n=dlength)$y
+            z1mat.p <- matrix(z1.p[Rprod.mat/0.0001+1], nrow=length(R2M))
+            if(is.null(main) & r.type == 1)
+                main1 <- expression(paste("ADE"[1], "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==1))
+            else if(is.null(main) & r.type == 2)
+                main1 <- expression(paste("ADE"[1], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==1))
+            else main1 <- main
+            contour(R2M, R2Y, z1mat.p, levels=levels1, main=main1, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd, ...)
+            contour(R2M, R2Y, z1mat.p, levels=0, lwd=lwd+1, add=TRUE)
+        } else if(sign.prod == -1){
+            z1.n <- rev(approx(x$z1[1:((length(x$z1)+1)/2)], n=dlength)$y)
+            z1mat.n <- matrix(z1.n[Rprod.mat/0.0001+1], nrow=length(R2M))
+            if(is.null(main) & r.type == 1)
+                main1 <- expression(paste("ADE"[1], "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==-1))
+            else if(is.null(main) & r.type == 2)
+                main1 <- expression(paste("ADE"[1], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==-1))
+            else main1 <- main
+            contour(R2M, R2Y, z1mat.n, levels=levels1, main=main1, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd, ...)
+            contour(R2M, R2Y, z1mat.n, levels=0, lwd=lwd+1, add=TRUE)
+        }
+        if(is.null(xlab) & r.type==1)
+            title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
+            else if(is.null(xlab) & r.type==2)
+            title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
+        if(is.null(ylab) & r.type==1)
+            title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
+            else if(is.null(ylab) & r.type==2)
+            title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
+        axis(2,at=seq(0,1,by=.1))
+        axis(1,at=seq(0,1,by=.1))
+      }
   } else stop("sens.par must be either 'rho' or 'R2'")
-}
-
+		}
