@@ -40,17 +40,21 @@ Users should note that use of the nonparametric bootstrap requires several minut
 \item{d1.ci}{confidence interval for mediation effect under control.}
 \item{d0.sims}{Vector for mediation effect under control.}
 \item{d1.sims}{Vector for mediation effect under treatment.}
-\item{tau.coef}{point estimate for total effect.}
-\item{tau.ci}{confidence interval for total effect.}
-\item{tau.sims}{Vector for total effect.}
 \item{z0}{point estimate for direct effect under control.}
 \item{z1}{point estimate for direct effect under treatment.}
 \item{z0.ci}{confidence interval for direct effect under control.}
-\item{z1.ci}{confidence interval for direct effect under control.}
+\item{z1.ci}{confidence interval for direct effect under treatment.}
 \item{z0.sims}{Vector for direct effect under control.}
 \item{z1.sims}{Vector for direct effect under treatment.}
-\item{pct.coef}{percentage of total effect due to mediation.}
-\item{pct.ci}{confidence interval for percentage of total effect due to mediation.}
+\item{n0}{percentage of total effect due to mediation under control.}
+\item{n1}{percentage of total effect due to mediation under treatment.}
+\item{n0.ci}{confidence interval for percentage of total effect due to mediation under control.}
+\item{n1.ci}{confidence interval for percentage of total effect due to mediation under treatment.}
+\item{n0.sims}{Vector for percentage of total effect due to mediation under control.}
+\item{n1.sims}{Vector for percentage of total effect due to mediation under treatment.}
+\item{tau.coef}{point estimate for total effect.}
+\item{tau.ci}{confidence interval for total effect.}
+\item{tau.sims}{Vector for total effect.}
 \item{boot}{the boot argument used.}
 \item{INT}{the INT argument used for presence of interaction term.}
 \item{treat}{name of the 'treat' variable used.}

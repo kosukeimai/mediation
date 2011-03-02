@@ -677,32 +677,51 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
         z1.ci <- quantile(zeta.1,c(low,high), na.rm=TRUE)
         z0 <- mean(zeta.0)
         z0.ci <- quantile(zeta.0,c(low,high), na.rm=TRUE)
+        nu.0 <- delta.0/tau
+        n0 <- median(nu.0)
+        n0.ci <- quantile(nu.0, c(low,high), na.rm=TRUE)
+        nu.1 <- delta.1/tau
+        n1 <- median(nu.1)
+        n1.ci <- quantile(nu.1, c(low,high), na.rm=TRUE)
         
-        avg.delta <- (d0 + d1)/2
-        pct.dist <- avg.delta/tau
-        pct.coef <- median(pct.dist)
-        pct.ci <- quantile(pct.dist,c(low,high), na.rm=TRUE)
+        delta.avg <- (delta.0 + delta.1)/2
+        zeta.avg <- (zeta.0 + zeta.1)/2
+        d.avg <- mean(delta.avg)
+        z.avg <- mean(zeta.avg)
+        d.avg.ci <- quantile(d.avg, c(low,high), na.rm=TRUE)
+        z.avg.ci <- quantile(z.avg, c(low,high), na.rm=TRUE)
+        nu.avg <- delta.avg/tau
+        n.avg <- median(nu.avg)
+        n.avg.ci <- quantile(nu.avg, c(low,high), na.rm=TRUE)
         
         if(long) {
             out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
                         d0.sims=delta.0, d1.sims=delta.1,
-                        pct.coef=pct.coef, pct.ci=pct.ci,
-                        tau.coef=tau.coef, tau.ci=tau.ci, 
                         z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci, 
-                        z1.sims=zeta.1, z0.sims=zeta.0, tau.sims=tau,
+                        z0.sims=zeta.0, z1.sims=zeta.1, 
+                        tau.coef=tau.coef, tau.ci=tau.ci, 
+                        tau.sims=tau,
+                        n0=n0, n1=n1, n0.ci=n0.ci, n1.ci=n1.ci,
+                        n0.sims=nu.0, n1.sims=nu.1,
+                        d.avg=d.avg, d.avg.ci=d.avg.ci, d.avg.sims=delta.avg,
+                        z.avg=z.avg, z.avg.ci=z.avg.ci, z.avg.sims=zeta.avg,
+                        n.avg=n.avg, n.avg.ci=n.avg.ci, n.avg.sims=nu.avg,
                         boot=boot, treat=treat, mediator=mediator, 
                         INT=INT, conf.level=conf.level,
                         model.y=model.y, model.m=model.m, 
                         control.value=control.value, treat.value=treat.value)
         } else {
             out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
-                        pct.coef=pct.coef, pct.ci=pct.ci,
+                        z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci, 
                         tau.coef=tau.coef, tau.ci=tau.ci, 
-                        z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci,  
+                        n0=n0, n1=n1, n0.ci=n0.ci, n1.ci=n1.ci,
+                        d.avg=d.avg, d.avg.ci=d.avg.ci,
+                        z.avg=z.avg, z.avg.ci=z.avg.ci,
+                        n.avg=n.avg, n.avg.ci=n.avg.ci,
                         boot=boot, treat=treat, mediator=mediator, 
                         INT=INT, conf.level=conf.level,
                         model.y=model.y, model.m=model.m, 
-                        control.value=control.value, treat.value=treat.value)    
+                        control.value=control.value, treat.value=treat.value)
         }
         class(out) <- "mediate"
         out
@@ -930,8 +949,8 @@ print.summary.mediate <- function(x, ...){
                 format(x$z0.ci, digits=4), "\n")
         cat("Total Effect: ", format(x$tau.coef, digits=4), clp, "% CI ", 
                 format(x$tau.ci, digits=4), "\n")
-        cat("Proportion of Total Effect via Mediation: ", format(x$pct.coef, digits=4), 
-                clp, "% CI ", format(x$pct.ci, digits=4),"\n")
+        cat("Proportion of Total Effect via Mediation: ", format(x$n0, digits=4), 
+                clp, "% CI ", format(x$n0.ci, digits=4),"\n\n")
     } else {
         cat("Mediation Effect_0: ", format(x$d0, digits=4), clp, "% CI ", 
                 format(x$d0.ci, digits=4), "\n")
@@ -943,8 +962,16 @@ print.summary.mediate <- function(x, ...){
                 format(x$z1.ci, digits=4), "\n")
         cat("Total Effect: ", format(x$tau.coef, digits=4), clp, "% CI ", 
                 format(x$tau.ci, digits=4), "\n")
-        cat("Proportion of Total Effect via Mediation: ", format(x$pct.coef, digits=4), 
-                clp, "% CI ", format(x$pct.ci, digits=4),"\n")
+        cat("Proportion of Total Effect via Mediation_0: ", format(x$n0, digits=4), 
+                clp, "% CI ", format(x$n0.ci, digits=4),"\n")
+        cat("Proportion of Total Effect via Mediation_1: ", format(x$n1, digits=4), 
+                clp, "% CI ", format(x$n1.ci, digits=4),"\n\n")
+        cat("Mediation Effect (Average): ", format(x$d.avg, digits=4), clp, "% CI ", 
+                format(x$d.avg.ci, digits=4), "\n")
+        cat("Direct Effect (Average): ", format(x$z.avg, digits=4), clp, "% CI ", 
+                format(x$z.avg.ci, digits=4), "\n")
+        cat("Proportion of Total Effect via Mediation (Average): ", format(x$n.avg, digits=4), 
+                clp, "% CI ", format(x$n.avg.ci, digits=4),"\n\n")
     } 
     invisible(x)
 }
@@ -1354,19 +1381,38 @@ print.summary.mediations <- function(x, ...){
         } else {
             cat("Quasi-Bayesian Confidence Intervals\n\n")
         }
-        cat("Mediation Effect_0: ", format(x[[i]]$d0, digits=4), clp, "% CI ", 
-                format(x[[i]]$d0.ci, digits=4), "\n")
-        cat("Mediation Effect_1: ", format(x[[i]]$d1, digits=4), clp, "% CI ", 
-                format(x[[i]]$d1.ci, digits=4), "\n")
-        cat("Direct Effect_0: ", format(x[[i]]$z0, digits=4), clp, "% CI ", 
-                format(x[[i]]$z0.ci, digits=4), "\n")
-        cat("Direct Effect_1: ", format(x[[i]]$z1, digits=4), clp, "% CI ", 
-                format(x[[i]]$z1.ci, digits=4), "\n")
-        cat("Total Effect: ", format(x[[i]]$tau.coef, digits=4), clp, "% CI ", 
-                format(x[[i]]$tau.ci, digits=4), "\n")
-        cat("Proportion of Total Effect via Mediation: ", format(x[[i]]$pct.coef, digits=4), 
-                clp, "% CI ", format(x[[i]]$pct.ci, digits=4),"\n")
-        #cat("Proportion of Total Effect via Mediation: ", format(x$pct.coef, digits=4),"\n")
+        if (x[[i]]$INT == FALSE && class(x[[i]]$model.y)[1] %in% c("lm", "gam", "rq")){
+            # Print only one set of values if lmY/gamY/quanY without interaction
+            cat("Mediation Effect: ", format(x[[i]]$d1, digits=4), clp, "% CI ", 
+                    format(x[[i]]$d1.ci, digits=4), "\n")
+            cat("Direct Effect: ", format(x[[i]]$z0, digits=4), clp, "% CI ", 
+                    format(x[[i]]$z0.ci, digits=4), "\n")
+            cat("Total Effect: ", format(x[[i]]$tau.coef, digits=4), clp, "% CI ", 
+                    format(x[[i]]$tau.ci, digits=4), "\n")
+            cat("Proportion of Total Effect via Mediation: ", format(x[[i]]$n0, digits=4), 
+                    clp, "% CI ", format(x[[i]]$n0.ci, digits=4),"\n\n")
+        } else {
+            cat("Mediation Effect_0: ", format(x[[i]]$d0, digits=4), clp, "% CI ", 
+                    format(x[[i]]$d0.ci, digits=4), "\n")
+            cat("Mediation Effect_1: ", format(x[[i]]$d1, digits=4), clp, "% CI ", 
+                    format(x[[i]]$d1.ci, digits=4), "\n")
+            cat("Direct Effect_0: ", format(x[[i]]$z0, digits=4), clp, "% CI ", 
+                    format(x[[i]]$z0.ci, digits=4), "\n")
+            cat("Direct Effect_1: ", format(x[[i]]$z1, digits=4), clp, "% CI ", 
+                    format(x[[i]]$z1.ci, digits=4), "\n")
+            cat("Total Effect: ", format(x[[i]]$tau.coef, digits=4), clp, "% CI ", 
+                    format(x[[i]]$tau.ci, digits=4), "\n")
+            cat("Proportion of Total Effect via Mediation_0: ", format(x[[i]]$n0, digits=4), 
+                    clp, "% CI ", format(x[[i]]$n0.ci, digits=4),"\n")
+            cat("Proportion of Total Effect via Mediation_1: ", format(x[[i]]$n1, digits=4), 
+                    clp, "% CI ", format(x[[i]]$n1.ci, digits=4),"\n\n")
+            cat("Mediation Effect (Average): ", format(x[[i]]$d.avg, digits=4), clp, "% CI ", 
+                    format(x[[i]]$d.avg.ci, digits=4), "\n")
+            cat("Direct Effect (Average): ", format(x[[i]]$z.avg, digits=4), clp, "% CI ", 
+                    format(x[[i]]$z.avg.ci, digits=4), "\n")
+            cat("Proportion of Total Effect via Mediation (Average): ", format(x[[i]]$n.avg, digits=4), 
+                    clp, "% CI ", format(x[[i]]$n.avg.ci, digits=4),"\n\n")
+        }
     }
     invisible(x)
 }
