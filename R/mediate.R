@@ -34,17 +34,6 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
         }
     }
         
-    # Detect whether models include T-M interaction
-    if(isGam.y){
-        INT <- !is.null(control)
-    } else if(!isS4(model.y)) {
-        INT <- paste(treat,mediator,sep=":") %in% attr(model.y$terms,"term.labels") | 
-             paste(mediator,treat,sep=":") %in% attr(model.y$terms,"term.labels") 
-    } else {
-        INT <- paste(treat,mediator,sep=":") %in% attr(model.y@terms,"term.labels") |
-             paste(mediator,treat,sep=":") %in% attr(model.y@terms,"term.labels") 
-    }
-    
     # Warning for control option in non-GAM outcome models
     if(!is.null(control) && !isGam.y){
         warning("argument control irrelevant except for GAM outcome models, 
@@ -694,6 +683,18 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
         n.avg <- median(nu.avg)
         n.avg.ci <- quantile(nu.avg, c(low,high), na.rm=TRUE)
         
+        # Detect whether models include T-M interaction
+        if(!isS4(model.y)) {
+            INT <- paste(treat,mediator,sep=":") %in% attr(model.y$terms,"term.labels") | 
+                 paste(mediator,treat,sep=":") %in% attr(model.y$terms,"term.labels") 
+        } else {
+            INT <- paste(treat,mediator,sep=":") %in% attr(model.y@terms,"term.labels") |
+                 paste(mediator,treat,sep=":") %in% attr(model.y@terms,"term.labels") 
+        }
+        if(!INT & isGam.y){
+            INT <- !isTRUE(all.equal(d0, d1))  # if gam, determine empirically
+        }
+        
         if(long) {
             out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
                         d0.sims=delta.0, d1.sims=delta.1,
@@ -894,6 +895,10 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
         z0 <- apply(zeta.0,2, mean)
         z0.ci <- apply(zeta.0,2, quantile, c(low,high))
         
+        # Detect whether models include T-M interaction
+        INT <- paste(treat,mediator,sep=":") %in% attr(model.y@terms,"term.labels") |
+             paste(mediator,treat,sep=":") %in% attr(model.y@terms,"term.labels") 
+        
         if(long) {
             out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
                         d0.sims=delta.0, d1.sims=delta.1,
@@ -941,8 +946,11 @@ print.summary.mediate <- function(x, ...){
     } else {
         cat("Quasi-Bayesian Confidence Intervals\n\n")
     }
-    if (x$INT == FALSE && class(x$model.y)[1] %in% c("lm", "gam", "rq")){
-        # Print only one set of values if lmY/gamY/quanY without interaction
+    printone <- x$INT == FALSE && (class(x$model.y)[1] %in% c("lm", "rq") ||
+        (inherits(x$model.y, "glm") & x$model.y$family$family == "gaussian"
+         & x$model.y$family$link == "identity"))
+    if (printone){
+        # Print only one set of values if lmY/quanY/linear gamY without interaction
         cat("Mediation Effect: ", format(x$d1, digits=4), clp, "% CI ", 
                 format(x$d1.ci, digits=4), "\n")
         cat("Direct Effect: ", format(x$z0, digits=4), clp, "% CI ", 
@@ -1381,8 +1389,11 @@ print.summary.mediations <- function(x, ...){
         } else {
             cat("Quasi-Bayesian Confidence Intervals\n\n")
         }
-        if (x[[i]]$INT == FALSE && class(x[[i]]$model.y)[1] %in% c("lm", "gam", "rq")){
-            # Print only one set of values if lmY/gamY/quanY without interaction
+        printone <- x$INT == FALSE && (class(x$model.y)[1] %in% c("lm", "rq") ||
+            (inherits(x$model.y, "glm") & x$model.y$family$family == "gaussian"
+             & x$model.y$family$link == "identity"))
+        if (printone){
+            # Print only one set of values if lmY/quanY without interaction
             cat("Mediation Effect: ", format(x[[i]]$d1, digits=4), clp, "% CI ", 
                     format(x[[i]]$d1.ci, digits=4), "\n")
             cat("Direct Effect: ", format(x[[i]]$z0, digits=4), clp, "% CI ", 
