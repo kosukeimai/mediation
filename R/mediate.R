@@ -1317,16 +1317,20 @@ mediations <- function(datasets, treatment, mediators, outcome,
                     result1 <- glm(fmla, family=binomial("probit"), data=dataarg)
                 } else if(family[1] == "quantile") {
                     result1 <- rq(fmla, data=dataarg, tau=tau_m)
+                } else if(family[1]=="oprobit") {
+                    result1 <- polr(fmla, method = "probit", data=dataarg)
                 } else {
                     result1 <- glm(fmla, family=family[1], data=dataarg)
                 }
                 
                 if(family[2] == "binomial") {  # run Outcome model using new data/specification
                     result2 <- glm(fmla2, family=binomial("probit"), data=dataarg)
-                } else if(family[1] == "quantile") {
+                } else if(family[2] == "quantile") {
                     result2 <- rq(fmla2, data=dataarg, tau=tau_y)
                 } else if(family[2] == "tobit") {
                     result2 <- vglm(fmla2, tobit(Lower=LowerY,Upper=UpperY), data=dataarg)
+                } else if(family[2]=="oprobit" ){
+                    result2 <- polr(fmla2, method = "probit", data=dataarg)
                 } else {
                     result2 <- glm(fmla2, family=family[2], data=dataarg)
                 }
