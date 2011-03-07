@@ -896,8 +896,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
         z0.ci <- apply(zeta.0,2, quantile, c(low,high))
         
         # Detect whether models include T-M interaction
-        INT <- paste(treat,mediator,sep=":") %in% attr(model.y@terms,"term.labels") |
-             paste(mediator,treat,sep=":") %in% attr(model.y@terms,"term.labels") 
+        INT <- paste(treat,mediator,sep=":") %in% attr(model.y$terms,"term.labels") | 
+             paste(mediator,treat,sep=":") %in% attr(model.y$terms,"term.labels") 
         
         if(long) {
             out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
