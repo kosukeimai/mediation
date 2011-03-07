@@ -1273,9 +1273,9 @@ plot.mediate.order <- function(x, treatment = NULL,
 
 
 mediations <- function(datasets, treatment, mediators, outcome, 
-                    covariates=NULL, family=c("gaussian", "gaussian"),
+                    covariates=NULL, families=c("gaussian", "gaussian"),
                     tau_m=.5,tau_y=.5, LowerY=NULL, UpperY=NULL, interaction=FALSE,
-                    conf.level=.95, sims=500) {
+                    conf.level=.95, sims=500, boot=FALSE) {
     data <- names(datasets)
     labels <- c()
     out <- list()
@@ -1312,32 +1312,40 @@ mediations <- function(datasets, treatment, mediators, outcome,
                 # Mediations does not currently support the use of GAM's. Logits 
                 # are not supported bc. users should use probits so they can do 
                 # sensitivity analyses.  
-                
-                if(family[1] == "binomial") {  # run Mediator model using new data/specification
+                print(families[2])
+                if(families[1] == "binomial") {  # run Mediator model using new data/specification
                     result1 <- glm(fmla, family=binomial("probit"), data=dataarg)
-                } else if(family[1] == "quantile") {
+                } else if(families[1] == "quantile") {
                     result1 <- rq(fmla, data=dataarg, tau=tau_m)
-                } else if(family[1]=="oprobit") {
+                } else if(families[1] == "oprobit") {
                     result1 <- polr(fmla, method = "probit", data=dataarg)
+                    print(result1)
                 } else {
-                    result1 <- glm(fmla, family=family[1], data=dataarg)
+                    result1 <- glm(fmla, family=families[1], data=dataarg)
+                    #print(result1)
                 }
                 
-                if(family[2] == "binomial") {  # run Outcome model using new data/specification
+                if(families[2] == "binomial") {  # run Outcome model using new data/specification
                     result2 <- glm(fmla2, family=binomial("probit"), data=dataarg)
-                } else if(family[2] == "quantile") {
+                } else if(families[2] == "quantile") {
                     result2 <- rq(fmla2, data=dataarg, tau=tau_y)
-                } else if(family[2] == "tobit") {
+                } else if(families[2] == "tobit") {
                     result2 <- vglm(fmla2, tobit(Lower=LowerY,Upper=UpperY), data=dataarg)
-                } else if(family[2]=="oprobit" ){
+                } else if(families[2]== "oprobit"){
+                  print("test")
                     result2 <- polr(fmla2, method = "probit", data=dataarg)
+                    print(result2)
                 } else {
-                    result2 <- glm(fmla2, family=family[2], data=dataarg)
+                    result2 <- glm(fmla2, family=families[2], data=dataarg)
                 }
-              
+              print(families)
+              mediate(result1, result2, sims=sims, 
+                                        treat=treatment[i], mediator=mediators[j],
+                                        conf.level=conf.level, boot=boot)
               out[[(count)]] <- mediate(result1, result2, sims=sims, 
                                         treat=treatment[i], mediator=mediators[j],
-                                        conf.level=conf.level)
+                                        conf.level=conf.level, boot=boot)
+                                        
               rm(result1)
               rm(result2)
               labels[(count)] <- sprintf("%s.%s.%s", outcome[o],data[i], mediators[j])
