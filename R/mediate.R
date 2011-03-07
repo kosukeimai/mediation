@@ -1310,17 +1310,19 @@ mediations <- function(datasets, treatment, mediators, outcome,
                 # Mediations does not currently support the use of GAM's. Logits 
                 # are not supported bc. users should use probits so they can do 
                 # sensitivity analyses.  
-                print(families[2])
+                #print(families)
                 if(families[1] == "binomial") {  # run Mediator model using new data/specification
                     result1 <- glm(fmla, family=binomial("probit"), data=dataarg)
                 } else if(families[1] == "quantile") {
                     result1 <- rq(fmla, data=dataarg, tau=tau_m)
                 } else if(families[1] == "oprobit") {
+                    #print(fmla)
                     result1 <- polr(fmla, method = "probit", data=dataarg)
-                    print(result1)
-                } else {
-                    result1 <- glm(fmla, family=families[1], data=dataarg)
                     #print(result1)
+                } else if (families[1] == "gaussian") {
+                    result1 <- glm(fmla, family="gaussian", data=dataarg)
+                } else {
+                print("mediations does not support this model for the mediator")
                 }
                 
                 if(families[2] == "binomial") {  # run Outcome model using new data/specification
@@ -1330,16 +1332,14 @@ mediations <- function(datasets, treatment, mediators, outcome,
                 } else if(families[2] == "tobit") {
                     result2 <- vglm(fmla2, tobit(Lower=LowerY,Upper=UpperY), data=dataarg)
                 } else if(families[2]== "oprobit"){
-                  print("test")
                     result2 <- polr(fmla2, method = "probit", data=dataarg)
-                    print(result2)
+                    #print(result2)
+                } else if(families[2]== "gaussian"){
+                    result2 <- glm(fmla2, family="gaussian", data=dataarg)
                 } else {
-                    result2 <- glm(fmla2, family=families[2], data=dataarg)
+                print("mediations does not support this model for the outcome")
                 }
-              print(families)
-              mediate(result1, result2, sims=sims, 
-                                        treat=treatment[i], mediator=mediators[j],
-                                        conf.level=conf.level, boot=boot)
+
               out[[(count)]] <- mediate(result1, result2, sims=sims, 
                                         treat=treatment[i], mediator=mediators[j],
                                         conf.level=conf.level, boot=boot)
