@@ -1048,7 +1048,7 @@ plot.process <- function(model) {
     coef.vec.1 <- c(model$d1, model$z1)
     lower.vec.1 <- c(model$d1.ci[1], model$z1.ci[1])
     upper.vec.1 <- c(model$d1.ci[2], model$z1.ci[2])
-    tau.vec<-c(model$tau.coef,model$tau.ci[1],model$tau.ci[2])
+    tau.vec <- c(model$tau.coef,model$tau.ci[1],model$tau.ci[2])
     range.1 <- range(model$d1.ci[1], model$z1.ci[1],model$tau.ci[1],
                       model$d1.ci[2], model$z1.ci[2],model$tau.ci[2])
     
@@ -1128,18 +1128,18 @@ plot.mediate <- function(x, treatment = NULL,
          # plot coefficients as points, turning off axes and labels. 
         segments(param$lower.vec.0, y.axis - adj, param$upper.vec.0, y.axis - adj, 
                 lwd = lwd, lty = 3, col = col)
-         # coef +/-1.96*se = 95% interval, lwd adjusts line thickness
     }
     if(treatment[1]==0 & length(treatment)==1) {
         points(param$tau.vec[1], 1 , type = "p", pch = 19, cex = cex, col = col)
         segments(param$tau.vec[2], 1 , param$tau.vec[3], 1 , 
                 lwd = lwd, col = col) 
     }
-    y.axis.new<-c(3,2,1)
+    y.axis.new <- c(3,2,1)
     axis(2, at = y.axis.new, labels = labels, las = 1, tick = TRUE, ...)
          # draw y-axis with tick marks, make labels perpendicular to axis and closer to axis
     abline(v = 0, lty = 2)
 }
+
 
 
 plot.process.order <- function(model){
@@ -1156,7 +1156,7 @@ plot.process.order <- function(model){
         lower.vec.0[j,] <- c(model$d0.ci[1,j], model$z0.ci[1,j])
         upper.vec.0[j,] <- c(model$d0.ci[2,j], model$z0.ci[2,j])
         
-        tau.vec[j,]<-c(model$tau.coef[j],model$tau.ci[1,j],model$tau.ci[2,j])
+        tau.vec[j,] <- c(model$tau.coef[j], model$tau.ci[1,j], model$tau.ci[2,j])
        
     }
     
@@ -1190,9 +1190,8 @@ plot.mediate.order <- function(x, treatment = NULL,
     
     param <- plot.process.order(x)
     y.axis <- c(ncol(param$coef.vec.1):.5)
-    y.axis<-y.axis+1
-    
-        # create indicator for y.axis, descending so labels go from top to bottom
+    y.axis < -y.axis + 1
+    # create indicator for y.axis, descending so labels go from top to bottom
     
     # Set xlim
     if(is.null(xlim)){
@@ -1230,10 +1229,10 @@ plot.mediate.order <- function(x, treatment = NULL,
             segments(param$lower.vec.1[z,], y.axis + adj.1,
                     param$upper.vec.1[z,], y.axis + adj.1, 
                     lwd = lwd, col = col)
-            points(param$tau.vec[z,1], 1+adj.1 , 
+            points(param$tau.vec[z,1], 1 + adj.1 , 
                     type = "p", pch = 19, cex = cex, col = col)
-            segments(param$tau.vec[z,2], 1+adj.1 ,
-                    param$tau.vec[z,3], 1 +adj.1 , 
+            segments(param$tau.vec[z,2], 1 + adj.1 ,
+                    param$tau.vec[z,3], 1 + adj.1 , 
                     lwd = lwd, col = col)
             adj.1 <- adj.1 - 0.05
         }
@@ -1248,7 +1247,6 @@ plot.mediate.order <- function(x, treatment = NULL,
             segments(param$lower.vec.0[z,], y.axis - adj.0, 
                     param$upper.vec.0[z,], y.axis - adj.0, 
                     lwd = lwd, lty = 3, col = col)
-             # coef +/-1.96*se = 95% interval, lwd adjusts line thickness
             adj.0 <- adj.0 + 0.05 
         }
     }
@@ -1256,16 +1254,16 @@ plot.mediate.order <- function(x, treatment = NULL,
         print("test")
         adj.1 <- adj * nrow(param$coef.vec.1)
         for(z in 1:nrow(param$tau.vec)){
-            points(param$tau.vec[z,1], 1+adj.1 , 
+            points(param$tau.vec[z,1], 1 + adj.1 , 
                     type = "p", pch = 19, cex = cex, col = col)
-            segments(param$tau.vec[z,2], 1+adj.1 ,
+            segments(param$tau.vec[z,2], 1 + adj.1 ,
                     param$tau.vec[z,3], 1 +adj.1 , 
                     lwd = lwd, col = col)
                     adj.1 <- adj.1 - 0.05
                     }
             }
                     
-    y.axis.new<-c(3,2,1)
+    y.axis.new <- c(3,2,1)
     axis(2, at = y.axis.new, labels = labels, las = 1, tick = TRUE, ...)
          # draw y-axis with tick marks, make labels perpendicular to axis and closer to axis
     abline(v = 0, lty = 2)
