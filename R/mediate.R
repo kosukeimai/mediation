@@ -1300,8 +1300,10 @@ mediations <- function(datasets, treatment, mediators, outcome,
                                                                 mediators[j], covariates)
                     }
                 }
-                fmla <- as.formula(paste(f1))
-                fmla2 <- as.formula(paste(f2))
+#                fmla <- as.formula(paste(f1))
+#                fmla2 <- as.formula(paste(f2))
+                fmla <- paste(f1)
+                fmla2 <- paste(f2)
                 
                 # Depending on the family chosen for the mediator or outcome model, 
                 # this generates the correct formulas.
@@ -1401,9 +1403,9 @@ print.summary.mediations <- function(x, ...){
         } else {
             cat("Quasi-Bayesian Confidence Intervals\n\n")
         }
-        printone <- x$INT == FALSE && (class(x$model.y)[1] %in% c("lm", "rq") ||
-            (inherits(x$model.y, "glm") & x$model.y$family$family == "gaussian"
-             & x$model.y$family$link == "identity"))
+        printone <- x[[i]]$INT == FALSE && (class(x[[i]]$model.y)[1] %in% c("lm", "rq") ||
+            (inherits(x[[i]]$model.y, "glm") & x[[i]]$model.y$family$family == "gaussian"
+             & x[[i]]$model.y$family$link == "identity"))
         if (printone){
             # Print only one set of values if lmY/quanY without interaction
             cat("Mediation Effect: ", format(x[[i]]$d1, digits=4), clp, "% CI ", 
