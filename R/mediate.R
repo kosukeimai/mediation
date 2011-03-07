@@ -1314,7 +1314,9 @@ mediations <- function(datasets, treatment, mediators, outcome,
                 if(families[1] == "binomial") {  # run Mediator model using new data/specification
                     result1 <- glm(fmla, family=binomial("probit"), data=dataarg)
                 } else if(families[1] == "quantile") {
+                    #print("rq")
                     result1 <- rq(fmla, data=dataarg, tau=tau_m)
+                    #print(model.frame(result1))
                 } else if(families[1] == "oprobit") {
                     #print(fmla)
                     result1 <- polr(fmla, method = "probit", data=dataarg)
