@@ -946,9 +946,14 @@ print.summary.mediate <- function(x, ...){
     } else {
         cat("Quasi-Bayesian Confidence Intervals\n\n")
     }
+    if (isS4(x$model.y)){
+    printone<-FALSE
+    } else {
     printone <- x$INT == FALSE && (class(x$model.y)[1] %in% c("lm", "rq") ||
         (inherits(x$model.y, "glm") & x$model.y$family$family == "gaussian"
          & x$model.y$family$link == "identity"))
+    }
+    
     if (printone){
         # Print only one set of values if lmY/quanY/linear gamY without interaction
         cat("Mediation Effect: ", format(x$d1, digits=4), clp, "% CI ", 
@@ -1403,9 +1408,14 @@ print.summary.mediations <- function(x, ...){
         } else {
             cat("Quasi-Bayesian Confidence Intervals\n\n")
         }
+        
+    if (isS4(x$model.y)){
+    printone<-FALSE
+    } else {
         printone <- x[[i]]$INT == FALSE && (class(x[[i]]$model.y)[1] %in% c("lm", "rq") ||
             (inherits(x[[i]]$model.y, "glm") & x[[i]]$model.y$family$family == "gaussian"
              & x[[i]]$model.y$family$link == "identity"))
+        }
         if (printone){
             # Print only one set of values if lmY/quanY without interaction
             cat("Mediation Effect: ", format(x[[i]]$d1, digits=4), clp, "% CI ", 
