@@ -1,6 +1,6 @@
 mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                     mediator="med.name", control=NULL, conf.level=.95, 
-                    control.value=0, treat.value=1, long=TRUE, INT=NULL){
+                    control.value=0, treat.value=1, dropobs=TRUE, long=TRUE, INT=NULL){
     
     # Warn users who still use INT option
     if(!is.null(INT)){
@@ -15,7 +15,17 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
     isRq.y <- class(model.y)[1] == "rq"
     isRq.m <- class(model.m)[1] == "rq"
     isOrdered.y <- class(model.y)[1] == "polr"
+    isRobust<-as.logical(class(model.m)[1]=="lmRob"|model.y[1]=="lmRob"|class(model.m)[1]=="glmRob"|model.y[1]=="glmRob")#note, robust standard errors only for lm and glm models.
     
+    if(dropobs==TRUE){
+    print(nrow(data))
+    data <- merge(model.m$model, model.y$model)
+    print(nrow(data))
+    data <- na.omit(data)
+    model.y <- update(model.y, data=data)
+    model.m <- update(model.m, data=data)
+    }
+        
     # Record class of model.m as "ClassM"
     if(isGam.m){
         ClassM <- class(model.m)[2]
@@ -173,8 +183,13 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 k <- length(model.m$coef)
                 MModel.var.cov <- vcov(model.m)[(1:k),(1:k)]
             } else {
-                MModel.var.cov <- vcov(model.m)
+                    if(isRobust){
+                    MModel.var.cov <- model.m$cov
+                    } else {
+                    MModel.var.cov <- vcov(model.m)
+                    }
             }
+            
             if(isS4(model.y)){
                 TMmodel.coef <- model.y@coefficients
             } else {
@@ -183,7 +198,11 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             if(isRq.y){
                 TMmodel.var.cov <- summary(model.y, covariance=TRUE)$cov
             } else{
-                TMmodel.var.cov <- vcov(model.y)
+                    if(isRobust){
+                    TMmodel.var.cov <- model.y$cov
+                    } else {
+                    TMmodel.var.cov <- vcov(model.y)
+                    }
             }
             
             # Draw model coefficients from normal
@@ -946,7 +965,8 @@ print.summary.mediate <- function(x, ...){
     } else {
         cat("Quasi-Bayesian Confidence Intervals\n\n")
     }
-    if (isS4(x$model.y)){
+    isRobust<-as.logical(class(x$model.m)[1]=="lmRob"|x$model.y[1]=="lmRob"|class(x$model.m)[1]=="glmRob"|x$model.y[1]=="glmRob")#note, robust standard errors only for lm and glm models.
+    if (isS4(x$model.y)|isRobust==TRUE){
     printone<-FALSE
     } else {
     printone <- x$INT == FALSE && (class(x$model.y)[1] %in% c("lm", "rq") ||
@@ -1408,8 +1428,8 @@ print.summary.mediations <- function(x, ...){
         } else {
             cat("Quasi-Bayesian Confidence Intervals\n\n")
         }
-        
-    if (isS4(x$model.y)){
+    isRobust<-as.logical(class(x$model.m)[1]=="lmRob"|x$model.y[1]=="lmRob"|class(x$model.m)[1]=="glmRob"|x$model.y[1]=="glmRob")#note, robust standard errors only for lm and glm models.      
+    if (isS4(x$model.y|isRobust==TRUE)){
     printone<-FALSE
     } else {
         printone <- x[[i]]$INT == FALSE && (class(x[[i]]$model.y)[1] %in% c("lm", "rq") ||
