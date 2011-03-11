@@ -15,17 +15,22 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
     isRq.y <- class(model.y)[1] == "rq"
     isRq.m <- class(model.m)[1] == "rq"
     isOrdered.y <- class(model.y)[1] == "polr"
-    isRobust<-as.logical(class(model.m)[1]=="lmRob"|model.y[1]=="lmRob"|class(model.m)[1]=="glmRob"|model.y[1]=="glmRob")#note, robust standard errors only for lm and glm models.
+    isRobust<-as.logical(class(model.m)[1]=="lmRob"|class(model.y)[1]=="lmRob"|class(model.m)[1]=="glmRob"|class(model.y)[1]=="glmRob")#note, robust standard errors only for lm and glm models.
     
     if(dropobs==TRUE){#Mediation requires that the same observations are in the M and Y model. This makes sure this is the case instead of users doing this manually.
-    print(nrow(model.m$model))
-    print(nrow(model.y$model))
-    data <- merge(model.m$model, model.y$model)
-    print(nrow(data))
-    data <- na.omit(data)
-    print(nrow(data))
-    model.y <- update(model.y, data=data)
-    model.m <- update(model.m, data=data)
+        #if(isVglm.y){
+        if(isS4(model.m)|isS4(model.y)){
+        print("dropobs function not available for s4 class objects like vglm")
+        } else {
+        nm<-c(names(model.m$model),names(model.y$model))
+        nm<-unique(nm)
+        data<-model.m$call$data
+        data<-eval(data)
+        data<-na.omit(data[nm])
+        print(nrow(data))
+        model.y <- update(model.y, data=data)
+        model.m <- update(model.m, data=data)
+        }
     }
         
     # Record class of model.m as "ClassM"
