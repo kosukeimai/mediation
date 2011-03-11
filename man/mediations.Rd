@@ -8,7 +8,7 @@ Processes a set of treatment variable/mediator combinations through the mediate 
 mediations(datasets, treatment, mediators, outcome, 
                     covariates=NULL, family=c("gaussian", "gaussian"),
                     tau_m=.5,tau_y=.5, LowerY=NULL, UpperY=NULL, interaction=FALSE,
-                    conf.level=.95, sims=500) {
+                    conf.level=.95, sims=500, boot=FALSE) {
 
 } 
 
@@ -25,7 +25,7 @@ Individual elements of the output may be passed through plot.mediate for graphin
 \item{mediators}{Vector of mediators names to be used with each treatment variable.}
 \item{outcome}{Single outcome variable to estimate all treatment/mediation combinations for.}
 \item{covariates}{Set of pre-treatment covariates to be included in each model. Default is NULL but users typically should have pre-treatment variables to control for to the make the sequential ignorability assumption more plausible.}
-\item{family}{Two element list specifying the link function to be used in the mediator and outcome models, respectively. Currently only supports "gaussian", "binomial" (for a probit link), and "quantile" (for quantile regression, see tau) for the mediator. For the outcome equation tobit is also available in addition to the mediator model options.}
+\item{family}{Two element list specifying the link function to be used in the mediator and outcome models, respectively. Currently only supports "gaussian", "binomial" (for a probit link), and "quantile" (for quantile regression, see tau) for the mediator. For the outcome equation tobit ("tobit") is also available in addition to the mediator model options.}
 \item{tau_m}{Specifies the quantile to be used for a quantile regression for the mediator model.}
 \item{tau_y}{Specifies the quantile to be used for a quantile regression for the outcome model.}
 \item{LowerY}{Lower bound for tobit model.}
@@ -33,6 +33,8 @@ Individual elements of the output may be passed through plot.mediate for graphin
 \item{interaction}{Whether the treatment and mediator variables should be interacted.}
 \item{conf.level}{Desired confidence interval calculations from mediate.}
 \item{sims}{Desired number of simulations to run mediate for.}
+\item{boot}{Whether or not bootstrap should be used.}
+
 }
 
 \references{Imai, Kosuke, Luke Keele and Dustin Tingley (2010) A General Approach to Causal Mediation Analysis, Psychological Methods, Vol. 15, No. 4 (December), pp. 309-334.
@@ -46,11 +48,11 @@ Imai, Kosuke, Luke Keele, Dustin Tingley, and Teppei Yamamoto. (2009) "Causal Me
 \examples{ 
 #Hypothetical example
 
-#datasets <- list(T1=T1, T2=T2) List of dataset names corresponding to the two different treatment variables T1 and T2
+#datasets <- list(T1=T1, T2=T2) List of dataset names corresponding to the two different treatment variables T1 and T2. Each data set has it's respective treatment/contrast variable.
 #mediators <- c("M1", "M2" ) List of mediators (in each data set)
-#outcome<-c("Ycont1","Ycont2") List of outcome variables.
+#outcome<-c("Ycont1","Ycont2") List of outcome variables (in each data set).
 #treatment <- c("T1", "T2") List of treatment variables
-#covariates <- c("X1+X2") Set of conditioning pre-treatment covariates
-#x <- mediations(datasets, treatment, mediators,outcome, covariates,family=c("gaussian","gaussian"),interaction=FALSE,conf.level=.90, sims=50)
-
+#covariates <- c("X1+X2") Set of conditioning pre-treatment covariates (in each data set)
+#x <- mediations(datasets, treatment, mediators,outcome, covariates,family=c("gaussian","gaussian"), interaction=FALSE,conf.level=.90, sims=50) #runs mediator and outcome models with OLS
+#plot(x) plots the results of each mediation analysis; names(x) will return each mediation result, and plot(x$A-Name) will plot that result.
 } 
