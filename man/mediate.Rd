@@ -6,7 +6,7 @@ Function to estimate causal mediation effects.
 } 
 \usage{
 
-mediate(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name", mediator="med.name", control=NULL, conf.level=.95, control.value=0, treat.value=1)
+mediate(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name", mediator="med.name", control=NULL, conf.level=.95, control.value=0, treat.value=1, long=TRUE, dropobs=TRUE, robustSE=FALSE, ...)
 
 } 
 
@@ -14,14 +14,17 @@ mediate(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name", mediator="m
 \item{model.m}{ R model object for mediator.  Can be of class lm, polr, glm, gam, or rq.} 
 \item{model.y}{ R model object for outcome.  Can be of class lm, glm, gam, vglm, or rq.} 
 \item{sims}{ Number of Monte Carlo draws for nonparametric bootstrap or quasi-Bayesian approximation.} 
-\item{boot}{ If FALSE a quasi-Bayesian approximation is used for confidence interval, if TRUE nonparametric bootstrap will be used.}
+\item{boot}{ If 'FALSE' a quasi-Bayesian approximation is used for confidence interval, if TRUE nonparametric bootstrap will be used.}
 \item{conf.level}{ The returned confidence interval. The default is to return the .025 through .0975 quantiles of the quantity distributions.} 
 \item{treat}{ Name of binary treatment indicator.}
 \item{mediator}{ Name of mediator variable.}
 \item{control}{ Name of binary treatment indicator for control. Only necessary for gam() object with interaction.}
 \item{control.value}{ Value of the treatment variable in the control condition. Default is 0.}
 \item{treat.value}{ Value of the treatment variable in the treatment condition. Default is 1.}
-\item{long}{Whether or not the output of the function should contain the entire sets of simulation draws of the the ACME, direct, and total effects. Default is TRUE.}
+\item{long}{ Whether or not the output of the function should contain the entire sets of simulation draws of the the ACME, direct, and total effects. Default is 'TRUE'.}
+\item{dropobs}{ }
+\item{robustSE}{ A logical value. If 'TRUE', Heteroskedasticisy-consistent standard errors will be used in quasi-Bayesian simulations. Ignored if 'boot' is 'TRUE' or neither 'model.m' nor 'model.y' has a method for \code\link{{vcovHC}} in the \code\link{{sandwich}} package.}
+\item{...}{ Other arguments passed to \code\link{{vcovHC}} in the \code{\link{sandwich}} package: typically the 'type' argument. Ignored if 'robustSE' is 'FALSE'.}
 
 }
 
@@ -74,7 +77,7 @@ Imai, Kosuke, Luke Keele, Dustin Tingley, and Teppei Yamamoto. (2009) "Causal Me
 
 \author{Luke Keele, Ohio State University, \email{keele.4@osu.edu} , Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu}, Teppei Yamamoto, Princeton University, \email{tyamamot@princeton.edu}, Kosuke Imai, Princeton University, \email{kimai@princeton.edu} }
  
-\seealso{See also \code{\link{medsens}} }
+\seealso{\code{\link{medsens}}, \code{\link{plot.mediate}}, \code{\link{summary.mediate}}, \code{\link{mediations}}, \code{\link{vcovHC}}}
 
 \examples{ 
 #Example with JOBS II Field experiment

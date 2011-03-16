@@ -1,11 +1,16 @@
 mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
-                    mediator="med.name", control=NULL, conf.level=.95, 
-                    control.value=0, treat.value=1, dropobs=TRUE, long=TRUE, INT=NULL){
+                    mediator="med.name", control=NULL, conf.level=.95, robustSE = FALSE,
+                    control.value=0, treat.value=1, dropobs=TRUE, long=TRUE, ...){
     
     # Warn users who still use INT option
-    if(!is.null(INT)){
+    if(match("INT", names(match.call()), 0L)){
         warning("Argument INT no longer necessary; existence of interaction term
         is now automatically detected.")
+    }
+    
+    # Warning for robustSE used with boot
+    if(robustSE && boot){
+        warning("robustSE does nothing for nonparametric bootstrap")
     }
     
     # Model type indicators
@@ -15,22 +20,40 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
     isRq.y <- class(model.y)[1] == "rq"
     isRq.m <- class(model.m)[1] == "rq"
     isOrdered.y <- class(model.y)[1] == "polr"
-    isRobust<-as.logical(class(model.m)[1]=="lmRob"|class(model.y)[1]=="lmRob"|class(model.m)[1]=="glmRob"|class(model.y)[1]=="glmRob")#note, robust standard errors only for lm and glm models.
     
-    if(dropobs==TRUE){#Mediation requires that the same observations are in the M and Y model. This makes sure this is the case instead of users doing this manually.
-        #if(isVglm.y){
-        if(isS4(model.m)|isS4(model.y)){
-        print("dropobs function not available for s4 class objects like vglm")
+    # Drop observations not common to both mediator and outcome models
+    if(dropobs){
+        if(isS4(model.m)){
+            data.m <- eval(as.name(model.m@misc$dataname))
         } else {
-        nm<-c(names(model.m$model),names(model.y$model))
-        nm<-unique(nm)
-        data<-model.m$call$data
-        data<-eval(data)
-        data<-na.omit(data[nm])
-        print(nrow(data))
-        model.y <- update(model.y, data=data)
-        model.m <- update(model.m, data=data)
+            data.m <- eval(model.m$model)
         }
+        if(isS4(model.y)){
+            data.y <- eval(as.name(model.y@misc$dataname))
+        } else {
+            data.y <- eval(model.y$model)
+        }
+        newdata <- merge(data.m, data.y, sort=FALSE)
+#        cat("data.m: ", dim(data.m), "\n")
+#        cat(names(data.m), "\n")
+#        cat("data.y ", dim(data.y), "\n")
+#        cat(names(data.y), "\n")
+#        cat("newdata: ", dim(newdata), "\n")
+#        cat(names(newdata), "\n")
+        model.m <- update(model.m, data=newdata)
+        model.y <- update(model.y, data=newdata)
+#        if(isS4(model.m)|isS4(model.y)){
+#        print("dropobs function not available for s4 class objects like vglm")
+#        } else {
+#        nm<-c(names(model.m$model),names(model.y$model))
+#        nm<-unique(nm)
+#        data<-model.m$call$data
+#        data<-eval(data)
+#        data<-na.omit(data[nm])
+#        print(nrow(data))
+#        model.y <- update(model.y, data=data)
+#        model.m <- update(model.m, data=data)
+#        }
     }
         
     # Record class of model.m as "ClassM"
@@ -50,7 +73,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             # Indicates which vglm model (currently always tobit)
         }
     }
-        
+    
     # Warning for control option in non-GAM outcome models
     if(!is.null(control) && !isGam.y){
         warning("argument control irrelevant except for GAM outcome models, 
@@ -190,11 +213,11 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 k <- length(model.m$coef)
                 MModel.var.cov <- vcov(model.m)[(1:k),(1:k)]
             } else {
-                    if(isRobust){
-                    MModel.var.cov <- model.m$cov
-                    } else {
+                if(robustSE){
+                    MModel.var.cov <- vcovHC(model.m, ...)
+                } else {
                     MModel.var.cov <- vcov(model.m)
-                    }
+                }
             }
             
             if(isS4(model.y)){
@@ -205,11 +228,11 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             if(isRq.y){
                 TMmodel.var.cov <- summary(model.y, covariance=TRUE)$cov
             } else{
-                    if(isRobust){
-                    TMmodel.var.cov <- model.y$cov
-                    } else {
+                if(robustSE){
+                    TMmodel.var.cov <- vcovHC(model.y, ...)
+                } else {
                     TMmodel.var.cov <- vcov(model.y)
-                    }
+                }
             }
             
             # Draw model coefficients from normal
@@ -703,8 +726,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
         zeta.avg <- (zeta.0 + zeta.1)/2
         d.avg <- mean(delta.avg)
         z.avg <- mean(zeta.avg)
-        d.avg.ci <- quantile(d.avg, c(low,high), na.rm=TRUE)
-        z.avg.ci <- quantile(z.avg, c(low,high), na.rm=TRUE)
+        d.avg.ci <- quantile(delta.avg, c(low,high), na.rm=TRUE)
+        z.avg.ci <- quantile(zeta.avg, c(low,high), na.rm=TRUE)
         nu.avg <- delta.avg/tau
         n.avg <- median(nu.avg)
         n.avg.ci <- quantile(nu.avg, c(low,high), na.rm=TRUE)
@@ -972,14 +995,13 @@ print.summary.mediate <- function(x, ...){
     } else {
         cat("Quasi-Bayesian Confidence Intervals\n\n")
     }
-    isRobust<-as.logical(class(x$model.m)[1]=="lmRob"|x$model.y[1]=="lmRob"|class(x$model.m)[1]=="glmRob"|x$model.y[1]=="glmRob")#note, robust standard errors only for lm and glm models.
-    if (isS4(x$model.y)|isRobust==TRUE){
-    printone<-FALSE
-    } else {
+#    if (isS4(x$model.y)|isRobust==TRUE){
+#    printone <- FALSE
+#    } else {
     printone <- x$INT == FALSE && (class(x$model.y)[1] %in% c("lm", "rq") ||
-        (inherits(x$model.y, "glm") & x$model.y$family$family == "gaussian"
-         & x$model.y$family$link == "identity"))
-    }
+        (inherits(x$model.y, "glm") && x$model.y$family$family == "gaussian"
+         && x$model.y$family$link == "identity"))
+#    }
     
     if (printone){
         # Print only one set of values if lmY/quanY/linear gamY without interaction
@@ -1435,14 +1457,13 @@ print.summary.mediations <- function(x, ...){
         } else {
             cat("Quasi-Bayesian Confidence Intervals\n\n")
         }
-    isRobust<-as.logical(class(x$model.m)[1]=="lmRob"|x$model.y[1]=="lmRob"|class(x$model.m)[1]=="glmRob"|x$model.y[1]=="glmRob")#note, robust standard errors only for lm and glm models.      
-    if (isS4(x$model.y|isRobust==TRUE)){
-    printone<-FALSE
-    } else {
+#    if (isS4(x$model.y)){
+#    printone<-FALSE
+#    } else {
         printone <- x[[i]]$INT == FALSE && (class(x[[i]]$model.y)[1] %in% c("lm", "rq") ||
-            (inherits(x[[i]]$model.y, "glm") & x[[i]]$model.y$family$family == "gaussian"
-             & x[[i]]$model.y$family$link == "identity"))
-        }
+            (inherits(x[[i]]$model.y, "glm") && x[[i]]$model.y$family$family == "gaussian"
+             && x[[i]]$model.y$family$link == "identity"))
+#        }
         if (printone){
             # Print only one set of values if lmY/quanY without interaction
             cat("Mediation Effect: ", format(x[[i]]$d1, digits=4), clp, "% CI ", 
@@ -1478,3 +1499,26 @@ print.summary.mediations <- function(x, ...){
     }
     invisible(x)
 }
+
+
+update.vglm <- function (object, formula., ..., evaluate = TRUE) 
+{
+    call <- object@call
+    if (is.null(call)) 
+        stop("need an object with call component")
+    extras <- match.call(expand.dots = FALSE)$...
+    if (!missing(formula.)) 
+        call$formula <- update.formula(formula(object), formula.)
+    if (length(extras)) {
+        existing <- !is.na(match(names(extras), names(call)))
+        for (a in names(extras)[existing]) call[[a]] <- extras[[a]]
+        if (any(!existing)) {
+            call <- c(as.list(call), extras[!existing])
+            call <- as.call(call)
+        }
+    }
+    if (evaluate) 
+        eval(call, parent.frame())
+    else call
+}
+
