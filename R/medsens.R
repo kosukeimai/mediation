@@ -260,26 +260,48 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
         		err.cr.1.z <- rho[ii.z]
         		err.cr.2.z <- rho[kk.z]
         		err.cr.z <- c(err.cr.1.z, err.cr.2.z)
-        		}	 
-        }
-        R2star.d.thresh <- err.cr^2
-        R2tilde.d.thresh <- err.cr^2*(1-r.sq.m)*(1-r.sq.y)
-		R2star.z.thresh <- err.cr.z^2
-        R2tilde.z.thresh <- err.cr.z^2*(1-r.sq.m)*(1-r.sq.y)
+        		}
+        } else{
+        	if("indirect" %in% effect.type){
+        		ii <- which(abs(d0-0)==min(abs(d0-0)))
+        		err.cr <- rho[ii] 
+        		}
+        	if("direct" %in% effect.type){
+        		ii.z <- which(abs(z0-0)==min(abs(z0-0)))
+        		err.cr.z <- rho[ii.z]
+        		}
+        	}
+        	if("indirect" %in% effect.type){
+        		R2star.d.thresh <- err.cr^2
+        		R2tilde.d.thresh <- err.cr^2*(1-r.sq.m)*(1-r.sq.y)
+        	}
+        	if("direct" %in% effect.type){
+        		R2star.z.thresh <- err.cr.z^2
+        		R2tilde.z.thresh <- err.cr.z^2*(1-r.sq.m)*(1-r.sq.y)
+        	}
         type <- "ct"
+        if("indirect" %in% effect.type){
         out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0,
         lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0,
-        ind.d1=ind.d1, z0=z0, z1=z1, upper.z0=upper.z0, lower.z0=lower.z0, 
-        upper.z1=upper.z1, lower.z1=lower.z1, ind.z0=ind.z0, ind.z1=ind.z1, 
-        R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
+        ind.d1=ind.d1, R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
         R2star.d.thresh=R2star.d.thresh, R2tilde.d.thresh=R2tilde.d.thresh,
-        R2star.z.thresh=R2star.z.thresh, R2tilde.z.thresh=R2tilde.z.thresh,
         r.square.y=r.sq.y, r.square.m=r.sq.m,
-        rho.by=rho.by, INT=INT,
+        rho.by=rho.by, INT=INT, effect.type=effect.type,
         tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL, type=type)
         class(out) <- "medsens"
         out
-
+        }
+        if("direct" %in% effect.type){
+        out <- list(rho = rho, err.cr=err.cr, z0=z0, z1=z1, upper.z0=upper.z0, lower.z0=lower.z0, 
+        upper.z1=upper.z1, lower.z1=lower.z1, ind.z0=ind.z0, ind.z1=ind.z1, 
+        R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
+        R2star.z.thresh=R2star.z.thresh, R2tilde.z.thresh=R2tilde.z.thresh,
+        r.square.y=r.sq.y, r.square.m=r.sq.m,
+        rho.by=rho.by, INT=INT, effect.type=effect.type,
+        tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL, type=type)
+        class(out) <- "medsens"
+        out
+        }
     ## END OF CASE 1: Continuous Outcome + Continuous Mediator    
     } else
 
@@ -440,7 +462,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
         lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0,
         ind.d1=ind.d1, R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
         R2star.thresh=R2star.thresh, R2tilde.thresh=R2tilde.thresh,
-        r.square.y=r.sq.y, r.square.m=r.sq.m,
+        r.square.y=r.sq.y, r.square.m=r.sq.m, effect.type=effect.type,
         rho.by=rho.by, INT=INT, tau=NULL, upper.tau=NULL,
         lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL,type=type,
         err.cr=err.cr)
