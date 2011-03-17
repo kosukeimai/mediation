@@ -644,7 +644,8 @@ summary.medsens <- function(object, ...)
  
 print.summary.medsens <- function(x, ...){
     if(x$type=="ct"){
-        if(x$INT==FALSE){if("indirect" %in% effect.type){            
+    	effect.type <- x$effect.type
+        if(x$INT==FALSE){if("indirect" %in% x$effect.type){            
         	tab <- cbind(x$rho, round(x$d0, 4), round(x$lower.d0, 4), round(x$upper.d0, 4), x$ind.d0, x$R2star.prod, round(x$R2tilde.prod,4))
             if(sum(x$ind.d0)==1){
                 tab <- as.matrix(tab[x$ind.d0==1, -5])
@@ -662,7 +663,7 @@ print.summary.medsens <- function(x, ...){
             cat("\nR^2_M~R^2_Y~ at which ACME = 0:", round(x$R2tilde.d.thresh, 4), "\n\n")
             invisible(x)    
         	}
-        	if("direct" %in% effect.type){
+        	if("direct" %in% x$effect.type){
         		if(!is.na(tab)){
         			tab.z <- cbind(round(x$z0, 4), round(x$lower.z0, 4), round(x$upper.z0, 4), x$ind.z0)
         			if(sum(x$ind.d0)==1){
@@ -703,7 +704,7 @@ print.summary.medsens <- function(x, ...){
             				invisible(x) 
         				}
         		}
-        } else {if("indirect" %in% effect.type){
+        } else {if("indirect" %in% x$effect.type){
             tab.d0 <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0, x$R2star.prod, round(x$R2tilde.prod, 4))
             if(sum(x$ind.d0)==1){
                 tab.d0 <- as.matrix(tab.d0[x$ind.d0==1, -5])
@@ -735,7 +736,7 @@ print.summary.medsens <- function(x, ...){
             cat("\nR^2_M~R^2_Y~ at which ACME for Treatment Group = 0:", round(x$R2tilde.d.thresh[2], 4), "\n\n")
             invisible(x)        
             }
-            if("direct" %in% effect.type){
+            if("direct" %in% x$effect.type){
             	tab.z0 <- cbind(x$rho, round(x$z0,4), round(x$lower.z0,4), round(x$upper.z0, 4), x$ind.z0, x$R2star.prod, round(x$R2tilde.prod, 4))
             if(sum(x$ind.z0)==1){
                 tab.z0 <- as.matrix(tab.z0[x$ind.z0==1, -5])
