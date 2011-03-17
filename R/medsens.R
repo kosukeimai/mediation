@@ -885,7 +885,7 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             else title(ylab = ylab)
     } else {
     if(x$INT == FALSE){
-    	if("indirect" %in% effect.type){
+    	if("indirect" %in% x$effect.type){
         if(is.null(ylim))
             ylim <- c(min(x$d0), max(x$d0))
         if(is.null(main))
@@ -914,7 +914,7 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             title(ylab = expression(paste("Average Mediation Effect: ", bar(delta)(t))), line=2.5, cex.lab=.9)
             else title(ylab = ylab)
     } 
-    if("direct" %in% effect.type){
+    if("direct" %in% x$effect.type){
     	if(is.null(ylim))
             ylim <- c(min(x$z0), max(x$z0))
         if(is.null(main))
@@ -944,7 +944,7 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             else title(ylab = ylab)
     	}
     } else {### With Interaction
-     if("indirect" %in% effect.type){
+     if("indirect" %in% x$effect.type){
         if(prod(par("mfrow")==1) && dev.interactive()){
             oask <- devAskNewPage(TRUE)
             on.exit(devAskNewPage(oask))
@@ -1008,7 +1008,7 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             title(ylab = expression(paste("Average Mediation Effect: ", bar(delta)(1))), line=2.5, cex.lab=.9)
             else title(ylab = ylab)
             }
-     if("direct" %in% effect.type){
+     if("direct" %in% x$effect.type){
      	if(prod(par("mfrow")==1) && dev.interactive()){
             oask <- devAskNewPage(TRUE)
             on.exit(devAskNewPage(oask))
@@ -1099,7 +1099,7 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         ylim <- c(0,1)
     
     if(x$INT==FALSE){## No Interaction, R2, Continuous
-        if("indirect" %in% effect.type){
+        if("indirect" %in% x$effect.type){
         	if(is.null(levels))
             levels <- pretty(quantile(x$d0, probs=c(0.1,0.9)), 10)
         if(sign.prod == 1){
@@ -1132,7 +1132,7 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         axis(2,at=seq(0,1,by=.1))
         axis(1,at=seq(0,1,by=.1))
     } 
-    if("direct" %in% effect.type){
+    if("direct" %in% x$effect.type){
     	levels <- pretty(quantile(x$z0, probs=c(0.1,0.9)), 10)
         if(sign.prod == 1){
             z0.p <- approx(x$z0[((length(x$z0)+1)/2):length(x$z0)], n=dlength)$y
@@ -1169,7 +1169,7 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             oask <- devAskNewPage(TRUE)
             on.exit(devAskNewPage(oask))
         }
-        if("indirect" %in% effect.type){
+        if("indirect" %in% x$effect.type){
         if(is.null(levels))
             levels0 <- pretty(quantile(x$d0, probs=c(0.1,0.9)), 10)
             else levels0 <- levels
@@ -1241,7 +1241,7 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         axis(1,at=seq(0,1,by=.1))
       }
   } 
-	if("direct" %in% effect.type){
+	if("direct" %in% x$effect.type){
 		if(is.null(levels))
             levels0 <- pretty(quantile(x$z0, probs=c(0.1,0.9)), 10)
             else levels0 <- levels
