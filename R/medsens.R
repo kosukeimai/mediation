@@ -42,7 +42,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
             T.cat <- paste(treat,cat.t, sep="")
             }
             
-        if(INT==TRUE){
+        if(INT){
             if(paste(treat,mediator,sep=":") %in% attr(model.y$terms,"term.labels")){ # T:M
                 int.lab <- paste(T.cat,mediator, sep=":")
                 t.m <- paste(treat,mediator, sep=":")
@@ -53,10 +53,12 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
             }
                 
         #Estimate Error Correlation
-        if(INT==TRUE){
-            mod.y <- update(model.y,as.formula(paste(". ~ . -", t.m, "-", mediator)))
+        data <- model.y$call$data
+print(head(data))
+        if(INT){
+            mod.y <- update(model.y,as.formula(paste(". ~ . -", t.m, "-", mediator)), data=data)
             } else {
-            mod.y <- update(model.y,as.formula(paste(". ~ . -", mediator)))
+            mod.y <- update(model.y,as.formula(paste(". ~ . -", mediator)), data=data)
                 }
         err.cr <- cor(model.m$resid, mod.y$resid)  ## FIX: This is only used for INT=F which is also unnecessary
                     
@@ -139,8 +141,8 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
         v.m <- v.cov[1:m.k,1:m.k]
         v.y <- v.cov[(m.k+1):(m.k+y.k),(m.k+1):(m.k+y.k)]
         m.bar <- apply(m.mat, 2, mean)
-        m.covt.coefs <- -(match(c("(Intercept)", paste(T.cat)), names(model.m$coefficients)))
-        m.bar.covts <- -(match(c("(Intercept)", paste(T.cat)), names(m.bar)))
+        m.covt.coefs <- -(match(c("(Intercept)", paste(T.cat)), names(model.m$coefficients), NULL))
+        m.bar.covts <- -(match(c("(Intercept)", paste(T.cat)), names(m.bar), NULL))
         
         if(length(m.coefs[m.covt.coefs, ]) != 0){
         	model.m.bar.z0 <- m.coefs["(Intercept)", ] + 0*m.coefs[paste(T.cat), ] + sum(t(m.coefs[m.covt.coefs, ]) %*% m.bar[m.bar.covts])
@@ -159,7 +161,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
             		}
             	
         #Save Estimates
-        if(INT==TRUE){if("indirect" %in% effect.type){
+        if(INT){if("indirect" %in% effect.type){
             d0[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(mediator),] 
             d1[i,] <- m.coefs[paste(T.cat),]*(y.coefs[paste(mediator),] + y.coefs[paste(int.lab),]) 
             }
@@ -183,9 +185,9 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
                 			}
                 }
         
-        #Save Variance Estimates 
-        if(INT==TRUE){if("indirect" %in% effect.type){
-        		if(!is.na(m.bar.covts))
+        #Save Variance Estimates
+        if(INT){if("indirect" %in% effect.type){
+#        		if(!is.na(m.bar.covts))
             d0.var[i,] <- (y.coefs[paste(mediator),] + 0*y.coefs[paste(int.lab),])^2*v.m[T.cat,T.cat] + m.coefs[paste(T.cat),]^2*(v.y[mediator,mediator] + 0*v.y[int.lab, int.lab] + 0*2*v.y[mediator, int.lab])
             d1.var[i,] <- (y.coefs[paste(mediator),] + y.coefs[paste(int.lab),])^2*v.m[T.cat,T.cat] + m.coefs[paste(T.cat),]^2*(v.y[mediator,mediator] + v.y[int.lab, int.lab] + 2*v.y[mediator, int.lab])
             }
@@ -208,7 +210,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
         
         }
         
-        if(INT==TRUE){
+        if(INT){
         # Indirect
         upper.d0 <- d0 + qnorm(high) * sqrt(d0.var)
         lower.d0 <- d0 + qnorm(low) * sqrt(d0.var)
@@ -246,7 +248,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
         R2tilde.prod <- rho^2*(1-r.sq.m)*(1-r.sq.y)
         
         # Calculate rho at which ACME=0
-        if(INT==TRUE){
+        if(INT){
         	if("indirect" %in% effect.type){
         		ii <- which(abs(d0-0)==min(abs(d0-0)))
 		        kk <- which(abs(d1-0)==min(abs(d1-0)))
@@ -288,8 +290,6 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
         r.square.y=r.sq.y, r.square.m=r.sq.m,
         rho.by=rho.by, INT=INT, effect.type=effect.type,
         tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL, type=type)
-        class(out) <- "medsens"
-        out
         }
         if("direct" %in% effect.type){
         out <- list(rho = rho, err.cr.z=err.cr.z, z0=z0, z1=z1, upper.z0=upper.z0, lower.z0=lower.z0, 
@@ -299,9 +299,10 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
         r.square.y=r.sq.y, r.square.m=r.sq.m,
         rho.by=rho.by, INT=INT, effect.type=effect.type,
         tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL, type=type)
-        class(out) <- "medsens"
-        out
         }
+        class(out) <- "medsens"
+print(names(out))
+        out
     ## END OF CASE 1: Continuous Outcome + Continuous Mediator    
     } else
 
@@ -336,7 +337,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
             M.out <- paste(mediator,cat.m1, sep="")
             }
         
-        if(INT==TRUE){
+        if(INT){
         TM <- paste(treat,mediator, sep=":")
         TM.out <- paste(T.out,M.out, sep=":")
             }
@@ -411,7 +412,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
             
             ## Step 2-4: Bootstrap ACMEs; means are over observations
             d0.boot[k] <- mean( (Ymodel.coef.boot[k,M.out]) * (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
-            if(INT==TRUE){
+            if(INT){
                 d1.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + Ymodel.coef.boot[k,TM.out]) * 
                     (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
                 } else {
@@ -443,7 +444,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
         R2tilde.prod <- rho^2*(1-r.sq.m)*(1-r.sq.y)
         
         # Calculate rho at which ACME=0
-        if(INT==TRUE){
+        if(INT){
         ii <- which(abs(d0-0)==min(abs(d0-0)))
         kk <- which(abs(d1-0)==min(abs(d1-0)))
         err.cr.1 <- rho[ii]
@@ -477,7 +478,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
     #########################################################
     if(class.y=="glm" & class.m=="lm") {
 
-        if(INT==TRUE){
+        if(INT){
         stop("Sensitivity Analysis Not Available Binary Outcome With Interactions \n")
         }
         # Step 0: Setting Variable labels
@@ -506,7 +507,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
             M.out <- paste(mediator,cat.m1, sep="")
             }
         
-        if(INT==TRUE){
+        if(INT){
         TM <- paste(treat,mediator, sep=":")
         TM.out <- paste(T.out,M.out, sep=":")
             }
@@ -600,7 +601,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
         R2tilde.prod <- rho^2*(1-r.sq.m)*(1-r.sq.y)
         
         # Calculate rho at which ACME=0
-        if(INT==TRUE){
+        if(INT){
         ii <- which(abs(d0-0)==min(abs(d0-0)))
         kk <- which(abs(d1-0)==min(abs(d1-0)))
         err.cr.1 <- rho[ii]
