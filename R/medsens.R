@@ -664,46 +664,23 @@ print.summary.medsens <- function(x, ...){
             invisible(x)    
         	}
         	if("direct" %in% x$effect.type){
-        		if(!is.na(tab)){
-        			tab.z <- cbind(round(x$z0, 4), round(x$lower.z0, 4), round(x$upper.z0, 4), x$ind.z0)
-        			if(sum(x$ind.d0)==1){
-                		tab.z <- as.matrix(tab.z[x$ind.z0==1, -4])
+        			tab.z <- cbind(x$rho, round(x$z0, 4), round(x$lower.z0, 4), round(x$upper.z0, 4), x$ind.z0, x$R2star.prod, round(x$R2tilde.prod,4))
+        			if(sum(x$ind.z0)==1){
+                		tab.z <- as.matrix(tab.z[x$ind.z0==1, -5])
                 		tab.z <- t(tab.z)
             		} else {
-                		tab.z <- tab.z[x$ind.z0==1, -4] 
+                		tab.z <- tab.z[x$ind.z0==1, -5] 
             		}
-            		tab <- cbind(tab[1], tab.z, tab[2:5])
-            		colnames(tab) <- c("Rho", "Dir. Eff.", "Dir. Eff. CI Lower", "Dir. Eff. CI Upper", "Med. Eff.", "Med. Eff. CI Lower", "Med. Eff. CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
-            		rownames(tab) <- NULL
+            		colnames(tab.z) <- c("Rho", "Dir. Eff.", "Dir. Eff. CI Lower", "Dir. Eff. CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
+            		rownames(tab.z) <- NULL
             		cat("\nMediation Sensitivity Analysis\n")
             		cat("\nSensitivity Region\n\n")
-            		print(tab)
-            		cat("\nRho at which ACME = 0:", round(x$err.cr, 4), "\n\n")
-            		cat("\nR^2_M*R^2_Y* at which ACME = 0:", round(x$R2star.d.thresh, 4), "\n\n")
-            		cat("\nR^2_M~R^2_Y~ at which ACME = 0:", round(x$R2tilde.d.thresh, 4), "\n\n")
+            		print(tab.z)
             		cat("\nRho at which ACDE = 0:", round(x$err.cr.z, 4), "\n\n")
             		cat("\nR^2_M*R^2_Y* at which ACDE = 0:", round(x$R2star.z.thresh, 4), "\n\n")
             		cat("\nR^2_M~R^2_Y~ at which ACDE = 0:", round(x$R2tilde.z.thresh, 4), "\n\n")
             		invisible(x)
-        			} else {
-        				tab <- cbind(x$rho, round(x$z0, 4), round(x$lower.z0, 4), round(x$upper.z0, 4), x$ind.z0, x$R2star.prod, round(x$R2tilde.prod,4))
-            			if(sum(x$ind.d0)==1){
-                			tab <- as.matrix(tab[x$ind.z0==1, -5])
-               				tab <- t(tab)
-           				 } else {
-            			    tab <- tab[x$ind.z0==1, -5] 
-            				}
-          				    colnames(tab) <-  c("Rho", "Dir. Eff.", "Dir. Eff. CI Lower", "Dir. Eff. CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
-            				rownames(tab) <- NULL
-     				        cat("\nMediation Sensitivity Analysis\n")
-    				        cat("\nSensitivity Region\n\n")
-            				print(tab)
-            				cat("\nRho at which ACME = 0:", round(x$err.cr.z, 4), "\n\n")
-            				cat("\nR^2_M*R^2_Y* at which ACME = 0:", round(x$R2star.z.thresh, 4), "\n\n")
-            				cat("\nR^2_M~R^2_Y~ at which ACME = 0:", round(x$R2tilde.z.thresh, 4), "\n\n")
-            				invisible(x) 
-        				}
-        		}
+        			} 
         } else {if("indirect" %in% x$effect.type){
             tab.d0 <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0, x$R2star.prod, round(x$R2tilde.prod, 4))
             if(sum(x$ind.d0)==1){
