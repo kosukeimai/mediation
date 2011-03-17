@@ -28,35 +28,32 @@ mediations <- function(datasets, treatment, mediators, outcome,
                     }
                 }
                 
-                fmla.m <- paste(f1)
-                fmla.y <- paste(f2)
-                
                 # Mediations does not currently support the use of GAM's. Logits 
                 # are not supported bc. users should use probits so they can do 
                 # sensitivity analyses.
                 
                 if(families[1] == "binomial") {  # run Mediator model using new data/specification
-                    result1 <- glm(fmla.m, family=binomial("probit"), data=dataarg)
+                    result1 <- glm(f1, family=binomial("probit"), data=dataarg)
                 } else if(families[1] == "quantile") {
-                    result1 <- rq(fmla.m, data=dataarg, tau=tau.m)
+                    result1 <- rq(f1, data=dataarg, tau=tau.m)
                 } else if(families[1] == "oprobit") {
-                    result1 <- polr(fmla.m, method = "probit", data=dataarg)
+                    result1 <- polr(f1, method = "probit", data=dataarg)
                 } else if (families[1] == "gaussian") {
-                    result1 <- glm(fmla.m, family="gaussian", data=dataarg)
+                    result1 <- glm(f1, family="gaussian", data=dataarg)
                 } else {
                     print("mediations does not support this model for the mediator")
                 }
                 
                 if(families[2] == "binomial") {  # run Outcome model using new data/specification
-                    result2 <- glm(fmla.y, family=binomial("probit"), data=dataarg)
+                    result2 <- glm(f2, family=binomial("probit"), data=dataarg)
                 } else if(families[2] == "quantile") {
-                    result2 <- rq(fmla.y, data=dataarg, tau=tau.y)
+                    result2 <- rq(f2, data=dataarg, tau=tau.y)
                 } else if(families[2] == "tobit") {
-                    result2 <- vglm(fmla.y, tobit(Lower=LowerY,Upper=UpperY), data=dataarg)
+                    result2 <- vglm(f2, tobit(Lower=LowerY,Upper=UpperY), data=dataarg)
                 } else if(families[2]== "oprobit"){
-                    result2 <- polr(fmla.y, method = "probit", data=dataarg)
+                    result2 <- polr(f2, method = "probit", data=dataarg)
                 } else if(families[2]== "gaussian"){
-                    result2 <- glm(fmla.y, family="gaussian", data=dataarg)
+                    result2 <- glm(f2, family="gaussian", data=dataarg)
                 } else {
                     print("mediations does not support this model for the outcome")
                 }
@@ -118,13 +115,11 @@ print.summary.mediations <- function(x, ...){
         } else {
             cat("Quasi-Bayesian Confidence Intervals\n\n")
         }
-#    if (isS4(x$model.y)){
-#    printone<-FALSE
-#    } else {
+        
         printone <- x[[i]]$INT == FALSE && (class(x[[i]]$model.y)[1] %in% c("lm", "rq") ||
             (inherits(x[[i]]$model.y, "glm") && x[[i]]$model.y$family$family == "gaussian"
              && x[[i]]$model.y$family$link == "identity"))
-#        }
+             
         if (printone){
             # Print only one set of values if lmY/quanY without interaction
             cat("Mediation Effect: ", format(x[[i]]$d1, digits=4), clp, "% CI ", 

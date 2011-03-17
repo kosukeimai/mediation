@@ -25,45 +25,24 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
     if(dropobs){
         if(isS4(model.m)){
             call.m <- model.m@call
-            data.m <- eval(as.name(model.m@misc$dataname))
+            origdata.m <- eval.parent(as.name(model.m@misc$dataname))
         } else {
             call.m <- model.m$call
-            data.m <- eval(model.m$call$data)
+            origdata.m <- eval.parent(model.m$call$data)
         }
         if(isS4(model.y)){
             call.y <- model.y@call
-            data.y <- eval(as.name(model.y@misc$dataname))
+            origdata.y <- eval.parent(as.name(model.y@misc$dataname))
         } else {
             call.y <- model.y$call
-            data.y <- eval(model.y$call$data)
+            origdata.y <- eval.parent(model.y$call$data)
         }
-        newdata <- merge(data.m, data.y, sort=FALSE)
-#        cat("data.m: ", dim(data.m), "\n")
-#        cat(names(data.m), "\n")
-#        cat("data.y ", dim(data.y), "\n")
-#        cat(names(data.y), "\n")
-#        cat("newdata: ", dim(newdata), "\n")
-#        cat(names(newdata), "\n")
+        newdata <- merge(origdata.m, origdata.y, sort=FALSE)
+        rm(origdata.m, origdata.y)
+        
         call.m$data <- call.y$data <- newdata
-        
-        model.m <- eval(call.m, parent.frame())
-        model.y <- eval(call.y, parent.frame())
-        
-        
-#        fmla.m <- formula(model.m)  # Need this for compatibility with mediations
-#        fmla.y <- formula(model.y)  # Need this for compatibility with mediations
-#        if(isRq.m){
-#            tau.m <- model.m$tau
-#            model.m <- update(model.m, formula=fmla.m, data=newdata, tau=tau.m)
-#        } else {
-#            model.m <- update(model.m, formula=fmla.m, data=newdata)
-#        }
-#        if(isRq.y){
-#            tau.y <- model.y$tau
-#            model.y <- update(model.y, formula=fmla.y, data=newdata, tau=tau.y)
-#        } else {
-#            model.y <- update(model.y, formula=fmla.y, data=newdata)
-#        }
+        model.m <- eval.parent(call.m)
+        model.y <- eval.parent(call.y)
         
 #        if(isS4(model.m)|isS4(model.y)){
 #        print("dropobs function not available for s4 class objects like vglm")
@@ -231,7 +210,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             MModel.coef <- model.m$coef
             if(ClassM=="polr"){  # TRUE if model.m is ordered
                 if(is.null(model.m$Hess)){
-                    stop("Mediator model must be fitted with 'Hess = TRUE'")
+                    cat("Mediator model does not contain 'Hessian';")
                 }
                 k <- length(model.m$coef)
                 MModel.var.cov <- vcov(model.m)[(1:k),(1:k)]
@@ -364,22 +343,12 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 
                 if(isVglm.y){
                     ymat.t <- model.matrix(model.y@terms, data=pred.data.t) 
-                        # There seems to be a problem here in how things work
                     ymat.c <- model.matrix(model.y@terms, data=pred.data.c)        
                 } else {
                     ymat.t <- model.matrix(terms(model.y), data=pred.data.t) 
                     ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
                 }
                
-                #print(as.matrix(TMmodel[j,]))  # the second row of this is a Log(scale) 
-                                                # parameter from tobit.
-                #print(t(ymat.t))  # this only has 3 rows, hence we must take this 
-                                   # second row out in order to create the predictions 
-                                   # we want.
-                #print(dim(ymat.t))
-                #print(as.matrix(TMmodel[j,]))
-                #print(dim(as.matrix(TMmodel[j,])))
-              
                 if(isVglm.y){
                     if(vfamily=="tobit") {
                         Pr1.tmp <- ymat.t %*% TMmodel[j,-2]
@@ -553,13 +522,6 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 Call.M$data <- m.data[index,]
                 Call.Y.t$data <- y.data[index,]
                 
-                if(isRq.m && dropobs){
-                    Call.M$tau <- tau.m
-                }
-                if(isRq.y && dropobs){
-                    Call.Y.t$tau <- tau.y
-                }
-                
                 if(ClassM=="polr" && length(unique(y.data[index,mediator]))!=m){
                         stop("Insufficient Variation on Mediator")
                 }
@@ -582,7 +544,6 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                     pred.data.c[,treat] <- cat.0
                 }
                 
-                
                 ### Case I-2-a: GLM Mediator
                 if(ClassM=="glm"){
                     PredictM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
@@ -604,9 +565,9 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 ### Case I-2-c: Quantile Regression for Mediator
                 } else if(isRq.m){
                     # Use inverse transform sampling to predict M
-
-                    fmla <- formula(new.fit.M)  # Need this for compatibility with mediations
-                    newfits <- update(new.fit.M, formula = fmla, tau = runif(n))
+                    call.new <- new.fit.M$call
+                    call.new$tau <- runif(n)
+                    newfits <- eval.parent(call.new)
                     tt <- delete.response(terms(new.fit.M))
                     m.t <- model.frame(tt, pred.data.t, xlev = new.fit.M$xlevels)
                     m.c <- model.frame(tt, pred.data.c, xlev = new.fit.M$xlevels)
@@ -722,13 +683,13 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 
                 rm(pred.data.t, pred.data.c, pred.data, pr.1, pr.0, pr.mat)
                 
-                
                 # Compute all QoIs
                 zeta.1[b] <- mean(zeta.1.tmp)
                 zeta.0[b] <- mean(zeta.0.tmp)
                 delta.1[b] <- mean(delta.1.tmp)
                 delta.0[b] <- mean(delta.0.tmp)
                 tau[b] <- (zeta.1[b] + zeta.0[b] + delta.0[b] + delta.1[b])/2
+                
             }  # bootstrap loop ends
         }  # nonpara boot branch ends
         
@@ -835,12 +796,12 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             # Resampling Step
             # Pull off data.star.
             index <- sample(1:n, n, repl=TRUE)
-            data.star.m <- m.data[index,]
-            data.star.y <- y.data[index,]
-            fmla.m <- formula(model.m)  # Need this for compatibility with mediations
-            fmla.y <- formula(model.y)  # Need this for compatibility with mediations
-            new.fit.M <- update(model.m, formula=fmla.m, data=data.star.m)
-            new.fit.t <- update(model.y, formula=fmla.y, data=data.star.y)
+            call.m <- model.m$call
+            call.y <- model.y$call
+            call.m$data <- m.data[index,]
+            call.y$data <- y.data[index,]
+            new.fit.M <- eval.parent(call.m)
+            new.fit.t <- eval.parent(call.y)
             
             if(ClassM=="polr" && length(unique(y.data[index,mediator]))!=m){
                 stop("Insufficient Variation on Mediator")
@@ -884,8 +845,9 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             ### Case II-c: Quantile Regression for Mediator
             } else if(isRq.m){
                 # Use inverse transform sampling to predict M
-                fmla <- formula(new.fit.M)  # Need this for compatibility with mediations
-                newfits <- update(new.fit.M, formula = fmla, tau = runif(n))
+                call.new <- new.fit.M$call
+                call.new$tau <- runif(n)
+                newfits <- eval.parent(call.new)
                 tt <- delete.response(terms(new.fit.M))
                 m.t <- model.frame(tt, pred.data.t, xlev = new.fit.M$xlevels)
                 m.c <- model.frame(tt, pred.data.c, xlev = new.fit.M$xlevels)
@@ -1030,13 +992,10 @@ print.summary.mediate <- function(x, ...){
     } else {
         cat("Quasi-Bayesian Confidence Intervals\n\n")
     }
-#    if (isS4(x$model.y)|isRobust==TRUE){
-#    printone <- FALSE
-#    } else {
+    
     printone <- x$INT == FALSE && (class(x$model.y)[1] %in% c("lm", "rq") ||
         (inherits(x$model.y, "glm") && x$model.y$family$family == "gaussian"
          && x$model.y$family$link == "identity"))
-#    }
     
     if (printone){
         # Print only one set of values if lmY/quanY/linear gamY without interaction
@@ -1356,28 +1315,5 @@ plot.mediate.order <- function(x, treatment = NULL,
     axis(2, at = y.axis.new, labels = labels, las = 1, tick = TRUE, ...)
          # draw y-axis with tick marks, make labels perpendicular to axis and closer to axis
     abline(v = 0, lty = 2)
-}
-
-
-
-update.vglm <- function (object, formula., ..., evaluate = TRUE) 
-{
-    call <- object@call
-    if (is.null(call)) 
-        stop("need an object with call component")
-    extras <- match.call(expand.dots = FALSE)$...
-    if (!missing(formula.)) 
-        call$formula <- update.formula(formula(object), formula.)
-    if (length(extras)) {
-        existing <- !is.na(match(names(extras), names(call)))
-        for (a in names(extras)[existing]) call[[a]] <- extras[[a]]
-        if (any(!existing)) {
-            call <- c(as.list(call), extras[!existing])
-            call <- as.call(call)
-        }
-    }
-    if (evaluate) 
-        eval(call, parent.frame())
-    else call
 }
 
