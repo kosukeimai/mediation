@@ -292,7 +292,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
         out
         }
         if("direct" %in% effect.type){
-        out <- list(rho = rho, err.cr=err.cr, z0=z0, z1=z1, upper.z0=upper.z0, lower.z0=lower.z0, 
+        out <- list(rho = rho, err.cr.z=err.cr.z, z0=z0, z1=z1, upper.z0=upper.z0, lower.z0=lower.z0, 
         upper.z1=upper.z1, lower.z1=lower.z1, ind.z0=ind.z0, ind.z1=ind.z1, 
         R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
         R2star.z.thresh=R2star.z.thresh, R2tilde.z.thresh=R2tilde.z.thresh,
