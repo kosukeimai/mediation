@@ -40,8 +40,20 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
 #        cat(names(data.y), "\n")
 #        cat("newdata: ", dim(newdata), "\n")
 #        cat(names(newdata), "\n")
-        model.m <- update(model.m, data=newdata)
-        model.y <- update(model.y, data=newdata)
+        fmla.m <- formula(model.m)  # Need this for compatibility with mediations
+        fmla.y <- formula(model.y)  # Need this for compatibility with mediations
+        if(isRq.m){
+            tau.m <- model.m$tau
+            model.m <- update(model.m, formula=fmla.m, data=newdata, tau=tau.m)
+        } else {
+            model.m <- update(model.m, formula=fmla.m, data=newdata)
+        }
+        if(isRq.y){
+            tau.y <- model.y$tau
+            model.y <- update(model.y, formula=fmla.y, data=newdata, tau=tau.y)
+        } else {
+            model.y <- update(model.y, formula=fmla.y, data=newdata)
+        }
 #        if(isS4(model.m)|isS4(model.y)){
 #        print("dropobs function not available for s4 class objects like vglm")
 #        } else {
@@ -208,7 +220,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             MModel.coef <- model.m$coef
             if(ClassM=="polr"){  # TRUE if model.m is ordered
                 if(is.null(model.m$Hess)){
-                    cat("\nMediator model fitted without Hess = TRUE;")
+                    stop("Mediator model must be fitted with 'Hess = TRUE'")
                 }
                 k <- length(model.m$coef)
                 MModel.var.cov <- vcov(model.m)[(1:k),(1:k)]
@@ -530,6 +542,13 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 Call.M$data <- m.data[index,]
                 Call.Y.t$data <- y.data[index,]
                 
+                if(isRq.m && dropobs){
+                    Call.M$tau <- tau.m
+                }
+                if(isRq.y && dropobs){
+                    Call.Y.t$tau <- tau.y
+                }
+                
                 if(ClassM=="polr" && length(unique(y.data[index,mediator]))!=m){
                         stop("Insufficient Variation on Mediator")
                 }
@@ -574,7 +593,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 ### Case I-2-c: Quantile Regression for Mediator
                 } else if(isRq.m){
                     # Use inverse transform sampling to predict M
-                    newfits <- update(new.fit.M, tau = runif(n))
+                    fmla <- formula(new.fit.M)  # Need this for compatibility with mediations
+                    newfits <- update(new.fit.M, formula = fmla, tau = runif(n))
                     tt <- delete.response(terms(new.fit.M))
                     m.t <- model.frame(tt, pred.data.t, xlev = new.fit.M$xlevels)
                     m.c <- model.frame(tt, pred.data.c, xlev = new.fit.M$xlevels)
@@ -805,8 +825,10 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             index <- sample(1:n, n, repl=TRUE)
             data.star.m <- m.data[index,]
             data.star.y <- y.data[index,]
-            new.fit.M <- update(model.m, data=data.star.m)
-            new.fit.t <- update(model.y, data=data.star.y)
+            fmla.m <- formula(model.m)  # Need this for compatibility with mediations
+            fmla.y <- formula(model.y)  # Need this for compatibility with mediations
+            new.fit.M <- update(model.m, formula=fmla.m, data=data.star.m)
+            new.fit.t <- update(model.y, formula=fmla.y, data=data.star.y)
             
             if(ClassM=="polr" && length(unique(y.data[index,mediator]))!=m){
                 stop("Insufficient Variation on Mediator")
@@ -850,7 +872,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             ### Case II-c: Quantile Regression for Mediator
             } else if(isRq.m){
                 # Use inverse transform sampling to predict M
-                newfits <- update(new.fit.M, tau = runif(n))
+                fmla <- formula(new.fit.M)  # Need this for compatibility with mediations
+                newfits <- update(new.fit.M, formula = fmla, tau = runif(n))
                 tt <- delete.response(terms(new.fit.M))
                 m.t <- model.frame(tt, pred.data.t, xlev = new.fit.M$xlevels)
                 m.c <- model.frame(tt, pred.data.c, xlev = new.fit.M$xlevels)
@@ -1326,19 +1349,18 @@ plot.mediate.order <- function(x, treatment = NULL,
 
 mediations <- function(datasets, treatment, mediators, outcome, 
                     covariates=NULL, families=c("gaussian", "gaussian"),
-                    tau_m=.5,tau_y=.5, LowerY=NULL, UpperY=NULL, interaction=FALSE,
-                    conf.level=.95, sims=500, boot=FALSE) {
+                    tau.m=.5, tau.y=.5, LowerY=NULL, UpperY=NULL, interaction=FALSE,
+                    conf.level=.95, sims=500, boot=FALSE, ...) {
     data <- names(datasets)
     labels <- c()
     out <- list()
     count <- 1
-        for (i in 1:length(treatment)) {
-            d1 <- sprintf("datasets$%s", data[i])
-            dataarg <- eval(parse(text=d1))
-       for (o in 1:length(outcome)) {
-         
+    for (i in 1:length(treatment)) {
+        d1 <- sprintf("datasets$%s", data[i])
+        dataarg <- eval(parse(text=d1))
+        for (o in 1:length(outcome)) {
             for (j in 1:length(mediators)) {
-                #create model formulas
+                # create model formulas
                 if(is.null(covariates)) {
                     f1 <- sprintf("%s ~ %s + %s", mediators[j], treatment[i])
                     f2 <- sprintf("%s ~ %s + %s ", outcome[o], treatment[i], mediators[j])
@@ -1354,61 +1376,49 @@ mediations <- function(datasets, treatment, mediators, outcome,
                                                                 mediators[j], covariates)
                     }
                 }
-#                fmla <- as.formula(paste(f1))
-#                fmla2 <- as.formula(paste(f2))
-                fmla <- paste(f1)
-                fmla2 <- paste(f2)
                 
-                # Depending on the family chosen for the mediator or outcome model, 
-                # this generates the correct formulas.
-                # NOTE: mediations is a WRAPPER function for mediate--things like 
-                # "update" etc. have no use here!
+                fmla.m <- paste(f1)
+                fmla.y <- paste(f2)
+                
                 # Mediations does not currently support the use of GAM's. Logits 
                 # are not supported bc. users should use probits so they can do 
-                # sensitivity analyses.  
-                #print(families)
+                # sensitivity analyses.
+                
                 if(families[1] == "binomial") {  # run Mediator model using new data/specification
-                    result1 <- glm(fmla, family=binomial("probit"), data=dataarg)
+                    result1 <- glm(fmla.m, family=binomial("probit"), data=dataarg)
                 } else if(families[1] == "quantile") {
-                    #print("rq")
-                    result1 <- rq(fmla, data=dataarg, tau=tau_m)
-                    #print(model.frame(result1))
+                    result1 <- rq(fmla.m, data=dataarg, tau=tau.m)
                 } else if(families[1] == "oprobit") {
-                    #print(fmla)
-                    result1 <- polr(fmla, method = "probit", data=dataarg)
-                    #print(result1)
+                    result1 <- polr(fmla.m, method = "probit", data=dataarg)
                 } else if (families[1] == "gaussian") {
-                    result1 <- glm(fmla, family="gaussian", data=dataarg)
+                    result1 <- glm(fmla.m, family="gaussian", data=dataarg)
                 } else {
-                print("mediations does not support this model for the mediator")
+                    print("mediations does not support this model for the mediator")
                 }
                 
                 if(families[2] == "binomial") {  # run Outcome model using new data/specification
-                    result2 <- glm(fmla2, family=binomial("probit"), data=dataarg)
+                    result2 <- glm(fmla.y, family=binomial("probit"), data=dataarg)
                 } else if(families[2] == "quantile") {
-                    result2 <- rq(fmla2, data=dataarg, tau=tau_y)
+                    result2 <- rq(fmla.y, data=dataarg, tau=tau.y)
                 } else if(families[2] == "tobit") {
-                    result2 <- vglm(fmla2, tobit(Lower=LowerY,Upper=UpperY), data=dataarg)
+                    result2 <- vglm(fmla.y, tobit(Lower=LowerY,Upper=UpperY), data=dataarg)
                 } else if(families[2]== "oprobit"){
-                    result2 <- polr(fmla2, method = "probit", data=dataarg)
-                    #print(result2)
+                    result2 <- polr(fmla.y, method = "probit", data=dataarg)
                 } else if(families[2]== "gaussian"){
-                    result2 <- glm(fmla2, family="gaussian", data=dataarg)
+                    result2 <- glm(fmla.y, family="gaussian", data=dataarg)
                 } else {
-                print("mediations does not support this model for the outcome")
+                    print("mediations does not support this model for the outcome")
                 }
-
-              out[[(count)]] <- mediate(result1, result2, sims=sims, 
+                
+                out[[(count)]] <- mediate(result1, result2, sims=sims, 
                                         treat=treatment[i], mediator=mediators[j],
-                                        conf.level=conf.level, boot=boot)
-                                        
-              rm(result1)
-              rm(result2)
-              labels[(count)] <- sprintf("%s.%s.%s", outcome[o],data[i], mediators[j])
-              count <- count + 1
+                                        conf.level=conf.level, boot=boot, ...)
+                rm(result1, result2)
+                labels[(count)] <- sprintf("%s.%s.%s", outcome[o],data[i], mediators[j])
+                count <- count + 1
             }
         }
-    }    
+    }
     names(out) <- labels
     class(out) <- "mediations"
     out

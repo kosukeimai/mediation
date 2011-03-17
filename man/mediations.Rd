@@ -34,6 +34,7 @@ Individual elements of the output may be passed through plot.mediate for graphin
 \item{conf.level}{Desired confidence interval calculations from mediate.}
 \item{sims}{Desired number of simulations to run mediate for.}
 \item{boot}{Whether or not bootstrap should be used.}
+\item{...}{Other arguments passed to \code{\link{mediate}}, such as 'robustSE', 'dropobs', etc.}
 
 }
 
