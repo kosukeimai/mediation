@@ -1,6 +1,6 @@
 \name{plot.mediations} 
 \alias{plot.mediations} 
-\title{Plotting indirect, direct, and total effects from mediations wrapper for mediate.} 
+\title{Plotting Indirect, Direct, and Total Effects from Multiple Mediation Analyses} 
 \description{ 
 Plots results from mediate function. Y axis lists indirect, direct, and total effects and x-axis plots the respective magnitudes. Most standard options for plot function available.
 } 

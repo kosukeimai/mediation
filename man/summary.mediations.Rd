@@ -2,7 +2,7 @@
 \alias{summary.mediations} 
 \alias{print.summary.mediations} 
 
-\title{Summarizing output from mediation analysis coming out of the wrapper function mediations.} 
+\title{Summarizing Output from Multiple Mediation Analyses} 
 \description{ 
 Function to report results from mediation analysis. Reported categories are mediation effect, direct effect, total effect, and proportion of total effect mediated. 
 All quantities reported with confidence intervals specified in mediations. Prints summaries for all models estimated in mediations.

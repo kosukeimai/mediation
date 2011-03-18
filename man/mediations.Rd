@@ -1,6 +1,6 @@
 \name{mediations} 
 \alias{mediations} 
-\title{Processing of multiple treatment variable/mediator variable combinations by mediate function.} 
+\title{Processing Multiple Treatment/Mediator/Outcome Combinations for Mediation Analysis} 
 \description{ 
 Processes a set of treatment variable/mediator combinations through the mediate function for a range models handeled by mediate.} 
 \usage{

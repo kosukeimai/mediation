@@ -1,8 +1,7 @@
 \name{plot.medsens} 
 \alias{plot.medsens} 
 
-
-\title{Plotting results from sensitivity analysis of mediation effects.} 
+\title{Plotting Results from Sensitivity Analysis of Mediation Effects} 
 \description{ 
 Plots results from medsens function. Y axis plots mediation effect and x-axis plots the error correlation rho. Standard options for plot function available.
 } 

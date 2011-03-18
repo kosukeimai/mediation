@@ -2,7 +2,7 @@
 \alias{summary.mediate} 
 \alias{print.summary.mediate} 
 
-\title{Summarizing output from mediation analysis.} 
+\title{Summarizing Output from Mediation Analysis} 
 \description{ 
 Function to report results from mediation analysis. Reported categories are mediation effect, direct effect, total effect, and proportion of total effect mediated. 
 All quantities reported with 95 percent confidence intervals. If the \code{INT = TRUE} option is selected in the mediate function, which allows for interaction between treatment and mediator, then effects are reported separately for the treatment and control groups.
