@@ -4,13 +4,13 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
     
     # Warn users who still use INT option
     if(match("INT", names(match.call()), 0L)){
-        warning("Argument INT no longer necessary; existence of interaction term
-        is now automatically detected.")
+        warning("'INT' is deprecated - existence of interaction term
+        is now automatically detected")
     }
     
     # Warning for robustSE used with boot
     if(robustSE && boot){
-        warning("robustSE does nothing for nonparametric bootstrap")
+        warning("'robustSE' is ignored for nonparametric bootstrap")
     }
     
     # Model type indicators
@@ -78,8 +78,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
     
     # Warning for control option in non-GAM outcome models
     if(!is.null(control) && !isGam.y){
-        warning("argument control irrelevant except for GAM outcome models, 
-        therefore ignored")
+        warning("'control' is only used for GAM outcome models - ignored")
         control <- NULL
     }
     
@@ -203,14 +202,14 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
         if(boot == FALSE){
             # Error if gam outcome or quantile mediator
             if(isGam.y | isRq.m){
-                stop("boot must be TRUE for models used")
+                stop("'boot' must be 'TRUE' for models used")
             }
             
             # Get mean and variance parameters for simulations
             MModel.coef <- model.m$coef
             if(ClassM=="polr"){  # TRUE if model.m is ordered
                 if(is.null(model.m$Hess)){
-                    cat("Mediator model does not contain 'Hessian';")
+                    cat("mediator model does not contain 'Hessian';")
                 }
                 k <- length(model.m$coef)
                 MModel.var.cov <- vcov(model.m)[(1:k),(1:k)]
@@ -523,7 +522,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                 Call.Y.t$data <- y.data[index,]
                 
                 if(ClassM=="polr" && length(unique(y.data[index,mediator]))!=m){
-                        stop("Insufficient Variation on Mediator")
+                        stop("insufficient variation on mediator")
                 }
                 
                 # Refit Models with Resampled Data
@@ -776,8 +775,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
     ############################################################################
     } else {
         if(boot != TRUE){
-            warning("Ordered outcome model can only be used with 
-                     nonparametric bootstrap, option forced")
+            warning("ordered outcome model can only be used with 
+                     nonparametric bootstrap - option forced")
             boot <- TRUE
         }
         
@@ -804,7 +803,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
             new.fit.t <- eval.parent(call.y)
             
             if(ClassM=="polr" && length(unique(y.data[index,mediator]))!=m){
-                stop("Insufficient Variation on Mediator")
+                stop("insufficient variation on mediator")
             }
             
             #####################################

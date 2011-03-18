@@ -479,7 +479,7 @@ print(names(out))
     if(class.y=="glm" & class.m=="lm") {
 
         if(INT){
-        stop("Sensitivity Analysis Not Available Binary Outcome With Interactions \n")
+        stop("sensitivity analysis is not available for binary outcome with interactions")
         }
         # Step 0: Setting Variable labels
         ## Uppercase letters (e.g. T) = labels in the input matrix
@@ -857,7 +857,7 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
   if(sens.par=="rho"){
     if(pr.plot==TRUE){
         if(x$type != "bm"){
-            stop("Proportion mediated is only implemented for binary mediator \n")
+            stop("proportion mediated is only implemented for binary mediator")
         }
         if(is.null(ylim)) 
             ylim <- c(min(x$nu), max(x$nu))
@@ -1077,7 +1077,7 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         }
   } else if (sens.par=="R2"){## R2 Sensitivity Parameter BEGIN HERE
     if(pr.plot==TRUE)
-        stop("Proportion mediated is only plotted in terms of rho\n")
+        stop("proportion mediated is only plotted in terms of 'rho'")
         
     R2Mstar <- seq(0, 1-x$rho.by, 0.01)
     R2Ystar <- seq(0, 1-x$rho.by, 0.01)
@@ -1088,7 +1088,7 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         R2M <- R2Mstar; R2Y <- R2Ystar
     } else if(r.type == 2) {
         R2M <- R2Mtilde; R2Y <- R2Ytilde
-    } else stop("r.type must be either 1 or 2\n")
+    } else stop("'r.type' must be either 1 or 2")
     
     dlength <- length(seq(0, (1-x$rho.by)^2, 0.0001))
     R2prod.mat <- outer(R2Mstar, R2Ystar)
@@ -1121,7 +1121,7 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
                 main <- expression(paste("ACME(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==-1))
             contour(R2M, R2Y, d0mat.n, levels=levels, main=main, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
             contour(R2M, R2Y, d0mat.n, levels=0, lwd=lwd+1, add=TRUE)
-        } else stop("'sign.prod' must be either -1 or 1\n")
+        } else stop("'sign.prod' must be either -1 or 1")
         if(is.null(xlab) & r.type==1)
             title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
             else if(is.null(xlab) & r.type==2)
@@ -1153,7 +1153,7 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
                 main <- expression(paste("ADE(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==-1))
             contour(R2M, R2Y, z0mat.n, levels=levels, main=main, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
             contour(R2M, R2Y, z0mat.n, levels=0, lwd=lwd+1, add=TRUE)
-        } else stop("'sign.prod' must be either -1 or 1\n")
+        } else stop("'sign.prod' must be either -1 or 1")
         if(is.null(xlab) & r.type==1)
             title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
             else if(is.null(xlab) & r.type==2)
@@ -1194,7 +1194,7 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             else main0 <- main
             contour(R2M, R2Y, d0mat.n, levels=levels0, main=main0, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
             contour(R2M, R2Y, d0mat.n, levels=0, lwd=lwd+1, add=TRUE)
-        } else stop("sign.prod must be either -1 or 1\n")
+        } else stop("sign.prod must be either -1 or 1")
         if(is.null(xlab) & r.type==1)
             title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
             else if(is.null(xlab) & r.type==2)
@@ -1266,7 +1266,7 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             else main0 <- main
             contour(R2M, R2Y, z0mat.n, levels=levels0, main=main0, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
             contour(R2M, R2Y, z0mat.n, levels=0, lwd=lwd+1, add=TRUE)
-        } else stop("sign.prod must be either -1 or 1\n")
+        } else stop("sign.prod must be either -1 or 1")
         if(is.null(xlab) & r.type==1)
             title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
             else if(is.null(xlab) & r.type==2)
@@ -1313,5 +1313,5 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         axis(2,at=seq(0,1,by=.1))
         axis(1,at=seq(0,1,by=.1))
       }
-  } else stop("sens.par must be either 'rho' or 'R2'")
+  } else stop("'sens.par' must be either \"rho\" or \"R2\" ")
 		}
