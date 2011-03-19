@@ -68,7 +68,11 @@ mediations <- function(datasets, treatment, mediators, outcome,
         }
     }
     names(out) <- labels
+    if(families[2]== "oprobit") {
+    class(out) <- "mediations.order"
+    } else {
     class(out) <- "mediations"
+    }
     out
 }
 
@@ -97,63 +101,30 @@ plot.mediations.order <- function(x, which = names(x),
     }
 }
 
-
 summary.mediations <- function(object, ...){
     structure(object, class = c("summary.mediations", class(object)))
 }
 
-
-
 print.summary.mediations <- function(x, ...){
-    clp <- 100 * x[[1]]$conf.level
     name.list <- names(x)
     for(i in 1:length(name.list)){
-        cat("\n Causal Mediation Analysis \n\n")
-        cat("Specification",name.list[i], "\n\n")
-        if(x[[i]]$boot==TRUE){
-            cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
-        } else {
-            cat("Quasi-Bayesian Confidence Intervals\n\n")
-        }
-        
-        printone <- x[[i]]$INT == FALSE && (class(x[[i]]$model.y)[1] %in% c("lm", "rq") ||
-            (inherits(x[[i]]$model.y, "glm") && x[[i]]$model.y$family$family == "gaussian"
-             && x[[i]]$model.y$family$link == "identity"))
-             
-        if (printone){
-            # Print only one set of values if lmY/quanY without interaction
-            cat("Mediation Effect: ", format(x[[i]]$d1, digits=4), clp, "% CI ", 
-                    format(x[[i]]$d1.ci, digits=4), "\n")
-            cat("Direct Effect: ", format(x[[i]]$z0, digits=4), clp, "% CI ", 
-                    format(x[[i]]$z0.ci, digits=4), "\n")
-            cat("Total Effect: ", format(x[[i]]$tau.coef, digits=4), clp, "% CI ", 
-                    format(x[[i]]$tau.ci, digits=4), "\n")
-            cat("Proportion of Total Effect via Mediation: ", format(x[[i]]$n0, digits=4), 
-                    clp, "% CI ", format(x[[i]]$n0.ci, digits=4),"\n\n")
-        } else {
-            cat("Mediation Effect_0: ", format(x[[i]]$d0, digits=4), clp, "% CI ", 
-                    format(x[[i]]$d0.ci, digits=4), "\n")
-            cat("Mediation Effect_1: ", format(x[[i]]$d1, digits=4), clp, "% CI ", 
-                    format(x[[i]]$d1.ci, digits=4), "\n")
-            cat("Direct Effect_0: ", format(x[[i]]$z0, digits=4), clp, "% CI ", 
-                    format(x[[i]]$z0.ci, digits=4), "\n")
-            cat("Direct Effect_1: ", format(x[[i]]$z1, digits=4), clp, "% CI ", 
-                    format(x[[i]]$z1.ci, digits=4), "\n")
-            cat("Total Effect: ", format(x[[i]]$tau.coef, digits=4), clp, "% CI ", 
-                    format(x[[i]]$tau.ci, digits=4), "\n")
-            cat("Proportion of Total Effect via Mediation_0: ", format(x[[i]]$n0, digits=4), 
-                    clp, "% CI ", format(x[[i]]$n0.ci, digits=4),"\n")
-            cat("Proportion of Total Effect via Mediation_1: ", format(x[[i]]$n1, digits=4), 
-                    clp, "% CI ", format(x[[i]]$n1.ci, digits=4),"\n\n")
-            cat("Mediation Effect (Average): ", format(x[[i]]$d.avg, digits=4), clp, "% CI ", 
-                    format(x[[i]]$d.avg.ci, digits=4), "\n")
-            cat("Direct Effect (Average): ", format(x[[i]]$z.avg, digits=4), clp, "% CI ", 
-                    format(x[[i]]$z.avg.ci, digits=4), "\n")
-            cat("Proportion of Total Effect via Mediation (Average): ", format(x[[i]]$n.avg, digits=4), 
-                    clp, "% CI ", format(x[[i]]$n.avg.ci, digits=4),"\n\n")
-        }
+        cat("Specification",name.list[i], "\n") 
+        print(summary.mediate(x[[i]])  )
     }
-    invisible(x)
+    }
+    
+
+
+    
+summary.mediations.order <- function(object, ...){
+    structure(object, class = c("summary.mediations.order", class(object)))
 }
 
-
+print.summary.mediations.order <- function(x, ...){
+    name.list <- names(x)
+    for(i in 1:length(name.list)){
+        cat("Specification",name.list[i], "\n") 
+        print(summary.mediate.order(x[[i]])  )
+    }
+    }
+    
