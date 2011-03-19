@@ -46,7 +46,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
         call.m$data <- call.y$data <- newdata
         model.m <- eval.parent(call.m)
         model.y <- eval.parent(call.y)
-        
+        n.used<-nrow(newdata)
 #        if(isS4(model.m)|isS4(model.y)){
 #        print("dropobs function not available for s4 class objects like vglm")
 #        } else {
@@ -754,7 +754,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                         boot=boot, treat=treat, mediator=mediator, 
                         INT=INT, conf.level=conf.level,
                         model.y=model.y, model.m=model.m, 
-                        control.value=control.value, treat.value=treat.value)
+                        control.value=control.value, treat.value=treat.value,nobs=n.used)
         } else {
             out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
                         z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci, 
@@ -766,7 +766,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                         boot=boot, treat=treat, mediator=mediator, 
                         INT=INT, conf.level=conf.level,
                         model.y=model.y, model.m=model.m, 
-                        control.value=control.value, treat.value=treat.value)
+                        control.value=control.value, treat.value=treat.value, nobs=n.used)
         }
         class(out) <- "mediate"
         out
@@ -956,7 +956,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                         boot=boot, treat=treat, mediator=mediator, 
                         INT=INT, conf.level=conf.level,
                         model.y=model.y, model.m=model.m, 
-                        control.value=control.value, treat.value=treat.value)
+                        control.value=control.value, treat.value=treat.value, nobs=n.used)
         } else {
             out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
                         tau.coef=tau.coef, tau.ci=tau.ci, 
@@ -964,7 +964,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                         boot=boot, treat=treat, mediator=mediator, 
                         INT=INT, conf.level=conf.level,
                         model.y=model.y, model.m=model.m, 
-                        control.value=control.value, treat.value=treat.value)
+                        control.value=control.value, treat.value=treat.value, nobs=n.used)
         }
         class(out) <- "mediate.order"
         out
@@ -1008,7 +1008,8 @@ print.summary.mediate <- function(x, ...){
         cat("Total Effect: ", format(x$tau.coef, digits=4), clp, "% CI ", 
                 format(x$tau.ci, digits=4), "\n")
         cat("Proportion of Total Effect via Mediation: ", format(x$n0, digits=4), 
-                clp, "% CI ", format(x$n0.ci, digits=4),"\n\n")
+                clp, "% CI ", format(x$n0.ci, digits=4),"\n")
+        cat("Sample Size Used:", x$nobs,"\n\n")        
     } else {
         cat("Mediation Effect_0: ", format(x$d0, digits=4), clp, "% CI ", 
                 format(x$d0.ci, digits=4), "\n")
@@ -1029,7 +1030,8 @@ print.summary.mediate <- function(x, ...){
         cat("Direct Effect (Average): ", format(x$z.avg, digits=4), clp, "% CI ", 
                 format(x$z.avg.ci, digits=4), "\n")
         cat("Proportion of Total Effect via Mediation (Average): ", format(x$n.avg, digits=4), 
-                clp, "% CI ", format(x$n.avg.ci, digits=4),"\n\n")
+                clp, "% CI ", format(x$n.avg.ci, digits=4),"\n")
+        cat("Sample Size Used:", x$nobs,"\n\n") 
     } 
     invisible(x)
 }
@@ -1088,7 +1090,7 @@ print.summary.mediate.order <- function(x, ...){
     cat("\n")
     print(tab.tau, digits=4)
     cat("\n")
-    
+    cat("Sample Size Used:", x$nobs,"\n\n") 
     invisible(x)
 }
 
@@ -1318,4 +1320,3 @@ plot.mediate.order <- function(x, treatment = NULL,
          # draw y-axis with tick marks, make labels perpendicular to axis and closer to axis
     abline(v = 0, lty = 2)
 }
-
