@@ -90,6 +90,7 @@ plot.mediations <- function(x, which = names(x),
 }
 
 
+
 plot.mediations.order <- function(x, which = names(x),
             ask = prod(par("mfcol")) < length(which) && dev.interactive(), ...){
     if (ask) {
@@ -101,30 +102,35 @@ plot.mediations.order <- function(x, which = names(x),
     }
 }
 
+
+
 summary.mediations <- function(object, ...){
     structure(object, class = c("summary.mediations", class(object)))
 }
 
+
+
 print.summary.mediations <- function(x, ...){
     name.list <- names(x)
     for(i in 1:length(name.list)){
-        cat("Specification",name.list[i], "\n") 
+        cat("Specification", name.list[i], "\n") 
         print(summary.mediate(x[[i]])  )
     }
-    }
-    
+}
 
 
-    
+
 summary.mediations.order <- function(object, ...){
     structure(object, class = c("summary.mediations.order", class(object)))
 }
 
+
+
 print.summary.mediations.order <- function(x, ...){
     name.list <- names(x)
     for(i in 1:length(name.list)){
-        cat("Specification",name.list[i], "\n") 
+        cat("Specification", name.list[i], "\n") 
         print(summary.mediate.order(x[[i]])  )
     }
-    }
-    
+}
+

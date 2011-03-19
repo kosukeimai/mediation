@@ -1,5 +1,12 @@
-medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effect.type=c("direct","indirect"))
+medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effect.type=c("indirect","direct","both"))
 {
+    effect.type <- match.arg(effect.type)
+    if(effect.type == "both"){
+        etype.vec <- c("indirect", "direct")
+    } else{
+        etype.vec <- effect.type
+    }
+    
     model.y <- x$model.y
     model.m <- x$model.m
     class.y <- class(model.y)[1]
@@ -8,13 +15,13 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
     mediator <- x$mediator
     INT <- x$INT
     low <- (1 - x$conf.level)/2; high <- 1 - low
-    
+
     #########################################################
     ## Setting Up Sensitivity Parameters
     #########################################################
     rho <- seq(-1+rho.by, 1-rho.by, rho.by)
     R2star.prod <- rho^2
-    
+
     #########################################################
     ## CASE 1: Continuous Outcome + Continuous Mediator
     #########################################################
@@ -29,328 +36,384 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
         z1 <- matrix(NA, length(rho), 1)
         z0.var <- matrix(NA, length(rho), 1)
         z1.var <- matrix(NA, length(rho), 1)
-       
-        
+
         y.t.data <- model.frame(model.y)
         if(is.factor(y.t.data[,paste(treat)])==TRUE){
             cat.c <- levels(y.t.data[,treat])[1]
             cat.t <- levels(y.t.data[,treat])[2]
             T.cat <- paste(treat,cat.t, sep="")
-            } else {
+        } else {
             cat.c <- NULL
             cat.t <- NULL
             T.cat <- paste(treat,cat.t, sep="")
-            }
-            
+        }
+
         if(INT){
             if(paste(treat,mediator,sep=":") %in% attr(model.y$terms,"term.labels")){ # T:M
                 int.lab <- paste(T.cat,mediator, sep=":")
                 t.m <- paste(treat,mediator, sep=":")
-                } else { # M:T
+            } else { # M:T
                 int.lab <- paste(mediator,T.cat, sep=":")
                 t.m <- paste(mediator,treat, sep=":")
-                }
             }
-                
+        }
+
         #Estimate Error Correlation
         data <- model.y$call$data
-print(head(data))
         if(INT){
             mod.y <- update(model.y,as.formula(paste(". ~ . -", t.m, "-", mediator)), data=data)
-            } else {
+        } else {
             mod.y <- update(model.y,as.formula(paste(". ~ . -", mediator)), data=data)
-                }
-        err.cr <- cor(model.m$resid, mod.y$resid)  ## FIX: This is only used for INT=F which is also unnecessary
-                    
-        
+        }
+        err.cr <- cor(model.m$resid, mod.y$resid)
+            ## FIX: This is only used for INT=F which is also unnecessary
+
         for(i in 1:length(rho)){
-        
-        e.cor <- rho[i]
-        
-        b.dif <- 1
-        
-        #Stacked Equations
-        m.mat <- model.matrix(model.m)
-        y.mat <- model.matrix(model.y)
-        m.k <- ncol(m.mat)
-        m.n <- nrow(m.mat)
-        y.k <- ncol(y.mat)
-        y.n <- nrow(y.mat)
-        n <- y.n
-        m.zero <- matrix(0, m.n, y.k)
-        y.zero <- matrix(0, y.n, m.k)
-        X.1 <- cbind(m.mat, m.zero)
-        X.2 <- cbind(y.zero, y.mat)
-        X <- rbind(X.1, X.2)
-        X.1bar <- apply(X.1, 2, mean)
-        X.2bar <- apply(X.2, 2, mean)
-        
-        m.frame <- model.frame(model.m)
-        y.frame <- model.frame(model.y)
-        Y.c <- rbind(as.matrix(m.frame[,1]), as.matrix(y.frame[,1]))
-        
-        #Estimates of OLS Start Values
-        inxx <- solve(crossprod(X))
-        b.ols <- inxx %*% crossprod(X,Y.c)
-        b.tmp <- b.ols
-        
-        while(abs(b.dif) > eps){
-        
-        e.hat <- as.matrix(Y.c - (X %*% b.tmp))
-        
-        e.1 <- e.hat[1:n]
-        e.2 <- e.hat[(n+1):(2*n)]
-        
-        sd.1 <- sd(e.1)
-        sd.2 <- sd(e.2)
-        
-        omega <- matrix(NA, 2,2)
-        
-        omega[1,1] <- crossprod(e.1)/(n-1)
-        omega[2,2] <- crossprod(e.2)/(n-1) 
-        omega[2,1] <- e.cor*sd.1*sd.2
-        omega[1,2] <- e.cor*sd.1*sd.2
-        
-        I <- Diagonal(n)
-        omega.i <- solve(omega)
-        v.i <-  kronecker(omega.i, I) 
-        Xv.i <- t(X) %*% v.i
-        X.sur <- Xv.i %*% X 
-        b.sur <- solve(X.sur) %*% Xv.i %*% Y.c
-        
-        #Variance-Covariance Matrix
-        v.cov <- solve(X.sur)
-        
-        b.old <- b.tmp
-        b.dif <- sum((b.sur - b.old)^2)
-        b.tmp <- b.sur
-        
-        }
-        
-        #Name Elements - Extract Quantities
-        m.names <- names(model.m$coef)
-        y.names <- names(model.y$coef)
-        b.names <- c(m.names, y.names)
-        row.names(b.sur) <- b.names
-        m.coefs <- as.matrix(b.sur[1:m.k])
-        y.coefs <- as.matrix(b.sur[(m.k+1):(m.k+y.k)])
-        row.names(m.coefs) <- m.names
-        row.names(y.coefs) <- y.names
-        rownames(v.cov) <- b.names
-        colnames(v.cov) <- b.names
-        v.m <- v.cov[1:m.k,1:m.k]
-        v.y <- v.cov[(m.k+1):(m.k+y.k),(m.k+1):(m.k+y.k)]
-        m.bar <- apply(m.mat, 2, mean)
-        m.covt.coefs <- -(match(c("(Intercept)", paste(T.cat)), names(model.m$coefficients), NULL))
-        m.bar.covts <- -(match(c("(Intercept)", paste(T.cat)), names(m.bar), NULL))
-        
-        if(length(m.coefs[m.covt.coefs, ]) != 0){
-        	model.m.bar.z0 <- m.coefs["(Intercept)", ] + 0*m.coefs[paste(T.cat), ] + sum(t(m.coefs[m.covt.coefs, ]) %*% m.bar[m.bar.covts])
-        	v.model.m.bar.z0 <- (v.m["(Intercept)","(Intercept)"] + 0*v.m[T.cat,T.cat] 
-        		+ sum(t(m.bar[m.bar.covts])%*%(v.m[m.covt.coefs, m.covt.coefs])%*%(m.bar[m.bar.covts])) + 2*0*v.m["(Intercept)",T.cat] 
-            	+ 2*0*sum(t(m.bar[m.bar.covts])%*%(v.m[T.cat,][m.bar.covts])) + 2*0*sum(t(m.bar[m.bar.covts])%*%v.m["(Intercept)",][m.bar.covts])) 
-        	model.m.bar.z1 <- m.coefs["(Intercept)", ] + 1*m.coefs[paste(T.cat), ] + sum(m.coefs[m.covt.coefs, ] * m.bar[m.bar.covts])
-        	v.model.m.bar.z1 <- (v.m["(Intercept)","(Intercept)"] + 1*v.m[T.cat,T.cat] 
-            	+ sum(t(m.bar[m.bar.covts])%*%(v.m[m.covt.coefs, m.covt.coefs])%*%(m.bar[m.bar.covts])) + 2*1*v.m["(Intercept)",T.cat] 
-            	+ 2*1*sum(t(m.bar[m.bar.covts])%*%(v.m[T.cat,][m.bar.covts])) + 2*1*sum(t(m.bar[m.bar.covts])%*%v.m["(Intercept)",][m.bar.covts]))
-            	} else {
-            		model.m.bar.z0 <- m.coefs["(Intercept)", ] + 0*m.coefs[paste(T.cat), ]
-            		v.model.m.bar.z0 <- v.m["(Intercept)","(Intercept)"] + 0*v.m[T.cat,T.cat] + 2*0*v.m["(Intercept)",T.cat] 
-            		model.m.bar.z1 <- m.coefs["(Intercept)", ] + 1*m.coefs[paste(T.cat), ]
-            		v.model.m.bar.z1 <- v.m["(Intercept)","(Intercept)"] + 1*v.m[T.cat,T.cat] + 2*1*v.m["(Intercept)",T.cat]
-            		}
-            	
-        #Save Estimates
-        if(INT){if("indirect" %in% effect.type){
-            d0[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(mediator),] 
-            d1[i,] <- m.coefs[paste(T.cat),]*(y.coefs[paste(mediator),] + y.coefs[paste(int.lab),]) 
+            e.cor <- rho[i]
+            b.dif <- 1
+
+            #Stacked Equations
+            m.mat <- model.matrix(model.m)
+            y.mat <- model.matrix(model.y)
+            m.k <- ncol(m.mat)
+            m.n <- nrow(m.mat)
+            y.k <- ncol(y.mat)
+            y.n <- nrow(y.mat)
+            n <- y.n
+            m.zero <- matrix(0, m.n, y.k)
+            y.zero <- matrix(0, y.n, m.k)
+            X.1 <- cbind(m.mat, m.zero)
+            X.2 <- cbind(y.zero, y.mat)
+            X <- rbind(X.1, X.2)
+            X.1bar <- apply(X.1, 2, mean)
+            X.2bar <- apply(X.2, 2, mean)
+
+            m.frame <- model.frame(model.m)
+            y.frame <- model.frame(model.y)
+            Y.c <- rbind(as.matrix(m.frame[,1]), as.matrix(y.frame[,1]))
+
+            #Estimates of OLS Start Values
+            inxx <- solve(crossprod(X))
+            b.ols <- inxx %*% crossprod(X,Y.c)
+            b.tmp <- b.ols
+
+            while(abs(b.dif) > eps){
+                e.hat <- as.matrix(Y.c - (X %*% b.tmp))
+                e.1 <- e.hat[1:n]
+                e.2 <- e.hat[(n+1):(2*n)]
+
+                sd.1 <- sd(e.1)
+                sd.2 <- sd(e.2)
+
+                omega <- matrix(NA, 2,2)
+                omega[1,1] <- crossprod(e.1)/(n-1)
+                omega[2,2] <- crossprod(e.2)/(n-1)
+                omega[2,1] <- e.cor*sd.1*sd.2
+                omega[1,2] <- e.cor*sd.1*sd.2
+
+                I <- Diagonal(n)
+                omega.i <- solve(omega)
+                v.i <-  kronecker(omega.i, I)
+                Xv.i <- t(X) %*% v.i
+                X.sur <- Xv.i %*% X
+                b.sur <- solve(X.sur) %*% Xv.i %*% Y.c
+
+                #Variance-Covariance Matrix
+                v.cov <- solve(X.sur)
+
+                b.old <- b.tmp
+                b.dif <- sum((b.sur - b.old)^2)
+                b.tmp <- b.sur
             }
-            if("direct" %in% effect.type){ # direct effects with interaction
-            	if(length(m.coefs[m.covt.coefs, ]) != 0){ # with covariates
-            	z0[i,] <- y.coefs[paste(T.cat),]
-            	z1[i,] <- y.coefs[paste(T.cat),] + y.coefs[paste(int.lab),] * (m.coefs[paste("(Intercept)"), ] + m.coefs[paste(T.cat), ] + 
-            		sum(t(m.coefs[m.covt.coefs, ]) %*% m.bar[m.bar.covts]))
-            		} else { # no covariates
-            		z0[i,] <- y.coefs[paste(T.cat),]
-            		z1[i,] <- y.coefs[paste(T.cat),] + y.coefs[paste(int.lab),] * (m.coefs[paste("(Intercept)"), ] + m.coefs[paste(T.cat), ])
-            			}
-            		}            
-            	} else {if("indirect" %in% effect.type){
-            			d0[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(mediator),]
-                		d1[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(mediator),]
-                		} 
-                		if("direct" %in% effect.type) {
-                			z0[i,] <- y.coefs[paste(T.cat),]
-                			z1[i,] <- y.coefs[paste(T.cat),]
-                			}
+
+            #Name Elements - Extract Quantities
+            m.names <- names(model.m$coef)
+            y.names <- names(model.y$coef)
+            b.names <- c(m.names, y.names)
+            row.names(b.sur) <- b.names
+            m.coefs <- as.matrix(b.sur[1:m.k])
+            y.coefs <- as.matrix(b.sur[(m.k+1):(m.k+y.k)])
+            row.names(m.coefs) <- m.names
+            row.names(y.coefs) <- y.names
+            rownames(v.cov) <- b.names
+            colnames(v.cov) <- b.names
+            v.m <- v.cov[1:m.k,1:m.k]
+            v.y <- v.cov[(m.k+1):(m.k+y.k),(m.k+1):(m.k+y.k)]
+            
+            if(INT && ("direct" %in% etype.vec)){
+                m.bar <- apply(m.mat, 2, mean)
+                m.covt.coefs <- -(match(c("(Intercept)", paste(T.cat)),
+                                                    names(model.m$coefficients), NULL))
+                m.bar.covts <- -(match(c("(Intercept)", paste(T.cat)),
+                                                    names(m.bar), NULL))
+                if(length(m.coefs[m.covt.coefs, ]) != 0){
+                    model.m.bar.z0 <- ( m.coefs["(Intercept)", ] +
+                                0*m.coefs[paste(T.cat), ] +
+                                sum(t(m.coefs[m.covt.coefs, ]) %*% m.bar[m.bar.covts]) )
+                    v.model.m.bar.z0 <- ( v.m["(Intercept)","(Intercept)"] + 0*v.m[T.cat,T.cat] +
+                                sum(t(m.bar[m.bar.covts])%*%(v.m[m.covt.coefs, m.covt.coefs])%*%
+                                (m.bar[m.bar.covts])) + 2*0*v.m["(Intercept)",T.cat] +
+                                2*0*sum(t(m.bar[m.bar.covts])%*%(v.m[T.cat,][m.bar.covts])) +
+                                2*0*sum(t(m.bar[m.bar.covts])%*%v.m["(Intercept)",][m.bar.covts]) )
+                    model.m.bar.z1 <- ( m.coefs["(Intercept)", ] + 1*m.coefs[paste(T.cat), ] +
+                                sum(m.coefs[m.covt.coefs, ] * m.bar[m.bar.covts]) )
+                    v.model.m.bar.z1 <- ( v.m["(Intercept)","(Intercept)"] + 1*v.m[T.cat,T.cat] +
+                                sum(t(m.bar[m.bar.covts])%*%(v.m[m.covt.coefs, m.covt.coefs])%*%
+                                (m.bar[m.bar.covts])) + 2*1*v.m["(Intercept)",T.cat] +
+                                2*1*sum(t(m.bar[m.bar.covts])%*%(v.m[T.cat,][m.bar.covts])) +
+                                2*1*sum(t(m.bar[m.bar.covts])%*%v.m["(Intercept)",][m.bar.covts]) )
+                } else {
+                    model.m.bar.z0 <- m.coefs["(Intercept)", ] + 0*m.coefs[paste(T.cat), ]
+                    v.model.m.bar.z0 <- ( v.m["(Intercept)","(Intercept)"] + 0*v.m[T.cat,T.cat] +
+                                        2*0*v.m["(Intercept)",T.cat] )
+                    model.m.bar.z1 <- m.coefs["(Intercept)", ] + 1*m.coefs[paste(T.cat), ]
+                    v.model.m.bar.z1 <- ( v.m["(Intercept)","(Intercept)"] + 1*v.m[T.cat,T.cat] +
+                                        2*1*v.m["(Intercept)",T.cat] )
                 }
-        
-        #Save Variance Estimates
-        if(INT){if("indirect" %in% effect.type){
-            d0.var[i,] <- (y.coefs[paste(mediator),] + 0*y.coefs[paste(int.lab),])^2*v.m[T.cat,T.cat] + m.coefs[paste(T.cat),]^2*(v.y[mediator,mediator] + 0*v.y[int.lab, int.lab] + 0*2*v.y[mediator, int.lab])
-            d1.var[i,] <- (y.coefs[paste(mediator),] + y.coefs[paste(int.lab),])^2*v.m[T.cat,T.cat] + m.coefs[paste(T.cat),]^2*(v.y[mediator,mediator] + v.y[int.lab, int.lab] + 2*v.y[mediator, int.lab])
             }
-            if("direct" %in% effect.type){
-            	z0.var[i,] <- v.y[T.cat, T.cat] + model.m.bar.z0^2 * v.y[int.lab, int.lab] + y.coefs[paste(int.lab), ]^2 * v.model.m.bar.z0 + v.y[int.lab, int.lab] * v.model.m.bar.z0 + 2 + model.m.bar.z0 * v.y[T.cat,int.lab]
-            	
-            	z1.var[i,] <- v.y[T.cat, T.cat] + model.m.bar.z1^2 * v.y[int.lab, int.lab] + y.coefs[paste(int.lab), ]^2 * v.model.m.bar.z1 + v.y[int.lab, int.lab] * v.model.m.bar.z1 + 2 + model.m.bar.z1 * v.y[T.cat,int.lab]
-            	}
-            } else {if("indirect" %in% effect.type){
-            d0.var[i,] <- (m.coefs[paste(T.cat),]^2*v.y[mediator,mediator]) + (y.coefs[paste(mediator),]^2*v.m[T.cat,T.cat])
-            d1.var[i,] <- (m.coefs[paste(T.cat),]^2*v.y[mediator,mediator]) + (y.coefs[paste(mediator),]^2*v.m[T.cat,T.cat])
-            }
-            if("direct" %in% effect.type){
-            	z0.var[i,] <- v.y[T.cat, T.cat]
-            	z1.var[i,] <- v.y[T.cat, T.cat]
-            	}
+
+            #Save Estimates
+            if(INT){
+                if("indirect" %in% etype.vec){
+                    d0[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(mediator),]
+                    d1[i,] <- m.coefs[paste(T.cat),]*(y.coefs[paste(mediator),] +
+                                                            y.coefs[paste(int.lab),])
                 }
-                
-        rm(b.sur, m.coefs, y.coefs, v.cov, v.m, v.y)
-        
-        }
-        
+                if("direct" %in% etype.vec){ # direct effects with interaction
+                    if(length(m.coefs[m.covt.coefs, ]) != 0){ # with covariates
+                        z0[i,] <- y.coefs[paste(T.cat),] + y.coefs[paste(int.lab),] *
+                            (m.coefs[paste("(Intercept)"), ] +
+                            sum(t(m.coefs[m.covt.coefs, ]) %*% m.bar[m.bar.covts]))
+                        z1[i,] <- y.coefs[paste(T.cat),] + y.coefs[paste(int.lab),] *
+                            (m.coefs[paste("(Intercept)"), ] + m.coefs[paste(T.cat), ] +
+                            sum(t(m.coefs[m.covt.coefs, ]) %*% m.bar[m.bar.covts]))
+                    } else { # no covariates
+                        z0[i,] <- y.coefs[paste(T.cat),] + y.coefs[paste(int.lab),] *
+                            m.coefs[paste("(Intercept)"), ]
+                        z1[i,] <- y.coefs[paste(T.cat),] + y.coefs[paste(int.lab),] *
+                            (m.coefs[paste("(Intercept)"), ] + m.coefs[paste(T.cat), ])
+                    }
+                }
+            } else {
+                if("indirect" %in% etype.vec){
+                    d0[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(mediator),]
+                    d1[i,] <- m.coefs[paste(T.cat),]*y.coefs[paste(mediator),]
+                }
+                if("direct" %in% etype.vec) {
+                    z0[i,] <- y.coefs[paste(T.cat),]
+                    z1[i,] <- y.coefs[paste(T.cat),]
+                }
+            }
+
+            #Save Variance Estimates
+            if(INT){
+                if("indirect" %in% etype.vec){
+                    d0.var[i,] <- (y.coefs[paste(mediator),] +
+                        0*y.coefs[paste(int.lab),])^2*v.m[T.cat,T.cat] +
+                        m.coefs[paste(T.cat),]^2*(v.y[mediator,mediator] +
+                        0*v.y[int.lab, int.lab] + 0*2*v.y[mediator, int.lab])
+                    d1.var[i,] <- (y.coefs[paste(mediator),] +
+                        y.coefs[paste(int.lab),])^2*v.m[T.cat,T.cat] +
+                        m.coefs[paste(T.cat),]^2*(v.y[mediator,mediator] +
+                        v.y[int.lab, int.lab] + 2*v.y[mediator, int.lab])
+                }
+                if("direct" %in% etype.vec){
+                    z0.var[i,] <- v.y[T.cat, T.cat] +
+                        model.m.bar.z0^2 * v.y[int.lab, int.lab] +
+                        y.coefs[paste(int.lab), ]^2 * v.model.m.bar.z0 +
+                        v.y[int.lab, int.lab] * v.model.m.bar.z0 + 2 *
+                        model.m.bar.z0 * v.y[T.cat,int.lab]
+                    z1.var[i,] <- v.y[T.cat, T.cat] +
+                        model.m.bar.z1^2 * v.y[int.lab, int.lab] +
+                        y.coefs[paste(int.lab), ]^2 * v.model.m.bar.z1 +
+                        v.y[int.lab, int.lab] * v.model.m.bar.z1 + 2 *
+                        model.m.bar.z1 * v.y[T.cat,int.lab]
+                }
+            } else {
+                if("indirect" %in% etype.vec){
+                    d0.var[i,] <- (m.coefs[paste(T.cat),]^2*v.y[mediator,mediator]) +
+                            (y.coefs[paste(mediator),]^2*v.m[T.cat,T.cat])
+                    d1.var[i,] <- (m.coefs[paste(T.cat),]^2*v.y[mediator,mediator]) +
+                            (y.coefs[paste(mediator),]^2*v.m[T.cat,T.cat])
+                }
+                if("direct" %in% etype.vec){
+                    z0.var[i,] <- v.y[T.cat, T.cat]
+                    z1.var[i,] <- v.y[T.cat, T.cat]
+                }
+            }
+
+            rm(b.sur, m.coefs, y.coefs, v.cov, v.m, v.y)
+
+        }  # END of Rho Loop
+
         if(INT){
-        # Indirect
-        upper.d0 <- d0 + qnorm(high) * sqrt(d0.var)
-        lower.d0 <- d0 + qnorm(low) * sqrt(d0.var)
-        upper.d1 <- d1 + qnorm(high) * sqrt(d1.var)
-        lower.d1 <- d1 + qnorm(low) * sqrt(d1.var)    
-        ind.d0 <- as.numeric(lower.d0 < 0 & upper.d0 > 0)
-        ind.d1 <- as.numeric(lower.d1 < 0 & upper.d1 > 0)
-        # Direct
-        upper.z0 <- z0 + qnorm(high) * sqrt(z0.var)
-        lower.z0 <- z0 + qnorm(low) * sqrt(z0.var)
-        upper.z1 <- z1 + qnorm(high) * sqrt(z1.var)
-        lower.z1 <- z1 + qnorm(low) * sqrt(z1.var)    
-        ind.z0 <- as.numeric(lower.z0 < 0 & upper.z0 > 0)
-        ind.z1 <- as.numeric(lower.z1 < 0 & upper.z1 > 0)
-                    } else {
-        ## Indirect
-        upper.d0 <- d0 + qnorm(high) * sqrt(d0.var)
-        lower.d0 <- d0 + qnorm(low) * sqrt(d0.var)
-        upper.d1 <- NULL
-        lower.d1 <- NULL
-        ind.d0 <- as.numeric(lower.d0 < 0 & upper.d0 > 0)
-        ind.d1 <- NULL
-        ## Direct
-        upper.z0 <- z0 + qnorm(high) * sqrt(z0.var)
-        lower.z0 <- z0 + qnorm(low) * sqrt(z0.var)
-        upper.z1 <- NULL
-        lower.z1 <- NULL
-        ind.z0 <- as.numeric(lower.z0 < 0 & upper.z0 > 0)
-        ind.z1 <- NULL        
-                }
-                
+            # Indirect
+            upper.d0 <- d0 + qnorm(high) * sqrt(d0.var)
+            lower.d0 <- d0 + qnorm(low) * sqrt(d0.var)
+            upper.d1 <- d1 + qnorm(high) * sqrt(d1.var)
+            lower.d1 <- d1 + qnorm(low) * sqrt(d1.var)
+            ind.d0 <- as.numeric(lower.d0 < 0 & upper.d0 > 0)
+            ind.d1 <- as.numeric(lower.d1 < 0 & upper.d1 > 0)
+            # Direct
+            upper.z0 <- z0 + qnorm(high) * sqrt(z0.var)
+            lower.z0 <- z0 + qnorm(low) * sqrt(z0.var)
+            upper.z1 <- z1 + qnorm(high) * sqrt(z1.var)
+            lower.z1 <- z1 + qnorm(low) * sqrt(z1.var)
+            ind.z0 <- as.numeric(lower.z0 < 0 & upper.z0 > 0)
+            ind.z1 <- as.numeric(lower.z1 < 0 & upper.z1 > 0)
+        } else {
+            ## Indirect
+            upper.d0 <- d0 + qnorm(high) * sqrt(d0.var)
+            lower.d0 <- d0 + qnorm(low) * sqrt(d0.var)
+            upper.d1 <- NULL
+            lower.d1 <- NULL
+            ind.d0 <- as.numeric(lower.d0 < 0 & upper.d0 > 0)
+            ind.d1 <- NULL
+            ## Direct
+            upper.z0 <- z0 + qnorm(high) * sqrt(z0.var)
+            lower.z0 <- z0 + qnorm(low) * sqrt(z0.var)
+            upper.z1 <- NULL
+            lower.z1 <- NULL
+            ind.z0 <- as.numeric(lower.z0 < 0 & upper.z0 > 0)
+            ind.z1 <- NULL
+        }
+
         # Save R2 tilde values
         r.sq.m <- summary(model.m)$r.squared
         r.sq.y <- summary(model.y)$r.squared
         R2tilde.prod <- rho^2*(1-r.sq.m)*(1-r.sq.y)
-        
+
         # Calculate rho at which ACME=0
         if(INT){
-        	if("indirect" %in% effect.type){
+        	if("indirect" %in% etype.vec){
         		ii <- which(abs(d0-0)==min(abs(d0-0)))
 		        kk <- which(abs(d1-0)==min(abs(d1-0)))
         		err.cr.1 <- rho[ii]
         		err.cr.2 <- rho[kk]
         		err.cr <- c(err.cr.1, err.cr.2)
         		}
-        	if("direct" %in% effect.type){
+        	if("direct" %in% etype.vec){
         		ii.z <- which(abs(z0-0)==min(abs(z0-0)))
 		        kk.z <- which(abs(z1-0)==min(abs(z1-0)))
         		err.cr.1.z <- rho[ii.z]
         		err.cr.2.z <- rho[kk.z]
         		err.cr.z <- c(err.cr.1.z, err.cr.2.z)
         		}
-        } else{
-        	if("indirect" %in% effect.type){
+        } else {
+        	if("indirect" %in% etype.vec){
         		ii <- which(abs(d0-0)==min(abs(d0-0)))
-        		err.cr <- rho[ii] 
+        		err.cr <- rho[ii]
         		}
-        	if("direct" %in% effect.type){
+        	if("direct" %in% etype.vec){
         		ii.z <- which(abs(z0-0)==min(abs(z0-0)))
         		err.cr.z <- rho[ii.z]
         		}
-        	}
-        	if("indirect" %in% effect.type){
-        		R2star.d.thresh <- err.cr^2
-        		R2tilde.d.thresh <- err.cr^2*(1-r.sq.m)*(1-r.sq.y)
-        	}
-        	if("direct" %in% effect.type){
-        		R2star.z.thresh <- err.cr.z^2
-        		R2tilde.z.thresh <- err.cr.z^2*(1-r.sq.m)*(1-r.sq.y)
-        	}
-        type <- "ct"
-        if("indirect" %in% effect.type){
-        out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0,
-        lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0,
-        ind.d1=ind.d1, R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
-        R2star.d.thresh=R2star.d.thresh, R2tilde.d.thresh=R2tilde.d.thresh,
-        r.square.y=r.sq.y, r.square.m=r.sq.m,
-        rho.by=rho.by, INT=INT, effect.type=effect.type,
-        tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL, type=type)
         }
-        if("direct" %in% effect.type){
-        out <- list(rho = rho, err.cr.z=err.cr.z, z0=z0, z1=z1, upper.z0=upper.z0, lower.z0=lower.z0, 
-        upper.z1=upper.z1, lower.z1=lower.z1, ind.z0=ind.z0, ind.z1=ind.z1, 
-        R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
-        R2star.z.thresh=R2star.z.thresh, R2tilde.z.thresh=R2tilde.z.thresh,
-        r.square.y=r.sq.y, r.square.m=r.sq.m,
-        rho.by=rho.by, INT=INT, effect.type=effect.type,
-        tau=NULL, upper.tau=NULL, lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL, type=type)
+
+    	if("indirect" %in% etype.vec){
+    		R2star.d.thresh <- err.cr^2
+    		R2tilde.d.thresh <- err.cr^2*(1-r.sq.m)*(1-r.sq.y)
+    	}
+    	if("direct" %in% etype.vec){
+    		R2star.z.thresh <- err.cr.z^2
+    		R2tilde.z.thresh <- err.cr.z^2*(1-r.sq.m)*(1-r.sq.y)
+    	}
+
+        type <- "ct"
+        if(effect.type == "indirect"){
+            out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1,
+                upper.d0=upper.d0, lower.d0=lower.d0, 
+                upper.d1=upper.d1, lower.d1=lower.d1, 
+                ind.d0=ind.d0, ind.d1=ind.d1, 
+                R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
+                R2star.d.thresh=R2star.d.thresh, R2tilde.d.thresh=R2tilde.d.thresh,
+                r.square.y=r.sq.y, r.square.m=r.sq.m,
+                rho.by=rho.by, INT=INT, effect.type=effect.type,
+                tau=NULL, upper.tau=NULL, lower.tau=NULL,
+                nu=NULL, upper.nu=NULL, lower.nu=NULL, type=type)
+        } else if(effect.type == "direct"){
+            out <- list(rho = rho, err.cr.z=err.cr.z, z0=z0, z1=z1, 
+                upper.z0=upper.z0, lower.z0=lower.z0,
+                upper.z1=upper.z1, lower.z1=lower.z1, 
+                ind.z0=ind.z0, ind.z1=ind.z1,
+                R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
+                R2star.z.thresh=R2star.z.thresh, R2tilde.z.thresh=R2tilde.z.thresh,
+                r.square.y=r.sq.y, r.square.m=r.sq.m,
+                rho.by=rho.by, INT=INT, effect.type=effect.type,
+                tau=NULL, upper.tau=NULL, lower.tau=NULL, 
+                nu=NULL, upper.nu=NULL, lower.nu=NULL, type=type)
+        } else if (effect.type == "both"){
+            out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1,
+                upper.d0=upper.d0, lower.d0=lower.d0, 
+                upper.d1=upper.d1, lower.d1=lower.d1, 
+                ind.d0=ind.d0, ind.d1=ind.d1, 
+                err.cr.z=err.cr.z, z0=z0, z1=z1, 
+                upper.z0=upper.z0, lower.z0=lower.z0,
+                upper.z1=upper.z1, lower.z1=lower.z1, 
+                ind.z0=ind.z0, ind.z1=ind.z1,
+                R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
+                R2star.d.thresh=R2star.d.thresh, R2tilde.d.thresh=R2tilde.d.thresh,
+                R2star.z.thresh=R2star.z.thresh, R2tilde.z.thresh=R2tilde.z.thresh,
+                r.square.y=r.sq.y, r.square.m=r.sq.m,
+                rho.by=rho.by, INT=INT, effect.type=effect.type,
+                tau=NULL, upper.tau=NULL, lower.tau=NULL,
+                nu=NULL, upper.nu=NULL, lower.nu=NULL, type=type)
         }
         class(out) <- "medsens"
-print(names(out))
         out
-    ## END OF CASE 1: Continuous Outcome + Continuous Mediator    
+    ## END OF CASE 1: Continuous Outcome + Continuous Mediator
     } else
 
     #########################################################
     ## CASE 2: Continuous Outcome + Binary Mediator
     #########################################################
     if (class.y == "lm" & class.m == "glm") {
+        if(effect.type != "indirect"){
+            stop("only \"indirect\" is currently allowed for 'effect.type' for this
+            model combination")
+        }
 
         # Step 0: Setting Variable labels
         ## Uppercase letters (e.g. T) = labels in the input matrix
         ## Uppercase letters + ".out" (e.g. T.out) = labels in the regression output
-        
+
         y.t.data <- model.frame(model.y)
         Y <- colnames(y.t.data)[1]
         if(is.factor(y.t.data[,treat])==TRUE){
-            cat.c <- levels(y.t.data[,treat])[1] 
+            cat.c <- levels(y.t.data[,treat])[1]
             cat.t <- levels(y.t.data[,treat])[2]
-            T.out <- paste(treat,cat.t, sep="") 
+            T.out <- paste(treat,cat.t, sep="")
             } else {
             cat.c <- NULL
             cat.t <- NULL
             T.out <- paste(treat,cat.t, sep="")
             }
-        
+
         if(is.factor(y.t.data[,mediator])==TRUE){
-            cat.m0 <- levels(y.t.data[,mediator])[1] 
+            cat.m0 <- levels(y.t.data[,mediator])[1]
             cat.m1 <- levels(y.t.data[,mediator])[2]
-            M.out <- paste(mediator,cat.m1, sep="") 
+            M.out <- paste(mediator,cat.m1, sep="")
             } else {
             cat.m0 <- NULL
             cat.m1 <- NULL
             M.out <- paste(mediator,cat.m1, sep="")
             }
-        
+
         if(INT){
         TM <- paste(treat,mediator, sep=":")
         TM.out <- paste(T.out,M.out, sep=":")
             }
-        
+
         ## Variable values (LABEL.value)
         Y.value <- y.t.data[,1]
         y.k <- length(model.y$coef)
-        
+
         # Step 1: Pre-loop computations
         # Step 1-1: Sample M model parameters
         Mmodel.coef <- model.m$coef
         Mmodel.var.cov <- vcov(model.m)
         Mmodel.coef.boot <- mvrnorm(sims, mu=Mmodel.coef, Sigma=Mmodel.var.cov) # bootstrap M-model parameters
-        
+
         # Step 1-2: Sample lambda_0 and lambda_1; lambdas are (n x sims) matrix
         m.mat <- model.matrix(model.m)
         m.mat.1 <- model.matrix(model.m)
@@ -364,7 +427,7 @@ print(names(out))
         lambda10 <- dnorm(-mu.0.boot) / pnorm(mu.0.boot) #lambda for m=1,t=0
         lambda01 <- -dnorm(-mu.1.boot) / pnorm(-mu.1.boot) #lambda for m=0,t=1
         lambda00 <- -dnorm(-mu.0.boot) / pnorm(-mu.0.boot) #lambda for m=0,t=0
-        
+
         # Step 1-3: Define lambda function
         lambda <- function(mmodel, mcoef) {
             mu <- model.matrix(mmodel) %*% mcoef
@@ -383,7 +446,7 @@ print(names(out))
         d0.boot <- d1.boot <- rep(NA, sims)
         ## START OF RHO LOOP
         for(i in 1:length(rho)){
-            
+
             ## START OF BOOTSTRAP LOOP
             for(k in 1:sims){
             ## Step 2-1: Obtain the initial Y model with the correction term
@@ -392,7 +455,7 @@ print(names(out))
             y.t.data.adj <- data.frame(y.t.data, w, adj)
             model.y.adj <- update(model.y, as.formula(paste(". ~ . + adj")), weights=w, data=y.t.data.adj)
             sigma.3 <- summary(model.y.adj)$sigma
-            
+
             ## Step 2-2: Update the Y model via Iterative FGLS
             sigma.dif <- 1
             while(abs(sigma.dif) > eps){
@@ -403,25 +466,25 @@ print(names(out))
                 sigma.dif <- sigma.3.temp - sigma.3
                 sigma.3 <- sigma.3.temp
             }
-            
+
             ## Step 2-3: Bootstrap Y model parameters
             Ymodel.coef <- model.y.update$coef
             Ymodel.var.cov <- vcov(model.y.update)
             Ymodel.coef.boot[k,] <- mvrnorm(1, mu=Ymodel.coef, Sigma=Ymodel.var.cov) #draw one bootstrap sample of Y-model parameters for each k
-            
+
             ## Step 2-4: Bootstrap ACMEs; means are over observations
             d0.boot[k] <- mean( (Ymodel.coef.boot[k,M.out]) * (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
             if(INT){
-                d1.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + Ymodel.coef.boot[k,TM.out]) * 
+                d1.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + Ymodel.coef.boot[k,TM.out]) *
                     (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
                 } else {
-                d1.boot[k] <- mean((Ymodel.coef.boot[k,M.out]) * 
+                d1.boot[k] <- mean((Ymodel.coef.boot[k,M.out]) *
                     (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
                 }
 
             ## END OF BOOTSTAP LOOP
             }
-            
+
         ## Step 2-5: Compute Outputs
         d0[i] <- mean(d0.boot)
         d1[i] <- mean(d1.boot)
@@ -431,17 +494,17 @@ print(names(out))
         lower.d1[i] <- quantile(d1.boot, low)
         ind.d0[i] <- as.numeric(lower.d0[i] < 0 & upper.d0[i] > 0)
         ind.d1[i] <- as.numeric(lower.d1[i] < 0 & upper.d1[i] > 0)
-        
+
         ## END OF RHO LOOP
         }
-        
+
         # Save R2 tilde values
         fitted<- m.mat %*% Mmodel.coef
         var.mstar <- var(fitted)
         r.sq.m <- var.mstar/(1+var.mstar)
         r.sq.y <- summary(model.y)$r.squared
         R2tilde.prod <- rho^2*(1-r.sq.m)*(1-r.sq.y)
-        
+
         # Calculate rho at which ACME=0
         if(INT){
         ii <- which(abs(d0-0)==min(abs(d0-0)))
@@ -451,11 +514,11 @@ print(names(out))
         err.cr <- c(err.cr.1, err.cr.2)
         } else {
         ii <- which(abs(d0-0)==min(abs(d0-0)))
-        err.cr <- rho[ii]   
+        err.cr <- rho[ii]
             }
         R2star.thresh <- err.cr^2
         R2tilde.thresh <- err.cr^2*(1-r.sq.m)*(1-r.sq.y)
-        
+
         # Step 3: Output
         type <- "bm"
         out <- list(rho = rho, d0=d0, d1=d1, upper.d0=upper.d0,
@@ -471,46 +534,51 @@ print(names(out))
 
     ## END OF CASE 2: Continuous Outcome + Binary Mediator
     } else
-    
+
     #########################################################
     ## CASE 3: Binary Outcome + Continuous Mediator
     #########################################################
     if(class.y=="glm" & class.m=="lm") {
+        if(effect.type != "indirect"){
+            stop("only \"indirect\" is currently allowed for 'effect.type' for this
+            model combination")
+        }
 
         if(INT){
         stop("sensitivity analysis is not available for binary outcome with interactions")
         }
+
         # Step 0: Setting Variable labels
         ## Uppercase letters (e.g. T) = labels in the input matrix
         ## Uppercase letters + ".out" (e.g. T.out) = labels in the regression output
-        
+
         y.t.data <- model.frame(model.y)
         Y <- colnames(y.t.data)[1]
         if(is.factor(y.t.data[,treat])==TRUE){
-            cat.c <- levels(y.t.data[,treat])[1] 
+            cat.c <- levels(y.t.data[,treat])[1]
             cat.t <- levels(y.t.data[,treat])[2]
-            T.out <- paste(treat,cat.t, sep="") 
+            T.out <- paste(treat,cat.t, sep="")
             } else {
             cat.c <- NULL
             cat.t <- NULL
             T.out <- paste(treat,cat.t, sep="")
             }
-        
+
         if(is.factor(y.t.data[,mediator])==TRUE){
-            cat.m0 <- levels(y.t.data[,mediator])[1] 
+            cat.m0 <- levels(y.t.data[,mediator])[1]
             cat.m1 <- levels(y.t.data[,mediator])[2]
-            M.out <- paste(mediator,cat.m1, sep="") 
+            M.out <- paste(mediator,cat.m1, sep="")
             } else {
             cat.m0 <- NULL
             cat.m1 <- NULL
             M.out <- paste(mediator,cat.m1, sep="")
             }
-        
+
         if(INT){
         TM <- paste(treat,mediator, sep=":")
         TM.out <- paste(T.out,M.out, sep=":")
             }
-        
+
         # Step 1: Obtain Model Parameters
         ## Step 1-1: Bootstrap M model parameters
         Mmodel.coef <- model.m$coef
@@ -518,16 +586,16 @@ print(names(out))
         Mmodel.var.cov <- vcov(model.m)
         Mmodel.coef.boot <- mvrnorm(sims, mu=Mmodel.coef, Sigma=Mmodel.var.cov)
         if(is.factor(y.t.data[,treat])==TRUE){
-         beta2.boot <- Mmodel.coef.boot[,T.out] 
+         beta2.boot <- Mmodel.coef.boot[,T.out]
             } else {
-          beta2.boot <- Mmodel.coef.boot[,treat]    
+          beta2.boot <- Mmodel.coef.boot[,treat]
                 }
 
         sigma.2 <- summary(model.m)$sigma
         sig2.shape <- model.m$df/2
         sig2.invscale <- (model.m$df/2) * sigma.2^2
         sigma.2.boot <- sqrt(1 / rgamma(sims, shape = sig2.shape, scale = 1/sig2.invscale))
-        
+
         ## Step 1-2: Bootstrap Y model parameters
         Ymodel.coef <- model.y$coef
         Ymodel.var.cov <- vcov(model.y)
@@ -539,17 +607,17 @@ print(names(out))
         # Step 2: Compute ACME via the procedure in IKT
         ## Step 2-1: Estimate Error Correlation from inconsistent estimate of Y on M
         rho12.boot <- (sigma.2.boot * gamma.tilde) / (1 + sqrt(sigma.2.boot^2*gamma.tilde^2))
-        
+
         ## Step 2-2: Calculate alpha_1, beta_1 and xi_1
         YTmodel.coef.boot <- Ymodel.coef.boot[,!colnames(Ymodel.coef.boot)%in%M.out] * sqrt(1-rho12.boot^2) %x% t(rep(1,y.k-1)) + Mmodel.coef.boot * (rho12.boot/sigma.2.boot) %x% t(rep(1,y.k-1))
-        
+
         ## Step 2-3: Calculate Gamma
         ## Data matrices for the Y model less M
         y.mat.1 <- model.matrix(model.y)[,!colnames(model.matrix(model.y))%in%M.out]
         y.mat.1[,T.out] <- 1
         y.mat.0 <- model.matrix(model.y)[,!colnames(model.matrix(model.y))%in%M.out]
         y.mat.0[,T.out] <- 0
-        
+
         ## Initialize objects before the rho loop
         d0 <- d1 <- rep(NA, length(rho))
         upper.d0 <- upper.d1 <- lower.d0 <- lower.d1 <- rep(NA, length(rho))
@@ -558,20 +626,20 @@ print(names(out))
         upper.tau <- upper.nu <- lower.tau <- lower.nu <- rep(NA, length(rho))
         d0.boot <- d1.boot <- rep(NA, sims)
         tau.boot <- nu.boot <- rep(NA, sims)
-        
+
         ## START OF RHO LOOP
         for(i in 1:length(rho)){
             gamma.boot <- (-rho[i] + rho12.boot*sqrt((1-rho[i]^2)/(1-rho12.boot^2)))/sigma.2.boot
             for(k in 1:sims){
-            d0.boot[k] <- mean( pnorm(y.mat.0 %*% YTmodel.coef.boot[k,] + 
+            d0.boot[k] <- mean( pnorm(y.mat.0 %*% YTmodel.coef.boot[k,] +
                 gamma.boot[k]*beta2.boot[k]/sqrt(gamma.boot[k]^2*sigma.2.boot[k]^2+2*gamma.boot[k]*rho[i]*sigma.2.boot[k]+1)) -
                 pnorm(y.mat.0 %*% YTmodel.coef.boot[k,]) )
-            d1.boot[k] <- mean( pnorm(y.mat.1 %*% YTmodel.coef.boot[k,]) - pnorm(y.mat.1 %*% YTmodel.coef.boot[k,] - 
+            d1.boot[k] <- mean( pnorm(y.mat.1 %*% YTmodel.coef.boot[k,]) - pnorm(y.mat.1 %*% YTmodel.coef.boot[k,] -
                 gamma.boot[k]*beta2.boot[k]/sqrt(gamma.boot[k]^2*sigma.2.boot[k]^2+2*gamma.boot[k]*rho[i]*sigma.2.boot[k]+1)) )
             tau.boot[k] <- mean( pnorm(y.mat.1 %*% YTmodel.coef.boot[k,]) - pnorm(y.mat.0 %*% YTmodel.coef.boot[k,]) )
             nu.boot[k] <- (d0.boot[k] + d1.boot[k])/(2*tau.boot[k])
             }
-            
+
         ## Step 2-4: Compute Outputs
         d0[i] <- mean(d0.boot) # ACME(t=0)
         d1[i] <- mean(d1.boot) # ACME(t=1)
@@ -587,10 +655,10 @@ print(names(out))
         lower.nu[i] <- quantile(nu.boot, low)
         ind.d0[i] <- as.numeric(lower.d0[i] < 0 & upper.d0[i] > 0)
         ind.d1[i] <- as.numeric(lower.d1[i] < 0 & upper.d1[i] > 0)
-        
+
         ## END OF RHO LOOP
         }
-        
+
         # Save R2 tilde values
         r.sq.m <- summary(model.m)$r.squared
         y.mat <- model.matrix(model.y)
@@ -598,7 +666,7 @@ print(names(out))
         var.ystar <- var(fitted)
         r.sq.y <-var.ystar/(1+var.ystar)
         R2tilde.prod <- rho^2*(1-r.sq.m)*(1-r.sq.y)
-        
+
         # Calculate rho at which ACME=0
         if(INT){
         ii <- which(abs(d0-0)==min(abs(d0-0)))
@@ -608,9 +676,9 @@ print(names(out))
         err.cr <- c(err.cr.1, err.cr.2)
         } else {
         ii <- which(abs(d0-0)==min(abs(d0-0)))
-        err.cr <- rho[ii]   
+        err.cr <- rho[ii]
             }
-        
+
         ## Step 3: Output
         type <- "bo"
         err.cr <- mean(rho12.boot) # Rho_12 estimate
@@ -626,7 +694,7 @@ print(names(out))
         class(out) <- "medsens"
         out
 
-    ## END OF CASE 3: Binary Outcome + Continuous Mediator    
+    ## END OF CASE 3: Binary Outcome + Continuous Mediator
     }
 
 ## END OF SENSITIVITY FUNCTION
@@ -641,17 +709,20 @@ print.medsens <- function(x, ...){
 
 summary.medsens <- function(object, ...)
     structure(object, class = c("summary.medsens", class(object)))
- 
+
 print.summary.medsens <- function(x, ...){
     if(x$type=="ct"){
-    	effect.type <- x$effect.type
-        if(x$INT==FALSE){if("indirect" %in% x$effect.type){            
+        etype.vec <- x$effect.type
+        if(etype.vec == "both"){
+            etype.vec <- c("indirect","direct")
+        }
+        if(x$INT==FALSE){if("indirect" %in% etype.vec){
         	tab <- cbind(x$rho, round(x$d0, 4), round(x$lower.d0, 4), round(x$upper.d0, 4), x$ind.d0, x$R2star.prod, round(x$R2tilde.prod,4))
             if(sum(x$ind.d0)==1){
                 tab <- as.matrix(tab[x$ind.d0==1, -5])
                 tab <- t(tab)
             } else {
-                tab <- tab[x$ind.d0==1, -5] 
+                tab <- tab[x$ind.d0==1, -5]
             }
             colnames(tab) <-  c("Rho", "Med. Eff.", "Med. Eff. CI Lower", "Med. Eff. CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab) <- NULL
@@ -661,15 +732,15 @@ print.summary.medsens <- function(x, ...){
             cat("\nRho at which ACME = 0:", round(x$err.cr, 4), "\n\n")
             cat("\nR^2_M*R^2_Y* at which ACME = 0:", round(x$R2star.d.thresh, 4), "\n\n")
             cat("\nR^2_M~R^2_Y~ at which ACME = 0:", round(x$R2tilde.d.thresh, 4), "\n\n")
-            invisible(x)    
+            invisible(x)
         	}
-        	if("direct" %in% x$effect.type){
+        	if("direct" %in% etype.vec){
         			tab.z <- cbind(x$rho, round(x$z0, 4), round(x$lower.z0, 4), round(x$upper.z0, 4), x$ind.z0, x$R2star.prod, round(x$R2tilde.prod,4))
         			if(sum(x$ind.z0)==1){
                 		tab.z <- as.matrix(tab.z[x$ind.z0==1, -5])
                 		tab.z <- t(tab.z)
             		} else {
-                		tab.z <- tab.z[x$ind.z0==1, -5] 
+                		tab.z <- tab.z[x$ind.z0==1, -5]
             		}
             		colnames(tab.z) <- c("Rho", "Dir. Eff.", "Dir. Eff. CI Lower", "Dir. Eff. CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             		rownames(tab.z) <- NULL
@@ -680,14 +751,14 @@ print.summary.medsens <- function(x, ...){
             		cat("\nR^2_M*R^2_Y* at which ACDE = 0:", round(x$R2star.z.thresh, 4), "\n\n")
             		cat("\nR^2_M~R^2_Y~ at which ACDE = 0:", round(x$R2tilde.z.thresh, 4), "\n\n")
             		invisible(x)
-        			} 
-        } else {if("indirect" %in% x$effect.type){
+        			}
+        } else {if("indirect" %in% etype.vec){
             tab.d0 <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0, x$R2star.prod, round(x$R2tilde.prod, 4))
             if(sum(x$ind.d0)==1){
                 tab.d0 <- as.matrix(tab.d0[x$ind.d0==1, -5])
                 tab.d0 <- t(tab.d0)
             } else {
-                tab.d0 <- tab.d0[x$ind.d0==1, -5] 
+                tab.d0 <- tab.d0[x$ind.d0==1, -5]
             }
             colnames(tab.d0) <-  c("Rho", "Med. Eff.", "Med. Eff. CI Lower", "Med. Eff. CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.d0) <- NULL
@@ -696,7 +767,7 @@ print.summary.medsens <- function(x, ...){
                 tab.d1 <- as.matrix(tab.d1[x$ind.d1==1, -5])
                 tab.d1 <- t(tab.d1)
             } else {
-                tab.d1 <- tab.d1[x$ind.d1==1, -5] 
+                tab.d1 <- tab.d1[x$ind.d1==1, -5]
             }
             colnames(tab.d1) <-  c("Rho", "Med. Eff.", "Med. Eff. CI Lower", "Med. Eff. CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.d1) <- NULL
@@ -711,15 +782,15 @@ print.summary.medsens <- function(x, ...){
             cat("\nRho at which ACME for Treatment Group = 0:", round(x$err.cr[2], 4), "\n\n")
             cat("\nR^2_M*R^2_Y* at which ACME for Treatment Group = 0:", round(x$R2star.d.thresh[2], 4), "\n\n")
             cat("\nR^2_M~R^2_Y~ at which ACME for Treatment Group = 0:", round(x$R2tilde.d.thresh[2], 4), "\n\n")
-            invisible(x)        
+            invisible(x)
             }
-            if("direct" %in% x$effect.type){
+            if("direct" %in% etype.vec){
             	tab.z0 <- cbind(x$rho, round(x$z0,4), round(x$lower.z0,4), round(x$upper.z0, 4), x$ind.z0, x$R2star.prod, round(x$R2tilde.prod, 4))
             if(sum(x$ind.z0)==1){
                 tab.z0 <- as.matrix(tab.z0[x$ind.z0==1, -5])
                 tab.z0 <- t(tab.z0)
             } else {
-                tab.z0 <- tab.z0[x$ind.z0==1, -5] 
+                tab.z0 <- tab.z0[x$ind.z0==1, -5]
             }
             colnames(tab.z0) <-  c("Rho", "Dir. Eff.", "Dir. Eff. CI Lower", "Dir. Eff. CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.z0) <- NULL
@@ -728,7 +799,7 @@ print.summary.medsens <- function(x, ...){
                 tab.z1 <- as.matrix(tab.z1[x$ind.z1==1, -5])
                 tab.z1 <- t(tab.z1)
             } else {
-                tab.z1 <- tab.z1[x$ind.z1==1, -5] 
+                tab.z1 <- tab.z1[x$ind.z1==1, -5]
             }
             colnames(tab.z1) <-  c("Rho", "Dir. Eff.", "Dir. Eff. CI Lower", "Dir. Eff. CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.z1) <- NULL
@@ -753,7 +824,7 @@ print.summary.medsens <- function(x, ...){
                 tab <- as.matrix(tab[x$ind.d0==1, -5])
                 tab <- t(tab)
             } else {
-                tab <- tab[x$ind.d0==1, -5] 
+                tab <- tab[x$ind.d0==1, -5]
             }
             colnames(tab) <-  c("Rho", "Med. Eff.", "CI Lower", "CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab) <- NULL
@@ -763,14 +834,14 @@ print.summary.medsens <- function(x, ...){
             cat("\nRho at which ACME = 0:", round(x$err.cr, 4), "\n\n")
             cat("\nR^2_M*R^2_Y* at which ACME = 0:", round(x$R2star.thresh, 4), "\n\n")
             cat("\nR^2_M~R^2_Y~ at which ACME = 0:", round(x$R2tilde.thresh, 4), "\n\n")
-            invisible(x)    
+            invisible(x)
         } else {
             tab.d0 <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0, x$R2star.prod, round(x$R2tilde.prod, 4))
             if(sum(x$ind.d0)==1){
                 tab.d0 <- as.matrix(tab.d0[x$ind.d0==1, -5])
                 tab.d0 <- t(tab.d0)
             } else {
-                tab.d0 <- tab.d0[x$ind.d0==1, -5] 
+                tab.d0 <- tab.d0[x$ind.d0==1, -5]
             }
             colnames(tab.d0) <-  c("Rho","Med. Eff.", "CI Lower", "CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.d0) <- NULL
@@ -779,7 +850,7 @@ print.summary.medsens <- function(x, ...){
                 tab.d1 <- as.matrix(tab.d1[x$ind.d1==1, -5])
                 tab.d1 <- t(tab.d1)
             } else {
-                tab.d1 <- tab.d1[x$ind.d1==1, -5] 
+                tab.d1 <- tab.d1[x$ind.d1==1, -5]
             }
             colnames(tab.d1) <-  c("Rho","Med. Eff.", "CI Lower", "CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.d1) <- NULL
@@ -794,7 +865,7 @@ print.summary.medsens <- function(x, ...){
             cat("\nRho at which Delta_1 = 0:", round(x$err.cr[2], 4), "\n\n")
             cat("\nR^2_M*R^2_Y* at which ACME for Treatment Group = 0:", round(x$R2star.thresh[2], 4), "\n\n")
             cat("\nR^2_M~R^2_Y~ at which ACME for Treatment Group = 0:", round(x$R2tilde.thresh[2], 4), "\n\n")
-            invisible(x)        
+            invisible(x)
             }
     } else if(x$type=="bo") {
         if(x$INT==FALSE){
@@ -803,7 +874,7 @@ print.summary.medsens <- function(x, ...){
                 tab <- as.matrix(tab[x$ind.d0==1, -5])
                 tab <- t(tab)
             } else {
-                tab <- tab[x$ind.d0==1, -5] 
+                tab <- tab[x$ind.d0==1, -5]
             }
             colnames(tab) <-  c("Rho", "Med. Eff.", "CI Lower", "CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab) <- NULL
@@ -813,14 +884,14 @@ print.summary.medsens <- function(x, ...){
             cat("\nRho at which Delta = 0:", round(x$err.cr, 4), "\n\n")
             cat("\nR^2_M*R^2_Y* at which ACME = 0:", round(x$R2star.thresh, 4), "\n\n")
             cat("\nR^2_M~R^2_Y~ at which ACME = 0:", round(x$R2tilde.thresh, 4), "\n\n")
-            invisible(x)    
+            invisible(x)
         } else {
             tab.d0 <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0, x$R2star.prod, round(x$R2tilde.prod, 4))
             if(sum(x$ind.d0)==1){
                 tab <- as.matrix(tab[x$ind.d0==1, -5])
                 tab <- t(tab)
             } else {
-                tab <- tab[x$ind.d0==1, -5] 
+                tab <- tab[x$ind.d0==1, -5]
             }
             colnames(tab.d0) <-  c("Rho","Med. Eff.", "CI Lower", "CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.d0) <- NULL
@@ -829,7 +900,7 @@ print.summary.medsens <- function(x, ...){
                 tab <- as.matrix(tab[x$ind.d1==1, -5])
                 tab <- t(tab)
             } else {
-                tab <- tab[x$ind.d1==1, -5] 
+                tab <- tab[x$ind.d1==1, -5]
             }
             colnames(tab.d1) <-  c("Rho","Med. Eff.", "CI Lower", "CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.d1) <- NULL
@@ -844,7 +915,7 @@ print.summary.medsens <- function(x, ...){
             cat("\nRho at which ACME for Treatment Group = 0:", round(x$err.cr[2], 4), "\n\n")
             cat("\nR^2_M*R^2_Y* at which ACME for Treatment Group  = 0:", round(x$R2star.thresh[2], 4), "\n\n")
             cat("\nR^2_M~R^2_Y~ at which ACME for Treatment Group  = 0:", round(x$R2tilde.thresh[2], 4), "\n\n")
-            invisible(x)        
+            invisible(x)
             }
      }
 }
@@ -853,12 +924,20 @@ print.summary.medsens <- function(x, ...){
 ### Plot Function ###
 
 plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE, smooth.effect=FALSE, smooth.ci=FALSE, levels=NULL, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL, lwd=par("lwd"), ...){
+    etype.vec <- x$effect.type
+    if(etype.vec == "both"){
+        etype.vec <- c("indirect","direct")
+    }
+    if(x$type != "ct" && x$effect.type != "indirect"){
+        stop("'effect.type' must be \"indirect\" for this model combination")
+    }
+
   if(sens.par=="rho"){
     if(pr.plot==TRUE){
         if(x$type != "bm"){
             stop("proportion mediated is only implemented for binary mediator")
         }
-        if(is.null(ylim)) 
+        if(is.null(ylim))
             ylim <- c(min(x$nu), max(x$nu))
         if(is.null(main))
             main <- expression(paste("Proportion Mediated ", (rho)))
@@ -877,15 +956,15 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         lines(x$rho, nu, lty=1, lwd=lwd)
         abline(h=0)
         abline(v=0)
-        if(is.null(xlab)) 
+        if(is.null(xlab))
             title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
             else title(xlab = xlab)
-        if(is.null(ylab)) 
+        if(is.null(ylab))
             title(ylab = expression(paste("Proportion Mediated: ", bar(nu))), line=2.5, cex.lab=.9)
             else title(ylab = ylab)
     } else {
     if(x$INT == FALSE){
-    	if("indirect" %in% x$effect.type){
+    	if("indirect" %in% etype.vec){
         if(is.null(ylim))
             ylim <- c(min(x$d0), max(x$d0))
         if(is.null(main))
@@ -905,16 +984,16 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         lines(x$rho, d0, lty=1, lwd=lwd)
         abline(h=0)
         abline(v=0)
-        abline(h=weighted.mean(c(d0[floor(1/x$rho.by)],d0[ceiling(1/x$rho.by)]), 
+        abline(h=weighted.mean(c(d0[floor(1/x$rho.by)],d0[ceiling(1/x$rho.by)]),
             c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
-        if(is.null(xlab)) 
+        if(is.null(xlab))
             title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
             else title(xlab = xlab)
-        if(is.null(ylab)) 
+        if(is.null(ylab))
             title(ylab = expression(paste("Average Mediation Effect: ", bar(delta)(t))), line=2.5, cex.lab=.9)
             else title(ylab = ylab)
-    } 
-    if("direct" %in% x$effect.type){
+    }
+    if("direct" %in% etype.vec){
     	if(is.null(ylim))
             ylim <- c(min(x$z0), max(x$z0))
         if(is.null(main))
@@ -934,17 +1013,17 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         lines(x$rho, z0, lty=1, lwd=lwd)
         abline(h=0)
         abline(v=0)
-        abline(h=weighted.mean(c(z0[floor(1/x$rho.by)],z0[ceiling(1/x$rho.by)]), 
+        abline(h=weighted.mean(c(z0[floor(1/x$rho.by)],z0[ceiling(1/x$rho.by)]),
             c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
-        if(is.null(xlab)) 
+        if(is.null(xlab))
             title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
             else title(xlab = xlab)
-        if(is.null(ylab)) 
+        if(is.null(ylab))
             title(ylab = expression(paste("Average Direct Effect: ", bar(delta)(t))), line=2.5, cex.lab=.9)
             else title(ylab = ylab)
     	}
     } else {### With Interaction
-     if("indirect" %in% x$effect.type){
+     if("indirect" %in% etype.vec){
         if(prod(par("mfrow")==1) && dev.interactive()){
             oask <- devAskNewPage(TRUE)
             on.exit(devAskNewPage(oask))
@@ -969,12 +1048,12 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         lines(x$rho, d0, lty=1, lwd=lwd)
         abline(h=0)
         abline(v=0)
-        abline(h=weighted.mean(c(d0[floor(1/x$rho.by)],d0[ceiling(1/x$rho.by)]), 
+        abline(h=weighted.mean(c(d0[floor(1/x$rho.by)],d0[ceiling(1/x$rho.by)]),
             c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
-        if(is.null(xlab)) 
+        if(is.null(xlab))
             title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
             else title(xlab = xlab)
-        if(is.null(ylab)) 
+        if(is.null(ylab))
             title(ylab = expression(paste("Average Mediation Effect: ", bar(delta)(0))), line=2.5, cex.lab=.9)
             else title(ylab = ylab)
 
@@ -999,16 +1078,16 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         lines(x$rho, d1, lty=1, lwd=lwd)
         abline(h=0)
         abline(v=0)
-        abline(h=weighted.mean(c(d1[floor(1/x$rho.by)],d1[ceiling(1/x$rho.by)]), 
+        abline(h=weighted.mean(c(d1[floor(1/x$rho.by)],d1[ceiling(1/x$rho.by)]),
             c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
-        if(is.null(xlab)) 
+        if(is.null(xlab))
             title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
             else title(xlab = xlab)
-        if(is.null(ylab)) 
+        if(is.null(ylab))
             title(ylab = expression(paste("Average Mediation Effect: ", bar(delta)(1))), line=2.5, cex.lab=.9)
             else title(ylab = ylab)
             }
-     if("direct" %in% x$effect.type){
+     if("direct" %in% etype.vec){
      	if(prod(par("mfrow")==1) && dev.interactive()){
             oask <- devAskNewPage(TRUE)
             on.exit(devAskNewPage(oask))
@@ -1033,12 +1112,12 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         lines(x$rho, z0, lty=1, lwd=lwd)
         abline(h=0)
         abline(v=0)
-        abline(h=weighted.mean(c(z0[floor(1/x$rho.by)],z0[ceiling(1/x$rho.by)]), 
+        abline(h=weighted.mean(c(z0[floor(1/x$rho.by)],z0[ceiling(1/x$rho.by)]),
             c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
-        if(is.null(xlab)) 
+        if(is.null(xlab))
             title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
             else title(xlab = xlab)
-        if(is.null(ylab)) 
+        if(is.null(ylab))
             title(ylab = expression(paste("Average Direct Effect: ", bar(delta)(0))), line=2.5, cex.lab=.9)
             else title(ylab = ylab)
 
@@ -1063,43 +1142,43 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         lines(x$rho, z1, lty=1, lwd=lwd)
         abline(h=0)
         abline(v=0)
-        abline(h=weighted.mean(c(z1[floor(1/x$rho.by)],z1[ceiling(1/x$rho.by)]), 
+        abline(h=weighted.mean(c(z1[floor(1/x$rho.by)],z1[ceiling(1/x$rho.by)]),
             c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
-        if(is.null(xlab)) 
+        if(is.null(xlab))
             title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
             else title(xlab = xlab)
-        if(is.null(ylab)) 
+        if(is.null(ylab))
             title(ylab = expression(paste("Average Direct Effect: ", bar(delta)(1))), line=2.5, cex.lab=.9)
             else title(ylab = ylab)
-     	}       
+     	}
             }
         }
   } else if (sens.par=="R2"){## R2 Sensitivity Parameter BEGIN HERE
     if(pr.plot==TRUE)
         stop("proportion mediated is only plotted in terms of 'rho'")
-        
+
     R2Mstar <- seq(0, 1-x$rho.by, 0.01)
     R2Ystar <- seq(0, 1-x$rho.by, 0.01)
     R2Mtilde <- (1-x$r.square.m)*seq(0, 1-x$rho.by, 0.01)
     R2Ytilde <- (1-x$r.square.y)*seq(0, 1-x$rho.by, 0.01)
-  
+
     if(r.type == 1){
         R2M <- R2Mstar; R2Y <- R2Ystar
     } else if(r.type == 2) {
         R2M <- R2Mtilde; R2Y <- R2Ytilde
     } else stop("'r.type' must be either 1 or 2")
-    
+
     dlength <- length(seq(0, (1-x$rho.by)^2, 0.0001))
     R2prod.mat <- outer(R2Mstar, R2Ystar)
     Rprod.mat <- round(sqrt(R2prod.mat), digits=4)
-    
+
     if(is.null(xlim))
         xlim <- c(0,1)
     if(is.null(ylim))
         ylim <- c(0,1)
-    
+
     if(x$INT==FALSE){## No Interaction, R2, Continuous
-        if("indirect" %in% x$effect.type){
+        if("indirect" %in% etype.vec){
         	if(is.null(levels))
             levels <- pretty(quantile(x$d0, probs=c(0.1,0.9)), 10)
         if(sign.prod == 1){
@@ -1131,8 +1210,8 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
         axis(2,at=seq(0,1,by=.1))
         axis(1,at=seq(0,1,by=.1))
-    } 
-    if("direct" %in% x$effect.type){
+    }
+    if("direct" %in% etype.vec){
     	levels <- pretty(quantile(x$z0, probs=c(0.1,0.9)), 10)
         if(sign.prod == 1){
             z0.p <- approx(x$z0[((length(x$z0)+1)/2):length(x$z0)], n=dlength)$y
@@ -1169,7 +1248,7 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             oask <- devAskNewPage(TRUE)
             on.exit(devAskNewPage(oask))
         }
-        if("indirect" %in% x$effect.type){
+        if("indirect" %in% etype.vec){
         if(is.null(levels))
             levels0 <- pretty(quantile(x$d0, probs=c(0.1,0.9)), 10)
             else levels0 <- levels
@@ -1240,8 +1319,8 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         axis(2,at=seq(0,1,by=.1))
         axis(1,at=seq(0,1,by=.1))
       }
-  } 
-	if("direct" %in% x$effect.type){
+  }
+	if("direct" %in% etype.vec){
 		if(is.null(levels))
             levels0 <- pretty(quantile(x$z0, probs=c(0.1,0.9)), 10)
             else levels0 <- levels
