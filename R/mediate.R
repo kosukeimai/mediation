@@ -25,20 +25,23 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
     if(dropobs){
         if(isS4(model.m)){
             call.m <- model.m@call
-            origdata.m <- eval.parent(as.name(model.m@misc$dataname))
+            odata.m <- model.m@model
         } else {
             call.m <- model.m$call
-            origdata.m <- eval.parent(model.m$call$data)
+            odata.m <- model.m$model
         }
         if(isS4(model.y)){
             call.y <- model.y@call
-            origdata.y <- eval.parent(as.name(model.y@misc$dataname))
+            odata.y <- model.y@model
         } else {
             call.y <- model.y$call
-            origdata.y <- eval.parent(model.y$call$data)
+            odata.y <- model.y$model
         }
-        newdata <- merge(origdata.m, origdata.y, sort=FALSE)
-        rm(origdata.m, origdata.y)
+        newdata <- merge(odata.m, odata.y, sort=FALSE,
+                    by=c("row.names", intersect(names(odata.m), names(odata.y))))
+        rownames(newdata) <- newdata$Row.names
+        newdata <- newdata[,-1L]
+        rm(odata.m, odata.y)
         
         call.m$data <- call.y$data <- newdata
         model.m <- eval.parent(call.m)
