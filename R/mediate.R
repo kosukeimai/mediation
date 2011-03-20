@@ -1,6 +1,6 @@
 mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                     mediator="med.name", control=NULL, conf.level=.95, robustSE = FALSE,
-                    control.value=0, treat.value=1, dropobs=TRUE, long=TRUE, ...){
+                    control.value=0, treat.value=1, dropobs=FALSE, long=TRUE, ...){
     
     # Warn users who still use INT option
     if(match("INT", names(match.call()), 0L)){
@@ -23,42 +23,27 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
     
     # Drop observations not common to both mediator and outcome models
     if(dropobs){
-        if(isS4(model.m)){
-            call.m <- model.m@call
-            odata.m <- model.m@model
-        } else {
-            call.m <- model.m$call
-            odata.m <- model.m$model
-        }
-        if(isS4(model.y)){
-            call.y <- model.y@call
-            odata.y <- model.y@model
-        } else {
-            call.y <- model.y$call
-            odata.y <- model.y$model
-        }
+        odata.m <- model.frame(model.m)
+        odata.y <- model.frame(model.y)
         newdata <- merge(odata.m, odata.y, sort=FALSE,
                     by=c("row.names", intersect(names(odata.m), names(odata.y))))
         rownames(newdata) <- newdata$Row.names
         newdata <- newdata[,-1L]
         rm(odata.m, odata.y)
         
+        if(isS4(model.m)){
+            call.m <- model.m@call
+        } else {
+            call.m <- model.m$call
+        }
+        if(isS4(model.y)){
+            call.y <- model.y@call
+        } else {
+            call.y <- model.y$call
+        }
         call.m$data <- call.y$data <- newdata
         model.m <- eval.parent(call.m)
         model.y <- eval.parent(call.y)
-        n.used<-nrow(newdata)
-#        if(isS4(model.m)|isS4(model.y)){
-#        print("dropobs function not available for s4 class objects like vglm")
-#        } else {
-#        nm<-c(names(model.m$model),names(model.y$model))
-#        nm<-unique(nm)
-#        data<-model.m$call$data
-#        data<-eval(data)
-#        data<-na.omit(data[nm])
-#        print(nrow(data))
-#        model.y <- update(model.y, data=data)
-#        model.m <- update(model.m, data=data)
-#        }
     }
         
     # Record class of model.m as "ClassM"
@@ -504,7 +489,11 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
         ########################################################################
         } else {
             
-            Call.M <- model.m$call
+            if(isS4(model.m)){
+                Call.M <- model.m@call
+            } else {
+                Call.M <- model.m$call
+            }
             if(isS4(model.y)){
                 Call.Y.t <- model.y@call
             } else {
@@ -754,7 +743,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                         boot=boot, treat=treat, mediator=mediator, 
                         INT=INT, conf.level=conf.level,
                         model.y=model.y, model.m=model.m, 
-                        control.value=control.value, treat.value=treat.value,nobs=n.used)
+                        control.value=control.value, treat.value=treat.value,nobs=n)
         } else {
             out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
                         z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci, 
@@ -766,7 +755,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                         boot=boot, treat=treat, mediator=mediator, 
                         INT=INT, conf.level=conf.level,
                         model.y=model.y, model.m=model.m, 
-                        control.value=control.value, treat.value=treat.value, nobs=n.used)
+                        control.value=control.value, treat.value=treat.value, nobs=n)
         }
         class(out) <- "mediate"
         out
@@ -956,7 +945,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                         boot=boot, treat=treat, mediator=mediator, 
                         INT=INT, conf.level=conf.level,
                         model.y=model.y, model.m=model.m, 
-                        control.value=control.value, treat.value=treat.value, nobs=n.used)
+                        control.value=control.value, treat.value=treat.value, nobs=n)
         } else {
             out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
                         tau.coef=tau.coef, tau.ci=tau.ci, 
@@ -964,7 +953,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
                         boot=boot, treat=treat, mediator=mediator, 
                         INT=INT, conf.level=conf.level,
                         model.y=model.y, model.m=model.m, 
-                        control.value=control.value, treat.value=treat.value, nobs=n.used)
+                        control.value=control.value, treat.value=treat.value, nobs=n)
         }
         class(out) <- "mediate.order"
         out
@@ -1008,7 +997,7 @@ print.summary.mediate <- function(x, ...){
         cat("Total Effect: ", format(x$tau.coef, digits=4), clp, "% CI ", 
                 format(x$tau.ci, digits=4), "\n")
         cat("Proportion of Total Effect via Mediation: ", format(x$n0, digits=4), 
-                clp, "% CI ", format(x$n0.ci, digits=4),"\n")
+                clp, "% CI ", format(x$n0.ci, digits=4),"\n\n")
         cat("Sample Size Used:", x$nobs,"\n\n")        
     } else {
         cat("Mediation Effect_0: ", format(x$d0, digits=4), clp, "% CI ", 
@@ -1030,7 +1019,7 @@ print.summary.mediate <- function(x, ...){
         cat("Direct Effect (Average): ", format(x$z.avg, digits=4), clp, "% CI ", 
                 format(x$z.avg.ci, digits=4), "\n")
         cat("Proportion of Total Effect via Mediation (Average): ", format(x$n.avg, digits=4), 
-                clp, "% CI ", format(x$n.avg.ci, digits=4),"\n")
+                clp, "% CI ", format(x$n.avg.ci, digits=4),"\n\n")
         cat("Sample Size Used:", x$nobs,"\n\n") 
     } 
     invisible(x)
@@ -1089,7 +1078,7 @@ print.summary.mediate.order <- function(x, ...){
     print(tab.z1, digits=4)
     cat("\n")
     print(tab.tau, digits=4)
-    cat("\n")
+    cat("\n\n")
     cat("Sample Size Used:", x$nobs,"\n\n") 
     invisible(x)
 }
