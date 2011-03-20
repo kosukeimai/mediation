@@ -771,7 +771,7 @@ print.summary.medsens <- function(x, ...){
             }
             colnames(tab.d1) <-  c("Rho", "Med. Eff.", "Med. Eff. CI Lower", "Med. Eff. CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.d1) <- NULL
-            cat("\nMediation Sensitivity Analysis: Average Causal Mediation Effect\n")
+            cat("\nMediation Sensitivity Analysis: Average Mediation Effect\n")
             cat("\nSensitivity Region: ACME for Control Group\n\n")
             print(tab.d0)
             cat("\nRho at which Delta_0 = 0:", round(x$err.cr[1], 4), "\n\n")
@@ -803,7 +803,7 @@ print.summary.medsens <- function(x, ...){
             }
             colnames(tab.z1) <-  c("Rho", "Dir. Eff.", "Dir. Eff. CI Lower", "Dir. Eff. CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.z1) <- NULL
-            cat("\nMediation Sensitivity Analysis\n")
+            cat("\nMediation Sensitivity Analysis: Average Direct Effect\n")
             cat("\nSensitivity Region: ADE for Control Group\n\n")
             print(tab.z0)
             cat("\nRho at which Delta_0 = 0:", round(x$err.cr.z[1], 4), "\n\n")
