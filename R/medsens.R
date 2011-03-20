@@ -726,7 +726,7 @@ print.summary.medsens <- function(x, ...){
             }
             colnames(tab) <-  c("Rho", "Med. Eff.", "Med. Eff. CI Lower", "Med. Eff. CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab) <- NULL
-            cat("\nMediation Sensitivity Analysis\n")
+            cat("\nMediation Sensitivity Analysis for Average Causal Mediation Effect\n")
             cat("\nSensitivity Region\n\n")
             print(tab)
             cat("\nRho at which ACME = 0:", round(x$err.cr, 4), "\n\n")
@@ -744,12 +744,12 @@ print.summary.medsens <- function(x, ...){
             		}
             		colnames(tab.z) <- c("Rho", "Dir. Eff.", "Dir. Eff. CI Lower", "Dir. Eff. CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             		rownames(tab.z) <- NULL
-            		cat("\nMediation Sensitivity Analysis\n")
+            		cat("\nMediation Sensitivity Analysis for Average Direct Effect\n")
             		cat("\nSensitivity Region\n\n")
             		print(tab.z)
-            		cat("\nRho at which ACDE = 0:", round(x$err.cr.z, 4), "\n\n")
-            		cat("\nR^2_M*R^2_Y* at which ACDE = 0:", round(x$R2star.z.thresh, 4), "\n\n")
-            		cat("\nR^2_M~R^2_Y~ at which ACDE = 0:", round(x$R2tilde.z.thresh, 4), "\n\n")
+            		cat("\nRho at which ADE = 0:", round(x$err.cr.z, 4), "\n\n")
+            		cat("\nR^2_M*R^2_Y* at which ADE = 0:", round(x$R2star.z.thresh, 4), "\n\n")
+            		cat("\nR^2_M~R^2_Y~ at which ADE = 0:", round(x$R2tilde.z.thresh, 4), "\n\n")
             		invisible(x)
         			}
         } else {if("indirect" %in% etype.vec){
@@ -771,7 +771,7 @@ print.summary.medsens <- function(x, ...){
             }
             colnames(tab.d1) <-  c("Rho", "Med. Eff.", "Med. Eff. CI Lower", "Med. Eff. CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.d1) <- NULL
-            cat("\nMediation Sensitivity Analysis\n")
+            cat("\nMediation Sensitivity Analysis: Average Causal Mediation Effect\n")
             cat("\nSensitivity Region: ACME for Control Group\n\n")
             print(tab.d0)
             cat("\nRho at which Delta_0 = 0:", round(x$err.cr[1], 4), "\n\n")
@@ -804,16 +804,16 @@ print.summary.medsens <- function(x, ...){
             colnames(tab.z1) <-  c("Rho", "Dir. Eff.", "Dir. Eff. CI Lower", "Dir. Eff. CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.z1) <- NULL
             cat("\nMediation Sensitivity Analysis\n")
-            cat("\nSensitivity Region: ACDE for Control Group\n\n")
+            cat("\nSensitivity Region: ADE for Control Group\n\n")
             print(tab.z0)
             cat("\nRho at which Delta_0 = 0:", round(x$err.cr.z[1], 4), "\n\n")
-            cat("\nR^2_M*R^2_Y* at which ACDE for Control Group = 0:", round(x$R2star.z.thresh[1], 4), "\n\n")
-            cat("\nR^2_M~R^2_Y~ at which ACDE for Control Group = 0:", round(x$R2tilde.z.thresh[1], 4), "\n\n")
-            cat("\nSensitivity Region: ACDE for Treatment Group\n\n")
+            cat("\nR^2_M*R^2_Y* at which ADE for Control Group = 0:", round(x$R2star.z.thresh[1], 4), "\n\n")
+            cat("\nR^2_M~R^2_Y~ at which ADE for Control Group = 0:", round(x$R2tilde.z.thresh[1], 4), "\n\n")
+            cat("\nSensitivity Region: ADE for Treatment Group\n\n")
             print(tab.z1)
-            cat("\nRho at which ACDE for Treatment Group = 0:", round(x$err.cr.z[2], 4), "\n\n")
-            cat("\nR^2_M*R^2_Y* at which ACDE for Treatment Group = 0:", round(x$R2star.z.thresh[2], 4), "\n\n")
-            cat("\nR^2_M~R^2_Y~ at which ACDE for Treatment Group = 0:", round(x$R2tilde.z.thresh[2], 4), "\n\n")
+            cat("\nRho at which ADE for Treatment Group = 0:", round(x$err.cr.z[2], 4), "\n\n")
+            cat("\nR^2_M*R^2_Y* at which ADE for Treatment Group = 0:", round(x$R2star.z.thresh[2], 4), "\n\n")
+            cat("\nR^2_M~R^2_Y~ at which ADE for Treatment Group = 0:", round(x$R2tilde.z.thresh[2], 4), "\n\n")
             invisible(x)
             	}
             } ### Case I Summary Ends Here
@@ -1019,7 +1019,7 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
             else title(xlab = xlab)
         if(is.null(ylab))
-            title(ylab = expression(paste("Average Direct Effect: ", bar(delta)(t))), line=2.5, cex.lab=.9)
+            title(ylab = expression(paste("Average Direct Effect: ", bar(zeta)(t))), line=2.5, cex.lab=.9)
             else title(ylab = ylab)
     	}
     } else {### With Interaction
@@ -1118,7 +1118,7 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
             else title(xlab = xlab)
         if(is.null(ylab))
-            title(ylab = expression(paste("Average Direct Effect: ", bar(delta)(0))), line=2.5, cex.lab=.9)
+            title(ylab = expression(paste("Average Direct Effect: ", bar(zeta)(0))), line=2.5, cex.lab=.9)
             else title(ylab = ylab)
 
         #Delta_1
@@ -1148,7 +1148,7 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
             else title(xlab = xlab)
         if(is.null(ylab))
-            title(ylab = expression(paste("Average Direct Effect: ", bar(delta)(1))), line=2.5, cex.lab=.9)
+            title(ylab = expression(paste("Average Direct Effect: ", bar(zeta)(1))), line=2.5, cex.lab=.9)
             else title(ylab = ylab)
      	}
             }
