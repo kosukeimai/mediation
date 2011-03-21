@@ -59,7 +59,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
         }
 
         #Estimate Error Correlation
-        data <- model.y$call$data
+        data <- model.frame(model.y)
         if(INT){
             mod.y <- update(model.y,as.formula(paste(". ~ . -", t.m, "-", mediator)), data=data)
         } else {
