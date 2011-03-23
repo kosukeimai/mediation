@@ -1,6 +1,8 @@
-mediate <- function(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name",
-                    mediator="med.name", control=NULL, conf.level=.95, robustSE = FALSE,
-                    control.value=0, treat.value=1, dropobs=FALSE, long=TRUE, ...){
+mediate <- function(model.m, model.y, sims=1000, boot=FALSE, 
+                    treat="treat.name", mediator="med.name", 
+                    control=NULL, conf.level=.95,
+                    control.value=0, treat.value=1, 
+                    long=TRUE, dropobs=FALSE,  robustSE = FALSE, ...){
     
     # Warn users who still use INT option
     if(match("INT", names(match.call()), 0L)){

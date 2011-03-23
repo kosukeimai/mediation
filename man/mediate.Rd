@@ -6,23 +6,29 @@ Function to estimate causal mediation effects.
 } 
 \usage{
 
-mediate(model.m, model.y, sims=1000, boot=FALSE, treat="treat.name", mediator="med.name", control=NULL, conf.level=.95, control.value=0, treat.value=1, long=TRUE, dropobs=TRUE, robustSE=FALSE, ...)
+mediate(model.m, model.y, sims=1000, boot=FALSE, 
+        treat="treat.name", mediator="med.name", 
+        control=NULL, conf.level=.95, 
+        control.value=0, treat.value=1, 
+        long=TRUE, dropobs=TRUE, robustSE=FALSE, 
+        ...)
 
 } 
 
 \arguments{ 
-\item{model.m}{ R model object for mediator.  Can be of class lm, polr, glm, gam, or rq.} 
-\item{model.y}{ R model object for outcome.  Can be of class lm, glm, gam, vglm, or rq.} 
-\item{sims}{ Number of Monte Carlo draws for nonparametric bootstrap or quasi-Bayesian approximation.} 
-\item{boot}{ If 'FALSE' a quasi-Bayesian approximation is used for confidence interval, if TRUE nonparametric bootstrap will be used.}
-\item{conf.level}{ The returned confidence interval. The default is to return the .025 through .0975 quantiles of the quantity distributions.} 
-\item{treat}{ Name of binary treatment indicator.}
-\item{mediator}{ Name of mediator variable.}
-\item{control}{ Name of binary treatment indicator for control. Only necessary for gam() object with interaction.}
-\item{control.value}{ Value of the treatment variable in the control condition. Default is 0.}
-\item{treat.value}{ Value of the treatment variable in the treatment condition. Default is 1.}
-\item{long}{ Whether or not the output of the function should contain the entire sets of simulation draws of the the ACME, direct, and total effects. Default is 'TRUE'.}
-\item{dropobs}{ }
+\item{model.m}{ a fitted model object for mediator.  Can be of class 'lm', 'polr', 'glm', 'gam', or 'rq'.} 
+\item{model.y}{ a fitted model object for outcome.  Can be of class 'lm', 'polr', 'glm', 'gam', 'vglm', or 'rq'.} 
+\item{sims}{ number of Monte Carlo draws for nonparametric bootstrap or quasi-Bayesian approximation.} 
+\item{boot}{ if 'FALSE' a quasi-Bayesian approximation is used for confidence interval; if TRUE nonparametric bootstrap will be used.}
+\item{conf.level}{ level of the returned two-sided confidence intervals.  Default is to return
+the 2.5 and 97.5 percentiles of the simulated quantities.} 
+\item{treat}{ a character string indicating the name of treatment variable used in the models.  The treatment can be either binary (integer or a two-valued factor) or continuous (numeric).}
+\item{mediator}{ a character string indicating the name of mediator variable used in the models.}
+\item{control}{ a character string indicating the name of control group indicator. Only relevant if 'model.y' is of class 'gam'. If provided, 'd0', 'z0' and 'n0' are allowed to differ from 'd1', 'z1' and 'n1', respectively.}
+\item{control.value}{ value of the treatment variable in the "control" condition. Only relevant when 'treat' is continuous.  Default is 0.}
+\item{treat.value}{ value of the treatment variable in the "treatment" condition. Only relevant when 'treat' is continuous. Default is 1.}
+\item{long}{ Logical. If 'TRUE', the output contains the entire sets of simulation draws of the the ACME, direct, proportion mediated, and total effects. Default is 'TRUE'.}
+\item{dropobs}{ Logical. If 'TRUE', }
 \item{robustSE}{ A logical value. If 'TRUE', Heteroskedasticisy-consistent standard errors will be used in quasi-Bayesian simulations. Ignored if 'boot' is 'TRUE' or neither 'model.m' nor 'model.y' has a method for \code\link{{vcovHC}} in the \code\link{{sandwich}} package.}
 \item{...}{ Other arguments passed to \code\link{{vcovHC}} in the \code{\link{sandwich}} package: typically the 'type' argument. Ignored if 'robustSE' is 'FALSE'.}
 
