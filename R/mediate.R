@@ -1110,8 +1110,8 @@ plot.process <- function(model) {
 
 
 plot.mediate <- function(x, treatment = NULL,
-                        xlim = NULL, xlab = "", ylim = NULL, ylab = "",
-                        labels = c("ACME","Direct\nEffect","Total\nEffect"), 
+                        xlim = NULL, xlab = "", ylim = NULL,
+                        ylab = c("ACME","Direct\nEffect","Total\nEffect"), 
                         main = NULL, lwd = 1.5, cex = .85,
                         col = "black", ...){
     # Determine which graph to plot
@@ -1121,11 +1121,16 @@ plot.mediate <- function(x, treatment = NULL,
         } else {
             treatment <- 1
         }
+    } else {
+        treatment <- switch(treatment,
+                                control = 0,
+                                treated = 1,
+                                both = c(0,1))
     }
     
     param <- plot.process(x)
     y.axis <- c(length(param$coef.vec.1):.5)
-    y.axis<-y.axis+1
+    y.axis <- y.axis + 1
         # create indicator for y.axis, descending so labels go from top to bottom
     
     # Set xlim
@@ -1145,7 +1150,7 @@ plot.mediate <- function(x, treatment = NULL,
     }
     
     # Plot
-    plot(param$coef.vec.1, y.axis, type = "n", xlab = xlab, ylab = ylab,
+    plot(param$coef.vec.1, y.axis, type = "n", xlab = xlab, ylab = "",
             yaxt = "n", xlim = xlim, ylim = ylim, main = main, ...) 
             # create empty plot with labels
     
@@ -1178,7 +1183,7 @@ plot.mediate <- function(x, treatment = NULL,
                 lwd = lwd, col = col) 
     }
     y.axis.new <- c(3,2,1)
-    axis(2, at = y.axis.new, labels = labels, las = 1, tick = TRUE, ...)
+    axis(2, at = y.axis.new, labels = ylab, las = 1, tick = TRUE, ...)
          # draw y-axis with tick marks, make labels perpendicular to axis and closer to axis
     abline(v = 0, lty = 2)
 }
@@ -1218,8 +1223,8 @@ plot.process.order <- function(model){
 
 
 plot.mediate.order <- function(x, treatment = NULL,
-                        xlim = NULL, xlab = "", ylim = NULL, ylab = "",
-                        labels = c("ACME","Direct\nEffect","Total\nEffect"), 
+                        xlim = NULL, ylim = NULL, xlab = "",
+                        ylab = c("ACME","Direct\nEffect","Total\nEffect"), 
                         main = NULL, lwd = 1.5, cex = .85,
                         col = "black", ...){
     # Determine which graph to plot
@@ -1229,11 +1234,16 @@ plot.mediate.order <- function(x, treatment = NULL,
         } else {
             treatment <- 1
         }
+    } else {
+        treatment <- switch(treatment,
+                                control = 0,
+                                treated = 1,
+                                both = c(0,1))
     }
     
     param <- plot.process.order(x)
     y.axis <- c(ncol(param$coef.vec.1):.5)
-    y.axis < -y.axis + 1
+    y.axis <- y.axis + 1
     # create indicator for y.axis, descending so labels go from top to bottom
     
     # Set xlim
@@ -1253,7 +1263,7 @@ plot.mediate.order <- function(x, treatment = NULL,
     }
     
     # Plot
-    plot(param$coef.vec.1[1,], y.axis, type = "n", xlab = xlab, ylab = ylab,
+    plot(param$coef.vec.1[1,], y.axis, type = "n", xlab = xlab, ylab = "",
             yaxt = "n", xlim = xlim, ylim = ylim, main = main, ...) 
             # create empty plot with labels
     
@@ -1307,7 +1317,7 @@ plot.mediate.order <- function(x, treatment = NULL,
             }
                     
     y.axis.new <- c(3,2,1)
-    axis(2, at = y.axis.new, labels = labels, las = 1, tick = TRUE, ...)
+    axis(2, at = y.axis.new, labels = ylab, las = 1, tick = TRUE, ...)
          # draw y-axis with tick marks, make labels perpendicular to axis and closer to axis
     abline(v = 0, lty = 2)
 }

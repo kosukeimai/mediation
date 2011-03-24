@@ -1,50 +1,37 @@
 \name{summary.mediate} 
 \alias{summary.mediate} 
+\alias{summary.mediate.order} 
 \alias{print.summary.mediate} 
+\alias{print.summary.mediate.order}
 
 \title{Summarizing Output from Mediation Analysis} 
 \description{ 
-Function to report results from mediation analysis. Reported categories are mediation effect, direct effect, total effect, and proportion of total effect mediated. 
-All quantities reported with 95 percent confidence intervals. If the \code{INT = TRUE} option is selected in the mediate function, which allows for interaction between treatment and mediator, then effects are reported separately for the treatment and control groups.
+Function to report results from mediation analysis. Reported categories are mediation effect, direct effect, total effect, and proportion of total effect mediated. All quantities reported with confidence intervals. Effects are reported separately for the treatment and control conditions if the treatment-mediator interaction is allowed in the mediation analysis.
 } 
 \usage{
 
-  \method{summary}{mediate}(object, ...) 
+  \method{summary}{mediate', 'mediate.order}(object, ...)
 
-  \method{print}{summary.mediate}(x, ...)
+  \method{print}{summary.mediate', 'summary.mediate.order}(x, ...)
 
 } 
 
 \arguments{ 
-\item{object}{Output from mediate function.} 
-\item{x}{Output from mediate function.} 
- \item{...}{Additional arguments to be passed.}
+\item{object}{ output from mediate function.} 
+\item{x}{ output from mediate function.} 
+\item{...}{ additional arguments affecting the summary produced.}
 } 
 
-\references{Imai, Kosuke, Luke Keele and Dustin Tingley (2009) A General Approach to Causal Mediation Analysis.
-Imai, Kosuke, Luke Keele and Teppei Yamamoto (2009) Identification, Inference, and Sensitivity Analysis for Causal Mediation Effects.
-Imai, Kosuke, Luke Keele, Dustin Tingley, and Teppei Yamamoto. (2009) "Causal Mediation Analysis Using R" in Advances in Social Science Research Using R, ed. H. D. Vinod New York: Springer. Forthcoming.} 
+\references{Imai, K., Keele, L. and Tingley, D. (2010) A General Approach to Causal Mediation Analysis, Psychological Methods, Vol. 15, No. 4 (December), pp. 309-334.
 
-\author{Luke Keele, Ohio State University, \email{keele.4@osu.edu} , Dustin Tingley, Princeton University, \email{dtingley@princeton.edu}, Teppei Yamamoto, Princeton University, \email{tyamamot@princeton.edu}, Kosuke Imai, Princeton University, \email{kimai@princeton.edu} }
+Imai, K., Keele, L. and Yamamoto, T. (2010) Identification, Inference, and Sensitivity Analysis for Causal Mediation Effects, Statistical Science, Vol. 25, No. 1 (February), pp. 51-71.
+
+Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation Analysis Using R" in Advances in Social Science Research Using R, ed. H. D. Vinod New York: Springer.} 
+
+\author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu}, 
+Teppei Yamamoto, Princeton University, \email{tyamamot@princeton.edu}, 
+Luke Keele, Ohio State University, \email{keele.4@osu.edu}, 
+Kosuke Imai, Princeton University, \email{kimai@princeton.edu} }
  
-\seealso{See also \code{\link{mediate}} }
+\seealso{\code{\link{mediate}}, \code{\link{plot.mediate}}, \code{\link{summary}}.}
 
-\examples{ 
-
-#Example with JOBS II Field experiment
-
-#**For illustration purposes simulations set to low number**
-
-data(jobs)
-
-#########################################
-#continuous mediator and continuous outcome
-#########################################
-
-model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age  + occp + marital + nonwhite + educ + income, data=jobs)
-model.y <- lm(depress2 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=jobs)
-continuous <- mediate(model.m, model.y, sims=10, treat="treat", mediator="job_seek")
-summary(continuous)
-
-
-} 
