@@ -1,4 +1,5 @@
-medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effect.type=c("indirect","direct","both"))
+medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps),
+        effect.type = c("indirect", "direct", "both"))
 {
     effect.type <- match.arg(effect.type)
     if(effect.type == "both"){
@@ -321,7 +322,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
 
         type <- "ct"
         if(effect.type == "indirect"){
-            out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1,
+            out <- list(rho = rho, err.cr.d=err.cr, d0=d0, d1=d1,
                 upper.d0=upper.d0, lower.d0=lower.d0, 
                 upper.d1=upper.d1, lower.d1=lower.d1, 
                 ind.d0=ind.d0, ind.d1=ind.d1, 
@@ -329,8 +330,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
                 R2star.d.thresh=R2star.d.thresh, R2tilde.d.thresh=R2tilde.d.thresh,
                 r.square.y=r.sq.y, r.square.m=r.sq.m,
                 rho.by=rho.by, INT=INT, effect.type=effect.type,
-                tau=NULL, upper.tau=NULL, lower.tau=NULL,
-                nu=NULL, upper.nu=NULL, lower.nu=NULL, type=type)
+                type=type)
         } else if(effect.type == "direct"){
             out <- list(rho = rho, err.cr.z=err.cr.z, z0=z0, z1=z1, 
                 upper.z0=upper.z0, lower.z0=lower.z0,
@@ -340,10 +340,9 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
                 R2star.z.thresh=R2star.z.thresh, R2tilde.z.thresh=R2tilde.z.thresh,
                 r.square.y=r.sq.y, r.square.m=r.sq.m,
                 rho.by=rho.by, INT=INT, effect.type=effect.type,
-                tau=NULL, upper.tau=NULL, lower.tau=NULL, 
-                nu=NULL, upper.nu=NULL, lower.nu=NULL, type=type)
+                type=type)
         } else if (effect.type == "both"){
-            out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1,
+            out <- list(rho = rho, err.cr.d=err.cr, d0=d0, d1=d1,
                 upper.d0=upper.d0, lower.d0=lower.d0, 
                 upper.d1=upper.d1, lower.d1=lower.d1, 
                 ind.d0=ind.d0, ind.d1=ind.d1, 
@@ -356,8 +355,7 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
                 R2star.z.thresh=R2star.z.thresh, R2tilde.z.thresh=R2tilde.z.thresh,
                 r.square.y=r.sq.y, r.square.m=r.sq.m,
                 rho.by=rho.by, INT=INT, effect.type=effect.type,
-                tau=NULL, upper.tau=NULL, lower.tau=NULL,
-                nu=NULL, upper.nu=NULL, lower.nu=NULL, type=type)
+                type=type)
         }
         class(out) <- "medsens"
         out
@@ -524,11 +522,10 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
         out <- list(rho = rho, d0=d0, d1=d1, upper.d0=upper.d0,
         lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0,
         ind.d1=ind.d1, R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
-        R2star.thresh=R2star.thresh, R2tilde.thresh=R2tilde.thresh,
+        R2star.d.thresh=R2star.thresh, R2tilde.d.thresh=R2tilde.thresh,
         r.square.y=r.sq.y, r.square.m=r.sq.m, effect.type=effect.type,
-        rho.by=rho.by, INT=INT, tau=NULL, upper.tau=NULL,
-        lower.tau=NULL, nu=NULL, upper.nu=NULL, lower.nu=NULL,type=type,
-        err.cr=err.cr)
+        rho.by=rho.by, INT=INT, type=type,
+        err.cr.d=err.cr)
         class(out) <- "medsens"
         out
 
@@ -684,20 +681,18 @@ medsens <- function(x, rho.by=.1, sims=1000, eps=sqrt(.Machine$double.eps), effe
         err.cr <- mean(rho12.boot) # Rho_12 estimate
         R2star.thresh <- err.cr^2
         R2tilde.thresh <- err.cr^2*(1-r.sq.m)*(1-r.sq.y)
-        out <- list(rho = rho, err.cr=err.cr, d0=d0, d1=d1, upper.d0=upper.d0,
+        out <- list(rho = rho, err.cr.d=err.cr, d0=d0, d1=d1, upper.d0=upper.d0,
         lower.d0=lower.d0, upper.d1=upper.d1, lower.d1=lower.d1, ind.d0=ind.d0,
         ind.d1=ind.d1, R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
-        R2star.thresh=R2star.thresh, R2tilde.thresh=R2tilde.thresh,
+        R2star.d.thresh=R2star.thresh, R2tilde.d.thresh=R2tilde.thresh,
         r.square.y=r.sq.y, r.square.m=r.sq.m,
         tau=tau, upper.tau=upper.tau, lower.tau=lower.tau, nu=nu, upper.nu=upper.nu,
         lower.nu=lower.nu, INT=INT, rho.by=rho.by, type=type)
         class(out) <- "medsens"
         out
-
+        
     ## END OF CASE 3: Binary Outcome + Continuous Mediator
     }
-
-## END OF SENSITIVITY FUNCTION
 }
 
 
@@ -707,8 +702,12 @@ print.medsens <- function(x, ...){
     invisible(x)
     }
 
+
+
 summary.medsens <- function(object, ...)
     structure(object, class = c("summary.medsens", class(object)))
+
+
 
 print.summary.medsens <- function(x, ...){
     if(x$type=="ct"){
@@ -729,7 +728,7 @@ print.summary.medsens <- function(x, ...){
             cat("\nMediation Sensitivity Analysis for Average Causal Mediation Effect\n")
             cat("\nSensitivity Region\n\n")
             print(tab)
-            cat("\nRho at which ACME = 0:", round(x$err.cr, 4), "\n\n")
+            cat("\nRho at which ACME = 0:", round(x$err.cr.d, 4), "\n\n")
             cat("\nR^2_M*R^2_Y* at which ACME = 0:", round(x$R2star.d.thresh, 4), "\n\n")
             cat("\nR^2_M~R^2_Y~ at which ACME = 0:", round(x$R2tilde.d.thresh, 4), "\n\n")
             invisible(x)
@@ -774,12 +773,12 @@ print.summary.medsens <- function(x, ...){
             cat("\nMediation Sensitivity Analysis: Average Mediation Effect\n")
             cat("\nSensitivity Region: ACME for Control Group\n\n")
             print(tab.d0)
-            cat("\nRho at which Delta_0 = 0:", round(x$err.cr[1], 4), "\n\n")
+            cat("\nRho at which Delta_0 = 0:", round(x$err.cr.d[1], 4), "\n\n")
             cat("\nR^2_M*R^2_Y* at which ACME for Control Group = 0:", round(x$R2star.d.thresh[1], 4), "\n\n")
             cat("\nR^2_M~R^2_Y~ at which ACME for Control Group = 0:", round(x$R2tilde.d.thresh[1], 4), "\n\n")
             cat("\nSensitivity Region: ACME for Treatment Group\n\n")
             print(tab.d1)
-            cat("\nRho at which ACME for Treatment Group = 0:", round(x$err.cr[2], 4), "\n\n")
+            cat("\nRho at which ACME for Treatment Group = 0:", round(x$err.cr.d[2], 4), "\n\n")
             cat("\nR^2_M*R^2_Y* at which ACME for Treatment Group = 0:", round(x$R2star.d.thresh[2], 4), "\n\n")
             cat("\nR^2_M~R^2_Y~ at which ACME for Treatment Group = 0:", round(x$R2tilde.d.thresh[2], 4), "\n\n")
             invisible(x)
@@ -831,9 +830,9 @@ print.summary.medsens <- function(x, ...){
             cat("\nMediation Sensitivity Analysis\n")
             cat("\nSensitivity Region\n\n")
             print(tab)
-            cat("\nRho at which ACME = 0:", round(x$err.cr, 4), "\n\n")
-            cat("\nR^2_M*R^2_Y* at which ACME = 0:", round(x$R2star.thresh, 4), "\n\n")
-            cat("\nR^2_M~R^2_Y~ at which ACME = 0:", round(x$R2tilde.thresh, 4), "\n\n")
+            cat("\nRho at which ACME = 0:", round(x$err.cr.d, 4), "\n\n")
+            cat("\nR^2_M*R^2_Y* at which ACME = 0:", round(x$R2star.d.thresh, 4), "\n\n")
+            cat("\nR^2_M~R^2_Y~ at which ACME = 0:", round(x$R2tilde.d.thresh, 4), "\n\n")
             invisible(x)
         } else {
             tab.d0 <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0, x$R2star.prod, round(x$R2tilde.prod, 4))
@@ -857,14 +856,14 @@ print.summary.medsens <- function(x, ...){
             cat("\nMediation Sensitivity Analysis\n")
             cat("\nSensitivity Region: ACME for Control Group\n\n")
             print(tab.d0)
-            cat("\nRho at which ACME for Control Group = 0:", round(x$err.cr[1], 4), "\n\n")
-            cat("\nR^2_M*R^2_Y* at which Delta_0 = 0:", round(x$R2star.thresh[1], 4), "\n\n")
-            cat("\nR^2_M~R^2_Y~ at which Delta_0 = 0:", round(x$R2tilde.thresh[1], 4), "\n\n")
+            cat("\nRho at which ACME for Control Group = 0:", round(x$err.cr.d[1], 4), "\n\n")
+            cat("\nR^2_M*R^2_Y* at which Delta_0 = 0:", round(x$R2star.d.thresh[1], 4), "\n\n")
+            cat("\nR^2_M~R^2_Y~ at which Delta_0 = 0:", round(x$R2tilde.d.thresh[1], 4), "\n\n")
             cat("\nSensitivity Region: ACME for Treatment Group\n\n")
             print(tab.d1)
-            cat("\nRho at which Delta_1 = 0:", round(x$err.cr[2], 4), "\n\n")
-            cat("\nR^2_M*R^2_Y* at which ACME for Treatment Group = 0:", round(x$R2star.thresh[2], 4), "\n\n")
-            cat("\nR^2_M~R^2_Y~ at which ACME for Treatment Group = 0:", round(x$R2tilde.thresh[2], 4), "\n\n")
+            cat("\nRho at which Delta_1 = 0:", round(x$err.cr.d[2], 4), "\n\n")
+            cat("\nR^2_M*R^2_Y* at which ACME for Treatment Group = 0:", round(x$R2star.d.thresh[2], 4), "\n\n")
+            cat("\nR^2_M~R^2_Y~ at which ACME for Treatment Group = 0:", round(x$R2tilde.d.thresh[2], 4), "\n\n")
             invisible(x)
             }
     } else if(x$type=="bo") {
@@ -881,9 +880,9 @@ print.summary.medsens <- function(x, ...){
             cat("\nMediation Sensitivity Analysis\n")
             cat("\nSensitivity Region\n\n")
             print(tab)
-            cat("\nRho at which Delta = 0:", round(x$err.cr, 4), "\n\n")
-            cat("\nR^2_M*R^2_Y* at which ACME = 0:", round(x$R2star.thresh, 4), "\n\n")
-            cat("\nR^2_M~R^2_Y~ at which ACME = 0:", round(x$R2tilde.thresh, 4), "\n\n")
+            cat("\nRho at which Delta = 0:", round(x$err.cr.d, 4), "\n\n")
+            cat("\nR^2_M*R^2_Y* at which ACME = 0:", round(x$R2star.d.thresh, 4), "\n\n")
+            cat("\nR^2_M~R^2_Y~ at which ACME = 0:", round(x$R2tilde.d.thresh, 4), "\n\n")
             invisible(x)
         } else {
             tab.d0 <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0, x$R2star.prod, round(x$R2tilde.prod, 4))
@@ -907,21 +906,20 @@ print.summary.medsens <- function(x, ...){
             cat("\nMediation Sensitivity Analysis\n")
             cat("\nSensitivity Region: ACME for Control Group\n\n")
             print(tab.d0)
-            cat("\nRho at which ACME for Control Group = 0:", round(x$err.cr[1], 4), "\n\n")
-            cat("\nR^2_M*R^2_Y* at which ACME for Control Group = 0:", round(x$R2star.thresh[1], 4), "\n\n")
-            cat("\nR^2_M~R^2_Y~ at which ACME for Control Group = 0:", round(x$R2tilde.thresh[1], 4), "\n\n")
+            cat("\nRho at which ACME for Control Group = 0:", round(x$err.cr.d[1], 4), "\n\n")
+            cat("\nR^2_M*R^2_Y* at which ACME for Control Group = 0:", round(x$R2star.d.thresh[1], 4), "\n\n")
+            cat("\nR^2_M~R^2_Y~ at which ACME for Control Group = 0:", round(x$R2tilde.d.thresh[1], 4), "\n\n")
             cat("\nSensitivity Region: ACME for Treatment Group\n\n")
             print(tab.d1)
-            cat("\nRho at which ACME for Treatment Group = 0:", round(x$err.cr[2], 4), "\n\n")
-            cat("\nR^2_M*R^2_Y* at which ACME for Treatment Group  = 0:", round(x$R2star.thresh[2], 4), "\n\n")
-            cat("\nR^2_M~R^2_Y~ at which ACME for Treatment Group  = 0:", round(x$R2tilde.thresh[2], 4), "\n\n")
+            cat("\nRho at which ACME for Treatment Group = 0:", round(x$err.cr.d[2], 4), "\n\n")
+            cat("\nR^2_M*R^2_Y* at which ACME for Treatment Group  = 0:", round(x$R2star.d.thresh[2], 4), "\n\n")
+            cat("\nR^2_M~R^2_Y~ at which ACME for Treatment Group  = 0:", round(x$R2tilde.d.thresh[2], 4), "\n\n")
             invisible(x)
             }
      }
 }
 
 
-### Plot Function ###
 
 plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE, smooth.effect=FALSE, smooth.ci=FALSE, levels=NULL, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL, lwd=par("lwd"), ...){
     etype.vec <- x$effect.type
