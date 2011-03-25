@@ -1,8 +1,8 @@
 \name{mediations} 
 \alias{mediations} 
-\title{Causal Mediation Analysis for Multiple Treatment/Mediator/Outcome Combinations} 
+\title{Causal Mediation Analysis for Multiple Treatment/Mediator Combinations} 
 \description{ 
-'mediations' can be used to process a set of treatment/mediator/outcome combinations through the \code{\link{mediate}} function to produce a series of causal mediation analysis results.} 
+'mediations' can be used to process a set of treatment/mediator combinations through the \code{\link{mediate}} function to produce a series of causal mediation analysis results.} 
 \usage{
 
 mediations(datasets, treatment, mediators, outcome, 
@@ -24,8 +24,8 @@ Individual elements of the output list may be passed through \code{\link[=summar
 \item{outcome}{Single outcome variable to estimate all treatment/mediation combinations for.}
 \item{covariates}{Set of pre-treatment covariates to be included in each model. Default is NULL but users typically should have pre-treatment variables to control for to the make the sequential ignorability assumption more plausible.}
 \item{family}{Two element list specifying the link function to be used in the mediator and outcome models, respectively. Currently only supports "gaussian", "binomial" (for a probit link), and "quantile" (for quantile regression, see tau) for the mediator. For the outcome equation tobit ("tobit") is also available in addition to the mediator model options.}
-\item{tau_m}{Specifies the quantile to be used for a quantile regression for the mediator model.}
-\item{tau_y}{Specifies the quantile to be used for a quantile regression for the outcome model.}
+\item{tau.m}{Specifies the quantile to be used for a quantile regression for the mediator model.}
+\item{tau.y}{Specifies the quantile to be used for a quantile regression for the outcome model.}
 \item{LowerY}{Lower bound for tobit model.}
 \item{UpperY}{Upper bound for tobit model.}
 \item{interaction}{Whether the treatment and mediator variables should be interacted.}
