@@ -1,26 +1,24 @@
 \name{mediations} 
 \alias{mediations} 
-\title{Processing Multiple Treatment/Mediator/Outcome Combinations for Mediation Analysis} 
+\title{Causal Mediation Analysis for Multiple Treatment/Mediator/Outcome Combinations} 
 \description{ 
-Processes a set of treatment variable/mediator combinations through the mediate function for a range models handeled by mediate.} 
+'mediations' can be used to process a set of treatment/mediator/outcome combinations through the \code{\link{mediate}} function to produce a series of causal mediation analysis results.} 
 \usage{
 
 mediations(datasets, treatment, mediators, outcome, 
-                    covariates=NULL, family=c("gaussian", "gaussian"),
-                    tau_m=.5,tau_y=.5, LowerY=NULL, UpperY=NULL, interaction=FALSE,
-                    conf.level=.95, sims=500, boot=FALSE) {
-
-} 
+        covariates=NULL, family=c("gaussian", "gaussian"),
+        tau.m=.5,tau.y=.5, LowerY=NULL, UpperY=NULL, interaction=FALSE,
+        conf.level=.95, sims=500, boot=FALSE, ...)
 
 
 
 \details{This function processes multiple sets of data/treatment variables/mediators to produce a collected set of output ready for analysis or graphing. For example, if you have 3 different treatment variables and a control condition, as well as 4 different mediators that you want to see if they mediate the effect of the different treatment conditions, this function estimates all of the combinations instead of separate lines of code being written for each one.
-Individual elements of the output may be passed through plot.mediate for graphing. Or the entire output may be passed through plot.mediations to inspect all results. 
+Individual elements of the output list may be passed through \code{\link[=summary.mediate]{summary}} and \code{\link[=plot.mediate]{plot}} for tabular and graphical summaries of the results. Alternatively, the entire output may be directly passed to \code{\link[=summary.mediations]{summary}} or \code{\link[plot.mediations]{plot}} to inspect all results. 
 }
 
 
 \value{
-\item{datasets}{List of dataset names. Each dataset has a separate treatment/control contrast. Names of datasets must begin the the exact name of the treatment variable (see example below).}
+\item{datasets}{ a list of data frames. Each dataset has a separate treatment/control contrast. Names of datasets must begin the the exact name of the treatment variable (see example below).}
 \item{treatment}{Vector of treatment names.}
 \item{mediators}{Vector of mediators names to be used with each treatment variable.}
 \item{outcome}{Single outcome variable to estimate all treatment/mediation combinations for.}
@@ -38,13 +36,9 @@ Individual elements of the output may be passed through plot.mediate for graphin
 
 }
 
-\references{Imai, Kosuke, Luke Keele and Dustin Tingley (2010) A General Approach to Causal Mediation Analysis, Psychological Methods, Vol. 15, No. 4 (December), pp. 309-334.
-Imai, Kosuke, Luke Keele and Teppei Yamamoto (2010) Identification, Inference, and Sensitivity Analysis for Causal Mediation Effects, Statistical Science, Vol. 25, No. 1 (February), pp. 51-71.
-Imai, Kosuke, Luke Keele, Dustin Tingley, and Teppei Yamamoto. (2009) "Causal Mediation Analysis Using R" in Advances in Social Science Research Using R, ed. H. D. Vinod New York: Springer. Forthcoming.} 
-
 \author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu} }
  
-\seealso{See also \code{\link{mediate}} and \code{\link{plot.mediate}} }
+\seealso{\code{\link{mediate}}, \code{link{summary.mediations}}, \code{\link{plot.mediations}} }
 
 \examples{ 
 #Hypothetical example

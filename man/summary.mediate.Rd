@@ -18,7 +18,7 @@ Function to report results from mediation analysis. Reported categories are medi
 
 \arguments{ 
 \item{object}{ output from mediate function.} 
-\item{x}{ output from mediate function.} 
+\item{x}{ output from summary.mediate function.} 
 \item{...}{ additional arguments affecting the summary produced.}
 } 
 

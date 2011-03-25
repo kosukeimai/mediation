@@ -29,13 +29,9 @@ Plots results from mediate function. Y axis lists indirect, direct, and total ef
 
 }
 
-\references{Imai, Kosuke, Luke Keele and Dustin Tingley (2010) A General Approach to Causal Mediation Analysis, Psychological Methods, Vol. 15, No. 4 (December), pp. 309-334.
-Imai, Kosuke, Luke Keele and Teppei Yamamoto (2010) Identification, Inference, and Sensitivity Analysis for Causal Mediation Effects, Statistical Science, Vol. 25, No. 1 (February), pp. 51-71.
-Imai, Kosuke, Luke Keele, Dustin Tingley, and Teppei Yamamoto. (2009) "Causal Mediation Analysis Using R" in Advances in Social Science Research Using R, ed. H. D. Vinod New York: Springer. Forthcoming.} 
-
 \author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu} }
  
-\seealso{See also \code{\link{mediate}} }
+\seealso{\code{\link{mediations}} }
 
 \examples{ 
 #Example with JOBS II Field experiment

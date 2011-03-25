@@ -96,9 +96,9 @@ Kosuke Imai, Princeton University, \email{kimai@princeton.edu} }
 \seealso{\code{\link{medsens}}, \code{\link{plot.mediate}}, \code{\link{summary.mediate}}, \code{\link{mediations}}, \code{\link{vcovHC}}}
 
 \examples{ 
-# Examples with JOBS II Field experiment
+# Examples with JOBS II Field Experiment
 
-# **For illustration purposes small number of simulations used**
+# **For illustration purposes a small number of simulations are used**
 
 data(jobs)
 

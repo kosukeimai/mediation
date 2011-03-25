@@ -21,11 +21,10 @@ medsens(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps),
 
 \details{This is the workhorse function for sensitivity analyses for average causal mediation effects. The sensitivity analysis can be used to assess the robustness of the findings from \code{mediate} to the violation of sequantial ignorability, the crucial identification assumption necessary for the estimates to be valid. The analysis proceeds by quantifying the degree of sequantial ignorability violation as the correlation between the error terms of the mediator and outcome models, and then calculating the true values of the average causal mediation effect for given values of this sensitivity parameter, rho. The original findings are deemed sensitive if the true effects are found to vary widely as function of rho.
 
-The sensitivity analysis is only implemented for the following three model combinations: linear mediator and outcome models, binary probit mediator and linear outcome models, and linear mediator and binary probit outcome models.  An error is returned if the 'mediate' object in 'x' is based on other model combinations.  As of version 3.0, the sensitivity analysis can also be conducted with respect to the average direct effect by setting 'effect.type' to "direct" (or "both" if results for the average causal mediation effect are also desired) when the mediator and outcome models are both linear.
+The sensitivity analysis is only implemented for the following three model combinations: linear mediator and outcome models (both of class 'lm'), binary probit mediator (fitted via 'glm' with family "binomial" and link "probit") and linear outcome models, and linear mediator and binary probit outcome models.  An error is returned if the 'mediate' object in 'x' is based on other model combinations.  As of version 3.0, the sensitivity analysis can also be conducted with respect to the average direct effect by setting 'effect.type' to "direct" (or "both" if results for the average causal mediation effect are also desired) when the mediator and outcome models are both linear.
 
-Users should note that computation time is several minutes for these functions. Setting rho.by to smaller numbers significantly increases computational time, as does increasing eps or the number of simulations.
+Users should note that computation can take significant time for \code{medsens}. Setting 'rho.by' to a larger number significantly decreases computational time, as does decreasing 'eps' (for the linear-linear case) or the number of simulations 'sims' (for the binary-linear and linear-binary cases).
 
-Function to perform sensitivity analysis on mediation effect for violations of sequential ignorability assumption. This allows for a correlation between the error terms of the outcome model and the mediator model. Sensitivity analysis is possible with 1) continuous mediator and continuous outcome, 2) binary outcome and continuous mediator, and 3) continuous outcome and binary mediator. Output from the function can be passed through summary or plot functions which display estimated mediation effects for given values of rho.
 }
 
 
@@ -43,10 +42,10 @@ Function to perform sensitivity analysis on mediation effect for violations of s
 \item{rho.by}{a numeric value indicating the increment of rho used.}
 \item{err.cr.d, err.cr.z}{the values of rho with which the average causal mediation and direct effects are zero.  Vectors of length two if 'INT' is 'TRUE'; numeric values otherwise.}
 \item{ind.d0, ind.d1, ind.z0, ind.z1}{vectors of 0s/1s, indicating whether the confidence intervals of d0, d1, z0 and z1 do not cover zero for each value of rho.}
-\item{R2star.prod}{a numeric vector containing the values of the products of the two "R square stars", representing the proportions of residual variance in the mediator and outcome explained by the hypothesized unobserved confounder. The values correspond to those of rho.}
-\item{R2tilda.prod}{a numeric vector containing the values of the products of the two "R square tildes", representing the proportions of total variance in the mediator and outcome explained by the hypothesized unobserved confounder. The values correspond to those of rho.}
-\item{R2star.d.thresh, R2star.z.thresh}{the values of the product of "R square star" for which the average causal mediation and direct effects are zero, respectively.}
-\item{R2tilda.d.thresh, R2tilda.z.thresh}{the values of the product of "R square tilde" for which the average causal mediation and direct effects are zero, respectively.}
+\item{R2star.prod}{a numeric vector containing the values of the products of the two "R square stars", representing the proportions of residual variance in the mediator and outcome explained by the hypothesized unobserved confounder. The values correspond to those of rho. See \code{\link{plot.medsens}} for details.}
+\item{R2tilde.prod}{a numeric vector containing the values of the products of the two "R square tildes", representing the proportions of total variance in the mediator and outcome explained by the hypothesized unobserved confounder. The values correspond to those of rho. See \code{\link{plot.medsens}} for details.}
+\item{R2star.d.thresh, R2star.z.thresh}{the values of the product of "R square stars" for which the average causal mediation and direct effects are zero, respectively.}
+\item{R2tilde.d.thresh, R2tilde.z.thresh}{the values of the product of "R square tildes" for which the average causal mediation and direct effects are zero, respectively.}
 \item{r.square.y, r.square.m}{the usual R square statistics for the outcome and mediator models.}
 \item{INT}{a logical value indicating whether interaction between the treatment and mediator is allowed in the original mediate object.}
 \item{effect.type}{ the 'effect.type' argument used.}
@@ -70,9 +69,9 @@ Kosuke Imai, Princeton University, \email{kimai@princeton.edu} }
 
 \examples{ 
 
-#Example with JOBS II Field experiment
+# Examples with JOBS II Field Experiment
 
-#**For illustration purposes simulations set to low number**
+# **For illustration purposes a small number of simulations are used**
 
 data(jobs)
 
@@ -89,11 +88,11 @@ sens.cont <- medsens(med.cont, rho.by=.1, eps=.01, effect.type="both")
 # Use summary function to display results
 summary(sens.cont)
 
-# Plot true ACMEs and ADEs as function of rho
+# Plot true ACMEs and ADEs as functions of rho
 par.orig <- par(mfrow = c(3,2))
 plot(sens.cont, main="JOBS", ylim=c(-.2,.2))
 
-# Plot true ACMEs as function of "R square tildes"
+# Plot true ACMEs and ADEs as functions of "R square tildes"
 plot(sens.cont, sens.par="R2", r.type=2, sign.prod=1)
 par(par.orig)
-} 
+}

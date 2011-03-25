@@ -18,16 +18,12 @@ All quantities reported with confidence intervals specified in mediations. Print
 \arguments{ 
 \item{object}{Output from mediations function.} 
 \item{x}{Output from mediations function.} 
- \item{...}{Additional arguments to be passed.}
-} 
-
-\references{Imai, Kosuke, Luke Keele and Dustin Tingley (2009) A General Approach to Causal Mediation Analysis.
-Imai, Kosuke, Luke Keele and Teppei Yamamoto (2009) Identification, Inference, and Sensitivity Analysis for Causal Mediation Effects.
-Imai, Kosuke, Luke Keele, Dustin Tingley, and Teppei Yamamoto. (2009) "Causal Mediation Analysis Using R" in Advances in Social Science Research Using R, ed. H. D. Vinod New York: Springer. Forthcoming.} 
+\item{...}{Additional arguments to be passed.}
+}
 
 \author{Dustin Tingley, Princeton University, \email{dtingley@princeton.edu}}
  
-\seealso{See also \code{\link{mediate}} and \code{\link{mediations}} }
+\seealso{\code{\link{mediations}} }
 
 \examples{ 
 

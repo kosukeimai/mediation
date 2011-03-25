@@ -1,10 +1,10 @@
 \name{summary.medsens} 
 \alias{summary.medsens}
-\alias{print.summary.medsens} 
-\title{Summarizing Results from Sensitivity Analysis of Mediation Effects} 
+\alias{print.summary.medsens}
+
+\title{Summarizing Results from Sensitivity Analysis for Causal Mediation Effects} 
 \description{ 
-Function to perform sensitivity analysis on mediation effect for violations of sequential ignorability assumption. The procedure estimates the mediation effect allowing for a correlation between the error terms of the outcome model and the mediator model. The extent of this correlation is expressed in terms of the parameter rho. Sensitivity analysis is possible with continuous mediator and continuous outcome and binary outcome and continuous mediator.
-Future versions of the function will also permit sensitivity analysis for a continuous outcome and binary mediator. Output from the function can be passed through summary or plot functions which display estimated mediation effects for given values of rho.
+Functions to report results from the sensitivity analysis for causal mediation effects via \code{\link{medsens}} in a tabular form.
 } 
 \usage{
 
@@ -16,48 +16,21 @@ Future versions of the function will also permit sensitivity analysis for a cont
 } 
 
 \arguments{ 
-\item{x}{Output from medsens function.}
-\item{object}{Output from medsens function.}
-\item{...}{Additional arguments to be passed.}
+\item{object}{ output from medsens function.}
+\item{x}{ output from summary.medsens function.} 
+\item{...}{ additional arguments affecting the summary produced.}
 } 
 
-\references{Imai, Kosuke, Luke Keele and Dustin Tingley (2009) A General Approach to Causal Mediation Analysis.
-Imai, Kosuke, Luke Keele and Teppei Yamamoto (2009) Identification, Inference, and Sensitivity Analysis for Causal Mediation Effects.
-Imai, Kosuke, Luke Keele, Dustin Tingley, and Teppei Yamamoto. (2009) "Causal Mediation Analysis Using R" in Advances in Social Science Research Using R, ed. H. D. Vinod New York: Springer. Forthcoming.} 
+\references{Imai, K., Keele, L. and Tingley, D. (2010) A General Approach to Causal Mediation Analysis, Psychological Methods, Vol. 15, No. 4 (December), pp. 309-334.
 
-\author{Luke Keele, Ohio State University, \email{keele.4@osu.edu} , Dustin Tingley, Princeton University, \email{dtingley@princeton.edu}, Teppei Yamamoto, Princeton University, \email{tyamamot@princeton.edu}, Kosuke Imai, Princeton University, \email{kimai@princeton.edu} }
+Imai, K., Keele, L. and Yamamoto, T. (2010) Identification, Inference, and Sensitivity Analysis for Causal Mediation Effects, Statistical Science, Vol. 25, No. 1 (February), pp. 51-71.
+
+Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation Analysis Using R" in Advances in Social Science Research Using R, ed. H. D. Vinod New York: Springer.} 
+
+\author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu}, 
+Teppei Yamamoto, Princeton University, \email{tyamamot@princeton.edu}, 
+Luke Keele, Ohio State University, \email{keele.4@osu.edu}, 
+Kosuke Imai, Princeton University, \email{kimai@princeton.edu} }
  
-\seealso{See also \code{\link{medsens}} }
+\seealso{\code{\link{medsens}}, \code{\link{summary}}.}
 
-\examples{ 
-
-\dontrun{
-#########################################
-#Continuous mediator and continuous outcome
-#########################################
-
-#Fit parametric models
-model.m <- lm(job_seek ~ treat + depress1, data=jobs)
-model.y <- lm(depress2 ~ treat + job_seek + depress1, data=jobs)
-
-#Pass model objects through mediate function
-med.cont <- mediate(model.m, model.y, treat="treat", mediator="job_seek", sims=1000)
-
-#Pass mediate output through medsens function
-sens.cont <- medsens(med.cont, sims=1000, rho.by=.1)
-
-#Use summary function to display values of rho where 95% confidence interval overlaps with 0
-summary(sens.cont)
-
-#########################################
-#binary outcome and continuous mediator
-#########################################
-
-model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, data=jobs)
-model.y <- glm(work1 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income, family=binomial(link="probit"), data=jobs)
-med.bin <- mediate(model.m, model.y, treat="treat", mediator="job_seek", sims=1000)
-sens.bin <- medsens(med.bin, sims=1000, rho.by=.1)
-summary(sens.bin)
-
-} 
-}
