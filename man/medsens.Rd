@@ -76,11 +76,11 @@ Kosuke Imai, Princeton University, \email{kimai@princeton.edu} }
 data(jobs)
 
 # Fit parametric models
-model.m <- lm(job_seek ~ treat + depress1, data=jobs)
-model.y <- lm(depress2 ~ treat + job_seek + depress1, data=jobs)
+b <- lm(job_seek ~ treat + econ_hard + sex + age, data=jobs)
+c <- lm(depress2 ~ treat + job_seek + econ_hard + sex + age, data=jobs)
 
 # Pass model objects through mediate function
-med.cont <- mediate(model.m, model.y, treat="treat", mediator="job_seek", sims=10)
+med.cont <- mediate(b, c, treat="treat", mediator="job_seek", sims=50)
 
 # Pass mediate output through medsens function
 sens.cont <- medsens(med.cont, rho.by=.1, eps=.01, effect.type="both")
@@ -89,10 +89,10 @@ sens.cont <- medsens(med.cont, rho.by=.1, eps=.01, effect.type="both")
 summary(sens.cont)
 
 # Plot true ACMEs and ADEs as functions of rho
-par.orig <- par(mfrow = c(3,2))
+par.orig <- par(mfrow = c(2,2))
 plot(sens.cont, main="JOBS", ylim=c(-.2,.2))
 
 # Plot true ACMEs and ADEs as functions of "R square tildes"
-plot(sens.cont, sens.par="R2", r.type=2, sign.prod=1)
+plot(sens.cont, sens.par="R2", r.type="total", sign.prod="positive")
 par(par.orig)
 }

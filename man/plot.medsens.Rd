@@ -1,75 +1,58 @@
 \name{plot.medsens} 
 \alias{plot.medsens} 
 
-\title{Plotting Results from Sensitivity Analysis of Mediation Effects} 
+\title{Plotting Results from Sensitivity Analysis for Causal Mediation Effects} 
 \description{ 
-Plots results from medsens function. Y axis plots mediation effect and x-axis plots the error correlation rho. Standard options for plot function available.
+This function is used to plot results from the 'medsens' function. Causal average mediation effects (as well as average direct effects and proportions mediated for selected models) can be plotted against two alternative sensitivity parameters.
 } 
 \usage{
 
-  \method{plot}{medsens}(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE, smooth.effect=FALSE, smooth.ci=FALSE, levels=NULL, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL, ...)
-
- # \method{print}{plot.medsens}(z)
+  \method{plot}{medsens}(x, sens.par = c("rho", "R2"), 
+        r.type = c("residual", "total"), sign.prod = c("positive", "negative"),
+        pr.plot = FALSE, smooth.effect = FALSE, smooth.ci = FALSE, 
+        ask = prod(par("mfcol")) < nplots, levels = NULL, 
+        xlab = NULL, ylab = NULL, xlim = NULL, ylim = NULL, 
+        main = NULL, lwd = par("lwd"), ...)
 
 } 
 
 \arguments{ 
-\item{x}{output from \code{medsens} function.} 
-\item{sens.par}{type of sensitivity interpretation to be plotted. Default plots mediation effects in terms of sensitivity parameter rho. If "R2" is specified then in terms of variances explained by an unobserved pretreatment confounder.}
-\item{r.type}{type of R square interpretation to be used. If 1 is specified then proportion of previously unexplained variance is used. If 2 is specified then proportion of total unexplained variance is used. Only relevant if sens.par is set to "R2".}
-\item{sign.prod}{whether the omitted variable affects the mediator and outcome variable in the same direction (1) or different directions (-1). Only relevant if sens.par is set to "R2".}
-\item{pr.plot}{if pr.plot=TRUE then proportion mediated will be plotted.}
-\item{smooth.effect}{whether the estimated mediation effects are smoothed via a lowess smoother before being plotted.}
-\item{smooth.ci}{whether the confidence bands are smoothed via a lowess smoother before being plotted.}
-\item{levels}{vector of levels at which to draw contour lines. Only relevant if sens.par is set to "R2".}
-\item{xlab}{x-axis label.} 
-\item{ylab}{y-axis label.} 
-\item{xlim}{range for x-axis.} 
-\item{ylim}{range for y-axis.} 
-\item{main}{main title for graph.}
-\item{...}{additional arguments to be passed.} 
+\item{x}{ 'medsens' object, typically output from \code{medsens}.} 
+\item{sens.par}{ a character string indicating the sensitivity parameter to be used. Default plots effects as functions of "rho". See Details.}
+\item{r.type}{ type of the R square parameter to be used in "R2" plots. If "residual", effects are plotted against the proportions of the residual variances that are explained by the unobserved confounder.  If "total", the proportions of the total variances are used as sensitivity parameters.  Only relevant if 'sens.par' is "R2".}
+\item{sign.prod}{ a value indicating the direction of hypothesized confounding in the sensitivity analysis. If "positive", the confounder is assumed to affect the mediator and outcome variable in the same direction; if "negative" the effects are assumed to be in opposite directions.  Only relevant if sens.par is set to "R2".}
+\item{pr.plot}{ a logical value. If 'TRUE', the "proportions mediated" will be plotted instead of the average causal mediation effects or direct effects.  Currently only available if the object 'medsens' is based on the linear mediator and binary probit outcome models. Default is 'FALSE'.}
+\item{smooth.effect}{ a logical value indicating whether the estimated mediation effects are smoothed via \code{\link{lowess}} before being plotted.}
+\item{smooth.ci}{ a logical value indicating whether the confidence bands are smoothed via \code{\link{lowess}} before being plotted.}
+\item{ask}{ a logical value. If 'TRUE', the user is asked for input before a new figure is plotted.  Default is to ask only if the number of plots on current screen is fewer than necessary.}
+\item{levels}{ vector of levels at which to draw contour lines. Only relevant if 'sens.par' is set to "R2". If 'NULL', default values in \code{\link{contour.default}} are used.}
+\item{xlab}{ label for the x axis. Default labels are used if 'NULL'.} 
+\item{ylab}{ label for the y axis. Default labels are used if 'NULL'.} 
+\item{xlim}{ limits of the x axis. If 'NULL' default values are used.} 
+\item{ylim}{ limits of the y axis. If 'NULL' default values are used.} 
+\item{main}{ main title for the plot. If 'NULL', default titles are used.}
+\item{lwd}{ width of the lines used in graphs.}
+\item{...}{ additional arguments to be passed to plotting functions.} 
 } 
 
-\section{Warning}{The smooth.effect and smooth.ci options should be used with caution since the smoothing could affect substantive implications of the graphical analysis in a significant way.}
+\details{The sensitivity analysis for causal mediation effects can be conducted in terms of two alternative sensitivity parameters, which both quantify the degree of violation of the sequential ignorability assumption.
 
-\references{Imai, Kosuke, Luke Keele and Dustin Tingley (2009) A General Approach to Causal Mediation Analysis.
-Imai, Kosuke, Luke Keele and Teppei Yamamoto (2009) Identification, Inference, and Sensitivity Analysis for Causal Mediation Effects.
-Imai, Kosuke, Luke Keele, Dustin Tingley, and Teppei Yamamoto. (2009) "Causal Mediation Analysis Using R" in Advances in Social Science Research Using R, ed. H. D. Vinod New York: Springer. Forthcoming.} 
 
-\author{Luke Keele, Ohio State University, \email{keele.4@osu.edu} , Dustin Tingley, Princeton University, \email{dtingley@princeton.edu}, Teppei Yamamoto, Princeton University, \email{tyamamot@princeton.edu}, Kosuke Imai, Princeton University, \email{kimai@princeton.edu} }
- 
-\seealso{See also \code{\link{medsens}} }
-
-\examples{ 
-
-#Example with JOBS II Field experiment
-
-data(jobs)
-
-\dontrun{
-#########################################
-#Continuous mediator and continuous outcome
-#########################################
-
-#Fit parametric models
-model.m <- lm(job_seek ~ treat + depress1, data=jobs)
-model.y <- lm(depress2 ~ treat + job_seek + depress1, data=jobs)
-
-#Pass model objects through mediate function
-med.cont <- mediate(model.m, model.y, treat="treat", mediator="job_seek", sims=1000)
-
-#Pass mediate output through medsens function
-sens.cont <- medsens(med.cont, sims=1000, rho.by=.1)
-
-#Use summary function to display values of rho where 95% confidence interval overlaps with 0
-summary(sens.cont)
-
-#Plot mediation effect and 95% CI's for each value of rho
-plot(sens.cont, main="JOBS", ylim=c(-.2,.2))
-
-#Plot sensitivity analysis using R^2 method. See plot.medsens for additional detail
-plot(sens.cont, sens.par="R2", r.type=2, sign.prod=1)
 }
 
+\section{Warning}{The 'smooth.effect' and 'smooth.ci' options should be used with caution since the smoothing could affect substantive implications of the graphical analysis in a significant way.}
 
-} 
+\references{Imai, K., Keele, L. and Tingley, D. (2010) A General Approach to Causal Mediation Analysis, Psychological Methods, Vol. 15, No. 4 (December), pp. 309-334.
+
+Imai, K., Keele, L. and Yamamoto, T. (2010) Identification, Inference, and Sensitivity Analysis for Causal Mediation Effects, Statistical Science, Vol. 25, No. 1 (February), pp. 51-71.
+
+Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation Analysis Using R" in Advances in Social Science Research Using R, ed. H. D. Vinod New York: Springer.} 
+
+\author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu}, 
+Teppei Yamamoto, Princeton University, \email{tyamamot@princeton.edu}, 
+Jaquilyn Waddell-Boie, Princeton University, \email{jwaddell@princeton.edu},
+Luke Keele, Ohio State University, \email{keele.4@osu.edu}, 
+Kosuke Imai, Princeton University, \email{kimai@princeton.edu} }
+ 
+\seealso{\code{\link{medsens}}, \code{\link{plot}}, \code{\link{contour}}.}
+

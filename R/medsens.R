@@ -4,7 +4,7 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
     effect.type <- match.arg(effect.type)
     if(effect.type == "both"){
         etype.vec <- c("indirect", "direct")
-    } else{
+    } else {
         etype.vec <- effect.type
     }
     
@@ -39,7 +39,7 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         z1.var <- matrix(NA, length(rho), 1)
 
         y.t.data <- model.frame(model.y)
-        if(is.factor(y.t.data[,paste(treat)])==TRUE){
+        if(is.factor(y.t.data[,paste(treat)])){
             cat.c <- levels(y.t.data[,treat])[1]
             cat.t <- levels(y.t.data[,treat])[2]
             T.cat <- paste(treat,cat.t, sep="")
@@ -377,7 +377,7 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
 
         y.t.data <- model.frame(model.y)
         Y <- colnames(y.t.data)[1]
-        if(is.factor(y.t.data[,treat])==TRUE){
+        if(is.factor(y.t.data[,treat])){
             cat.c <- levels(y.t.data[,treat])[1]
             cat.t <- levels(y.t.data[,treat])[2]
             T.out <- paste(treat,cat.t, sep="")
@@ -387,7 +387,7 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
             T.out <- paste(treat,cat.t, sep="")
             }
 
-        if(is.factor(y.t.data[,mediator])==TRUE){
+        if(is.factor(y.t.data[,mediator])){
             cat.m0 <- levels(y.t.data[,mediator])[1]
             cat.m1 <- levels(y.t.data[,mediator])[2]
             M.out <- paste(mediator,cat.m1, sep="")
@@ -524,7 +524,7 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         ind.d1=ind.d1, R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
         R2star.d.thresh=R2star.thresh, R2tilde.d.thresh=R2tilde.thresh,
         r.square.y=r.sq.y, r.square.m=r.sq.m, effect.type=effect.type,
-        rho.by=rho.by, INT=INT, type=type,
+        rho.by=rho.by, INT=INT, effect.type = effect.type, type=type,
         err.cr.d=err.cr)
         class(out) <- "medsens"
         out
@@ -551,7 +551,7 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
 
         y.t.data <- model.frame(model.y)
         Y <- colnames(y.t.data)[1]
-        if(is.factor(y.t.data[,treat])==TRUE){
+        if(is.factor(y.t.data[,treat])){
             cat.c <- levels(y.t.data[,treat])[1]
             cat.t <- levels(y.t.data[,treat])[2]
             T.out <- paste(treat,cat.t, sep="")
@@ -561,7 +561,7 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
             T.out <- paste(treat,cat.t, sep="")
             }
 
-        if(is.factor(y.t.data[,mediator])==TRUE){
+        if(is.factor(y.t.data[,mediator])){
             cat.m0 <- levels(y.t.data[,mediator])[1]
             cat.m1 <- levels(y.t.data[,mediator])[2]
             M.out <- paste(mediator,cat.m1, sep="")
@@ -582,7 +582,7 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         m.k <- length(model.m$coef)
         Mmodel.var.cov <- vcov(model.m)
         Mmodel.coef.boot <- mvrnorm(sims, mu=Mmodel.coef, Sigma=Mmodel.var.cov)
-        if(is.factor(y.t.data[,treat])==TRUE){
+        if(is.factor(y.t.data[,treat])){
          beta2.boot <- Mmodel.coef.boot[,T.out]
             } else {
           beta2.boot <- Mmodel.coef.boot[,treat]
@@ -619,10 +619,11 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         d0 <- d1 <- rep(NA, length(rho))
         upper.d0 <- upper.d1 <- lower.d0 <- lower.d1 <- rep(NA, length(rho))
         ind.d0 <- ind.d1 <- rep(NA, length(rho))
-        tau <- nu <- rep(NA, length(rho))
-        upper.tau <- upper.nu <- lower.tau <- lower.nu <- rep(NA, length(rho))
+        tau <- nu0 <- nu1 <- rep(NA, length(rho))
+        upper.tau <- upper.nu0 <- upper.nu1 <- rep(NA, length(rho))
+        lower.tau <- lower.nu0 <- lower.nu1 <- rep(NA, length(rho))
         d0.boot <- d1.boot <- rep(NA, sims)
-        tau.boot <- nu.boot <- rep(NA, sims)
+        tau.boot <- nu0.boot <- nu1.boot <- rep(NA, sims)
 
         ## START OF RHO LOOP
         for(i in 1:length(rho)){
@@ -634,7 +635,8 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
             d1.boot[k] <- mean( pnorm(y.mat.1 %*% YTmodel.coef.boot[k,]) - pnorm(y.mat.1 %*% YTmodel.coef.boot[k,] -
                 gamma.boot[k]*beta2.boot[k]/sqrt(gamma.boot[k]^2*sigma.2.boot[k]^2+2*gamma.boot[k]*rho[i]*sigma.2.boot[k]+1)) )
             tau.boot[k] <- mean( pnorm(y.mat.1 %*% YTmodel.coef.boot[k,]) - pnorm(y.mat.0 %*% YTmodel.coef.boot[k,]) )
-            nu.boot[k] <- (d0.boot[k] + d1.boot[k])/(2*tau.boot[k])
+            nu0.boot[k] <- d0.boot[k]/tau.boot[k]
+            nu1.boot[k] <- d1.boot[k]/tau.boot[k]
             }
 
         ## Step 2-4: Compute Outputs
@@ -645,11 +647,14 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         lower.d0[i] <- quantile(d0.boot, low)
         lower.d1[i] <- quantile(d1.boot, low)
         tau[i] <- mean(tau.boot) # ATE
-        nu[i] <- mean(nu.boot) # Proportion Mediated
+        nu0[i] <- mean(nu0.boot) # Proportion Mediated (t=0)
+        nu1[i] <- mean(nu1.boot) # Proportion Mediated (t=0)
         upper.tau[i] <- quantile(tau.boot, high)
-        upper.nu[i] <- quantile(nu.boot, high)
+        upper.nu0[i] <- quantile(nu0.boot, high)
+        upper.nu1[i] <- quantile(nu1.boot, high)
         lower.tau[i] <- quantile(tau.boot, low)
-        lower.nu[i] <- quantile(nu.boot, low)
+        lower.nu0[i] <- quantile(nu0.boot, low)
+        lower.nu1[i] <- quantile(nu1.boot, low)
         ind.d0[i] <- as.numeric(lower.d0[i] < 0 & upper.d0[i] > 0)
         ind.d1[i] <- as.numeric(lower.d1[i] < 0 & upper.d1[i] > 0)
 
@@ -686,8 +691,10 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         ind.d1=ind.d1, R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
         R2star.d.thresh=R2star.thresh, R2tilde.d.thresh=R2tilde.thresh,
         r.square.y=r.sq.y, r.square.m=r.sq.m,
-        tau=tau, upper.tau=upper.tau, lower.tau=lower.tau, nu=nu, upper.nu=upper.nu,
-        lower.nu=lower.nu, INT=INT, rho.by=rho.by, type=type)
+        tau=tau, upper.tau=upper.tau, lower.tau=lower.tau, 
+        nu0=nu0, nu1=nu1, upper.nu0=upper.nu0, upper.nu1=upper.nu1,
+        lower.nu0=lower.nu0, lower.nu1=lower.nu1, INT=INT, rho.by=rho.by, 
+        effect.type = effect.type, type=type)
         class(out) <- "medsens"
         out
         
@@ -715,7 +722,7 @@ print.summary.medsens <- function(x, ...){
         if(etype.vec == "both"){
             etype.vec <- c("indirect","direct")
         }
-        if(x$INT==FALSE){if("indirect" %in% etype.vec){
+        if(!x$INT){if("indirect" %in% etype.vec){
         	tab <- cbind(x$rho, round(x$d0, 4), round(x$lower.d0, 4), round(x$upper.d0, 4), x$ind.d0, x$R2star.prod, round(x$R2tilde.prod,4))
             if(sum(x$ind.d0)==1){
                 tab <- as.matrix(tab[x$ind.d0==1, -5])
@@ -817,7 +824,7 @@ print.summary.medsens <- function(x, ...){
             	}
             } ### Case I Summary Ends Here
     } else if(x$type=="bm") {
-        if(x$INT==FALSE){
+        if(!x$INT){
             tab <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0, x$R2star.prod, round(x$R2tilde.prod, 4))
             if(sum(x$ind.d0)==1){
                 tab <- as.matrix(tab[x$ind.d0==1, -5])
@@ -867,7 +874,7 @@ print.summary.medsens <- function(x, ...){
             invisible(x)
             }
     } else if(x$type=="bo") {
-        if(x$INT==FALSE){
+        if(!x$INT){
             tab <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), round(x$upper.d0, 4), x$ind.d0, x$R2star.prod, round(x$R2tilde.prod, 4))
             if(sum(x$ind.d0)==1){
                 tab <- as.matrix(tab[x$ind.d0==1, -5])
@@ -921,481 +928,603 @@ print.summary.medsens <- function(x, ...){
 
 
 
-plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE, smooth.effect=FALSE, smooth.ci=FALSE, levels=NULL, xlab=NULL, ylab=NULL, xlim=NULL, ylim=NULL, main=NULL, lwd=par("lwd"), ...){
+plot.medsens <- function(x, sens.par = c("rho", "R2"), 
+        r.type = c("residual", "total"), sign.prod = c("positive", "negative"),
+        pr.plot = FALSE, smooth.effect = FALSE, smooth.ci = FALSE, 
+        ask = prod(par("mfcol")) < nplots, levels = NULL, 
+        xlab = NULL, ylab = NULL, xlim = NULL, ylim = NULL, 
+        main = NULL, lwd = par("lwd"), ...){
+    
+    # Compatibility with previous version
+    if(r.type[1L] == 1 | r.type[1L] == "star") r.type <- "residual"
+    if(r.type[1L] == 2 | r.type[1L] == "tilde") r.type <- "total"
+    if(sign.prod[1L] == 1) sign.prod <- "positive"
+    if(sign.prod[1L] == -1) sign.prod <- "negative"
+    
+    # Match arguments
+    sens.par <- match.arg(sens.par)
+    r.type <- match.arg(r.type)
+    sign.prod <- match.arg(sign.prod)
+    
+    # Effect types
     etype.vec <- x$effect.type
-    if(etype.vec == "both"){
+    if(x$effect.type == "both"){
         etype.vec <- c("indirect","direct")
     }
     if(x$type != "ct" && x$effect.type != "indirect"){
         stop("'effect.type' must be \"indirect\" for this model combination")
     }
-
-  if(sens.par=="rho"){
-    if(pr.plot==TRUE){
-        if(x$type != "bm"){
-            stop("proportion mediated is only implemented for binary mediator")
-        }
-        if(is.null(ylim))
-            ylim <- c(min(x$nu), max(x$nu))
-        if(is.null(main))
-            main <- expression(paste("Proportion Mediated ", (rho)))
-        if(smooth.effect==TRUE)
-            nu <- lowess(x$rho, x$nu)$y
-            else nu <- x$nu
-        if(smooth.ci==TRUE){
-            lower <- lowess(x$rho, x$lower.nu)$y
-            upper <- lowess(x$rho, x$upper.nu)$y
-        } else {
-            lower <- x$lower.nu
-            upper <- x$upper.nu
-        }
-        plot.default(x$rho, nu, type="n", xlab="", ylab="", main=main, xlim=xlim, ylim=ylim, ...)
-        polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
-        lines(x$rho, nu, lty=1, lwd=lwd)
-        abline(h=0)
-        abline(v=0)
-        if(is.null(xlab))
-            title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
-            else title(xlab = xlab)
-        if(is.null(ylab))
-            title(ylab = expression(paste("Proportion Mediated: ", bar(nu))), line=2.5, cex.lab=.9)
-            else title(ylab = ylab)
-    } else {
-    if(x$INT == FALSE){
-    	if(x$effect.type == "both"){
-            oask <- devAskNewPage(TRUE)
-            on.exit(devAskNewPage(oask))
-        }
-    	if("indirect" %in% etype.vec){
-        if(is.null(ylim))
-            ylim <- c(min(x$d0), max(x$d0))
-        if(is.null(main))
-            main <- expression(paste("ACME(", rho, ")"))
-        if(smooth.effect==TRUE)
-            d0 <- lowess(x$rho, x$d0)$y
-            else d0 <- x$d0
-        if(smooth.ci==TRUE){
-            lower <- lowess(x$rho, x$lower.d0)$y
-            upper <- lowess(x$rho, x$upper.d0)$y
-        } else {
-            lower <- x$lower.d0
-            upper <- x$upper.d0
-        }
-        plot.default(x$rho, d0, type="n", xlab="", ylab="", main=main, xlim=xlim, ylim=ylim, ...)
-        polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
-        lines(x$rho, d0, lty=1, lwd=lwd)
-        abline(h=0)
-        abline(v=0)
-        abline(h=weighted.mean(c(d0[floor(1/x$rho.by)],d0[ceiling(1/x$rho.by)]),
-            c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
-        if(is.null(xlab))
-            title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
-            else title(xlab = xlab)
-        if(is.null(ylab))
-            title(ylab = expression(paste("Average Mediation Effect: ", bar(delta)(t))), line=2.5, cex.lab=.9)
-            else title(ylab = ylab)
+    
+    # Determine number of plots necessary
+    nplots <- ifelse(pr.plot, ifelse(x$INT, 2, 1),
+                ifelse(x$INT, 2, 1) * ifelse(x$effect.type == "both", 2, 1))
+    if (ask) {
+        oask <- devAskNewPage(TRUE)
+        on.exit(devAskNewPage(oask))
     }
-    if("direct" %in% etype.vec){
-    	if(is.null(ylim))
-            ylim <- c(min(x$z0), max(x$z0))
-        if(is.null(main))
-            main <- expression(paste("ADE(", rho, ")"))
-        if(smooth.effect==TRUE)
-            z0 <- lowess(x$rho, x$z0)$y
-            else z0 <- x$z0
-        if(smooth.ci==TRUE){
-            lower <- lowess(x$rho, x$lower.z0)$y
-            upper <- lowess(x$rho, x$upper.z0)$y
-        } else {
-            lower <- x$lower.z0
-            upper <- x$upper.z0
-        }
-        plot.default(x$rho, z0, type="n", xlab="", ylab="", main=main, xlim=xlim, ylim=ylim, ...)
-        polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
-        lines(x$rho, z0, lty=1, lwd=lwd)
-        abline(h=0)
-        abline(v=0)
-        abline(h=weighted.mean(c(z0[floor(1/x$rho.by)],z0[ceiling(1/x$rho.by)]),
-            c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
-        if(is.null(xlab))
-            title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
-            else title(xlab = xlab)
-        if(is.null(ylab))
-            title(ylab = expression(paste("Average Direct Effect: ", bar(zeta)(t))), line=2.5, cex.lab=.9)
-            else title(ylab = ylab)
-    	}
-    } else {### With Interaction
-     if("indirect" %in% etype.vec){
-        if(prod(par("mfrow")==1) && dev.interactive()){
-            oask <- devAskNewPage(TRUE)
-            on.exit(devAskNewPage(oask))
-        }
-        if(is.null(ylim))
-            ylim <- c(min(x$d0), max(x$d0))
-        if(is.null(main))
-            main0 <- expression(paste("ACME"[0], "(", rho, ")"))
-            else main0 <- main
-        if(smooth.effect==TRUE)
-            d0 <- lowess(x$rho, x$d0)$y
-            else d0 <- x$d0
-        if(smooth.ci==TRUE){
-            lower <- lowess(x$rho, x$lower.d0)$y
-            upper <- lowess(x$rho, x$upper.d0)$y
-        } else {
-            lower <- x$lower.d0
-            upper <- x$upper.d0
-        }
-        plot.default(x$rho, d0, type="n", xlab="", ylab="", main=main0, xlim=xlim, ylim=ylim, ...)
-        polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
-        lines(x$rho, d0, lty=1, lwd=lwd)
-        abline(h=0)
-        abline(v=0)
-        abline(h=weighted.mean(c(d0[floor(1/x$rho.by)],d0[ceiling(1/x$rho.by)]),
-            c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
-        if(is.null(xlab))
-            title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
-            else title(xlab = xlab)
-        if(is.null(ylab))
-            title(ylab = expression(paste("Average Mediation Effect: ", bar(delta)(0))), line=2.5, cex.lab=.9)
-            else title(ylab = ylab)
 
-        #Delta_1
-        if(is.null(ylim))
-            ylim <- c(min(x$d1), max(x$d1))
-        if(is.null(main))
-            main1 <- expression(paste("ACME"[1], "(", rho, ")"))
-            else main1 <- main
-        if(smooth.effect==TRUE)
-            d1 <- lowess(x$rho, x$d1)$y
-            else d1 <- x$d1
-        if(smooth.ci==TRUE){
-            lower <- lowess(x$rho, x$lower.d1)$y
-            upper <- lowess(x$rho, x$upper.d1)$y
-        } else {
-            lower <- x$lower.d1
-            upper <- x$upper.d1
+    ## Plots for proportions mediated
+    if(pr.plot){
+        if(sens.par != "rho"){
+            stop("proportion mediated can only be plotted against rho")
         }
-        plot.default(x$rho, d1, type="n", xlab="", ylab="", main=main1, xlim=xlim, ylim=ylim,...)
-        polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
-        lines(x$rho, d1, lty=1, lwd=lwd)
-        abline(h=0)
-        abline(v=0)
-        abline(h=weighted.mean(c(d1[floor(1/x$rho.by)],d1[ceiling(1/x$rho.by)]),
-            c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
-        if(is.null(xlab))
-            title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
-            else title(xlab = xlab)
-        if(is.null(ylab))
-            title(ylab = expression(paste("Average Mediation Effect: ", bar(delta)(1))), line=2.5, cex.lab=.9)
-            else title(ylab = ylab)
+        if(x$type != "bo"){
+            stop("proportion mediated is only implemented for binary outcome")
+        }
+        if(x$INT){
+            # nu0
+            if(is.null(ylim))
+                ylim <- c(min(x$nu0), max(x$nu0))
+            if(is.null(main))
+                main0 <- expression(paste("Proportion Mediated"[0], (rho)))
+                else main0 <- main
+            if(smooth.effect)
+                nu <- lowess(x$rho, x$nu0)$y
+                else nu <- x$nu0
+            if(smooth.ci){
+                lower <- lowess(x$rho, x$lower.nu0)$y
+                upper <- lowess(x$rho, x$upper.nu0)$y
+            } else {
+                lower <- x$lower.nu0
+                upper <- x$upper.nu0
             }
-     if("direct" %in% etype.vec){
-     	if(prod(par("mfrow")==1) && dev.interactive()){
-            oask <- devAskNewPage(TRUE)
-            on.exit(devAskNewPage(oask))
-        }
-        if(is.null(ylim))
-            ylim <- c(min(x$z0), max(x$z0))
-        if(is.null(main))
-            main0 <- expression(paste("ADE"[0], "(", rho, ")"))
-            else main0 <- main
-        if(smooth.effect==TRUE)
-            z0 <- lowess(x$rho, x$z0)$y
-            else z0 <- x$z0
-        if(smooth.ci==TRUE){
-            lower <- lowess(x$rho, x$lower.z0)$y
-            upper <- lowess(x$rho, x$upper.z0)$y
+            plot.default(x$rho, nu, type="n", xlab="", ylab="", main=main0, xlim=xlim, ylim=ylim, ...)
+            polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
+            lines(x$rho, nu, lty=1, lwd=lwd)
+            abline(h=0)
+            abline(v=0)
+            if(is.null(xlab))
+                title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
+                else title(xlab = xlab)
+            if(is.null(ylab))
+                title(ylab = expression(paste("Proportion Mediated: ", bar(nu), (0))), line=2.5, cex.lab=.9)
+                else title(ylab = ylab)
+            
+            # nu1
+            if(is.null(ylim))
+                ylim <- c(min(x$nu1), max(x$nu1))
+            if(is.null(main))
+                main1 <- expression(paste("Proportion Mediated"[1], (rho)))
+                else main1 <- main
+            if(smooth.effect)
+                nu <- lowess(x$rho, x$nu1)$y
+                else nu <- x$nu1
+            if(smooth.ci){
+                lower <- lowess(x$rho, x$lower.nu1)$y
+                upper <- lowess(x$rho, x$upper.nu1)$y
+            } else {
+                lower <- x$lower.nu1
+                upper <- x$upper.nu1
+            }
+            plot.default(x$rho, nu, type="n", xlab="", ylab="", main=main1, xlim=xlim, ylim=ylim, ...)
+            polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
+            lines(x$rho, nu, lty=1, lwd=lwd)
+            abline(h=0)
+            abline(v=0)
+            if(is.null(xlab))
+                title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
+                else title(xlab = xlab)
+            if(is.null(ylab))
+                title(ylab = expression(paste("Proportion Mediated: ", bar(nu), (1))), line=2.5, cex.lab=.9)
+                else title(ylab = ylab)
+        
         } else {
-            lower <- x$lower.z0
-            upper <- x$upper.z0
+            if(is.null(ylim))
+                ylim <- c(min(x$nu0), max(x$nu0))
+            if(is.null(main))
+                main0 <- expression(paste("Proportion Mediated ", (rho)))
+                else main0 <- main
+            if(smooth.effect)
+                nu <- lowess(x$rho, x$nu0)$y
+                else nu <- x$nu0
+            if(smooth.ci){
+                lower <- lowess(x$rho, x$lower.nu0)$y
+                upper <- lowess(x$rho, x$upper.nu0)$y
+            } else {
+                lower <- x$lower.nu0
+                upper <- x$upper.nu0
+            }
+            plot.default(x$rho, nu, type="n", xlab="", ylab="", main=main0, xlim=xlim, ylim=ylim, ...)
+            polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
+            lines(x$rho, nu, lty=1, lwd=lwd)
+            abline(h=0)
+            abline(v=0)
+            if(is.null(xlab))
+                title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
+                else title(xlab = xlab)
+            if(is.null(ylab))
+                title(ylab = expression(paste("Proportion Mediated: ", bar(nu))), line=2.5, cex.lab=.9)
+                else title(ylab = ylab)
         }
-        plot.default(x$rho, z0, type="n", xlab="", ylab="", main=main0, xlim=xlim, ylim=ylim, ...)
-        polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
-        lines(x$rho, z0, lty=1, lwd=lwd)
-        abline(h=0)
-        abline(v=0)
-        abline(h=weighted.mean(c(z0[floor(1/x$rho.by)],z0[ceiling(1/x$rho.by)]),
-            c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
-        if(is.null(xlab))
-            title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
-            else title(xlab = xlab)
-        if(is.null(ylab))
-            title(ylab = expression(paste("Average Direct Effect: ", bar(zeta)(0))), line=2.5, cex.lab=.9)
-            else title(ylab = ylab)
+    
+    ## Plots for ACME/ADE
+    } else if(sens.par == "rho"){
+        if(!x$INT){
+            if("indirect" %in% etype.vec){
+                if(is.null(ylim))
+                    ylim <- c(min(x$d0), max(x$d0))
+                if(is.null(main))
+                    main0 <- expression(paste("ACME(", rho, ")"))
+                    else main0 <- main
+                if(smooth.effect)
+                    d0 <- lowess(x$rho, x$d0)$y
+                    else d0 <- x$d0
+                if(smooth.ci){
+                    lower <- lowess(x$rho, x$lower.d0)$y
+                    upper <- lowess(x$rho, x$upper.d0)$y
+                } else {
+                    lower <- x$lower.d0
+                    upper <- x$upper.d0
+                }
+                plot.default(x$rho, d0, type="n", xlab="", ylab="", main=main0, xlim=xlim, ylim=ylim, ...)
+                polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
+                lines(x$rho, d0, lty=1, lwd=lwd)
+                abline(h=0)
+                abline(v=0)
+                abline(h=weighted.mean(c(d0[floor(1/x$rho.by)],d0[ceiling(1/x$rho.by)]),
+                    c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
+                if(is.null(xlab))
+                    title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
+                    else title(xlab = xlab)
+                if(is.null(ylab))
+                    title(ylab = expression(paste("Average Mediation Effect: ", bar(delta)(t))), line=2.5, cex.lab=.9)
+                    else title(ylab = ylab)
+            }
+            if("direct" %in% etype.vec){
+                if(is.null(ylim))
+                    ylim <- c(min(x$z0), max(x$z0))
+                if(is.null(main))
+                    main1 <- expression(paste("ADE(", rho, ")"))
+                    else main1 <- main
+                if(smooth.effect)
+                    z0 <- lowess(x$rho, x$z0)$y
+                    else z0 <- x$z0
+                if(smooth.ci){
+                    lower <- lowess(x$rho, x$lower.z0)$y
+                    upper <- lowess(x$rho, x$upper.z0)$y
+                } else {
+                    lower <- x$lower.z0
+                    upper <- x$upper.z0
+                }
+                plot.default(x$rho, z0, type="n", xlab="", ylab="", main=main1, xlim=xlim, ylim=ylim, ...)
+                polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
+                lines(x$rho, z0, lty=1, lwd=lwd)
+                abline(h=0)
+                abline(v=0)
+                abline(h=weighted.mean(c(z0[floor(1/x$rho.by)],z0[ceiling(1/x$rho.by)]),
+                    c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
+                if(is.null(xlab))
+                    title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
+                    else title(xlab = xlab)
+                if(is.null(ylab))
+                    title(ylab = expression(paste("Average Direct Effect: ", bar(zeta)(t))), line=2.5, cex.lab=.9)
+                    else title(ylab = ylab)
+            }
+            
+        } else {### With Interaction
+            if("indirect" %in% etype.vec){
+                # Delta_0
+                if(is.null(ylim))
+                    ylim <- c(min(x$d0), max(x$d0))
+                if(is.null(main))
+                    main0 <- expression(paste("ACME"[0], "(", rho, ")"))
+                    else main0 <- main
+                if(smooth.effect)
+                    d0 <- lowess(x$rho, x$d0)$y
+                    else d0 <- x$d0
+                if(smooth.ci){
+                    lower <- lowess(x$rho, x$lower.d0)$y
+                    upper <- lowess(x$rho, x$upper.d0)$y
+                } else {
+                    lower <- x$lower.d0
+                    upper <- x$upper.d0
+                }
+                plot.default(x$rho, d0, type="n", xlab="", ylab="", main=main0, xlim=xlim, ylim=ylim, ...)
+                polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
+                lines(x$rho, d0, lty=1, lwd=lwd)
+                abline(h=0)
+                abline(v=0)
+                abline(h=weighted.mean(c(d0[floor(1/x$rho.by)],d0[ceiling(1/x$rho.by)]),
+                        c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
+                if(is.null(xlab))
+                    title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
+                    else title(xlab = xlab)
+                if(is.null(ylab))
+                    title(ylab = expression(paste("Average Mediation Effect: ", bar(delta)(0))), line=2.5, cex.lab=.9)
+                    else title(ylab = ylab)
 
-        #Delta_1
-        if(is.null(ylim))
-            ylim <- c(min(x$z1), max(x$z1))
-        if(is.null(main))
-            main1 <- expression(paste("ADE"[1], "(", rho, ")"))
-            else main1 <- main
-        if(smooth.effect==TRUE)
-            z1 <- lowess(x$rho, x$z1)$y
-            else z1 <- x$z1
-        if(smooth.ci==TRUE){
-            lower <- lowess(x$rho, x$lower.z1)$y
-            upper <- lowess(x$rho, x$upper.z1)$y
-        } else {
-            lower <- x$lower.z1
-            upper <- x$upper.z1
-        }
-        plot.default(x$rho, z1, type="n", xlab="", ylab="", main=main1, xlim=xlim, ylim=ylim,...)
-        polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
-        lines(x$rho, z1, lty=1, lwd=lwd)
-        abline(h=0)
-        abline(v=0)
-        abline(h=weighted.mean(c(z1[floor(1/x$rho.by)],z1[ceiling(1/x$rho.by)]),
-            c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
-        if(is.null(xlab))
-            title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
-            else title(xlab = xlab)
-        if(is.null(ylab))
-            title(ylab = expression(paste("Average Direct Effect: ", bar(zeta)(1))), line=2.5, cex.lab=.9)
-            else title(ylab = ylab)
-     	}
+                # Delta_1
+                if(is.null(ylim))
+                    ylim <- c(min(x$d1), max(x$d1))
+                if(is.null(main))
+                    main1 <- expression(paste("ACME"[1], "(", rho, ")"))
+                    else main1 <- main
+                if(smooth.effect)
+                    d1 <- lowess(x$rho, x$d1)$y
+                    else d1 <- x$d1
+                if(smooth.ci){
+                    lower <- lowess(x$rho, x$lower.d1)$y
+                    upper <- lowess(x$rho, x$upper.d1)$y
+                } else {
+                    lower <- x$lower.d1
+                    upper <- x$upper.d1
+                }
+                plot.default(x$rho, d1, type="n", xlab="", ylab="", main=main1, xlim=xlim, ylim=ylim,...)
+                polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
+                lines(x$rho, d1, lty=1, lwd=lwd)
+                abline(h=0)
+                abline(v=0)
+                abline(h=weighted.mean(c(d1[floor(1/x$rho.by)],d1[ceiling(1/x$rho.by)]),
+                        c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
+                if(is.null(xlab))
+                    title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
+                    else title(xlab = xlab)
+                if(is.null(ylab))
+                    title(ylab = expression(paste("Average Mediation Effect: ", bar(delta)(1))), line=2.5, cex.lab=.9)
+                    else title(ylab = ylab)
+            }
+            
+            if("direct" %in% etype.vec){
+                # Zeta_0
+                if(is.null(ylim))
+                    ylim <- c(min(x$z0), max(x$z0))
+                if(is.null(main))
+                    main0 <- expression(paste("ADE"[0], "(", rho, ")"))
+                    else main0 <- main
+                if(smooth.effect)
+                    z0 <- lowess(x$rho, x$z0)$y
+                    else z0 <- x$z0
+                if(smooth.ci){
+                    lower <- lowess(x$rho, x$lower.z0)$y
+                    upper <- lowess(x$rho, x$upper.z0)$y
+                } else {
+                    lower <- x$lower.z0
+                    upper <- x$upper.z0
+                }
+                plot.default(x$rho, z0, type="n", xlab="", ylab="", main=main0, xlim=xlim, ylim=ylim, ...)
+                polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
+                lines(x$rho, z0, lty=1, lwd=lwd)
+                abline(h=0)
+                abline(v=0)
+                abline(h=weighted.mean(c(z0[floor(1/x$rho.by)],z0[ceiling(1/x$rho.by)]),
+                        c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
+                if(is.null(xlab))
+                    title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
+                    else title(xlab = xlab)
+                if(is.null(ylab))
+                    title(ylab = expression(paste("Average Direct Effect: ", bar(zeta)(0))), line=2.5, cex.lab=.9)
+                    else title(ylab = ylab)
+
+                # Zeta_1
+                if(is.null(ylim))
+                    ylim <- c(min(x$z1), max(x$z1))
+                if(is.null(main))
+                    main1 <- expression(paste("ADE"[1], "(", rho, ")"))
+                    else main1 <- main
+                if(smooth.effect)
+                    z1 <- lowess(x$rho, x$z1)$y
+                    else z1 <- x$z1
+                if(smooth.ci){
+                    lower <- lowess(x$rho, x$lower.z1)$y
+                    upper <- lowess(x$rho, x$upper.z1)$y
+                } else {
+                    lower <- x$lower.z1
+                    upper <- x$upper.z1
+                }
+                plot.default(x$rho, z1, type="n", xlab="", ylab="", main=main1, xlim=xlim, ylim=ylim,...)
+                polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
+                lines(x$rho, z1, lty=1, lwd=lwd)
+                abline(h=0)
+                abline(v=0)
+                abline(h=weighted.mean(c(z1[floor(1/x$rho.by)],z1[ceiling(1/x$rho.by)]),
+                        c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
+                if(is.null(xlab))
+                    title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
+                    else title(xlab = xlab)
+                if(is.null(ylab))
+                    title(ylab = expression(paste("Average Direct Effect: ", bar(zeta)(1))), line=2.5, cex.lab=.9)
+                    else title(ylab = ylab)
             }
         }
-  } else if (sens.par=="R2"){## R2 Sensitivity Parameter BEGIN HERE
-    if(pr.plot==TRUE)
-        stop("proportion mediated is only plotted in terms of 'rho'")
+    } else { ## R2 Sensitivity Parameter BEGINS HERE
+        R2Mstar <- seq(0, 1-x$rho.by, 0.01)
+        R2Ystar <- seq(0, 1-x$rho.by, 0.01)
+        R2Mtilde <- (1-x$r.square.m)*seq(0, 1-x$rho.by, 0.01)
+        R2Ytilde <- (1-x$r.square.y)*seq(0, 1-x$rho.by, 0.01)
 
-    R2Mstar <- seq(0, 1-x$rho.by, 0.01)
-    R2Ystar <- seq(0, 1-x$rho.by, 0.01)
-    R2Mtilde <- (1-x$r.square.m)*seq(0, 1-x$rho.by, 0.01)
-    R2Ytilde <- (1-x$r.square.y)*seq(0, 1-x$rho.by, 0.01)
+        if(r.type == "residual"){
+            R2M <- R2Mstar; R2Y <- R2Ystar
+        } else {
+            R2M <- R2Mtilde; R2Y <- R2Ytilde
+        }
+        dlength <- length(seq(0, (1-x$rho.by)^2, 0.0001))
+        R2prod.mat <- outer(R2Mstar, R2Ystar)
+        Rprod.mat <- round(sqrt(R2prod.mat), digits=4)
 
-    if(r.type == 1){
-        R2M <- R2Mstar; R2Y <- R2Ystar
-    } else if(r.type == 2) {
-        R2M <- R2Mtilde; R2Y <- R2Ytilde
-    } else stop("'r.type' must be either 1 or 2")
+        if(is.null(xlim))
+            xlim <- c(0,1)
+        if(is.null(ylim))
+            ylim <- c(0,1)
 
-    dlength <- length(seq(0, (1-x$rho.by)^2, 0.0001))
-    R2prod.mat <- outer(R2Mstar, R2Ystar)
-    Rprod.mat <- round(sqrt(R2prod.mat), digits=4)
-
-    if(is.null(xlim))
-        xlim <- c(0,1)
-    if(is.null(ylim))
-        ylim <- c(0,1)
-
-    if(x$INT==FALSE){## No Interaction, R2, Continuous
-    	 if(x$effect.type == "both"){
-            oask <- devAskNewPage(TRUE)
-            on.exit(devAskNewPage(oask))
-         }
-        if("indirect" %in% etype.vec){
-        	if(is.null(levels))
-            levels <- pretty(quantile(x$d0, probs=c(0.1,0.9)), 10)
-        if(sign.prod == 1){
-            d0.p <- approx(x$d0[((length(x$d0)+1)/2):length(x$d0)], n=dlength)$y
-            d0mat.p <- matrix(d0.p[Rprod.mat/0.0001+1], nrow=length(R2M))
-            if(is.null(main) & r.type == 1)
-                main <- expression(paste("ACME(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==1))
-            else if(is.null(main) & r.type == 2)
-                main <- expression(paste("ACME(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==1))
-            contour(R2M, R2Y, d0mat.p, levels=levels, main=main, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
-            contour(R2M, R2Y, d0mat.p, levels=0, lwd=lwd+1, add=TRUE)
-        } else if(sign.prod == -1){
-            d0.n <- rev(approx(x$d0[1:((length(x$d0)+1)/2)], n=dlength)$y)
-            d0mat.n <- matrix(d0.n[Rprod.mat/0.0001+1], nrow=length(R2M))
-            if(is.null(main) & r.type == 1)
-                main <- expression(paste("ACME(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==-1))
-            else if(is.null(main) & r.type == 2)
-                main <- expression(paste("ACME(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==-1))
-            contour(R2M, R2Y, d0mat.n, levels=levels, main=main, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
-            contour(R2M, R2Y, d0mat.n, levels=0, lwd=lwd+1, add=TRUE)
-        } else stop("'sign.prod' must be either -1 or 1")
-        if(is.null(xlab) & r.type==1)
-            title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
-            else if(is.null(xlab) & r.type==2)
-            title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
-        if(is.null(ylab) & r.type==1)
-            title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
-            else if(is.null(ylab) & r.type==2)
-            title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
-        axis(2,at=seq(0,1,by=.1))
-        axis(1,at=seq(0,1,by=.1))
+        if(!x$INT){## No Interaction, R2, Continuous
+            if("indirect" %in% etype.vec){
+                if(is.null(levels))
+                    levels0 <- pretty(quantile(x$d0, probs=c(0.1,0.9)), 10)
+                    else levels0 <- levels
+                if(sign.prod == "positive"){
+                    d0.p <- approx(x$d0[((length(x$d0)+1)/2):length(x$d0)], n=dlength)$y
+                    d0mat.p <- matrix(d0.p[Rprod.mat/0.0001+1], nrow=length(R2M))
+                    if(is.null(main) & r.type == "residual")
+                        main0 <- expression(paste("ACME(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
+                                                    (lambda[2]*lambda[3])==1))
+                    else if(is.null(main) & r.type == "total")
+                        main0 <- expression(paste("ACME(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", 
+                                                    (lambda[2]*lambda[3])==1))
+                    else main0 <- main
+                    contour(R2M, R2Y, d0mat.p, levels=levels0, main=main0, 
+                            xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
+                    contour(R2M, R2Y, d0mat.p, levels=0, lwd=lwd+1, add=TRUE)
+                } else {
+                    d0.n <- rev(approx(x$d0[1:((length(x$d0)+1)/2)], n=dlength)$y)
+                    d0mat.n <- matrix(d0.n[Rprod.mat/0.0001+1], nrow=length(R2M))
+                    if(is.null(main) & r.type == "residual")
+                        main0 <- expression(paste("ACME(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
+                                                    (lambda[2]*lambda[3])==-1))
+                    else if(is.null(main) & r.type == "total")
+                        main0 <- expression(paste("ACME(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", 
+                                                    (lambda[2]*lambda[3])==-1))
+                    else main0 <- main
+                    contour(R2M, R2Y, d0mat.n, levels=levels0, main=main0, 
+                            xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
+                    contour(R2M, R2Y, d0mat.n, levels=0, lwd=lwd+1, add=TRUE)
+                }
+                if(is.null(xlab) & r.type == "residual")
+                    title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
+                else if(is.null(xlab) & r.type == "total")
+                    title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
+                if(is.null(ylab) & r.type == "residual")
+                    title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
+                else if(is.null(ylab) & r.type == "total")
+                    title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
+                axis(2,at=seq(0,1,by=.1))
+                axis(1,at=seq(0,1,by=.1))
+            }
+            
+            if("direct" %in% etype.vec){
+                if(is.null(levels))
+                    levels0 <- pretty(quantile(x$z0, probs=c(0.1,0.9)), 10)
+                    else levels0 <- levels
+                if(sign.prod == "positive"){
+                    z0.p <- approx(x$z0[((length(x$z0)+1)/2):length(x$z0)], n=dlength)$y
+                    z0mat.p <- matrix(z0.p[Rprod.mat/0.0001+1], nrow=length(R2M))
+                    if(is.null(main) & r.type == "residual")
+                        main0 <- expression(paste("ADE(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
+                                                    (lambda[2]*lambda[3])==1))
+                    else if(is.null(main) & r.type == "total")
+                        main0 <- expression(paste("ADE(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", 
+                                                    (lambda[2]*lambda[3])==1))
+                    else main0 <- main
+                    contour(R2M, R2Y, z0mat.p, levels=levels0, main=main0, 
+                            xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
+                    contour(R2M, R2Y, z0mat.p, levels=0, lwd=lwd+1, add=TRUE)
+                } else {
+                    z0.n <- rev(approx(x$z0[1:((length(x$z0)+1)/2)], n=dlength)$y)
+                    z0mat.n <- matrix(z0.n[Rprod.mat/0.0001+1], nrow=length(R2M))
+                    if(is.null(main) & r.type == "residual")
+                        main0 <- expression(paste("ADE(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
+                                                    (lambda[2]*lambda[3])==-1))
+                    else if(is.null(main) & r.type == "total")
+                        main0 <- expression(paste("ADE(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", 
+                                                    (lambda[2]*lambda[3])==-1))
+                    else main0 <- main
+                    contour(R2M, R2Y, z0mat.n, levels=levels0, main=main0, 
+                            xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
+                    contour(R2M, R2Y, z0mat.n, levels=0, lwd=lwd+1, add=TRUE)
+                }
+                if(is.null(xlab) & r.type == "residual")
+                    title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
+                else if(is.null(xlab) & r.type == "total")
+                    title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
+                if(is.null(ylab) & r.type == "residual")
+                    title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
+                else if(is.null(ylab) & r.type == "total")
+                    title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
+                axis(2,at=seq(0,1,by=.1))
+                axis(1,at=seq(0,1,by=.1))
+            }
+        
+        } else {## Interaction, R2, Continuous
+            if("indirect" %in% etype.vec){
+                # Delta_0
+                if(is.null(levels))
+                    levels0 <- pretty(quantile(x$d0, probs=c(0.1,0.9)), 10)
+                    else levels0 <- levels
+                if(sign.prod == "positive"){
+                    d0.p <- approx(x$d0[((length(x$d0)+1)/2):length(x$d0)], n=dlength)$y
+                    d0mat.p <- matrix(d0.p[Rprod.mat/0.0001+1], nrow=length(R2M))
+                    if(is.null(main) & r.type == "residual")
+                        main0 <- expression(paste("ACME"[0], "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
+                                                    (lambda[2]*lambda[3])==1))
+                    else if(is.null(main) & r.type == "total")
+                        main0 <- expression(paste("ACME"[0], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", 
+                                                    (lambda[2]*lambda[3])==1))
+                    else main0 <- main
+                    contour(R2M, R2Y, d0mat.p, levels=levels0, main=main0, 
+                            xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
+                    contour(R2M, R2Y, d0mat.p, levels=0, lwd=lwd+1, add=TRUE)
+                } else {
+                    d0.n <- rev(approx(x$d0[1:((length(x$d0)+1)/2)], n=dlength)$y)
+                    d0mat.n <- matrix(d0.n[Rprod.mat/0.0001+1], nrow=length(R2M))
+                    if(is.null(main) & r.type == "residual")
+                        main0 <- expression(paste("ACME"[0],"(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
+                                                    (lambda[2]*lambda[3])==-1))
+                    else if(is.null(main) & r.type == "total")
+                        main0 <- expression(paste("ACME"[0], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", 
+                                                    (lambda[2]*lambda[3])==-1))
+                    else main0 <- main
+                    contour(R2M, R2Y, d0mat.n, levels=levels0, main=main0, 
+                            xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
+                    contour(R2M, R2Y, d0mat.n, levels=0, lwd=lwd+1, add=TRUE)
+                }
+                if(is.null(xlab) & r.type == "residual")
+                    title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
+                else if(is.null(xlab) & r.type == "total")
+                    title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
+                if(is.null(ylab) & r.type == "residual")
+                    title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
+                else if(is.null(ylab) & r.type == "total")
+                    title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
+                axis(2,at=seq(0,1,by=.1))
+                axis(1,at=seq(0,1,by=.1))
+                
+                # Delta_1
+                if(is.null(levels))
+                    levels1 <- pretty(quantile(x$d1, probs=c(0.1,0.9)), 10)
+                    else levels1 <- levels
+                if(sign.prod == "positive"){
+                    d1.p <- approx(x$d1[((length(x$d1)+1)/2):length(x$d1)], n=dlength)$y
+                    d1mat.p <- matrix(d1.p[Rprod.mat/0.0001+1], nrow=length(R2M))
+                    if(is.null(main) & r.type == "residual")
+                        main1 <- expression(paste("ACME"[1], "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
+                                                    (lambda[2]*lambda[3])==1))
+                    else if(is.null(main) & r.type == "total")
+                        main1 <- expression(paste("ACME"[1], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", 
+                                                    (lambda[2]*lambda[3])==1))
+                    else main1 <- main
+                    contour(R2M, R2Y, d1mat.p, levels=levels1, main=main1, 
+                            xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd, ...)
+                    contour(R2M, R2Y, d1mat.p, levels=0, lwd=lwd+1, add=TRUE)
+                } else {
+                    d1.n <- rev(approx(x$d1[1:((length(x$d1)+1)/2)], n=dlength)$y)
+                    d1mat.n <- matrix(d1.n[Rprod.mat/0.0001+1], nrow=length(R2M))
+                    if(is.null(main) & r.type == "residual")
+                        main1 <- expression(paste("ACME"[1], "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
+                                                    (lambda[2]*lambda[3])==-1))
+                    else if(is.null(main) & r.type == "total")
+                        main1 <- expression(paste("ACME"[1], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", 
+                                                    (lambda[2]*lambda[3])==-1))
+                    else main1 <- main
+                    contour(R2M, R2Y, d1mat.n, levels=levels1, main=main1, 
+                            xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd, ...)
+                    contour(R2M, R2Y, d1mat.n, levels=0, lwd=lwd+1, add=TRUE)
+                }
+                if(is.null(xlab) & r.type == "residual")
+                    title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
+                else if(is.null(xlab) & r.type == "total")
+                    title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
+                if(is.null(ylab) & r.type == "residual")
+                    title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
+                else if(is.null(ylab) & r.type == "total")
+                    title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
+                axis(2,at=seq(0,1,by=.1))
+                axis(1,at=seq(0,1,by=.1))
+            }
+            
+            if("direct" %in% etype.vec){
+                # Zeta_0
+                if(is.null(levels))
+                    levels0 <- pretty(quantile(x$z0, probs=c(0.1,0.9)), 10)
+                    else levels0 <- levels
+                if(sign.prod == "positive"){
+                    z0.p <- approx(x$z0[((length(x$z0)+1)/2):length(x$z0)], n=dlength)$y
+                    z0mat.p <- matrix(z0.p[Rprod.mat/0.0001+1], nrow=length(R2M))
+                    if(is.null(main) & r.type == "residual")
+                        main0 <- expression(paste("ADE"[0], "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
+                                                    (lambda[2]*lambda[3])==1))
+                    else if(is.null(main) & r.type == "total")
+                        main0 <- expression(paste("ADE"[0], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", 
+                                                    (lambda[2]*lambda[3])==1))
+                    else main0 <- main
+                    contour(R2M, R2Y, z0mat.p, levels=levels0, main=main0, 
+                            xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
+                    contour(R2M, R2Y, z0mat.p, levels=0, lwd=lwd+1, add=TRUE)
+                } else {
+                    z0.n <- rev(approx(x$z0[1:((length(x$z0)+1)/2)], n=dlength)$y)
+                    z0mat.n <- matrix(z0.n[Rprod.mat/0.0001+1], nrow=length(R2M))
+                    if(is.null(main) & r.type == "residual")
+                        main0 <- expression(paste("ADE"[0],"(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
+                                                    (lambda[2]*lambda[3])==-1))
+                    else if(is.null(main) & r.type == "total")
+                        main0 <- expression(paste("ADE"[0], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", 
+                                                    (lambda[2]*lambda[3])==-1))
+                    else main0 <- main
+                    contour(R2M, R2Y, z0mat.n, levels=levels0, main=main0, 
+                            xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
+                    contour(R2M, R2Y, z0mat.n, levels=0, lwd=lwd+1, add=TRUE)
+                }
+                if(is.null(xlab) & r.type == "residual")
+                    title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
+                else if(is.null(xlab) & r.type == "total")
+                    title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
+                if(is.null(ylab) & r.type == "residual")
+                    title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
+                else if(is.null(ylab) & r.type == "total")
+                    title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
+                axis(2,at=seq(0,1,by=.1))
+                axis(1,at=seq(0,1,by=.1))
+                
+                # Zeta_1
+                if(is.null(levels))
+                    levels1 <- pretty(quantile(x$z1, probs=c(0.1,0.9)), 10)
+                    else levels1 <- levels
+                if(sign.prod == "positive"){
+                    z1.p <- approx(x$z1[((length(x$z1)+1)/2):length(x$z1)], n=dlength)$y
+                    z1mat.p <- matrix(z1.p[Rprod.mat/0.0001+1], nrow=length(R2M))
+                    if(is.null(main) & r.type == "residual")
+                        main1 <- expression(paste("ADE"[1], "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
+                                                    (lambda[2]*lambda[3])==1))
+                    else if(is.null(main) & r.type == "total")
+                        main1 <- expression(paste("ADE"[1], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", 
+                                                    (lambda[2]*lambda[3])==1))
+                    else main1 <- main
+                    contour(R2M, R2Y, z1mat.p, levels=levels1, main=main1, 
+                            xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd, ...)
+                    contour(R2M, R2Y, z1mat.p, levels=0, lwd=lwd+1, add=TRUE)
+                } else {
+                    z1.n <- rev(approx(x$z1[1:((length(x$z1)+1)/2)], n=dlength)$y)
+                    z1mat.n <- matrix(z1.n[Rprod.mat/0.0001+1], nrow=length(R2M))
+                    if(is.null(main) & r.type == "residual")
+                        main1 <- expression(paste("ADE"[1], "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
+                                                    (lambda[2]*lambda[3])==-1))
+                    else if(is.null(main) & r.type == "total")
+                        main1 <- expression(paste("ADE"[1], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", 
+                                                    (lambda[2]*lambda[3])==-1))
+                    else main1 <- main
+                    contour(R2M, R2Y, z1mat.n, levels=levels1, main=main1, 
+                            xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd, ...)
+                    contour(R2M, R2Y, z1mat.n, levels=0, lwd=lwd+1, add=TRUE)
+                }
+                if(is.null(xlab) & r.type == "residual")
+                    title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
+                else if(is.null(xlab) & r.type == "total")
+                    title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
+                if(is.null(ylab) & r.type == "residual")
+                    title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
+                else if(is.null(ylab) & r.type == "total")
+                    title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
+                axis(2,at=seq(0,1,by=.1))
+                axis(1,at=seq(0,1,by=.1))
+            }
+        }
     }
-    if("direct" %in% etype.vec){
-    	levels <- pretty(quantile(x$z0, probs=c(0.1,0.9)), 10)
-        if(sign.prod == 1){
-            z0.p <- approx(x$z0[((length(x$z0)+1)/2):length(x$z0)], n=dlength)$y
-            z0mat.p <- matrix(z0.p[Rprod.mat/0.0001+1], nrow=length(R2M))
-            if(is.null(main) & r.type == 1)
-                main <- expression(paste("ADE(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==1))
-            else if(is.null(main) & r.type == 2)
-                main <- expression(paste("ADE(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==1))
-            contour(R2M, R2Y, z0mat.p, levels=levels, main=main, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
-            contour(R2M, R2Y, z0mat.p, levels=0, lwd=lwd+1, add=TRUE)
-        } else if(sign.prod == -1){
-            z0.n <- rev(approx(x$z0[1:((length(x$z0)+1)/2)], n=dlength)$y)
-            z0mat.n <- matrix(z0.n[Rprod.mat/0.0001+1], nrow=length(R2M))
-            if(is.null(main) & r.type == 1)
-                main <- expression(paste("ADE(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==-1))
-            else if(is.null(main) & r.type == 2)
-                main <- expression(paste("ADE(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==-1))
-            contour(R2M, R2Y, z0mat.n, levels=levels, main=main, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
-            contour(R2M, R2Y, z0mat.n, levels=0, lwd=lwd+1, add=TRUE)
-        } else stop("'sign.prod' must be either -1 or 1")
-        if(is.null(xlab) & r.type==1)
-            title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
-            else if(is.null(xlab) & r.type==2)
-            title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
-        if(is.null(ylab) & r.type==1)
-            title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
-            else if(is.null(ylab) & r.type==2)
-            title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
-        axis(2,at=seq(0,1,by=.1))
-        axis(1,at=seq(0,1,by=.1))
-    	}
-    } else {## Interaction, R2, Continuous
-        if(prod(par("mfrow")==1) && dev.interactive()){
-            oask <- devAskNewPage(TRUE)
-            on.exit(devAskNewPage(oask))
-        }
-        if("indirect" %in% etype.vec){
-        if(is.null(levels))
-            levels0 <- pretty(quantile(x$d0, probs=c(0.1,0.9)), 10)
-            else levels0 <- levels
-        if(sign.prod == 1){
-            d0.p <- approx(x$d0[((length(x$d0)+1)/2):length(x$d0)], n=dlength)$y
-            d0mat.p <- matrix(d0.p[Rprod.mat/0.0001+1], nrow=length(R2M))
-            if(is.null(main) & r.type == 1)
-                main0 <- expression(paste("ACME"[0], "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==1))
-            else if(is.null(main) & r.type == 2)
-                main0 <- expression(paste("ACME"[0], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==1))
-            else main0 <- main
-            contour(R2M, R2Y, d0mat.p, levels=levels0, main=main0, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
-            contour(R2M, R2Y, d0mat.p, levels=0, lwd=lwd+1, add=TRUE)
-        } else if(sign.prod == -1){
-            d0.n <- rev(approx(x$d0[1:((length(x$d0)+1)/2)], n=dlength)$y)
-            d0mat.n <- matrix(d0.n[Rprod.mat/0.0001+1], nrow=length(R2M))
-            if(is.null(main) & r.type == 1)
-                main0 <- expression(paste("ACME"[0],"(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==-1))
-            else if(is.null(main) & r.type == 2)
-                main0 <- expression(paste("ACME"[0], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==-1))
-            else main0 <- main
-            contour(R2M, R2Y, d0mat.n, levels=levels0, main=main0, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
-            contour(R2M, R2Y, d0mat.n, levels=0, lwd=lwd+1, add=TRUE)
-        } else stop("sign.prod must be either -1 or 1")
-        if(is.null(xlab) & r.type==1)
-            title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
-            else if(is.null(xlab) & r.type==2)
-            title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
-        if(is.null(ylab) & r.type==1)
-            title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
-            else if(is.null(ylab) & r.type==2)
-            title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
-        axis(2,at=seq(0,1,by=.1))
-        axis(1,at=seq(0,1,by=.1))
-    #Delta_1
-        if(is.null(levels))
-            levels1 <- pretty(quantile(x$d1, probs=c(0.1,0.9)), 10)
-            else levels1 <- levels
-        if(sign.prod == 1){
-            d1.p <- approx(x$d1[((length(x$d1)+1)/2):length(x$d1)], n=dlength)$y
-            d1mat.p <- matrix(d1.p[Rprod.mat/0.0001+1], nrow=length(R2M))
-            if(is.null(main) & r.type == 1)
-                main1 <- expression(paste("ACME"[1], "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==1))
-            else if(is.null(main) & r.type == 2)
-                main1 <- expression(paste("ACME"[1], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==1))
-            else main1 <- main
-            contour(R2M, R2Y, d1mat.p, levels=levels1, main=main1, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd, ...)
-            contour(R2M, R2Y, d1mat.p, levels=0, lwd=lwd+1, add=TRUE)
-        } else if(sign.prod == -1){
-            d1.n <- rev(approx(x$d1[1:((length(x$d1)+1)/2)], n=dlength)$y)
-            d1mat.n <- matrix(d1.n[Rprod.mat/0.0001+1], nrow=length(R2M))
-            if(is.null(main) & r.type == 1)
-                main1 <- expression(paste("ACME"[1], "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==-1))
-            else if(is.null(main) & r.type == 2)
-                main1 <- expression(paste("ACME"[1], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==-1))
-            else main1 <- main
-            contour(R2M, R2Y, d1mat.n, levels=levels1, main=main1, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd, ...)
-            contour(R2M, R2Y, d1mat.n, levels=0, lwd=lwd+1, add=TRUE)
-        }
-        if(is.null(xlab) & r.type==1)
-            title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
-            else if(is.null(xlab) & r.type==2)
-            title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
-        if(is.null(ylab) & r.type==1)
-            title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
-            else if(is.null(ylab) & r.type==2)
-            title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
-        axis(2,at=seq(0,1,by=.1))
-        axis(1,at=seq(0,1,by=.1))
-      }
-  }
-	if("direct" %in% etype.vec){
-		if(is.null(levels))
-            levels0 <- pretty(quantile(x$z0, probs=c(0.1,0.9)), 10)
-            else levels0 <- levels
-        if(sign.prod == 1){
-            z0.p <- approx(x$z0[((length(x$z0)+1)/2):length(x$z0)], n=dlength)$y
-            z0mat.p <- matrix(z0.p[Rprod.mat/0.0001+1], nrow=length(R2M))
-            if(is.null(main) & r.type == 1)
-                main0 <- expression(paste("ADE"[0], "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==1))
-            else if(is.null(main) & r.type == 2)
-                main0 <- expression(paste("ADE"[0], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==1))
-            else main0 <- main
-            contour(R2M, R2Y, z0mat.p, levels=levels0, main=main0, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
-            contour(R2M, R2Y, z0mat.p, levels=0, lwd=lwd+1, add=TRUE)
-        } else if(sign.prod == -1){
-            z0.n <- rev(approx(x$z0[1:((length(x$z0)+1)/2)], n=dlength)$y)
-            z0mat.n <- matrix(z0.n[Rprod.mat/0.0001+1], nrow=length(R2M))
-            if(is.null(main) & r.type == 1)
-                main0 <- expression(paste("ADE"[0],"(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==-1))
-            else if(is.null(main) & r.type == 2)
-                main0 <- expression(paste("ADE"[0], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==-1))
-            else main0 <- main
-            contour(R2M, R2Y, z0mat.n, levels=levels0, main=main0, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
-            contour(R2M, R2Y, z0mat.n, levels=0, lwd=lwd+1, add=TRUE)
-        } else stop("sign.prod must be either -1 or 1")
-        if(is.null(xlab) & r.type==1)
-            title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
-            else if(is.null(xlab) & r.type==2)
-            title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
-        if(is.null(ylab) & r.type==1)
-            title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
-            else if(is.null(ylab) & r.type==2)
-            title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
-        axis(2,at=seq(0,1,by=.1))
-        axis(1,at=seq(0,1,by=.1))
-    #Delta_1
-        if(is.null(levels))
-            levels1 <- pretty(quantile(x$z1, probs=c(0.1,0.9)), 10)
-            else levels1 <- levels
-        if(sign.prod == 1){
-            z1.p <- approx(x$z1[((length(x$z1)+1)/2):length(x$z1)], n=dlength)$y
-            z1mat.p <- matrix(z1.p[Rprod.mat/0.0001+1], nrow=length(R2M))
-            if(is.null(main) & r.type == 1)
-                main1 <- expression(paste("ADE"[1], "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==1))
-            else if(is.null(main) & r.type == 2)
-                main1 <- expression(paste("ADE"[1], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==1))
-            else main1 <- main
-            contour(R2M, R2Y, z1mat.p, levels=levels1, main=main1, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd, ...)
-            contour(R2M, R2Y, z1mat.p, levels=0, lwd=lwd+1, add=TRUE)
-        } else if(sign.prod == -1){
-            z1.n <- rev(approx(x$z1[1:((length(x$z1)+1)/2)], n=dlength)$y)
-            z1mat.n <- matrix(z1.n[Rprod.mat/0.0001+1], nrow=length(R2M))
-            if(is.null(main) & r.type == 1)
-                main1 <- expression(paste("ADE"[1], "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", (lambda[2]*lambda[3])==-1))
-            else if(is.null(main) & r.type == 2)
-                main1 <- expression(paste("ADE"[1], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", (lambda[2]*lambda[3])==-1))
-            else main1 <- main
-            contour(R2M, R2Y, z1mat.n, levels=levels1, main=main1, xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd, ...)
-            contour(R2M, R2Y, z1mat.n, levels=0, lwd=lwd+1, add=TRUE)
-        }
-        if(is.null(xlab) & r.type==1)
-            title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
-            else if(is.null(xlab) & r.type==2)
-            title(xlab=expression(paste(tilde(R)[M]^{2})), line=2.5, cex.lab=.9)
-        if(is.null(ylab) & r.type==1)
-            title(ylab=expression(paste(R[Y]^2,"*")), line=2.5, cex.lab=.9)
-            else if(is.null(ylab) & r.type==2)
-            title(ylab=expression(paste(tilde(R)[Y]^2)), line=2.5, cex.lab=.9)
-        axis(2,at=seq(0,1,by=.1))
-        axis(1,at=seq(0,1,by=.1))
-      }
-  } else stop("'sens.par' must be either \"rho\" or \"R2\" ")
-		}
+}
