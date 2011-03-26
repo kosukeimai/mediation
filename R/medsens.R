@@ -962,6 +962,10 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
             else title(ylab = ylab)
     } else {
     if(x$INT == FALSE){
+    	if(x$effect.type == "both"){
+            oask <- devAskNewPage(TRUE)
+            on.exit(devAskNewPage(oask))
+        }
     	if("indirect" %in% etype.vec){
         if(is.null(ylim))
             ylim <- c(min(x$d0), max(x$d0))
@@ -1176,6 +1180,10 @@ plot.medsens <- function(x, sens.par="rho", r.type=1, sign.prod=1, pr.plot=FALSE
         ylim <- c(0,1)
 
     if(x$INT==FALSE){## No Interaction, R2, Continuous
+    	if(x$effect.type == "both"){
+            oask <- devAskNewPage(TRUE)
+            on.exit(devAskNewPage(oask))
+        }
         if("indirect" %in% etype.vec){
         	if(is.null(levels))
             levels <- pretty(quantile(x$d0, probs=c(0.1,0.9)), 10)
