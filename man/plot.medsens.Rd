@@ -35,9 +35,15 @@ This function is used to plot results from the 'medsens' function. Causal averag
 \item{...}{ additional arguments to be passed to plotting functions.} 
 } 
 
-\details{The sensitivity analysis for causal mediation effects can be conducted in terms of two alternative sensitivity parameters, which both quantify the degree of violation of the sequential ignorability assumption.
+\details{The sensitivity analysis for causal mediation effects can be conducted in terms of two alternative sensitivity parameters, which both quantify the degree of violation of the sequential ignorability assumption. The "rho" parameter represents the correlation between the two error terms of the (latent) linear models for the mediator and outcome variables. A large value of rho indicates the existence of important common unobserved predictors for both the mediator and outcome and therefore a high degree of sequential ignorability violation, while a value close to zero implies there is no such confounders.
 
+The resulting "rho" figures plot the estimated true values of ACME (or ADE, proportion mediated) against rho, along with the confidence intervals. When rho is zero, sequantial ignorability holds, so the estimated value at that point will be equal to the estimate returned by the \code{\link{mediate}}. The confidence level is determined by the 'conf.level' value of the original \code{\link{mediate}} object.
 
+The "R2" parameters represent the proportions of the mediator and outcome variances that are explained by an unobserved pre-treatment confounder, thereby indicating the importance of such a confounder in each model.  When 'r.type' is "residual", the R2 parameters represent the proportions of the residual variances of the mediator and outcome models that become explained by the inclusion of the hypothetical pre-treatment confounder.  These are denoted as "R square stars" in Imai, Keele and Yamamoto (2010) and can also be specified as "star" or using a numeric value 1 in \code{medsens.plot}. When 'r.type' is "total", the R2s represent the total mediator and outcome variances the unobserved confounder would explain. This option can also be specified using "tilde" or a numeric value 2.
+
+For both types of the "R2" parameters, 'sign.prod' indicates the hypothesized direction in which the unobserved confounder affects the mediator and outcome. (The name derives from the fact that this direction is mathematically represented by the sign of the product of two regression coefficients.) If "positive" (or a numeric value 1) is given, the confounder is assumed to affect the mediator and outcome in the same direction.  If "negative" (or a numeric value -1), the effect is assumed to be in opposite directions.
+
+The resulting contours in the "R2" plots represent the values of the ACME (or ADE) for different combinations of the mediator R2 and outcome R2 values. When both values are zero (the lower-left corner of the plot), the unobserved pre-treatment confounder has no effect on either mediator or outcome and therefore sequantial ignorability is satisfied.
 }
 
 \section{Warning}{The 'smooth.effect' and 'smooth.ci' options should be used with caution since the smoothing could affect substantive implications of the graphical analysis in a significant way.}
