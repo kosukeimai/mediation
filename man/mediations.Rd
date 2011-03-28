@@ -1,8 +1,8 @@
 \name{mediations} 
 \alias{mediations} 
-\title{Causal Mediation Analysis for Multiple Treatment/Mediator Combinations} 
+\title{Causal Mediation Analysis for Multiple Outcome/Treatment/Mediator Combinations} 
 \description{ 
-'mediations' can be used to process a set of treatment/mediator combinations through the \code{\link{mediate}} function to produce a series of causal mediation analysis results.} 
+'mediations' can be used to process a set of outcome/treatment/mediator combinations through the \code{\link{mediate}} function to produce a series of causal mediation analysis results.} 
 \usage{
 
 mediations(datasets, treatment, mediators, outcome, 
@@ -11,8 +11,8 @@ mediations(datasets, treatment, mediators, outcome,
         conf.level=.95, sims=500, boot=FALSE, ...)
 
 \arguments{
-\item{datasets}{A list of character strings corresponding to the names of the data frames. Each dataset has a separate treatment/control contrast. The listed names of each dataset must begin the the exact name of the treatment variable that is contained in that dataset (see example below).}
-\item{treatment}{Vector of treatment variable names contained in one of the data frames. Each element is a character expression and part of a vector within c(). Each treatment name must be the first part of each dataset name.}
+\item{datasets}{A named list of data frames. Each data frame has a separate treatment/control contrast. The listed names of each dataset must begin the the exact name of the treatment variable that is contained in that dataset (see example below).}
+\item{treatment}{A vector of character strings indicating the names of the treatment variables, with length equal to the length of 'datasets'. Each treatment variable must be included in the data frame listed in the same position of list 'datasets'. Each treatment variable name must be the first part of each data frame name (contained in the list "datasets").}
 \item{mediators}{Vector of mediators names contained within each data frame. Each element is a character expression and part of a vector within c(). Each mediator will be used with each treatment variable and hence must be in each dataframe of "datasets".}
 \item{outcome}{Vector of outcome names contained within each data frame. Each element is used to estimate all treatment/mediation combinations.}
 \item{covariates}{Single valued character vector that is a set of all pre-treatment covariates names (as they appear in the data frame) to be included in each model. Between each variable is a "+" sign indicating their additive entry to each model. All covariates must be in each model. Default is NULL but users typically should have pre-treatment variables to control for to the make the sequential ignorability assumption more plausible.}
@@ -57,9 +57,10 @@ There are several limitations to the code. First, it works only with a somewhat 
 the extremely flexible mediate function. See the "family" option below. Second, one cannot specify separate sets of 
 covariates. In this case, separate uses of mediations can easily be used to accomodate these user specific cases. } 
 
-\values{
-Teppei I don't know what to put here bc. the actual names of all values will depend on the variables used. Then everything is same as mediate.
-}
+\values{ The output of mediations is a list of mediate objects. Each one is named by the outcome, treatment, and 
+mediator variable used by mediate for estimation. The order of these mediate objects is simply a function of the 
+order used in the lists and vectors entered into mediations. Each object is named using the same convention 
+described in the "details" section.} 
 
 \author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu} }
  
