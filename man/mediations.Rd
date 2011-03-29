@@ -6,74 +6,77 @@
 \usage{
 
 mediations(datasets, treatment, mediators, outcome, 
-        covariates=NULL, family=c("gaussian", "gaussian"),
-        tau.m=.5,tau.y=.5, LowerY=NULL, UpperY=NULL, interaction=FALSE,
-        conf.level=.95, sims=500, boot=FALSE, ...)
+        covariates = NULL, families = c("gaussian", "gaussian"),
+        tau.m = 0.5, tau.y = 0.5, LowerY = NULL, UpperY = NULL, 
+        interaction = FALSE, conf.level = 0.95, sims = 500, boot = FALSE, ...)
 
-\arguments{
-\item{datasets}{A named list of data frames. Each data frame has a separate treatment variable. The listed names of each dataset must begin the the exact name of the treatment variable that is contained in that dataset (see example below).}
-\item{treatment}{A vector of character strings indicating the names of the treatment variables, with length equal to the length of 'datasets'. Each treatment variable must be included in the data frame listed in the same position of list 'datasets'. Each treatment variable name must be the first part of each data frame name (contained in the list "datasets").}
-\item{mediators}{Vector of mediators names contained within each data frame. Each element is a character expression and part of a vector within c(). Each mediator will be used with each treatment variable and hence must be in each dataframe of "datasets".}
-\item{outcome}{Vector of outcome names contained within each data frame. Each element is used to estimate all treatment/mediation combinations.}
-\item{covariates}{Single valued character vector that is a set of all pre-treatment covariates names (as they appear in the data frame) to be included in each model. Between each variable is a "+" sign indicating their additive entry to each model. All covariates must be in each data frame. Default is NULL but users typically should have pre-treatment variables to control for to the make the sequential ignorability assumption more plausible.}
-\item{family}{Two element vector specifying the link function to be used in the mediator and outcome models, respectively. Currently only supports "gaussian", "binomial" (for a probit link), "oprobit" (for ordered probit) and "quantile" (for quantile regression, see tau). For the outcome equation tobit ("tobit") is also available in addition to the mediator model options.}
-\item{tau.m}{Specifies the quantile to be used for a quantile regression for the mediator model. Only relevant if 'family' for the mediator model is "quantile". }
-\item{tau.y}{Specifies the quantile to be used for a quantile regression for the outcome model. Only relevant if 'family' for the outcome model is "quantile". }
-\item{LowerY}{Lower bound for tobit model.}
-\item{UpperY}{Upper bound for tobit model.}
-\item{interaction}{Whether the treatment and mediator variables should be interacted. This will apply to applications of mediate to all the treatment/mediator/outcome combinations.}
-\item{conf.level}{Confidence level used for estimation of uncertainty in mediate function. This will apply to all applications of mediate to all the treatment/mediator/outcome combinations.}
-\item{sims}{Desired number of simulations to run mediate for. This will apply to all applications of mediate to all the treatment/mediator/outcome combinations.}
-\item{boot}{Whether or not bootstrap should be used. This will apply to all applications of mediate to all the treatment/mediator/outcome combinations.}
-\item{...}{Other arguments passed to \code{\link{mediate}}, such as 'robustSE', 'dropobs', etc.}
 }
 
-\details{This function processes multiple treatment/mediators/outcome variable combinations to produce a collected set of 
-output ready for analysis or graphing. In principle, this is a function designed to facilitate running causal 
-mediation analyses on multiple models that share the same basic specification (types of parametric model and set of 
-pre-treatment covariates) except the treatment, mediator and outcome variables can differ across specifications. The 
-function works by looping over a set of data frames that are pre-loaded into the workspace. Each one of these data 
-frames has a specific treatment variable that is used for analysis with that data frame. Then the code runs causal 
-mediation analysis via \code{\link{mediate}} on every combination of the treatment, mediator, and 
-outcomes specified in these arguments. This allows the users to explore whether different mediators transmit the 
-effect of the treatment variable on a variety of outcome variables. The output of mediations is an object of type 
-"mediations". Individual elements of the object use a naming convention based on the variables names of the 
-output, the treatment, and the mediator, each separated by a "." (see example below). A single set of pre-treatment control variables is 
-used throughout. 
+\arguments{
+\item{datasets}{ a named list of data frames. Each data frame has a separate treatment variable. The names of each data frame must begin with the exact name of the treatment variable that is contained in that dataset (see example below).}
+\item{treatment}{ a vector of character strings indicating the names of the treatment variables, with length equal to the length of 'datasets'. Each treatment variable must be included in the data frame listed in the same position of list 'datasets' and its name must match the first part of the corresponding data frame.}
+\item{mediators}{ a vector of character strings indicating the names of the mediators contained within each data frame. All of the mediators will be used with each treatment variable and hence must be included in each data frame of 'datasets'.}
+\item{outcome}{ a vector of character strings indicating the names of the outcome variables contained within each data frame. All of the outcomes will be used with each treatment variable and must be in each data frame.}
+\item{covariates}{ a character string representing the set of pre-treatment covariate names (as they appear in the data frame) to be included in each model. The value must take the form of standard model formula, with each additive component separated by "+", etc. (see example below). All covariates must be in each data frame. Default is 'NULL'.}
+\item{families}{ a vector of length two specifying the types of the mediator and outcome models. Currently only supports "gaussian" (for linear regression), "binomial" (for binary probit), "oprobit" (for ordered probit) and "quantile" (for quantile regression, see 'tau'). For the outcome the tobit model ("tobit") is also available in addition to the mediator model options.}
+\item{tau.m}{ a numeric value specifying the quantile to be used for a quantile regression for the mediator model. Only relevant if the first element of 'families' is "quantile". See \code{\link{rq}}.}
+\item{tau.y}{ a numeric value specifying the quantile to be used for a quantile regression for the outcome model. Only relevant if the second element of 'families' is "quantile". See \code{\link{rq}}.}
+\item{LowerY}{ a numeric value indicating the lower bound for the tobit outcome model. See \code{\link{tobit}}.}
+\item{UpperY}{ a numeric value indicating the upper bound for the tobit outcome model. See \code{\link{tobit}}.}
+\item{interaction}{ a logical value indicating whether the treatment and mediator variables should be interacted. This will apply to applications of \code{\link{mediate}} to all the treatment/mediator/outcome combinations.}
+\item{conf.level}{ confidence level used in each application of the \code{\link{mediate}} function.}
+\item{sims}{ an integer indicating the desired number of simulations to run \code{\link{mediate}} for. This will apply to all applications of 'mediate' to all the treatment/mediator/outcome combinations.}
+\item{boot}{ a logical value, indicating whether or not nonparametric bootstrap should be used in each \code{\link{mediate}} application.}
+\item{...}{ other arguments passed to \code{\link{mediate}}, such as 'robustSE', 'dropobs', etc.}
 
-Some times users will not have multiple different outcome variables, and instead will use the function 
-to explore several separate mediators. For example, if you have 3 different treatments and a control condition, the 
-user will create three different data frames, each containing a treatment variable equal to 0 (typically) if a control 
-condition. In addition, if there are also 4 different mediators, each of these will be contained in each data frame, 
-along with the outcome variable. The function will estimate all of the combinations of treatment variables 
-and mediators instead of separate lines of code being written for each one. 
+}
 
-Individual elements of the output list may be passed through \code{\link[=summary.mediate]{summary}} and 
-\code{\link[=plot.mediate]{plot}} for tabular and graphical summaries of the results. Alternatively, the entire 
-output may be directly passed to \code{\link[=summary.mediations]{summary}} or \code{\link[plot.mediations]{plot}} 
-to inspect all results. 
+\details{This function processes multiple treatment/mediators/outcome variable combinations to produce a collected set of  output ready for analysis or graphing. In principle, this is a function designed to facilitate running causal  mediation analyses on multiple models that share the same basic specification (i.e. the types of parametric models and the set of pre-treatment covariates) except the treatment, mediator and outcome variables can differ across specifications. The function works by looping over a set of data frames that are pre-loaded into the workspace. Each one of these data frames has a specific treatment variable that is used for analysis with that data frame. Then the code runs causal mediation analysis via \code{\link{mediate}} on every combination of the treatment, mediator, and outcomes specified in these arguments. This allows the users to explore whether different mediators transmit the effect of the treatment variable on a variety of outcome variables. A single set of pre-treatment control variables can be specified in 'covariates', which will be used throughout. 
 
-There are several limitations to the code. First, it works only with a somewhat limited set of models compared to 
-the extremely flexible mediate function. See the "family" option above. Second, one cannot specify separate sets of 
-covariates. In this case, separate uses of mediations can easily be used to accomodate these user specific cases. } 
+The 'mediations' function can be used with either multiple mediators and a single outcome, a single mediator and multiple outcomes, or multiple mediators and outcomes. For example, with three different treatments, user will create three different data frames, each containing a treatment variable. In addition, if there are also four different mediators, each of these will be contained in each data frame, along with the outcome variable. The function will estimate all of the combinations of treatment variables and mediators instead of separate lines of code being written for each one.
 
-\values{ The output of mediations is a list of mediate objects. Each one is named by the outcome, treatment, and 
-mediator variable used by mediate for estimation. The order of these mediate objects is simply a function of the 
-order used in the lists and vectors entered into mediations. Each object is named using the same convention 
-described in the "details" section.} 
+Individual elements of the output list (see "Value") may be passed through \code{\link[=summary.mediate]{summary}} and  \code{\link[=plot.mediate]{plot}} for tabular and graphical summaries of the results. Alternatively, the entire output may be directly passed to \code{\link[=summary.mediations]{summary}} or \code{\link[plot.mediations]{plot}} for all results to be inspected. 
 
-\author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu} }
+The default value of 'covariates' is 'NULL' and no covariate will be included in either mediator or outcome models without a custom value. It should be noted that users typically should have pre-treatment covariates to make the sequential ignorability assumption more plausible.
+
+There are several limitations to the code. First, it works only with a subset of the model types that will be accommodated if 'mediate' is used individually (see the 'families' argument above for details). Second, one cannot specify separate sets of covariates for different treatment/mediator/outcome combinations. Users should use 'mediate' separately for individual models if more flexibility is required in their specific applications.} 
+
+\value{ An object of class "mediations" (or "mediations.order" if the outcome model is ordered probit), a list of "mediate" ("mediate.order") objects produced by applications of \code{\link{mediate}} for the specified treatment/mediator/outcome combinations.  The elements are named based on the names of the outcome, treatment, and mediator variables, each separated by a "." (see example below). } 
+
+\author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu},
+Teppei Yamamoto, Princeton University, \email{tyamamot@princeton.edu}.}
  
-\seealso{\code{\link{mediate}}, \code{link{summary.mediations}}, \code{\link{plot.mediations}} }
+\seealso{\code{\link{mediate}}, \code{\link{summary.mediations}}, \code{\link{plot.mediations}}, \code{\link{rq}}, \code{\link{tobit}}.}
 
 \examples{ 
-#Hypothetical example
+\dontrun{
+# Hypothetical example
 
-#datasets <- list(T1=T1, T2=T2) List of dataset names corresponding to the two different treatment variables T1vsCont and T2vsCont. Each data set has it's respective treatment/contrast variable.
-#mediators <- c("M1", "M2" ) List of different mediators, M1 and M2 (in each data set)
-#outcome<-c("Ycont1","Ycont2") List of different outcome variables (in each data set).
-#treatment <- c("T1vsCont", "T2vsCont") List of treatment variables. Could also just be denoted c("T1","T2")
-#covariates <- c("X1+X2") Set of conditioning pre-treatment covariates (in each data set)
-#x <- mediations(datasets, treatment, mediators,outcome, covariates,family=c("gaussian","gaussian"), interaction=FALSE,conf.level=.90, sims=50) #runs mediator and outcome models with OLS on both mediator and outcome model.
-#plot(x$Ycont1.T1vsCont.M1) plots the result of a model with Ycont1 outcome, T1vsCont treatment, and the mediator M1; names(x) will return the name of each mediation result. summary displays the summary statistics.
+datasets <- list(T1 = T1, T2 = T2)
+    # List of data frames corresponding to the two different treatment variables "T1vsCont" and "T2vsCont". 
+    # Each data set has its respective treatment variable.
+    
+mediators <- c("M1", "M2") 
+    # Vector of mediator names, all included in each data frame.
+
+outcome <- c("Ycont1","Ycont2")
+    # Vector of outcome variable names, again all included in each data frame.
+    
+treatment <- c("T1vsCont", "T2vsCont")
+    # Vector of treatment variables names; must begin with identical strings with dataset names in 'datasets'.
+    
+covariates <- c("X1 + X2")
+    # Set of covariates (in each data set), entered using the standard model formula format.
+
+x <- mediations(datasets, treatment, mediators, outcome, covariates,
+    families=c("gaussian","gaussian"), interaction=FALSE, 
+    conf.level=.90, sims=50) 
+    # Runs 'mediate' iteratively for each variable combinations, with 'lm' on both mediator and outcome model.
+
+summary(x)  # tabular summary of results for all model combinations
+plot(x)  # graphical summary of results for all model combinations at once
+
+plot(x$Ycont1.T1vsCont.M1) 
+    # Individual 'mediate' outputs are stored as list elements and can be accessed using the usual "$" operator.
+}
 } 
