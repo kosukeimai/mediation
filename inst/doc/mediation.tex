@@ -140,7 +140,7 @@ pdfstartview=FitH, breaklinks=true, urlbordercolor={0 1 0}, citebordercolor={0 0
   investigate possible causal mechanisms.  Such an analysis allows
   researchers to explore various causal pathways, going beyond the
   estimation of simple causal effects. Recently,
-  \citet*{imai:keel:yama:08} and \citet*{imai:keel:ting:09} developed
+  \citet*{imai:keel:yama:10} and \citet*{imai:keel:ting:10} developed
   general algorithms to estimate causal mediation effects with the
   variety of data types that are often encountered in practice.  The
   new algorithms can estimate causal mediation effects for linear and
@@ -172,21 +172,21 @@ mediation analysis has a potential to overcome the common criticism of
 quantitative social science research that it only provides a black-box
 view of causality.
 
-Recently, \citet*{imai:keel:yama:08} and \citet*{imai:keel:ting:09}
+Recently, \citet*{imai:keel:yama:10} and \citet*{imai:keel:ting:10}
 developed general algorithms for the estimation of causal mediation
 effects with a wide variety of data that are often encountered in
 practice.  The new algorithms can estimate causal mediation effects
 for linear and nonlinear relationships, with parametric and
 nonparametric models, with continuous and discrete mediators, and
 various types of outcome variables.
-\citet{imai:keel:yama:08,imai:keel:ting:09} also develop sensitivity
+\citet{imai:keel:yama:10,imai:keel:ting:10} also develop sensitivity
 analyses which can be used to formally assess the robustness of
 findings to the potential violations of the key identifying
 assumption.  In this paper, we describe the easy-to-use software,
 \bmediation, which allows researchers to conduct causal mediation
 analysis within the statistical computing language \bR\ \citep{R:09}.
 We illustrate the use of the software with some of the empirical
-examples presented in \citet{imai:keel:ting:09}.
+examples presented in \citet{imai:keel:ting:10}.
 
 \paragraph{Installation and Updating.} Before we begin, we explain how
 to install and update the software.  First, researchers need to
@@ -212,14 +212,14 @@ In this section, we give an overview of the software by describing its
 design and architecture.  To avoid the duplication, we do not provide
 the details of the methods that are implemented by \bmediation\ and
 the assumptions that underline them.  Readers are encouraged to read
-\citet{imai:keel:yama:08,imai:keel:ting:09} for more information about
+\citet{imai:keel:yama:10,imai:keel:ting:10} for more information about
 the methodology implemented in \bmediation.
 
 \subsection{The Overview}
 
 The methods implemented via \bmediation\ rely on the following
 identification result obtained under the sequential ignorability
-assumption of \citet{imai:keel:yama:08}, {\small \begin{eqnarray}
+assumption of \citet{imai:keel:yama:10}, {\small \begin{eqnarray}
     \bar\delta(t) & = & \int \int \E(Y_i \mid M_i = m, T_i=t, X_i = x)
     \l\{ dF_{M_i \mid T_i = 1, X_i = x}(m) - dF_{M_i \mid T_i = 0, X_i = x}(m)\r\}\, dF_{X_i}(x), \label{eq:acme} \\
     \bar\zeta(t) & = & \int \int \l\{ \E(Y_i \mid M_i = m, T_i = 1,
@@ -237,7 +237,7 @@ the outcome variable $f(Y_i \mid T_i, M_i, X_i)$.  (Note that we use
 the empirical distribution of $X_i$ to approximate $F_{X_i}$.)  Once these
 models are chosen and fitted by researchers, then \bmediation\ will
 compute the estimated causal mediation and other relevant estimates
-using the algorithms proposed in \citet{imai:keel:ting:09}.  The
+using the algorithms proposed in \citet{imai:keel:ting:10}.  The
 algorithms also produce uncertainty estimates such as standard errors
 and confidence intervals, based on either a nonparametric bootstrap procedure (for parametric or nonparametric models) or a
 quasi-Bayesian Monte Carlo approximation (for parametric models).
@@ -275,7 +275,7 @@ respectively.
 \subsection{Estimation of the Causal Mediation Effects}
 
 Estimation of the causal mediation effects is based on
-Algorithms~1~and~2 of \citet{imai:keel:ting:09}. These are general
+Algorithms~1~and~2 of \citet{imai:keel:ting:10}. These are general
 algorithms in that they can be applied to any parametric
 (Algorithm~1~or~2) or semi/nonparametric models (Algorithm~2) for the
 mediator and outcome variables.  Here, we briefly describe how these
@@ -285,7 +285,7 @@ of the object-oriented nature of \bR\ programming language.
 \paragraph{Algorithm~1 for Parametric Models.}
 
 We begin by explaining how to implement Algorithm~1 of
-\citet{imai:keel:ting:09} for standard parametric models.  First,
+\citet{imai:keel:ting:10} for standard parametric models.  First,
 analysts fit parametric models for the mediator and outcome
 variables. That is, we model the observed mediator $M_i$ given the
 treatment $T_i$ and pre-treatment covariates $X_i$.  Similarly, we
@@ -369,14 +369,14 @@ identification assumption, analysts must perform a sensitivity
 analysis \citep{rose:02c}.  Unfortunately, it is difficult to
 construct a sensitivity analysis that is generally applicable to any
 parametric or nonparametric model.  Thus,
-\citet{imai:keel:yama:08,imai:keel:ting:09} develop sensitivity
+\citet{imai:keel:yama:10,imai:keel:ting:10} develop sensitivity
 analyses for commonly used parametric models, which we implement in
 \bmediation.
 
 \paragraph{The Baron-Kenny Procedure.}
 
-\citet{imai:keel:yama:08} develop a sensitivity analysis for the
-Baron-Kenny procedure and \citet{imai:keel:ting:09} generalize it to
+\citet{imai:keel:yama:10} develop a sensitivity analysis for the
+Baron-Kenny procedure and \citet{imai:keel:ting:10} generalize it to
 the linear structural equation model (LSEM) with an interaction term.
 This general model is given by,
 \begin{eqnarray}
@@ -390,7 +390,7 @@ magnitude of this correlation coefficient represents the departure
 from the ignorability assumption (about the mediator).  Note that the
 treatment is assumed to be ignorable as it would be the case in
 randomized experiments where the treatment is randomized but the
-mediator is not.  Theorem~2 of \citet{imai:keel:ting:09} shows how the
+mediator is not.  Theorem~2 of \citet{imai:keel:ting:10} shows how the
 average causal mediation effects change as a function of $\rho$.
 
 To obtain the confidence intervals for the sensitivity analysis, we
@@ -436,7 +436,7 @@ both the mediator and outcome are continuous.  Here, we assume that
 the model for the outcome is a probit regression. Using a probit
 regression for the outcome allows us to assume the error terms are
 jointly normal with a possibly non-zero correlation $\rho$.
-\citet{imai:keel:ting:09} derive the average causal mediation effects
+\citet{imai:keel:ting:10} derive the average causal mediation effects
 as a function of $\rho$ and a set of parameters that are identifiable
 due to randomization of the treatment. This lets us use $\rho$ as a
 sensitivity parameter in the same way as in the Baron-Kenny procedure.
@@ -464,7 +464,7 @@ model the continuous outcome variable.  We further assume that the two
 error terms jointly follow a bivariate normal distribution with mean
 zero and covariance $\rho\sigma_3$.  Then, as in the other two cases,
 we use the correlation between the two error terms $\rho$ as the
-sensitivity parameter.  \citet{imai:keel:ting:09} show that under this
+sensitivity parameter.  \citet{imai:keel:ting:10} show that under this
 setup, the causal mediation effects can be expressed as a function of
 the model parameters that can be consistently estimated given a fixed
 value of $\rho$.  Uncertainty estimates are computed based on the
@@ -477,9 +477,9 @@ manner similar to the other two cases.
 The main advantage of using $\rho$ as a sensitivity parameter is its
 simplicity.  However, applied researchers may find it difficult to
 interpret the magnitude of this correlation coefficient.  To overcome
-this limitation, \citet{imai:keel:yama:08} proposed alternative
+this limitation, \citet{imai:keel:yama:10} proposed alternative
 interpretations of $\rho$ based on the coefficients of determination
-or $R^2$ and \citet{imai:keel:ting:09} extended them to the binary
+or $R^2$ and \citet{imai:keel:ting:10} extended them to the binary
 mediator and binary outcome cases.  In that formulation, it is assumed
 that there exists a common unobserved pre-treament confounder in both
 mediator and outcome models.  Applied researchers are then required to
@@ -879,7 +879,7 @@ R> model.y <- rq(depress2 ~ treat + job_seek + depress1 + econ_hard + sex
 \end{verbatim}
 Furthermore, it is straightforward to loop over a set of quantiles and
 graph the mediation effects for a range of quantiles, as done in
-\citet{imai:keel:ting:09}.
+\citet{imai:keel:ting:10}.
 
 \paragraph{Discrete Mediator and Outcome Data.}
 
@@ -888,7 +888,7 @@ discrete.  For standard methods, this has presented a number of
 complications requiring individually tailored techniques.  The
 \bmediation\ software, however, can handle a number of different
 discrete data types using the general algorithms developed in
-\citet{imai:keel:ting:09}.  For example, one outcome of interest in
+\citet{imai:keel:ting:10}.  For example, one outcome of interest in
 the JOBS II study is a binary indicator (\texttt{work1}) for whether
 the subject became employed after the training sessions. To estimate
 the mediation effect, we simply use a probit regression instead of a
@@ -1203,7 +1203,7 @@ The \texttt{sims} option provides control over the number of draws in
 the parametric bootstrap procedure which is used to compute confidence bands. 
 When either the mediator or outcome is binary, the exact values of 
 sensitivity parameters where the mediation effects are zero cannot be analytically 
-obtained as in the fully continuous case \citep[see][Section 4]{imai:keel:yama:08}.
+obtained as in the fully continuous case \citep[see][Section 4]{imai:keel:yama:10}.
 Thus, this information is reported based on the signs of the estimated mediation 
 effects under various values of $\rho$ and corresponding coefficients of determination.
 The usage of the \texttt{summary()} function, however, remains
@@ -1304,8 +1304,8 @@ simulations.
 Causal mediation analysis is a key tool for social scientific
 research. In this paper, we describe our easy-to-use software for
 causal mediation analysis, \bmediation, that implements the new
-methods and algorithms introduced by \citet*{imai:keel:yama:08} and
-\citet*{imai:keel:ting:09}.  The software provides a flexible, unified
+methods and algorithms introduced by \citet*{imai:keel:yama:10} and
+\citet*{imai:keel:ting:11}.  The software provides a flexible, unified
 approach to causal mediation analysis in various situations
 encountered by applied researchers.  The object-oriented nature of the
 \bR\ programming made it possible for us to implement these algorithms
@@ -1327,7 +1327,7 @@ science research in several critical directions.
 
 \clearpage
 \pdfbookmark[1]{References}{References}
-\bibliography{my,imai,keele_revised2,TingleyBib}
+\bibliography{my,imai,../../../paper/keele_revised2,../../../paper/TingleyBib}
 
 
 \end{document}
