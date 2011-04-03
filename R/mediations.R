@@ -62,7 +62,7 @@ mediations <- function(datasets, treatment, mediators, outcome,
                                         treat=treatment[i], mediator=mediators[j],
                                         conf.level=conf.level, boot=boot, ...)
                 rm(result1, result2)
-                labels[(count)] <- sprintf("%s.%s.%s", outcome[o],data[i], mediators[j])
+                labels[(count)] <- sprintf("%s.%s.%s", outcome[o],treatment[i], mediators[j])
                 count <- count + 1
             }
         }
@@ -133,4 +133,3 @@ print.summary.mediations.order <- function(x, ...){
         print(summary.mediate.order(x[[i]])  )
     }
 }
-
