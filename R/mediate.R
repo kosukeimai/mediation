@@ -964,10 +964,10 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
 
 
 
-print.mediate <- function(x, ...){
-    print(unlist(x[1:11]))
-    invisible(x)
-}
+#print.mediate <- function(x, ...){
+#    print(unlist(x[1:11]))
+#    invisible(x)
+#}
 
 
 
@@ -1029,10 +1029,10 @@ print.summary.mediate <- function(x, ...){
 
 
 
-print.mediate.order <- function(x, ...){
-    print(unlist(x[1:50]))
-    invisible(x)
-}
+#print.mediate.order <- function(x, ...){
+#    print(unlist(x[1:50]))
+#    invisible(x)
+#}
 
 
 
