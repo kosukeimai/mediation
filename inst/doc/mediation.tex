@@ -214,7 +214,7 @@ package.  Readers may wish to skip this section and come back later if they are
 not already familiar with previous versions of the package.
 
 We implemented many new features in version 3.0, 
-long with numerous small changes to the internal code for efficiency
+along with numerous small changes to the internal code for efficiency
 improvement.  The user-level changes from the previous version include:
 
 \begin{itemize}
@@ -223,7 +223,8 @@ In addition to the models already implemented in the previous version, the {\tt 
 function can now be used for ordered response models fitted via the {\tt polr}
 function, quantile regressions for mediators fitted via the {\tt qr} function in package 
 {\tt quantreg}, and the tobit model for censored outcome variables fitted via the
-{\tt vglm} function in package {\tt VGAM}.
+{\tt vglm} function in package {\tt VGAM}.  These models have not been made available
+for sensitivity analysis via {\tt medsens}, however.
 
 \item Continuous treatment variables can now be used with the {\tt mediate} function
 via the {\tt treat.value} and {\tt control.value} arguments.  The estimated average
@@ -247,11 +248,11 @@ for $\bar\delta(0)$ and $\bar\delta(1)$ when they are equal).
 
 \item The output of the {\tt mediate} function now by default includes the entire sets of
 simulation draws ({\tt d0.sims}, {\tt z0.sims}, etc.) in addition to their means
-and quantiles.  This can be disabled by setting the ({\tt long}) argument to {\tt FALSE}.
+and quantiles.  This can be disabled by setting the {\tt long} argument to {\tt FALSE}.
 
 \item The {\tt mediate} function can now run even when different data frames are used
 for the mediator model ({\tt model.m}) and outcome model ({\tt model.y}).  This is
-done by refitting both models using a combined data frame created via {\tt merge}.  
+done by internally refitting both models using a combined data frame created via {\tt merge}.  
 As a result, observations which contain missing values for either model will be 
 automatically listwise discarded.  This feature is by default disabled and can be
 enabled by setting the {\tt dropobs} option to {\tt TRUE}.
@@ -260,7 +261,7 @@ enabled by setting the {\tt dropobs} option to {\tt TRUE}.
 standard errors for some parametric models (e.g. {\tt lm}, {\tt glm}).  This
 feature is controled by the new {\tt robustSE} argument of the {\tt mediate} function.
 The standard errors are obtained via the {\tt vcovHC} function in package {\tt sandwich}
-and users may also pass options for {\tt vcovHC} to compute different types of
+and users may also pass options for {\tt vcovHC} to use different types of
 robust standard errors.
 
 \item Users no longer need to manually indicate whether their models include a treatment-mediator
@@ -270,7 +271,7 @@ with a warning).
 \item We have added a new function {\tt mediations} to easily conduct multiple 
 causal mediation analyses for different treatment-mediator-outcome combinations.
 Both {\tt summary} and {\tt plot} methods have also been added for this function.
-The function is intended for exploratory analyses and users are cautioned against
+The function is intended for exploratory analyses only and users are cautioned against
 its potential abuse.  See Section~\ref{sec:mediations} for more discussion.
 
 \end{itemize}
@@ -591,7 +592,7 @@ Semiparametric ({\tt gam})   & \checkmark & \checkmark & \checkmark & \checkmark
                                                   \checkmark & \checkmark \\
 \hline
 \end{tabular}
-\caption{The Types of Data That Can be Handled by {\tt mediate} for the
+\caption{The Types of Models That Can be Handled by {\tt mediate} for the
   Estimation of Causal Mediation Effects.} \label{tab:MediateOptions}
   \end{center}
 \end{table}
@@ -599,11 +600,11 @@ Semiparametric ({\tt gam})   & \checkmark & \checkmark & \checkmark & \checkmark
 Our software, \bmediation, is quite flexible and can handle many of
 the model types that researchers are likely to use in practice.
 Table~\ref{tab:MediateOptions} categorizes the types of the mediator
-and outcome variables and lists whether \bmediation\ can produce the
+and outcome models and lists whether \bmediation\ can produce the
 point and uncertainty estimates of causal mediation effects. For
 example, while \bmediation\ can estimate average causal mediation
-effects when the mediator is ordered and the outcome is continuous, it
-has not yet been extended to other cases involving ordered variables.
+effects for censored outcomes with the tobit model, it
+has not yet been extended to cases involving censored mediators.
 In each situation handled by \bmediation, it is possible to have an
 interaction term between treatment status and the mediator variable,
 in which case the estimated quantities of interest will be reported
@@ -622,7 +623,7 @@ Linear                     & \checkmark & \checkmark \\
 Binary Probit              & \checkmark & - \\
 \hline
 \end{tabular}
-\caption{The Types of Data That Can Be Handled by {\tt medsens} for
+\caption{The Types of Models That Can Be Handled by {\tt medsens} for
   Sensitivity Analysis. } \label{tab:SensitivityOptions}
   \end{center}
 \end{table}
@@ -642,7 +643,9 @@ that combine binary or continuous mediators and outcomes, analysts
 must use a probit regression model with a linear regression model.
 This allows for jointly normal errors in the analysis. Unlike the
 estimation of causal mediation effects, sensitivity analysis with
-treatment/mediator interactions can only be done for the continuous outcome/continuous mediator and continuous outcome/binary mediator cases.  In the future, we hope to expand the range of models that
+treatment/mediator interactions can only be done for the continuous 
+outcome/continuous mediator and continuous outcome/binary mediator cases. 
+In the future, we hope to expand the range of models that
 are available for sensitivity analysis.
 
 \section{Examples}
