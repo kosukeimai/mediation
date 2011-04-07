@@ -10,7 +10,7 @@ mediate(model.m, model.y, sims=1000, boot=FALSE,
         treat="treat.name", mediator="med.name", 
         control=NULL, conf.level=.95, 
         control.value=0, treat.value=1, 
-        long=TRUE, dropobs=TRUE, robustSE=FALSE, ...)
+        long=TRUE, dropobs=FALSE, robustSE=FALSE, ...)
 
 } 
 

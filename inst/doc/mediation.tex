@@ -96,7 +96,8 @@ pdfstartview=FitH, breaklinks=true, urlbordercolor={0 1 0}, citebordercolor={0 0
 \if0\blind
 
 {\title{\bf \tit\thanks{This paper is an updated version of the tutorial
-    for package {\bf mediation} which was previously published as \citet{imai:etal:10}.
+    for package {\bf mediation} which was previously published in an edited
+    volume: \citet{imai:etal:10}.
     The description is based on version 3.0 of {\bf mediation} and included as 
     the package's vignette.
     Financial support from the National Science Foundation
@@ -208,7 +209,71 @@ R> update.packages("mediation")
 
 \section{New Features in Version 3.0}
 
+This section describes the recent update (version 3.0) to the {\tt mediation} 
+package.  Readers may wish to skip this section and come back later if they are
+not already familiar with previous versions of the package.
 
+We implemented many new features in version 3.0, 
+long with numerous small changes to the internal code for efficiency
+improvement.  The user-level changes from the previous version include:
+
+\begin{itemize}
+\item More model types have been added to the main mediation analysis function {\tt mediate}.
+In addition to the models already implemented in the previous version, the {\tt mediate}
+function can now be used for ordered response models fitted via the {\tt polr}
+function, quantile regressions for mediators fitted via the {\tt qr} function in package 
+{\tt quantreg}, and the tobit model for censored outcome variables fitted via the
+{\tt vglm} function in package {\tt VGAM}.
+
+\item Continuous treatment variables can now be used with the {\tt mediate} function
+via the {\tt treat.value} and {\tt control.value} arguments.  The estimated average
+causal mediation effects (ACME) and average direct effects (ADE) will be equal to the
+effects of changing treatment from {\tt control.value} to {\tt treat.value} while
+holding the appropriate treatment status constant at either of these two values.
+This functionality, however, has not been implemented for the {\tt medsens} function yet.
+
+\item The sensitivity analysis via {\tt medsens} can now be conducted with respect
+to the average direct effects.  Users can choose from {\tt "indirect"}, {\tt "direct"}
+or {\tt "both"} using the {\tt effect.type} argument.  The {\tt summary} and {\tt plot}
+methods are also added for these cases.
+
+\item A {\tt plot} method function for {\tt mediate} objects are now included,
+so that the results of mediation analysis using {\tt mediate} can be easily graphically
+summarized.
+
+\item The {\tt summary} output for {\tt mediate} objects has been updated to include
+additional information and not to include unnecessary information (e.g. separate estimates
+for $\bar\delta(0)$ and $\bar\delta(1)$ when they are equal).
+
+\item The output of the {\tt mediate} function now by default includes the entire sets of
+simulation draws ({\tt d0.sims}, {\tt z0.sims}, etc.) in addition to their means
+and quantiles.  This can be disabled by setting the ({\tt long}) argument to {\tt FALSE}.
+
+\item The {\tt mediate} function can now run even when different data frames are used
+for the mediator model ({\tt model.m}) and outcome model ({\tt model.y}).  This is
+done by refitting both models using a combined data frame created via {\tt merge}.  
+As a result, observations which contain missing values for either model will be 
+automatically listwise discarded.  This feature is by default disabled and can be
+enabled by setting the {\tt dropobs} option to {\tt TRUE}.
+
+\item Confidence intervals can now be calculated using heteroskedasticity-consistent
+standard errors for some parametric models (e.g. {\tt lm}, {\tt glm}).  This
+feature is controled by the new {\tt robustSE} argument of the {\tt mediate} function.
+The standard errors are obtained via the {\tt vcovHC} function in package {\tt sandwich}
+and users may also pass options for {\tt vcovHC} to compute different types of
+robust standard errors.
+
+\item Users no longer need to manually indicate whether their models include a treatment-mediator
+interaction.  The old {\tt INT} argument is therefore deprecated (but still accepted
+with a warning).
+
+\item We have added a new function {\tt mediations} to easily conduct multiple 
+causal mediation analyses for different treatment-mediator-outcome combinations.
+Both {\tt summary} and {\tt plot} methods have also been added for this function.
+The function is intended for exploratory analyses and users are cautioned against
+its potential abuse.  See Section~\ref{sec:mediations} for more discussion.
+
+\end{itemize}
 
 \section{The Software}
 
@@ -507,20 +572,26 @@ reversed.
 \begin{table}[t]
  \spacingset{1}
   \begin{center}
-\begin{tabular}{lccc}
+\begin{tabular}{lcccccc}
 \hline
-                     &\multicolumn{3}{c}{\it Outcome Variable Types} \\
-\cline{2-4}
-{\it Mediator Types} & Continuous    & Ordered & Binary \\ 
+                     &\multicolumn{6}{c}{\it Outcome Model Types} \\
+\cline{2-7}
+{\it Mediator Model Types} & Linear & GLM & Ordered & Censored & Quantile & Semiparametric \\ 
 \hline
-Continuous           & Yes           & No      & Yes \\
-                     &               &         &  \\
-Ordered              &  Yes          & No      &  No  \\
-                     &               &         &  \\
-Binary               &  Yes          & No      & Yes \\
+Linear ({\tt lm}) & \checkmark & \checkmark & \checkmark & \checkmark & 
+                                                  \checkmark & \checkmark  \\
+GLM (probit etc. via {\tt glm})  & \checkmark & \checkmark & \checkmark & \checkmark & 
+                                                  \checkmark & \checkmark  \\
+Ordered ({\tt polr}) & \checkmark & \checkmark & \checkmark & \checkmark & 
+                                                  \checkmark & \checkmark  \\
+Censored (tobit via {\tt vglm}) & - & - & - & - & - & - \\
+Quantile ({\tt rq}) & \checkmark & \checkmark & \checkmark & \checkmark & 
+                                                  \checkmark & \checkmark \\
+Semiparametric ({\tt gam})   & \checkmark & \checkmark & \checkmark & \checkmark & 
+                                                  \checkmark & \checkmark \\
 \hline
 \end{tabular}
-\caption{The Types of Data That Can be Handled by \bmediation\ for the
+\caption{The Types of Data That Can be Handled by {\tt mediate} for the
   Estimation of Causal Mediation Effects.} \label{tab:MediateOptions}
   \end{center}
 \end{table}
@@ -541,23 +612,18 @@ separately for the treatment and control groups.
 \begin{table}[t]
  \spacingset{1}
   \begin{center}
-\begin{tabular}{lccc}
+\begin{tabular}{lcc}
 \hline
-                     &\multicolumn{3}{c}{\it Outcome Variable Types} \\
-\cline{2-4}
-{\it Mediator Types} & Continuous & Ordered & Binary \\ 
+                     &\multicolumn{2}{c}{\it Outcome Model Types} \\
+\cline{2-3}
+{\it Mediator Model Types} & Linear & Binary Probit \\ 
 \hline
-Continuous           & Yes        & No      & Yes \\
-                     &            &         &  \\
-Ordered              & No         & No      & No  \\
-                     &            &         &  \\
-Binary               & Yes        & No      & No \\
+Linear                     & \checkmark & \checkmark \\
+Binary Probit              & \checkmark & - \\
 \hline
 \end{tabular}
-\caption{The Types of Data That Can Be Handled by \bmediation\ for
-  Sensitivity Analysis.  For continuous variables, the linear
-  regression model is assumed.  For binary variables, the probit
-  regression model is assumed.} \label{tab:SensitivityOptions}
+\caption{The Types of Data That Can Be Handled by {\tt medsens} for
+  Sensitivity Analysis. } \label{tab:SensitivityOptions}
   \end{center}
 \end{table}
 
@@ -1300,7 +1366,8 @@ the adjustment could affect one's substantive conclusions in a
 significant way.  A recommended alternative is to increase the number of 
 simulations.
 
-
+\section{Multiple Causal Mediation Analyses via {\tt mediations}}
+\label{sec:mediations}
 
 
 \section{Concluding Remarks}
