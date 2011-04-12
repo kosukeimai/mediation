@@ -50,6 +50,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
     }
     
     #Survey weights
+    
     if(boot==FALSE){
         if(is.null(model.m$weights)){
         weights<-rep(1,nrow(model.m$model))
