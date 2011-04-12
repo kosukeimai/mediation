@@ -15,6 +15,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
         warning("'robustSE' is ignored for nonparametric bootstrap")
     }
     
+    
     # Model type indicators
     isGam.y <- class(model.y)[1] == "gam"
     isGam.m <- class(model.m)[1] == "gam"
@@ -47,7 +48,27 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
         model.m <- eval.parent(call.m)
         model.y <- eval.parent(call.y)
     }
-        
+    
+    #Survey weights
+    if(boot==FALSE){
+        if(is.null(model.m$weights)){
+        weights<-rep(1,nrow(model.m$model))
+        } else {
+        weights<-model.m$weights
+        } 
+    } else {
+        print("Survey weighted mediation analysis not supported with bootstrap.")   
+    }
+    
+    
+    if(is.null(model.m$weights) & !is.null(model.y$weights)){
+    print("Survey weights on outcome model but not mediator model.")
+    }
+    if(!is.null(model.m$weights) & is.null(model.y$weights)){
+    print("Survey weights on mediator model but not outcome model.")
+    } 
+    
+            
     # Record class of model.m as "ClassM"
     if(isGam.m){
         ClassM <- class(model.m)[2]
@@ -475,13 +496,13 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
             }
             
             rm(Pr1, Pr0, PredictM1, PredictM0, TMmodel, MModel) 
-            zeta.1 <- t(as.matrix(apply(zeta.1.tmp, 2, mean)))
+            zeta.1 <- t(as.matrix(apply(zeta.1.tmp, 2, weighted.mean,w=weights)))
             rm(zeta.1.tmp)
-            zeta.0 <- t(as.matrix(apply(zeta.0.tmp, 2, mean)))
+            zeta.0 <- t(as.matrix(apply(zeta.0.tmp, 2, weighted.mean,w=weights)))
             rm(zeta.0.tmp)
-            delta.1 <- t(as.matrix(apply(delta.1.tmp, 2, mean)))
+            delta.1 <- t(as.matrix(apply(delta.1.tmp, 2, weighted.mean,w=weights)))
             rm(delta.1.tmp)
-            delta.0 <- t(as.matrix(apply(delta.0.tmp, 2, mean)))
+            delta.0 <- t(as.matrix(apply(delta.0.tmp, 2, weighted.mean,w=weights)))
             rm(delta.0.tmp)
             tau <- (zeta.1 + delta.0 + zeta.0 + delta.1)/2
             
@@ -745,7 +766,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                         boot=boot, treat=treat, mediator=mediator, 
                         INT=INT, conf.level=conf.level,
                         model.y=model.y, model.m=model.m, 
-                        control.value=control.value, treat.value=treat.value,nobs=n)
+                        control.value=control.value, treat.value=treat.value,nobs=n,weights=weights)
         } else {
             out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
                         z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci, 
@@ -947,7 +968,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                         boot=boot, treat=treat, mediator=mediator, 
                         INT=INT, conf.level=conf.level,
                         model.y=model.y, model.m=model.m, 
-                        control.value=control.value, treat.value=treat.value, nobs=n)
+                        control.value=control.value, treat.value=treat.value, nobs=n, weights=weights)
         } else {
             out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
                         tau.coef=tau.coef, tau.ci=tau.ci, 
