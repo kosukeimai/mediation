@@ -335,11 +335,9 @@ them as inputs for the main function, {\tt mediate()}. This function
 then estimates the causal mediation effects, direct effects, and total
 effect along with their uncertainty estimates. Finally, sensitivity
 analysis can be conducted via the function {\tt medsens()} which takes
-the output of {\tt mediate()} as an input.  For the output of the {\tt
-  mediate()} function, a {\tt summary()} method reports its key
-results in tabular form.  For the output of the {\tt medsens()}
-function, there are both {\tt summary()} and {\tt plot()} functions to
-display numerical and graphical summaries of the sensitivity analysis,
+the output of {\tt mediate()} as an input.  For these outputs, 
+there are both {\tt summary()} and {\tt plot()} methods to
+display numerical and graphical summaries of the analyses,
 respectively.
 
 \subsection{Estimation of the Causal Mediation Effects}
@@ -493,7 +491,7 @@ $W \ = \ \l[\begin{array}{c} M \\
 $Y=(Y_1,\dots,Y_n)^\top$ are column vectors of length $n$, and $X = (X_1, \dots, X_n)^\top$ are the $(n \times K)$ matrix of observed pre-treatment covariates, and $\otimes$ represents the Kronecker product. We typically use
 equation-by-equation least squares estimates as the starting values of $\theta$
 and iterate these two steps until convergence.  This is essentially an
-application of the iterative feasible generalized least square algorithm of the
+application of the iterative feasible generalized least square (FGLS) algorithm of the
 seemingly unrelated regression \citep{zell:62}, and thus the asymptotic variance
 of $\hat\theta$ is given by $\var(\hat\theta) = \{V^\top (\Sigma^{-1} \otimes
 I_n) V\}^{-1}$. Then, for a given value of $\rho$, the asymptotic variance of the estimated average causal mediation effects
@@ -567,6 +565,27 @@ unobserved confounder must be (relative to the observed pre-treatment
 covariates in the model) in order for the original conclusions to be
 reversed.
 
+\paragraph{Sensitivity Analyses with Respect to the Average Direct Effects.}
+In addition to the above procedures for the average causal mediation effects,
+an analogous sensitivity analysis can also be conducted for the average direct 
+effects using the {\tt medsens} function.  This is possible because it can be
+shown that the average direct effects are also expressed as a function of $\rho$
+in any of the above three cases.  First, when both the mediator and outcome variables
+are continuous and modelled using linear structural equations, the iterative FGLS algorithm
+given above can be used to estimate the model coefficients and both the point and interval
+estimates of the average direct effects can be obtained using the formulas given by
+\citet[Section 4.1]{imai:keel:yama:10} and \citet[p.314 and Appendix A]{imai:keel:ting:10}.
+Second, when the mediator is binary and modelled using the probit regression,
+the average direct effect is given by $\bar\zeta(t) = \beta_3 + \kappa\E\{
+\Phi(\alpha_2 + \beta_2 t + \xi_2^\top X_i)\}$ using the same notation as
+\citet[footnote 12]{imai:keel:ting:10}, where all of the parameters, $(\alpha_2,
+\beta_2, \xi_2, \beta_3, \kappa)$, are identified and consistently estimated
+using the same procedure.  Finally, for the binary outcome case,
+the average direct effect is identified given a value of $\rho$ and expressed
+as $\bar\zeta(t) = \E\{\Phi(\alpha_1 + \beta_1 t + \xi_1^\top X_i +
+\beta_3(1-t)/\sqrt{\gamma^2\sigma_2^2 + 2\gamma\rho\sigma_2 + 1})
+- \Phi(\alpha_1 + \beta_1 t + \xi_1^\top X_i - \beta_3 t/\sqrt{\gamma^2\sigma_2^2 + 2\gamma\rho\sigma_2 + 1}) \}$, which can be estimated via the same procedure as
+described in Appendix H of \citet{imai:keel:ting:10}.
 
 \subsection{Current Limitations}
 
