@@ -40,6 +40,7 @@ Users should note that computation can take significant time for \code{medsens}.
 \item{upper.nu, lower.nu}{vectors of upper and lower confidence limits for the proportion mediated.  Only present when the outcome model is binary.}
 \item{rho}{a numeric vector containing the values of sensitivity parameter rho used.}
 \item{rho.by}{a numeric value indicating the increment of rho used.}
+\item{sims}{a numeric value indicating the number of Monte Carlo draws used.}
 \item{err.cr.d, err.cr.z}{the values of rho with which the average causal mediation and direct effects are zero.  Vectors of length two if 'INT' is 'TRUE'; numeric values otherwise.}
 \item{ind.d0, ind.d1, ind.z0, ind.z1}{vectors of 0s/1s, indicating whether the confidence intervals of d0, d1, z0 and z1 do not cover zero for each value of rho.}
 \item{R2star.prod}{a numeric vector containing the values of the products of the two "R square stars", representing the proportions of residual variance in the mediator and outcome explained by the hypothesized unobserved confounder. The values correspond to those of rho. See \code{\link{plot.medsens}} for details.}
