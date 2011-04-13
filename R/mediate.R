@@ -54,8 +54,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
     #####
     if(boot==FALSE){
         if(isS4(model.m)){
-            if(is.null(model.m@prior.weights)){
-            weights<-rep(1,nrow(model.m@model))
+            if(length(model.m@prior.weights)==0){
+            weights<-rep(1,nrow(model.m@y))
             } else {
             weights<-model.m@prior.weights
             }  
@@ -63,8 +63,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
         }
         
         if(isS4(model.y)){
-            if(is.null(model.y@prior.weights)){
-            weights<-rep(1,nrow(model.y@model))
+            if(length(model.y@prior.weights)==0){
+            weights<-rep(1,nrow(model.y@y))
             } else {
             weights<-model.y@prior.weights
             }  
@@ -79,7 +79,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
             }               
         }
     }
-    
+    #Error return for use with weights.
     #Weights not supported using bootstrap models.
     if(isS4(model.m)){
         if(boot==TRUE & !is.null(model.m@prior.weights)){
@@ -97,42 +97,63 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
         stop("Weighted mediation analysis not supported with bootstrap.")   
         }
     } 
+    if(!isS4(model.y)){
+        if(isGam.y){
+            if(boot==TRUE & sum(model.y$weights)!=nrow(model.y$model)){
+            print("test1")
+            stop("Weighted mediation analysis not supported with bootstrap.")           
+            }
+            }
+        if(!isGam.y){
+            if(boot==TRUE & !is.null(model.y$weights)){
+            print("test2")
+            stop("Weighted mediation analysis not supported with bootstrap.")   
+            }
+            }
+        }
+    
+    
 
     #If weights are used that should be used on both models.
     if(isS4(model.m) & isS4(model.y)){    
-        if(is.null(model.m@prior.weights) & !is.null(model.y@prior.weights)){
+        if(length(model.m@prior.weights)==0 & length(model.y@prior.weights)!=0){
         stop("Weights on outcome model but not mediator model.")
         }
-        if(!is.null(model.m@prior.weights) & is.null(model.y@prior.weights)){
+        if(length(model.m@prior.weights)!=0 & length(model.y@prior.weights)==0){
         stop("Weights on mediator model but not outcome model.")
         }
     }
     
     if(isS4(model.m) & !isS4(model.y)){    
-        if(is.null(model.m@prior.weights) & !is.null(model.y$weights)){
+        if(length(model.m@prior.weights)==0 & !is.null(model.y$weights)){
         stop("Weights on outcome model but not mediator model.")
         }
-        if(!is.null(model.m@prior.weights) & is.null(model.y$weights)){
+        if(length(model.m@prior.weights)!=0 & is.null(model.y$weights)){
         stop("Weights on mediator model but not outcome model.")
         }
     }
 
     if(!isS4(model.m) & isS4(model.y)){    
-        if(is.null(model.m$weights) & !is.null(model.y@prior.weights)){
+        if(is.null(model.m$weights) & length(model.y@prior.weights)!=0){
         stop("Weights on outcome model but not mediator model.")
         }
-        if(!is.null(model.m$weights) & is.null(model.y@prior.weights)){
+        if(!is.null(model.m$weights) & length(model.y@prior.weights)==0){
         stop("Weights on mediator model but not outcome model.")
         }
     }
 
-    if(!isS4(model.m) & !isS4(model.y)){    
+    if(!isS4(model.m) & !isS4(model.y)){
+        if(isGam.m|isGam.y) {
+        #fill in here if survey weights ever extended to use with bootstrap model
+        } else {
         if(is.null(model.m$weights) & !is.null(model.y$weights)){
         stop("Weights on outcome model but not mediator model.")
         }
         if(!is.null(model.m$weights) & is.null(model.y$weights)){
         stop("Weights on mediator model but not outcome model.")
         }
+        }
+        
     }
 
 
