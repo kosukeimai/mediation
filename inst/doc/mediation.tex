@@ -262,7 +262,9 @@ standard errors for some parametric models (e.g. {\tt lm}, {\tt glm}).  This
 feature is controled by the new {\tt robustSE} argument of the {\tt mediate} function.
 The standard errors are obtained via the {\tt vcovHC} function in package {\tt sandwich}
 and users may also pass options for {\tt vcovHC} to use different types of
-robust standard errors.
+robust standard errors.  However, these standard errors are currently not carried 
+through for sensitivity analysis; the output of {\tt medsens} will not be based
+on robust standard errors regardless of the {\tt robustSE} argument.
 
 \item Users no longer need to manually indicate whether their models include a treatment-mediator
 interaction.  The old {\tt INT} argument is therefore deprecated (but still accepted
