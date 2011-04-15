@@ -44,6 +44,7 @@ mediations <- function(datasets, treatment, mediators, outcome,
                         result1 <- polr(f1, method = "probit", data=dataarg)
                     } else if (families[1] == "gaussian") {
                         result1 <- glm(f1, family="gaussian", data=dataarg)
+                        #print(result1$weight)
                     } else {
                         print("mediations does not support this model for the mediator")
                     }
@@ -76,6 +77,7 @@ mediations <- function(datasets, treatment, mediators, outcome,
                         print("test6")
                         print(f2)
                         print(d1)
+                        #print(dataarg)
                         result1 <- glm(f2, family="gaussian", data=dataarg)#use this so only has obs from m and y models            
                         odata.m <- model.frame(result1)
                         newdata <- merge(odata.m, weight, sort=FALSE,
@@ -116,16 +118,8 @@ mediations <- function(datasets, treatment, mediators, outcome,
                         #print(length(weight))
                         print(names(newdata))
                         newdata<-as.data.frame(newdata)
-                        print(names(newdata))
                         result2 <- glm(f2, family="gaussian", weights=weight, data=newdata)
-                    
-                    print("test2")
-                        #result2 <- glm(f2, family="gaussian", weights=weight, data=newdata)
-                   
-                        #result2 <- glm(f2, family="gaussian", weights=weight, data=dataarg)
-                        print(names(result2))
-                        print("test3")
-                        #print(result2$weights)
+
                     } else {
                         print("mediations does not support this model for the outcome")
                     }
