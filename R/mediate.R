@@ -23,6 +23,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
     isRq.y <- class(model.y)[1] == "rq"
     isRq.m <- class(model.m)[1] == "rq"
     isOrdered.y <- class(model.y)[1] == "polr"
+    isOrdered.m <- class(model.m)[1] == "polr"
     
     # Drop observations not common to both mediator and outcome models
     if(dropobs){
@@ -33,7 +34,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
         rownames(newdata) <- newdata$Row.names
         newdata <- newdata[,-1L]
         rm(odata.m, odata.y)
-        
+                
         if(isS4(model.m)){
             call.m <- model.m@call
         } else {
@@ -45,12 +46,14 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
             call.y <- model.y$call
         }
         call.m$data <- call.y$data <- newdata
+        if(c("(weights)") %in% names(newdata)){
+        call.m$weights <- call.y$weights <- newdata[,"(weights)"] #Teppei, this worked for all the models I tried. will it work in general? 
+        }
         model.m <- eval.parent(call.m)
         model.y <- eval.parent(call.y)
     }
     
-    print(typeof(model.m))
-    print(typeof(model.y))
+
     #####
     #Extraction of weights from models
     #####
@@ -77,73 +80,48 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
         
         }
         
-        if(!isS4(model.m) ){
-            if(is.null(model.m$weights)|sum(model.m$weights)==nrow(model.m$model)){
+        if(!isS4(model.m) & !isOrdered.m  ){
+            if(is.null(weights(model.m))){
             model.m$weights<-weights.m<-rep(1,nrow(model.m$model))
             weights.m.status<-FALSE
             } else {
-            weights.m<-model.m$weights
+            weights.m<-weights(model.m)
             weights.m.status<-TRUE
             }               
         }
         
-         if(!isS4(model.y)){
-            if(is.null(model.y$weights)|sum(model.y$weights)==nrow(model.y$model)){
+         if(!isS4(model.y) & !isOrdered.y){
+            if(is.null(weights(model.y))){
             model.y$weights<-weights.y<-rep(1,nrow(model.y$model))
             weights.y.status<-FALSE
             } else {
-            weights.y<-model.y$weights
+            weights.y<-weights(model.y)
             weights.y.status<-TRUE
             }               
-        } 
+        }
+
+        if(isOrdered.m){
+            if(is.null(model.m$model["(weights)"])){
+            model.m$weights<-weights.m<-rep(1,nrow(model.m$model))
+            weights.m.status<-FALSE
+            } else {
+            weights.m<-model.m$model["(weights)"]
+            weights.m.status<-TRUE
+            }               
+        }
+
+        if(isOrdered.y){
+            if(is.null(model.y$model["(weights)"])){
+            model.y$weights<-weights.y<-rep(1,nrow(model.y$model))
+            weights.y.status<-FALSE
+            } else {
+            weights.y<-model.y$model["(weights)"]
+            weights.y.status<-TRUE
+            }               
+        }
     }
     
 
-    #Error return for use with weights.
-    #Weights not supported using bootstrap models.    
-    if(boot==TRUE) {
-        if(isS4(model.m)){
-            if(length(model.m@prior.weights)==0){
-            weights.m.status<-FALSE
-            weights.m<-rep(1,nrow(nodel.m@y))
-            } else {
-            weights.m.status<-TRUE
-            }
-        } else { 
-            if(is.null(model.m$weights)|sum(model.m$weights)==nrow(model.m$model)){
-            weights.m.status<-FALSE
-            weights.m<-rep(1,nrow(model.m$model))
-            } else {
-            weights.m.status<-TRUE
-            }
-        }
-        
-        
-        if(isS4(model.y)){
-            if(length(model.y@prior.weights)==0){
-            weights.y.status<-FALSE
-            weights.y<-rep(1,nrow(nodel.y@y))
-            } else {
-            weights.y.status<-TRUE
-            }
-        } else {
-            if(is.null(model.y$weights)|sum(model.y$weights)==nrow(model.y$model)){
-            weights.y.status<-FALSE
-            weights.y<-rep(1,nrow(model.y$model))
-            } else {
-            weights.y.status<-TRUE
-            }
-        }
-        
-               
-    }
-        
-    if(boot==TRUE & (weights.y.status|weights.m.status)) {
-        stop("Weighted mediation analysis not supported with bootstrap.") 
-    }
-      
-    print(weights.m[1:10])
-    print(weights.y[1:10])
     #If weights are used that should be used on both models.
     #s4 models carry an entry for weights even if not used so can't use is.null.
     if(boot==FALSE) {
@@ -151,14 +129,10 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
         stop("Weights on outcome and mediator model not identical")
         } else {
         weights<-weights.m
-    }
+        }
     }
 
-    if(boot==TRUE){
-    weights<-weights.m
-    }
-    
-   
+ 
             
     # Record class of model.m as "ClassM"
     if(isGam.m){
@@ -621,19 +595,100 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
             zeta.0 <- matrix(NA, sims, 1)
             tau <- matrix(NA, sims, 1)
             
+            
+            
             # Bootstrap loop begins
             for(b in 1:sims){
                 index <- sample(1:n, n, repl=TRUE)
                 Call.M$data <- m.data[index,]
                 Call.Y.t$data <- y.data[index,]
+                #only select weights that are included in the bootstrap sample
+                Call.M$weights <- m.data[index,"(weights)"]
+                Call.Y.t$weights  <- y.data[index,"(weights)"]
                 
                 if(ClassM=="polr" && length(unique(y.data[index,mediator]))!=m){
                         stop("insufficient variation on mediator")
                 }
                 
                 # Refit Models with Resampled Data
-                new.fit.M <- eval.parent(Call.M)
-                new.fit.t <- eval.parent(Call.Y.t)
+                new.fit.M <- model.m <- eval.parent(Call.M)
+                new.fit.t <- model.y <-eval.parent(Call.Y.t)
+                
+                
+                #####
+                #Extraction of weights from models
+                #####
+                
+                    if(isS4(model.m)){
+                        if(length(model.m@prior.weights)==0){
+                        weights.m<-rep(1,nrow(model.m@y))
+                        weights.m.status<-FALSE
+                        } else {
+                        weights.m<-model.m@prior.weights
+                        weights.m.status<-TRUE
+                        }  
+                    
+                    }
+                    
+                    if(isS4(model.y)){
+                        if(length(model.y@prior.weights)==0){
+                        weights.y<-rep(1,nrow(model.y@y))
+                        weights.y.status<-FALSE
+                        } else {
+                        weights.y<-model.y@prior.weights
+                        weights.y.status<-TRUE
+                        }  
+                    
+                    }
+                    
+                    if(!isS4(model.m) & !isOrdered.m  ){
+                        if(is.null(weights(model.m))){
+                        model.m$weights<-weights.m<-rep(1,nrow(model.m$model))
+                        weights.m.status<-FALSE
+                        } else {
+                        weights.m<-weights(model.m)
+                        weights.m.status<-TRUE
+                        }               
+                    }
+                    
+                     if(!isS4(model.y) & !isOrdered.y){
+                        if(is.null(weights(model.y))){
+                        model.y$weights<-weights.y<-rep(1,nrow(model.y$model))
+                        weights.y.status<-FALSE
+                        } else {
+                        weights.y<-weights(model.y)
+                        weights.y.status<-TRUE
+                        }               
+                    }
+            
+                    if(isOrdered.m){
+                        if(is.null(model.m$model["(weights)"])){
+                        model.m$weights<-weights.m<-rep(1,nrow(model.m$model))
+                        weights.m.status<-FALSE
+                        } else {
+                        weights.m<-model.m$model["(weights)"]
+                        weights.m.status<-TRUE
+                        }               
+                    }
+            
+                    if(isOrdered.y){
+                        if(is.null(model.y$model["(weights)"])){
+                        model.y$weights<-weights.y<-rep(1,nrow(model.y$model))
+                        weights.y.status<-FALSE
+                        } else {
+                        weights.y<-model.y$model["(weights)"]
+                        weights.y.status<-TRUE
+                        }               
+                    }
+                
+                    if(!all(weights.m==weights.y)) {
+                    stop("Weights on outcome and mediator model not identical")
+                    } else {
+                    weights<-weights.m
+                    }
+                
+                
+                
                 
                 #####################################
                 #  Mediator Predictions
@@ -789,10 +844,10 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                 rm(pred.data.t, pred.data.c, pred.data, pr.1, pr.0, pr.mat)
                 
                 # Compute all QoIs
-                zeta.1[b] <- mean(zeta.1.tmp)
-                zeta.0[b] <- mean(zeta.0.tmp)
-                delta.1[b] <- mean(delta.1.tmp)
-                delta.0[b] <- mean(delta.0.tmp)
+                zeta.1[b] <- weighted.mean(zeta.1.tmp,weights)
+                zeta.0[b] <- weighted.mean(zeta.0.tmp,weights)
+                delta.1[b] <- weighted.mean(delta.1.tmp,weights)
+                delta.0[b] <- weighted.mean(delta.0.tmp,weights)
                 tau[b] <- (zeta.1[b] + zeta.0[b] + delta.0[b] + delta.1[b])/2
                 
             }  # bootstrap loop ends
