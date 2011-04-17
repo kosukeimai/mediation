@@ -262,13 +262,15 @@ standard errors for some parametric models (e.g. {\tt lm}, {\tt glm}).  This
 feature is controled by the new {\tt robustSE} argument of the {\tt mediate} function.
 The standard errors are obtained via the {\tt vcovHC} function in package {\tt sandwich}
 and users may also pass options for {\tt vcovHC} to use different types of
-robust standard errors.  However, these standard errors are currently not carried 
+robust standard errors.  However, these standard errors are currently not carried
 through for sensitivity analysis; the output of {\tt medsens} will not be based
 on robust standard errors regardless of the {\tt robustSE} argument.
 
 \item Users no longer need to manually indicate whether their models include a treatment-mediator
 interaction.  The old {\tt INT} argument is therefore deprecated (but still accepted
 with a warning).
+
+\item Weights can now be used. For example, if researchers have survey weights then these will be extracted and used to estimate the quantities of interest.
 
 \item We have added a new function {\tt mediations} to easily conduct multiple
 causal mediation analyses for different treatment-mediator-outcome combinations.
@@ -726,7 +728,7 @@ R> model.y <- lm(depress2 ~ treat + job_seek + depress1 + econ_hard + sex + age
 These two model objects, {\tt model.m} and {\tt model.y}, become the
 arguments for the \texttt{mediate} function.  When different data frames
 are used for these two models, the {\tt mediate} function internally refits
-them using a merged dataset if the {\tt dropobs} argument is set to 
+them using a merged dataset if the {\tt dropobs} argument is set to
 {\tt TRUE}; otherwise an error message is returned.
 
 In the first call to \texttt{mediate} below, we specify \texttt{boot
@@ -750,23 +752,23 @@ The objects from a call to \texttt{mediate}, i.e., {\tt out.1} and
 quantities from the analysis.  For example, \texttt{out.1\$d0} returns
 the point estimate for the average causal mediation effect based on
 Algorithm~1.  The help file contains a full list of values that are
-contained in \texttt{mediate} objects. 
+contained in \texttt{mediate} objects.
 
 The \texttt{summary}
 function prints out the results of the analysis in tabular form:
 \begin{verbatim}
 R> summary(out.2)
 
- Causal Mediation Analysis 
+ Causal Mediation Analysis
 
 Quasi-Bayesian Confidence Intervals
 
-Mediation Effect:  -0.01385 95 % CI  -0.033175  0.002333 
-Direct Effect:  -0.03879 95 % CI  -0.11989  0.04682 
-Total Effect:  -0.05264 95 % CI  -0.13324  0.03459 
-Proportion of Total Effect via Mediation:  0.2146 95 % CI  -1.387  1.906 
+Mediation Effect:  -0.01385 95 % CI  -0.033175  0.002333
+Direct Effect:  -0.03879 95 % CI  -0.11989  0.04682
+Total Effect:  -0.05264 95 % CI  -0.13324  0.03459
+Proportion of Total Effect via Mediation:  0.2146 95 % CI  -1.387  1.906
 
-Sample Size Used: 899 
+Sample Size Used: 899
 \end{verbatim}
 The output from the {\tt summary} function displays the estimates
 for the average causal mediation effect, direct effect, total effect,
@@ -810,26 +812,26 @@ R> out.3 <- mediate(model.m, model.y, sims = 1000, boot = TRUE,
                     treat = "treat", mediator = "job_seek")
 R> summary(out.3)
 
- Causal Mediation Analysis 
+ Causal Mediation Analysis
 
 Quasi-Bayesian Confidence Intervals
 
-Mediation Effect_0:  -0.01829 95 % CI  -0.046754  0.005477 
-Mediation Effect_1:  -0.01164 95 % CI  -0.027492  0.003419 
-Direct Effect_0:  -0.03577 95 % CI  -0.1170  0.0420 
-Direct Effect_1:  -0.02912 95 % CI  -0.10900  0.05012 
-Total Effect:  -0.04741 95 % CI  -0.13040  0.03249 
-Proportion of Total Effect via Mediation_0:  0.2821 95 % CI  -2.254  3.517 
-Proportion of Total Effect via Mediation_1:  0.1801 95 % CI  -1.535  2.253 
+Mediation Effect_0:  -0.01829 95 % CI  -0.046754  0.005477
+Mediation Effect_1:  -0.01164 95 % CI  -0.027492  0.003419
+Direct Effect_0:  -0.03577 95 % CI  -0.1170  0.0420
+Direct Effect_1:  -0.02912 95 % CI  -0.10900  0.05012
+Total Effect:  -0.04741 95 % CI  -0.13040  0.03249
+Proportion of Total Effect via Mediation_0:  0.2821 95 % CI  -2.254  3.517
+Proportion of Total Effect via Mediation_1:  0.1801 95 % CI  -1.535  2.253
 
-Mediation Effect (Average):  -0.01496 95 % CI  -0.034988  0.004684 
-Direct Effect (Average):  -0.03245 95 % CI  -0.11272  0.04712 
-Proportion of Total Effect via Mediation (Average):  0.2321 95 % CI  -1.889  2.860 
+Mediation Effect (Average):  -0.01496 95 % CI  -0.034988  0.004684
+Direct Effect (Average):  -0.03245 95 % CI  -0.11272  0.04712
+Proportion of Total Effect via Mediation (Average):  0.2321 95 % CI  -1.889  2.860
 
-Sample Size Used: 899 
+Sample Size Used: 899
 \end{verbatim}
 Again using the \texttt{summary} function provides a table of the
-results. Now estimates for the mediation effects, direct effects and 
+results. Now estimates for the mediation effects, direct effects and
 proportion of totel effect mediated correspond
 to the levels of the treatment and are printed as such in the tabular
 summary.  In this case, the mediation effect under the treatment
@@ -1391,11 +1393,13 @@ simulations.
 
 \section{Multiple Causal Mediation Analyses via {\tt mediations}}
 \label{sec:mediations}
-Researchers may face a situation where they want to conduct multiple causal mediation analyses. For example, the researcher may have run several different experiments that had different treatment conditions but had the same mediator and outcome variables. Or, a researcher may measure several different mediating variables in their experiment and wish to estimate causal mediation effects for each of these cases. In these situations the researcher would need to write separate lines of code for each of these situations. A more efficient way is too loop over the different combinations of interest. In R this is generally more difficult (compared, for example, to software packages like STATA) and so we wrote a function, mediations, to facilitate this process.
+Researchers may face a situation where they want to conduct multiple causal mediation analyses. For example, the researcher may have run several different experiments that had different treatment conditions but had the same mediator and outcome variables. Or, a researcher may measure several different mediating variables in their experiment and wish to estimate causal mediation effects for each of these cases. In these situations the researcher would need to write separate lines of code for the different models. A more efficient way is too loop over the different combinations of interest. In R this is generally more difficult and so we wrote a separate function, {\tt mediations}, that facilitates this process by making use of the {\tt sprintf} wrapper.
 
-The mediations function can be used in a variety of situations to estimate causal mediation analyses over the range of treatment, mediator, and outcome combinations. For example, if there was two treatment conditions, two measured mediators, and two outcomes, mediations would estimate 8 causal mediation analyses. The results can then be analyzed with the standard summary and plot functions discussed previously. If there is only one treatment/control condition, the user needs only a single data set that contains all mediators and outcomes of interest. If there are multiple treatment conditions, then the researcher must first create separate data frames, each with all mediator/outcome variables to be considered and named using a convention where the first part of the data frame is the name of the treatment variable contained within.
+{\tt mediations} can be used to estimate causal mediation analyses over the range of treatment, mediator, and outcome combinations that could be present within a study. For example, if there was two treatment conditions, two measured mediators, and two outcomes, mediations would estimate 8 causal mediation analyses. The results can then be analyzed with the standard {\tt summary} and {\tt plot } functions discussed previously. If there is only one treatment/control condition, the user needs only a single data set that contains all mediators and outcomes of interest. If there are multiple treatment conditions, then the researcher must first create separate data frames, each with all mediator/outcome variables to be considered, and named using a convention where the first part of the data frame name is the name of the treatment variable contained within it.
 
-Use of the mediations function is straightforward. First, the user creates lists of the treatment, mediator, outcome, and covariates. The treatment, mediator, and outcome variables are looped over to produce the various combinations, while the set of covariates is held constant across the models. Each of these lists are then entered into the mediations function. With this information the user specifies several different options. First, the type of model to be used for the mediator and outcome equations must be specified. Currently, mediations can handle a variety of different model combinations. Either the mediator or outcome equation can be modeled with linear regression, probit, ordered probit, and quantile regression. Mediations also handles the case where tobit is used for the outcome. Next, the user selects a range of features that are necessary for the standard mediate function, such as the number of simulations. In addition, if quantile regression or tobit regression are used, the appropriate parameters must also be specified.
+Use of the mediations function is straightforward. First, the user creates lists of the treatment, mediator, outcome, and covariates names that are to be used. The treatment, mediator, and outcome variable lists are looped over to produce the various combinations of mediator and outcome models. The set of covariates is held constant across the models. The different model combinations are then entered into the mediations function. The user specifies several different options for {\tt mediations}. First, the type of model to be used for the mediator and outcome equations must be specified. Currently, mediations can handle a variety of different model combinations. Either the mediator or outcome equation can be modeled with linear regression, probit, ordered probit, and quantile regression. Mediations also handles the case where tobit is used for the outcome. Next, specifies the standard features that are necessary for the standard mediate function, such as the number of simulations. In addition, if quantile regression or tobit regression are used, the appropriate parameters must also be specified. If the user wishes for estimates to include weights (e.g., survey weights) then the name of the weight variable needs to be passed through the mediations function.
+
+The output of mediations contains a collection of mediate objects. The naming system uses the name of the particular outcome variable, mediator, and treatment, each separated by a ``.''. For example, if the output of mediations is {\tt medations.output} and the outcome, mediator and treatment variable names ``O'', ``M1'' or ``M2'', and ``T'', respectively, then {\tt mediations.output\$O.M2.T} would be the mediate object from using mediator ``M2''.
 
 To illustrate the use of mediations we use a hypothetical situation with several treatment, mediator, and outcome conditions.
 
