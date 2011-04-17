@@ -61,24 +61,21 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
     if(boot==FALSE){
         weights.m<-model.weights(model.frame(model.m))
         weights.y<-model.weights(model.frame(model.y))
+        
         if(is.null(weights.m)){
         weights.m<-rep(1,nrow(model.frame(model.m)))
         }
         if(is.null(weights.y)){
         weights.m<-rep(1,nrow(model.frame(model.y)))
         }
-    }
-    
-
-    #If weights are used that should be used on both models.
-    #s4 models carry an entry for weights even if not used so can't use is.null.
-    if(boot==FALSE) {
+        
         if(!all(weights.m==weights.y)) {
         stop("Weights on outcome and mediator model not identical")
         } else {
         weights<-weights.m
         }
     }
+
 
             
     # Record class of model.m as "ClassM"
@@ -565,16 +562,20 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                 #####                
                 weights.m<-model.weights(model.frame(model.m))
                 weights.y<-model.weights(model.frame(model.y))
-               
-                    if(!all(weights.m==weights.y)) {
-                    stop("Weights on outcome and mediator model not identical")
-                    } else {
-                    weights<-weights.m
-                    }
                 
-                    if(is.null(weights)){
-                    weights<-rep(1,nrow(model.frame(model.m)))
-                    } 
+                        if(is.null(weights.m)){
+                        weights.m<-rep(1,nrow(model.frame(model.m)))
+                        }
+                        if(is.null(weights.y)){
+                        weights.m<-rep(1,nrow(model.frame(model.y)))
+                        }
+                        
+                        if(!all(weights.m==weights.y)) {
+                        stop("Weights on outcome and mediator model not identical")
+                        } else {
+                        weights<-weights.m
+                        }
+               
                 
                 
                 #####################################
