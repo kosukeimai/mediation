@@ -55,26 +55,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
     }
     
 
-    #####
-    #Extraction of weights from models
-    #####
-    if(boot==FALSE){
-        weights.m<-model.weights(model.frame(model.m))
-        weights.y<-model.weights(model.frame(model.y))
-        
-        if(is.null(weights.m)){
-        weights.m<-rep(1,nrow(model.frame(model.m)))
-        }
-        if(is.null(weights.y)){
-        weights.m<-rep(1,nrow(model.frame(model.y)))
-        }
-        
-        if(!all(weights.m==weights.y)) {
-        stop("Weights on outcome and mediator model not identical")
-        } else {
-        weights<-weights.m
-        }
-    }
+ 
 
 
             
@@ -114,6 +95,28 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
     }
     m <- length(sort(unique(model.frame(model.m)[,1])))
     m.min <- as.numeric(sort(model.frame(model.m)[,1])[1])
+    
+    #####
+    #Extraction of weights from models
+    #####
+        weights.m<-model.weights(m.data)
+        weights.y<-model.weights(y.data)
+        
+        if(is.null(weights.m)){
+        weights.m<-rep(1,nrow(m.data))
+        }
+        if(is.null(weights.y)){
+        weights.m<-rep(1,nrow(y.data))
+        }
+        
+        if(!all(weights.m==weights.y)) {
+        stop("Weights on outcome and mediator model not identical")
+        } else {
+        weights<-weights.m
+        }
+
+    
+    
     
     # Factor treatment indicator
     isFactorT.m <- is.factor(m.data[,treat])
@@ -569,12 +572,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                         if(is.null(weights.y)){
                         weights.m<-rep(1,nrow(model.frame(model.y)))
                         }
-                        
-                        if(!all(weights.m==weights.y)) {
-                        stop("Weights on outcome and mediator model not identical")
-                        } else {
                         weights<-weights.m
-                        }
+                     
                
                 
                 
