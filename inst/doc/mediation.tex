@@ -238,9 +238,12 @@ to the average direct effects.  Users can choose from {\tt "indirect"}, {\tt "di
 or {\tt "both"} using the {\tt effect.type} argument.  The {\tt summary} and {\tt plot}
 methods are also added for these cases.
 
-\item A {\tt plot} method function for {\tt mediate} objects are now included,
+\item A {\tt plot} method function for {\tt mediate} objects is now included,
 so that the results of mediation analysis using {\tt mediate} can be easily graphically
-summarized.
+summarized.  When the input includes treatment-mediator interaction and the effect estimates
+therefore differ between the treatment and control conditions, the user can choose which
+set of estimates to plot by setting the {\tt treatment} argument to {\tt "treated"},
+{\tt "control"}, or {\tt "both"}.
 
 \item The {\tt summary} output for {\tt mediate} objects has been updated to include
 additional information and not to include unnecessary information (e.g. separate estimates
@@ -266,9 +269,9 @@ robust standard errors.  However, these standard errors are currently not carrie
 through for sensitivity analysis; the output of {\tt medsens} will not be based
 on robust standard errors regardless of the {\tt robustSE} argument.
 
-\item Users no longer need to manually indicate whether their models include a treatment-mediator
-interaction.  The old {\tt INT} argument is therefore deprecated (but still accepted
-with a warning).
+\item Users no longer need to manually indicate whether their models include a 
+treatment-mediator interaction.  The old {\tt INT} argument is therefore deprecated 
+(but still accepted with a warning).
 
 \item Weights can now be used. For example, if researchers have survey weights then these will be extracted and used to estimate the quantities of interest.
 
@@ -603,21 +606,23 @@ uses these procedures for sensitivity analyses for the average direct effects.
 \cline{2-7}
 {\it Mediator Model Types} & Linear & GLM & Ordered & Censored & Quantile & Semiparametric \\
 \hline
-Linear ({\tt lm}) & \checkmark & \checkmark & \checkmark & \checkmark &
-                                                  \checkmark & \checkmark  \\
-GLM (probit etc. via {\tt glm})  & \checkmark & \checkmark & \checkmark & \checkmark &
-                                                  \checkmark & \checkmark  \\
-Ordered ({\tt polr}) & \checkmark & \checkmark & \checkmark & \checkmark &
-                                                  \checkmark & \checkmark  \\
+Linear ({\tt lm}) & \checkmark & \checkmark & \checkmark^\ast & \checkmark &
+                                                  \checkmark & \checkmark^\ast  \\
+GLM (probit etc. via {\tt glm})  & \checkmark & \checkmark & \checkmark^\ast & \checkmark &
+                                                  \checkmark & \checkmark^\ast  \\
+Ordered ({\tt polr}) & \checkmark & \checkmark & \checkmark^\ast & \checkmark &
+                                                  \checkmark & \checkmark^\ast  \\
 Censored (tobit via {\tt vglm}) & - & - & - & - & - & - \\
-Quantile ({\tt rq}) & \checkmark & \checkmark & \checkmark & \checkmark &
-                                                  \checkmark & \checkmark \\
-Semiparametric ({\tt gam})   & \checkmark & \checkmark & \checkmark & \checkmark &
-                                                  \checkmark & \checkmark \\
+Quantile ({\tt rq}) & \checkmark^\ast & \checkmark^\ast & \checkmark^\ast & \checkmark^\ast &
+                                                  \checkmark^\ast & \checkmark^\ast \\
+Semiparametric ({\tt gam})   & \checkmark^\ast & \checkmark^\ast & \checkmark^\ast & \checkmark^\ast &
+                                                  \checkmark^\ast & \checkmark^\ast \\
 \hline
 \end{tabular}
 \caption{The Types of Models That Can be Handled by {\tt mediate} for the
-  Estimation of Causal Mediation Effects.} \label{tab:MediateOptions}
+  Estimation of Causal Mediation Effects. Asterisks ($^\ast$) indicate the model combinations
+  that can only be estimated using the nonparametric bootstrap (i.e. with {\tt boot = TRUE}).} 
+  \label{tab:MediateOptions}
   \end{center}
 \end{table}
 
@@ -787,13 +792,15 @@ These results can be graphically presented by using the {\tt plot} function:
 \begin{verbatim}
 R> plot(out.2)
 \end{verbatim}
-The output is shown in Figure~\ref{fig:plot.mediate}.
+The output is shown in Figure~\ref{fig:plot.mediate}. The standard arguments
+for {\tt plot}, such as titles ({\tt main}, {\tt xlab}, etc.) and line widths 
+({\tt lwd}), can be used and behave as expected.
 
 \begin{figure}[t]
 \spacingset{1}
 \vspace{-.5in}
 \begin{center}
-\includegraphics[scale=.5]{plot-mediate.pdf}
+\includegraphics[scale=.8]{plot-mediate.pdf}
 \end{center}
 \vspace{-.5in}
 \caption{Graphical Summary of Causal Mediation Analysis.
@@ -841,6 +848,28 @@ $-.012$ while the mediation effect under the control condition,
 the overall summary of these quantities averaged over the two treatment levels,
 as well as the number of data points.
 
+When using the {\tt plot} function on a {\tt mediate} object with interactions,
+one can select which treatment condition to plot the estimated effects for by
+specifying the {\tt treatment} argument.  The default is to plot both estimates,
+which is equivalent to setting {\tt treatment} to {\tt "both"}:
+\begin{verbatim}
+R> plot(out.3, treatment = "both")
+\end{verbatim}
+The resulting plot is in Figure~\ref{fig:plot.mediate.int}.
+
+\begin{figure}[t]
+\spacingset{1}
+\vspace{-.5in}
+\begin{center}
+\includegraphics[scale=.8]{plot-mediate-int.pdf}
+\end{center}
+\vspace{-.5in}
+\caption{Causal Mediation Analysis with Interaction
+between Treatment and Mediator.
+  \label{fig:plot.mediate.int}}
+\end{figure}
+
+
 \paragraph{Use of Non/Semi-parametric Regression.}
 
 The flexibility of \bmediation\ becomes readily apparent when we move
@@ -852,8 +881,6 @@ flexible nonlinear fits.  This presents no difficulties for the
 alter the outcome model using the \texttt{gam} function from the
 \texttt{mgcv} library.
 \begin{verbatim}
-R> library(mgcv)
-This is mgcv 1.4-1
 R> model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age + occp + marital
                  + nonwhite + educ + income, data = jobs)
 R> model.y <- gam(depress2 ~ treat + s(job_seek, bs = "cr")  + depress1 + econ_hard
@@ -909,16 +936,23 @@ R> out.5 <- mediate(model.m, model.y, sims = 1000, boot = TRUE,
                     treat = "treat", mediator = "job_seek", control = "control")
 R> summary(out.5)
 
- Causal Mediation Analysis
+ Causal Mediation Analysis 
 
 Confidence Intervals Based on Nonparametric Bootstrap
 
-Mediation Effect_0:  -0.02328 95% CI  -0.059138  0.006138
-Mediation Effect_1:  -0.01622 95% CI  -0.041565  0.004363
-Direct Effect_0:  -0.01408 95% CI  -0.09369  0.05672
-Direct Effect_1:  -0.007025 95% CI  -0.08481  0.06114
-Total Effect:  -0.0303 95% CI  -0.13065  0.04744
-Proportion of Total Effect via Mediation:  0.3395% CI  -8.514  4.391
+Mediation Effect_0:  -0.02285 95 % CI  -0.052889  0.003819 
+Mediation Effect_1:  -0.01710 95 % CI  -0.039015  0.002544 
+Direct Effect_0:  -0.01093 95 % CI  -0.09689  0.07581 
+Direct Effect_1:  -0.005191 95 % CI  -0.08789  0.07816 
+Total Effect:  -0.02804 95 % CI  -0.11704  0.06002 
+Proportion of Total Effect via Mediation_0:  0.3817 95 % CI  -4.315  6.295 
+Proportion of Total Effect via Mediation_1:  0.2742 95 % CI  -3.915  4.472 
+
+Mediation Effect (Average):  -0.01998 95 % CI  -0.045832  0.003162 
+Direct Effect (Average):  -0.008063 95 % CI  -0.09149  0.07672 
+Proportion of Total Effect via Mediation (Average):  0.3237 95 % CI  -4.053  5.166 
+
+Sample Size Used: 899 
 \end{verbatim}
 
 \paragraph{Quantile Causal Mediation Effects.}
@@ -931,33 +965,33 @@ researcher might be interested in the 0.5 quantile (i.e., median)
 of the distribution. This also presents no difficulties for the
 \texttt{mediate} function.  Again for these models, uncertainty
 estimates are calculated using the nonparametric bootstrap.  To use
-quantile regression, we load the \texttt{quantreg} library and model
+quantile regression, we use the {\tt rq} function in package 
+\texttt{quantreg} and model
 the median of the outcome, though other quantiles are also
 permissible.  Analysts can also relax the no-interaction assumption
 for the quantile regression models as well.  Below we estimate the
 mediator with a standard linear regression, while for the outcome we
 use \texttt{rq} to model the median.
 \begin{verbatim}
-R> library(quantreg)
-Loading required package: SparseM
-Package SparseM (0.78) loaded.  To cite, see citation("SparseM")
-Package quantreg (4.26) loaded.  To cite, see citation("quantreg")
 R> model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age + occp + marital
-+ nonwhite + educ + income, data = jobs)
+                 + nonwhite + educ + income, data = jobs)
 R> model.y <- rq(depress2 ~ treat + job_seek + depress1 + econ_hard + sex
-+ age + occp + marital + nonwhite + educ + income, tau= 0.5, data = jobs)
-R> out.7 <- mediate(model.m, model.y, sims = 1000, boot = TRUE, treat = "treat",
- M = "job_seek")
-R> summary(out.7)
+                 + age + occp + marital + nonwhite + educ + income, 
+                 tau = 0.5, data = jobs)
+R> out.6 <- mediate(model.m, model.y, sims = 1000, boot = TRUE, treat = "treat",
+                    mediator = "job_seek")
+R> summary(out.6)
 
- Causal Mediation Analysis
+ Causal Mediation Analysis 
 
 Confidence Intervals Based on Nonparametric Bootstrap
 
-Mediation Effect:  -0.01470 95% CI  -0.027235 -0.001534
-Direct Effect:  -0.02489 95% CI  -0.09637  0.04309
-Total Effect:  -0.03959 95% CI  -0.11523  0.02857
-Proportion of Total Effect via Mediation:  0.3337 95% CI  -3.069  1.902
+Mediation Effect:  -0.01426 95 % CI  -0.031162  0.002092 
+Direct Effect:  -0.04152 95 % CI  -0.12300  0.03562 
+Total Effect:  -0.05577 95 % CI  -0.14335  0.02364 
+Proportion of Total Effect via Mediation:  0.2000 95 % CI  -2.866  2.300 
+
+Sample Size Used: 899 
 \end{verbatim}
 where the {\tt summary} command gives the estimated median causal
 mediation effect along with the estimates for the other quantities of
@@ -970,7 +1004,8 @@ example, if the $10th$ percentile of the outcome were of interest,
 then the user can change {\tt tau} option,
 \begin{verbatim}
 R> model.y <- rq(depress2 ~ treat + job_seek + depress1 + econ_hard + sex
-+ age + occp + marital + nonwhite + educ + income, tau = 0.1, data = jobs)
+                 + age + occp + marital + nonwhite + educ + income, 
+                 tau = 0.1, data = jobs)
 \end{verbatim}
 Furthermore, it is straightforward to loop over a set of quantiles and
 graph the mediation effects for a range of quantiles, as done in
@@ -990,40 +1025,48 @@ the mediation effect, we simply use a probit regression instead of a
 linear regression for the outcome and then call \texttt{mediate} as
 before,
 \begin{verbatim}
-R> model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age + occp + marital
-+ nonwhite + educ + income, data = jobs)
-R> model.y <- glm(work1 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp
-+ marital + nonwhite + educ + income, family = binomial(link = "probit"), data = jobs)
-R> out.8 <- mediate(model.m, model.y, sims = 1000, boot = TRUE, treat = "treat",
- mediator = "job_seek")
-R> out.9 <- mediate(model.m, model.y, sims = 1000, treat = "treat",
- mediator = "job_seek")
-R> summary(out.8)
-.
-.
-Output Omitted
-R> summary(out.9)
+R> model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age 
+                + occp + marital + nonwhite + educ + income, data = jobs)
+R> model.y <- glm(work1 ~ treat + job_seek + depress1 + econ_hard + sex + age 
+                + occp + marital + nonwhite + educ + income, 
+                family = binomial(link = "probit"), data = jobs)
+R> out.7 <- mediate(model.m, model.y, sims = 1000, treat = "treat",
+                    mediator = "job_seek")
+R> summary(out.7)
 
- Causal Mediation Analysis
+ Causal Mediation Analysis 
 
 Quasi-Bayesian Confidence Intervals
 
-Mediation Effect:  0.003780 95% CI  -0.0005248  0.0109583
-Direct Effect:  0.05573 95% CI  -0.007416  0.119900
-Total Effect:  0.05951 95% CI  -0.004037  0.123071
-Proportion of Total Effect via Mediation:  0.05804 95% CI  -0.2405  0.4498
+Mediation Effect_0:  0.003340 95 % CI  -0.0009266  0.0101511 
+Mediation Effect_1:  0.003588 95 % CI  -0.001001  0.010833 
+Direct Effect_0:  0.05592 95 % CI  -0.004395  0.116298 
+Direct Effect_1:  0.05617 95 % CI  -0.004405  0.116453 
+Total Effect:  0.05951 95 % CI  -0.0006978  0.1196860 
+Proportion of Total Effect via Mediation_0:  0.04671 95 % CI  -0.06537  0.40433 
+Proportion of Total Effect via Mediation_1:  0.05055 95 % CI  -0.06854  0.40859 
+
+Mediation Effect (Average):  0.003464 95 % CI  -0.0009614  0.0105733 
+Direct Effect (Average):  0.05604 95 % CI  -0.0044  0.1164 
+Proportion of Total Effect via Mediation (Average):  0.0484 95 % CI  -0.06695  0.40646 
+
+Sample Size Used: 899 
 \end{verbatim}
 
 In the table printed by the \texttt{summary} function, the estimated
 average causal mediation effect along with the quasi-Bayesian
 confidence interval are printed on the first line followed by the
 direct and total effects, and the proportion of the total effect due
-to mediation.  It is also possible to use a logit model for the
+to mediation.  Even though the outcome model does not include an interaction
+term between the treatment and mediator, the estimated effects slightly differ
+between the treatment and control conditions.  This difference, however, 
+is solely due to the nonlinearity in the outcome model and should be
+extremely small.  It is also possible to use a logit model for the
 outcome instead of a probit model.  However, we recommend the use of a
 probit model because our implementation of the sensitivity analysis
 below requires a probit model for analytical tractability.
 
-The mediator can also be binary or an ordered measures as well.  This
+The mediator can also be binary or ordered measures as well.  This
 simply requires modeling the mediator with either a probit or ordered
 probit model.  For demonstration purposes, the \texttt{jobs} data
 contains two variables, \texttt{job\_dich} and \texttt{job\_disc},
@@ -1037,35 +1080,39 @@ Estimating mediation effects with a binary mediator is quite similar
 to the case above with a binary outcome.  We simply now use a probit
 model for the mediator and a linear regression for the outcome,
 \begin{verbatim}
-R> model.m <- glm(job_dich ~ treat + depress1 + econ_hard + sex + age + occp + marital
-+ nonwhite + educ + income, data = job, family = binomial(link = "probit"))
-R> model.y <- lm(depress2 ~ treat + job_dich + treat:job_dich + depress1 + econ_hard
-+ sex + age + occp + marital + nonwhite + educ + income, data = jobs)
+R> model.m <- glm(job_dich ~ treat + depress1 + econ_hard + sex + age
+                + occp + marital + nonwhite + educ + income, data = job, 
+                family = binomial(link = "probit"))
+R> model.y <- lm(depress2 ~ treat + job_dich + treat:job_dich + depress1
+                + econ_hard + sex + age + occp + marital + nonwhite 
+                + educ + income, data = jobs)
 \end{verbatim}
 
-In this example we allow the effect of the mediator to vary with
+In this example we include the interaction term between the treatment and
+mediator to allow the effect of the mediator to vary with
 treatment status.  The user now calls \texttt{mediate} and can use
 either the quasi-Bayesian approximation or nonparametric bootstrap.
 \begin{verbatim}
-R> out.10 <- mediate(model.m, model.y, sims = 1000, boot = TRUE, treat = "treat",
- mediator = "job_dich", INT = TRUE)
-R> out.11 <- mediate(model.m, model.y, sims = 1000, treat = "treat",
- mediator = "job_dich", INT = TRUE)
-R> summary(out.10)
-.
-.
-Output Omitted
-R> summary(out.11)
- Causal Mediation Analysis
+R> out.8 <- mediate(model.m, model.y, sims = 1000, treat = "treat",
+                    mediator = "job_dich")
+R> summary(out.8)
+ Causal Mediation Analysis 
 
 Quasi-Bayesian Confidence Intervals
 
-Mediation Effect_0:  -0.01809 95% CI  -0.035290 -0.005589
-Mediation Effect_1:  -0.01968 95% CI  -0.034518 -0.007263
-Direct Effect_0:  -0.02849 95% CI  -0.1008  0.0393
-Direct Effect_1:  -0.03009 95% CI  -0.10111  0.03791
-Total Effect:  -0.04817 95% CI  -0.11962  0.01729
-Proportion of Total Effect via Mediation:  0.3431 95% CI  -3.330  3.756
+Mediation Effect_0:  -0.01815 95 % CI  -0.037383 -0.003393 
+Mediation Effect_1:  -0.02035 95 % CI  -0.039359 -0.003966 
+Direct Effect_0:  -0.03076 95 % CI  -0.11109  0.04833 
+Direct Effect_1:  -0.03296 95 % CI  -0.11524  0.04722 
+Total Effect:  -0.05111 95 % CI  -0.12946  0.03085 
+Proportion of Total Effect via Mediation_0:  0.2695 95 % CI  -2.430  3.154 
+Proportion of Total Effect via Mediation_1:  0.3135 95 % CI  -2.906  3.379 
+
+Mediation Effect (Average):  -0.01925 95 % CI  -0.035705 -0.004607 
+Direct Effect (Average):  -0.03186 95 % CI  -0.11337  0.04748 
+Proportion of Total Effect via Mediation (Average):  0.301 95 % CI  -2.496  2.757 
+
+Sample Size Used: 899 
 \end{verbatim}
 
 \noindent In the table, we see that \texttt{Mediation Effect\_0} is
@@ -1077,71 +1124,60 @@ used for the 95\% confidence intervals.
 
 When the mediator is an ordered variable, we switch to an ordered
 probit model for the mediator.  In \bR, the \texttt{polr} function
-in the \texttt{MASS} library provides this functionality.  The
-\texttt{MASS} library is automatically loaded with \bmediation\, so
-the \texttt{polr} function is readily available to users.  Thus, we
+in the \texttt{MASS} library provides this functionality.  Thus, we
 fit the outcome and mediator models below,
-
 \begin{verbatim}
-R> model.m <- polr(job_disc ~ treat + depress1 + econ_hard + sex + age + occp + marital
-+ nonwhite + educ + income, data = jobs, method = "probit", Hess = TRUE)
-R> model.y <- lm(depress2 ~ treat + job_disc + depress1 + econ_hard + sex + age + occp
-+ marital + nonwhite + educ + income, data = jobs)
+R> model.m <- polr(job_disc ~ treat + depress1 + econ_hard + sex + age 
+                + occp + marital + nonwhite + educ + income, 
+                data = jobs, method = "probit", Hess = TRUE)
+R> model.y <- lm(depress2 ~ treat + job_disc + depress1 + econ_hard + sex + age 
+                + occp + marital + nonwhite + educ + income, data = jobs)
 \end{verbatim}
-
 The reader should note that in the call to \texttt{polr} the
-\texttt{Hess = TRUE} needs to be specified to use the quasi-Bayesian
-approximation in the \texttt{mediate} function.  Once we have
-estimated these two models, analysis proceeds as before,
+\texttt{Hess = TRUE} should be specified to compute the asymptotic variance
+covariance matrix for the estimated model coefficients in the quasi-Bayesian
+approximation.  Otherwise, the Hessian of the log-likelihood will be recalculated
+within the {\tt mediate} call.  
+
+Once we have estimated these two models, analysis proceeds as before,
 \begin{verbatim}
-R> out.12 <- mediate(model.m, model.y, sims = 1000, boot = TRUE, treat = "treat",
- mediator = "job_disc")
-R> out.13 <- mediate(model.m, model.y, sims = 1000, treat = "treat",
- mediator = "job_disc")
-R> summary(out.12)
-.
-.
-Output Omitted
-R> summary(out.13)
-.
-.
-Output Omitted
+R> out.9 <- mediate(model.m, model.y, sims = 1000, treat = "treat",
+                     mediator = "job_disc")
+R> summary(out.9)
 \end{verbatim}
 Again, for any of these data types, analysts can relax the
 no-interaction assumption as before by including the interaction
-between treatment and the mediator variable in the outcome model and
-using the \texttt{INT = TRUE} option.
+between treatment and the mediator variable in the outcome model.
 
 \subsection{Sensitivity Analysis}
 
-Once analysts have estimated mediation effects, they should always
-explore how robust their finding is to the ignorability assumption.
+Once analysts have estimated mediation effects, they should explore how 
+robust their finding is to the ignorability assumption, whenever possible.
 The \texttt{medsens} function allows analysts to conduct sensitivity
-analyses for mediation effects.  Next, we provide a demonstration of
-the functionality for the sensitivity analysis.  Currently,
-\bmediation\ can conduct sensitivity analyses for the
-continuous-continuous case, the binary-continuous case, and the
-continuous-binary case.
-
-
+analyses for mediation effects as well as direct effects.  
+In this section we provide a demonstration of these functionalities.
+Currently, \bmediation\ can conduct sensitivity analyses when both mediator
+and outcome are continuous and modelled with the {\tt lm} function, as well
+as when either mediator or outcome (but not both) is binary and modelled using
+a binary probit regression via {\tt glm}.
 
 \paragraph{The Baron-Kenny Procedure.}
 As before, one must first fit models for the mediator and outcome and then pass these model objects through the mediate function:
 \begin{verbatim}
-R> model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age + occp + marital
-+ nonwhite + educ + income, data = jobs)
+R> model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age + occp 
+                + marital + nonwhite + educ + income, data = jobs)
 R> model.y <- lm(depress2 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp
-+ marital + nonwhite + educ + income, data = jobs)
+                + marital + nonwhite + educ + income, data = jobs)
 R> med.cont <- mediate(model.m, model.y, sims=1000,  treat = "treat",
- mediator = "job_seek")
+                       mediator = "job_seek")
 \end{verbatim}
 
 Once the analyst estimates the mediation effects, the output from the
 {\tt mediate} function becomes the argument for \texttt{medsens},
 which is the workhorse function. The {\tt medsens} function
-recognizes the options specified in the {\tt mediate} function and
-thus there is no need to specify the \texttt{treat}, \texttt{mediator}, or
-\texttt{INT} options.
+recognizes main arguments specified in the {\tt mediate} function and
+thus there is no need to specify options such as \texttt{treat} or 
+\texttt{mediator}.
 \begin{verbatim}
 R> sens.cont <- medsens(med.cont, rho.by = 0.05)
 \end{verbatim}
@@ -1206,27 +1242,18 @@ ignorability assumption, and the solid line represents the mediation
 effect under various values of $\rho$.  The grey region represents the
 95\% confidence bands.
 
-%\begin{figure}[t]
-%\spacingset{1}
-%\vspace{-.5in}
-%\begin{center}
-%\includegraphics[scale=.8]{jobs-sens-c.pdf}
-%\end{center}
-%\vspace{-.5in}
-%\caption{Sensitivity Analysis with Continuous Outcome and Mediator.
-%  \label{jobplot1}}
-%\end{figure}
-
 Similarly, we can also plot the sensitivity analysis in terms of the
 coefficients of determination as discussed above. Here we specify \texttt{sens.par}
 option to \texttt{"R2"}.  We also need to specify two additional pieces of information.
 First, \texttt{r.type} option tells the plot function whether to plot
 ${R^\ast}^2_M{R^\ast}^2_Y$ or $\widetilde{R}^2_M\widetilde{R}^2_Y$. To plot the
-former \texttt{r.type} is set to \texttt{1} and to plot the latter \texttt{r.type} is set
-to \texttt{2}.  Finally, the \texttt{sign.prod} option specifies the sign of the
+former \texttt{r.type} is set to \texttt{"residual"} and to plot the latter 
+\texttt{r.type} is set
+to \texttt{"total"}.  Finally, the \texttt{sign.prod} option specifies the sign of the
 product of the coefficients of the unobserved confounder in the mediator and outcome models.
 This product indicates whether the unobserved confounder affects both mediator and outcome
-variables in the same direction (\texttt{1}) or different directions (\texttt{-1}), thereby
+variables in the same direction (\texttt{"positive"}) or different directions 
+(\texttt{"negative"}), thereby
 reflecting the analyst's expectation about the nature of confounding.
 
 For example, the following command produces the plot representing the sensitivity
@@ -1234,7 +1261,7 @@ of estimates with respect to the proportion of the original variances explained 
 the unobserved confounder when the confounder is hypothesized to affect the mediator
 and outcome variables in opposite directions.
 \begin{verbatim}
-R> plot(sens.cont, sens.par = "R2", r.type = 2, sign.prod = -1)
+R> plot(sens.cont, sens.par = "R2", r.type = "total", sign.prod = "negative")
 \end{verbatim}
 The resulting plot is shown on the right hand side of Figure~\ref{jobplot1}. Each contour
 line represents the mediation effect for the corresponding values of
@@ -1250,17 +1277,6 @@ For both types of sensitivity plots, the user can specify additional options
 available in the plot function such as alternative
 title (\texttt{main}) and axis labels (\texttt{xlab}, \texttt{ylab}) or
 manipulate common graphical options (e.g., \texttt{xlim}).
-
-%\begin{figure}[t]
-%\spacingset{1}
-%\vspace{-.5in}
-%\begin{center}
-%\includegraphics[scale=.8]{R2-ContCont-JOBS.pdf}
-%\end{center}
-%\vspace{-.5in}
-%\caption{Sensitivity Analysis with Continuous Outcome and Mediator in terms of proportion of total variance.
-%  \label{jobplot2}}
-%\end{figure}
 
 
 \begin{figure}[t]
@@ -1283,10 +1299,11 @@ mediator is continuous and the outcome is binary.  If either variable
 is binary, \texttt{medsens} takes an additional argument.  For
 example, recall the binary outcome model estimated earlier:
 \begin{verbatim}
-R> model.y <- glm(work1 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp
-+ marital + nonwhite + educ + income, family = binomial(link = "probit"), data = jobs)
+R> model.y <- glm(work1 ~ treat + job_seek + depress1 + econ_hard + sex + age 
+                + occp + marital + nonwhite + educ + income, 
+                family = binomial(link = "probit"), data = jobs)
 R> med.bout <- mediate(model.m, model.y, sims = 1000, treat = "treat",
- mediator = "job_seek")
+                       mediator = "job_seek")
 \end{verbatim}
 
 The call to \texttt{medsens} works as before, with the output from the \texttt{mediate}
@@ -1294,8 +1311,8 @@ function passed through \texttt{medsens}.
 \begin{verbatim}
 R> sens.bout <- medsens(med.bout, rho.by = 0.05, sims = 1000)
 \end{verbatim}
-The \texttt{sims} option provides control over the number of draws in
-the parametric bootstrap procedure which is used to compute confidence bands.
+The \texttt{sims} option provides control over the number of Monte Carlo draws 
+used to compute confidence bands.
 When either the mediator or outcome is binary, the exact values of
 sensitivity parameters where the mediation effects are zero cannot be analytically
 obtained as in the fully continuous case \citep[see][Section 4]{imai:keel:yama:10}.
@@ -1311,7 +1328,7 @@ As in the case with continuous mediator and outcome variables, we can plot the
 results of the sensitivity analysis.  The following code produces Figure~\ref{SensBinOut}.
 \begin{verbatim}
 R> plot(sens.bout, sens.par = "rho")
-R> plot(sens.bout, sens.par = "R2", r.type = 2, sign.prod = 1)
+R> plot(sens.bout, sens.par = "R2", r.type = "total", sign.prod = "positive")
 \end{verbatim}
 On the left hand side we plot the ACME in terms of $\rho$, while we plot the ACME
 in terms of $\widetilde{R}^2_M$ and $\widetilde{R}^2_Y$ on the right hand side.
@@ -1351,12 +1368,13 @@ variable to produce a binary measure \texttt{job\_dich}. We fit a
 probit model for the mediator and linear regression for the outcome
 variable.
 \begin{verbatim}
-R> model.m <- glm(job_dich ~ treat + depress1 + econ_hard + sex + age + occp
-+ marital + nonwhite + educ + income, data = jobs, family = binomial(link = "probit"))
-R> model.y <- lm(depress2 ~ treat + job_dich+ depress1 + econ_hard + sex + age + occp
-+ marital + nonwhite + educ + income, data = jobs)
+R> model.m <- glm(job_dich ~ treat + depress1 + econ_hard + sex + age 
+                + occp + marital + nonwhite + educ + income, 
+                data = jobs, family = binomial(link = "probit"))
+R> model.y <- lm(depress2 ~ treat + job_dich+ depress1 + econ_hard + sex + age 
+                + occp + marital + nonwhite + educ + income, data = jobs)
 R> med.bmed <- mediate(model.m, model.y, sims = 1000, treat = "treat",
- mediator = "job_dich")
+                       mediator = "job_dich")
 R> sens.bmed <- medsens(med.bmed, rho.by = 0.05, sims = 1000)
 \end{verbatim}
 Again we can pass the output of the \texttt{medsens} function through the \texttt{plot} function,
@@ -1401,41 +1419,10 @@ Use of the mediations function is straightforward. First, the user creates lists
 
 The output of mediations contains a collection of mediate objects. The naming system uses the name of the particular outcome variable, mediator, and treatment, each separated by a ``.''. For example, if the output of mediations is {\tt medations.output} and the outcome, mediator and treatment variable names ``O'', ``M1'' or ``M2'', and ``T'', respectively, then {\tt mediations.output\$O.M2.T} would be the mediate object from using mediator ``M2''.
 
-To illustrate the use of mediations we use a hypothetical situation with several treatment, mediator, and outcome conditions.
-
-\begin{verbatim}
-# Hypothetical example
-
-datasets <- list(T1 = T1, T2 = T2)
-    # List of data frames corresponding to the two different treatment variables "T1vsCont" and "T2vsCont".
-    # Each data set has its respective treatment variable.
-
-mediators <- c("M1", "M2")
-    # Vector of mediator names, all included in each data frame.
-
-outcome <- c("Ycont1","Ycont2")
-    # Vector of outcome variable names, again all included in each data frame.
-
-treatment <- c("T1vsCont", "T2vsCont")
-    # Vector of treatment variables names; must begin with identical strings with dataset names in 'datasets'.
-
-covariates <- c("X1 + X2")
-    # Set of covariates (in each data set), entered using the standard model formula format.
-
-x <- mediations(datasets, treatment, mediators, outcome, covariates,
-    families=c("gaussian","gaussian"), interaction=FALSE,
-    conf.level=.90, sims=50)
-    # Runs 'mediate' iteratively for each variable combinations, with 'lm' on both mediator and outcome model.
-
-summary(x)  # tabular summary of results for all model combinations
-plot(x)  # graphical summary of results for all model combinations at once
-
-plot(x$Ycont1.T1vsCont.M1)
-    # Individual 'mediate' outputs are stored as list elements and can be accessed using the usual "$" operator.
-\end{verbatim}
-
 There are several limitations to the code. First, it works only with a subset of the model types that will be accommodated if 'mediate' is used individually. Second, one cannot specify separate sets of covariates for different treatment/mediator/outcome combinations. Users should use 'mediate' separately for individual models if more flexibility is required in their specific applications. While mediations is a helpful function, researchers must be aware of the assumptions being made at every step of causal mediation analysis. For example, if there are multiple mediators, the researcher is assuming that they are not causally related.
 
+An illustration of the {\tt mediations} function; can be found in the {\tt Examples}
+section of its help document; see {\tt ?mediations} or {\tt example(mediations)}.
 
 \section{Concluding Remarks}
 

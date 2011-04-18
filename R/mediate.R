@@ -224,7 +224,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
         ########################################################################
         if(boot == FALSE){
             # Error if gam outcome or quantile mediator
-            if(isGam.y | isRq.m){
+            if(isGam.m | isGam.y | isRq.m){
                 stop("'boot' must be 'TRUE' for models used")
             }
             
