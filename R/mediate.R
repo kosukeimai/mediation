@@ -202,9 +202,15 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
         } else {
             PredictMc <- PredictM0.tmp
         }
+cat("Simulation ", parent.frame()$j, "\n")
+print(table(PredictMt))
+print(table(PredictMc))
+cat("\n")
         if(isFactorM) {
-            pred.data.t[,mediator] <- factor(PredictMt, labels = m.levels)
-            pred.data.c[,mediator] <- factor(PredictMc, labels = m.levels)
+            labMt <- m.levels[sort(unique(PredictMt))]
+            labMc <- m.levels[sort(unique(PredictMc))]
+            pred.data.t[,mediator] <- factor(PredictMt, labels = labMt)
+            pred.data.c[,mediator] <- factor(PredictMc, labels = labMc)
         } else {
             pred.data.t[,mediator] <- PredictMt
             pred.data.c[,mediator] <- PredictMc
@@ -362,15 +368,33 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                 pred.data <- predictY.dataprep(1,1,1,0)
                 pred.data.t <- pred.data$t
                 pred.data.c <- pred.data$c
-                
+print(dim(pred.data.t))
+print(dim(pred.data.c))
                 if(isVglm.y){
                     ymat.t <- model.matrix(model.y@terms, data=pred.data.t) 
-                    ymat.c <- model.matrix(model.y@terms, data=pred.data.c)        
+                    ymat.c <- model.matrix(model.y@terms, data=pred.data.c) 
                 } else {
                     ymat.t <- model.matrix(terms(model.y), data=pred.data.t) 
                     ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
                 }
-               
+print(dim(ymat.t))
+print(dim(ymat.c))
+                if(ncol(ymat.t) != ncol(model.matrix(model.y))){
+                    ymat.t.temp <- matrix(0, nrow=nrow(pred.data.t), 
+                            ncol=ncol(model.matrix(model.y)), dimnames=dimnames(model.matrix(model.y)))
+                    ymat.t.temp[,colnames(ymat.t)] <- ymat.t
+                    ymat.t <- ymat.t.temp
+                }
+                if(ncol(ymat.c) != ncol(model.matrix(model.y))){
+                    ymat.c.temp <- matrix(0, nrow=nrow(pred.data.c), 
+                            ncol=ncol(model.matrix(model.y)), dimnames=dimnames(model.matrix(model.y)))
+                    ymat.c.temp[,colnames(ymat.c)] <- ymat.c
+                    ymat.c <- ymat.c.temp
+                }
+print(dim(ymat.t))
+print(dim(ymat.c))
+print(colnames(TMmodel))
+print(colnames(ymat.t))
                 if(isVglm.y){
                     if(vfamily=="tobit") {
                         Pr1.tmp <- ymat.t %*% TMmodel[j,-2]
@@ -799,7 +823,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                         boot=boot, treat=treat, mediator=mediator, 
                         INT=INT, conf.level=conf.level,
                         model.y=model.y, model.m=model.m, 
-                        control.value=control.value, treat.value=treat.value,nobs=n,weights=weights)
+                        control.value=control.value, treat.value=treat.value,
+                        nobs=n, weights=weights)
         } else {
             out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
                         z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci, 
@@ -811,7 +836,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                         boot=boot, treat=treat, mediator=mediator, 
                         INT=INT, conf.level=conf.level,
                         model.y=model.y, model.m=model.m, 
-                        control.value=control.value, treat.value=treat.value, nobs=n)
+                        control.value=control.value, treat.value=treat.value,
+                        nobs=n)
         }
         class(out) <- "mediate"
         out

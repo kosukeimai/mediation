@@ -74,11 +74,11 @@ summary(out.8)
 
 model.m <- polr(job_disc ~ treat + depress1 + econ_hard + sex + age 
                 + occp + marital + nonwhite + educ + income, 
-                data = jobs, method = "probit", Hess = TRUE)
+                data = jobs1, method = "probit", Hess = TRUE)
 model.y <- lm(depress2 ~ treat + job_disc + depress1 + econ_hard + sex + age 
-                + occp + marital + nonwhite + educ + income, data = jobs)
+                + occp + marital + nonwhite + educ + income, data = jobs1)
 
-out.9 <- mediate(model.m, model.y, sims = 1000, treat = "treat",
+out.9 <- mediate(model.m, model.y, sims = 10, treat = "treat",
                      mediator = "job_disc")
 summary(out.9)
 
