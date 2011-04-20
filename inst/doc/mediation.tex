@@ -273,7 +273,10 @@ on robust standard errors regardless of the {\tt robustSE} argument.
 treatment-mediator interaction.  The old {\tt INT} argument is therefore deprecated 
 (but still accepted with a warning).
 
-\item Weights can now be used. For example, if researchers have survey weights then these will be extracted and used to estimate the quantities of interest.
+\item The prior weights in input model objects are now correctly handled by
+the {\tt mediate} function.  The estimated quantities will thus be weighted averages
+when the mediator and outcome models are fitted with a non-{\tt NULL} {\tt weights}
+argument. This will be useful if, for example, data come from a complex survey.
 
 \item We have added a new function {\tt mediations} to easily conduct multiple
 causal mediation analyses for different treatment-mediator-outcome combinations.
@@ -1411,17 +1414,79 @@ simulations.
 
 \section{Multiple Causal Mediation Analyses via {\tt mediations}}
 \label{sec:mediations}
-Researchers may face a situation where they want to conduct multiple causal mediation analyses. For example, the researcher may have run several different experiments that had different treatment conditions but had the same mediator and outcome variables. Or, a researcher may measure several different mediating variables in their experiment and wish to estimate causal mediation effects for each of these cases. In these situations the researcher would need to write separate lines of code for the different models. A more efficient way is too loop over the different combinations of interest. In R this is generally more difficult and so we wrote a separate function, {\tt mediations}, that facilitates this process by making use of the {\tt sprintf} wrapper.
+Researchers may face a situation where they want to conduct multiple causal
+mediation analyses. For example, the researcher may have run several different
+experiments that had different treatment conditions but had the same mediator
+and outcome variables. Or, a researcher may measure several different mediating
+variables in their experiment and wish to estimate causal mediation effects for
+each of these cases. In these situations the researcher would need to write
+separate lines of code for the different models. A more efficient way is to
+loop over the different combinations of interest.  The {\tt mediations} function
+facilitates this process.
 
-{\tt mediations} can be used to estimate causal mediation analyses over the range of treatment, mediator, and outcome combinations that could be present within a study. For example, if there was two treatment conditions, two measured mediators, and two outcomes, mediations would estimate 8 causal mediation analyses. The results can then be analyzed with the standard {\tt summary} and {\tt plot } functions discussed previously. If there is only one treatment/control condition, the user needs only a single data set that contains all mediators and outcomes of interest. If there are multiple treatment conditions, then the researcher must first create separate data frames, each with all mediator/outcome variables to be considered, and named using a convention where the first part of the data frame name is the name of the treatment variable contained within it.
+The {\tt mediations} function can be used to conduct causal mediation analyses
+over the range of treatment, mediator, and outcome combinations that could be
+present within a study. For example, if there were two treatment conditions, two
+measured mediators, and two outcomes, mediations would run eight causal
+mediation analyses. The results can then be analyzed with the {\tt
+summary} and {\tt plot} functions. If there is only one
+treatment variable, the user needs only a single data set that contains
+all mediators and outcomes of interest. If there are multiple treatment
+variables, then the researcher must first create separate data frames, each
+with all mediator/outcome variables to be considered, and named using a
+convention where the name of the data frame object begins with the name of the
+treatment variable contained within it.
 
-Use of the mediations function is straightforward. First, the user creates lists of the treatment, mediator, outcome, and covariates names that are to be used. The treatment, mediator, and outcome variable lists are looped over to produce the various combinations of mediator and outcome models. The set of covariates is held constant across the models. The different model combinations are then entered into the mediations function. The user specifies several different options for {\tt mediations}. First, the type of model to be used for the mediator and outcome equations must be specified. Currently, mediations can handle a variety of different model combinations. Either the mediator or outcome equation can be modeled with linear regression, probit, ordered probit, and quantile regression. Mediations also handles the case where tobit is used for the outcome. Next, specifies the standard features that are necessary for the standard mediate function, such as the number of simulations. In addition, if quantile regression or tobit regression are used, the appropriate parameters must also be specified. If the user wishes for estimates to include weights (e.g., survey weights) then the name of the weight variable needs to be passed through the mediations function.
+Use of the {\tt mediations} function is straightforward. First, the user creates
+vectors of the treatment, mediator, outcome, and covariates names that are to be used.
+The treatment, mediator, and outcome variables are looped over to produce
+all possible combinations of mediator and outcome models. The set of covariates
+is held constant across the models. The different model combinations are then
+entered into the {\tt mediate} function. 
 
-The output of mediations contains a collection of mediate objects. The naming system uses the name of the particular outcome variable, mediator, and treatment, each separated by a ``.''. For example, if the output of mediations is {\tt medations.output} and the outcome, mediator and treatment variable names ``O'', ``M1'' or ``M2'', and ``T'', respectively, then {\tt mediations.output\$O.M2.T} would be the mediate object from using mediator ``M2''.
+The user can specify several different
+options for {\tt mediations}. First, the type of model to be used for the
+mediator and outcome equations must be specified. Currently, {\tt mediations} can
+handle a variety of different model combinations. Either the mediator or outcome
+equation can be modeled with linear regression, probit, ordered probit, and
+quantile regression. The {\tt mediations} function also handles the case where tobit is used for
+the outcome. Next, the user must also specify the standard features that are necessary for the
+{\tt mediate} function, such as the number of simulations ({\tt sims}). In addition, if
+quantile regression or tobit regression is used, the user needs to specify 
+the appropriate parameters, such as the quantiles to be estimated ({\tt tau.m},
+{\tt tau.y}) and cutpoints ({\tt LowerY}, {\tt UpperY}). 
+If the user wishes for estimates to include weights
+(e.g., survey weights) then the name of the weight variable needs to be passed
+via the {\tt weights} argument.
 
-There are several limitations to the code. First, it works only with a subset of the model types that will be accommodated if 'mediate' is used individually. Second, one cannot specify separate sets of covariates for different treatment/mediator/outcome combinations. Users should use 'mediate' separately for individual models if more flexibility is required in their specific applications. While mediations is a helpful function, researchers must be aware of the assumptions being made at every step of causal mediation analysis. For example, if there are multiple mediators, the researcher is assuming that they are not causally related.
+The output of {\tt mediations} contains a collection of {\tt mediate} objects. The naming
+system uses the name of the particular outcome variable, mediator, and
+treatment, each separated by a dot. For example, if the output of {\tt mediations}
+is {\tt output} and the outcome, mediator and treatment variable names
+{\tt O}, {\tt M1} or {\tt M2}, and {\tt T}, respectively, 
+then {\tt output\$O.M2.T} would be the {\tt mediate} object from using mediator
+{\tt M2}.
 
-An illustration of the {\tt mediations} function; can be found in the {\tt Examples}
+There are several limitations to the code. First, it works only with a subset of
+the model types that will be accommodated if {\tt mediate} is used individually.
+Second, one cannot specify separate sets of covariates for different
+treatment/mediator/outcome combinations. Users should use {\tt mediate} separately
+for individual models if more flexibility is required in their specific
+applications. 
+
+While {\tt mediations} is a helpful function, it is also easy to abuse. 
+First, researchers must be aware of the assumptions being made at every step of
+causal mediation analysis. For example, if there are multiple mediators, a
+strong assumption must be made for the estimates to be interpreted as causal
+quantities. One such assumption is that the mediators are not causally related. 
+Second, care must be taken against the risks of multiple testing when a 
+large number of treatment/mediator/outcome combinations are involved.  The
+{\tt mediations} function simply runs independent {\tt mediate} processes and
+does not use any correction procedures for multiple testing, so the confidence
+intervals may be too narrow. We recommend that the use of this function be limited
+for exploratory analyses.
+
+An illustration of the {\tt mediations} function can be found in the {\tt Examples}
 section of its help document; see {\tt ?mediations} or {\tt example(mediations)}.
 
 \section{Concluding Remarks}
@@ -1430,7 +1495,7 @@ Causal mediation analysis is a key tool for social scientific
 research. In this paper, we describe our easy-to-use software for
 causal mediation analysis, \bmediation, that implements the new
 methods and algorithms introduced by \citet*{imai:keel:yama:10} and
-\citet*{imai:keel:ting:11}.  The software provides a flexible, unified
+\citet*{imai:keel:ting:10}.  The software provides a flexible, unified
 approach to causal mediation analysis in various situations
 encountered by applied researchers.  The object-oriented nature of the
 \bR\ programming made it possible for us to implement these algorithms

@@ -8,7 +8,7 @@
 mediations(datasets, treatment, mediators, outcome, 
         covariates = NULL, families = c("gaussian", "gaussian"),
         tau.m = 0.5, tau.y = 0.5, LowerY = NULL, UpperY = NULL, 
-        interaction = FALSE, conf.level = 0.95, sims = 500, boot = FALSE, weight=NULL, ...)
+        interaction = FALSE, conf.level = 0.95, sims = 500, boot = FALSE, weights=NULL, ...)
 
 }
 
@@ -27,7 +27,7 @@ mediations(datasets, treatment, mediators, outcome,
 \item{conf.level}{ confidence level used in each application of the \code{\link{mediate}} function.}
 \item{sims}{ an integer indicating the desired number of simulations to run \code{\link{mediate}} for. This will apply to all applications of 'mediate' to all the treatment/mediator/outcome combinations.}
 \item{boot}{ a logical value, indicating whether or not nonparametric bootstrap should be used in each \code{\link{mediate}} application.}
-\item{weight}{a single valued vector of a character string indicating a weight variable to be used in all model fitting.}
+\item{weights}{a single valued vector of a character string indicating a weight variable to be used in all model fitting.}
 \item{...}{ other arguments passed to \code{\link{mediate}}, such as 'robustSE', 'dropobs', etc.}
 
 }
