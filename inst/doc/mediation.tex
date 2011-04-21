@@ -609,21 +609,21 @@ uses these procedures for sensitivity analyses for the average direct effects.
 \cline{2-7}
 {\it Mediator Model Types} & Linear & GLM & Ordered & Censored & Quantile & Semiparametric \\
 \hline
-Linear ({\tt lm}) & \checkmark & \checkmark & \checkmark^\ast & \checkmark &
-                                                  \checkmark & \checkmark^\ast  \\
-GLM (probit etc. via {\tt glm})  & \checkmark & \checkmark & \checkmark^\ast & \checkmark &
-                                                  \checkmark & \checkmark^\ast  \\
-Ordered ({\tt polr}) & \checkmark & \checkmark & \checkmark^\ast & \checkmark &
-                                                  \checkmark & \checkmark^\ast  \\
+Linear ({\tt lm}) & \checkmark & \checkmark & \checkmark$^\ast$ & \checkmark &
+                                                  \checkmark & \checkmark$^\ast$  \\
+GLM (probit etc. via {\tt glm})  & \checkmark & \checkmark & \checkmark$^\ast$ & \checkmark &
+                                                  \checkmark & \checkmark$^\ast$  \\
+Ordered ({\tt polr}) & \checkmark & \checkmark & \checkmark$^\ast$ & \checkmark &
+                                                  \checkmark & \checkmark$^\ast$  \\
 Censored (tobit via {\tt vglm}) & - & - & - & - & - & - \\
-Quantile ({\tt rq}) & \checkmark^\ast & \checkmark^\ast & \checkmark^\ast & \checkmark^\ast &
-                                                  \checkmark^\ast & \checkmark^\ast \\
-Semiparametric ({\tt gam})   & \checkmark^\ast & \checkmark^\ast & \checkmark^\ast & \checkmark^\ast &
-                                                  \checkmark^\ast & \checkmark^\ast \\
+Quantile ({\tt rq}) & \checkmark$^\ast$ & \checkmark$^\ast$ & \checkmark$^\ast$ & \checkmark$^\ast$ &
+                                                  \checkmark$^\ast$ & \checkmark$^\ast$ \\
+Semiparametric ({\tt gam})   & \checkmark$^\ast$ & \checkmark$^\ast$ & \checkmark$^\ast$ & \checkmark$^\ast$ &
+                                                  \checkmark$^\ast$ & \checkmark$^\ast$ \\
 \hline
 \end{tabular}
 \caption{The Types of Models That Can be Handled by {\tt mediate} for the
-  Estimation of Causal Mediation Effects. Asterisks ($^\ast$) indicate the model combinations
+  Estimation of Causal Mediation Effects. Stars ($^\ast$) indicate the model combinations
   that can only be estimated using the nonparametric bootstrap (i.e. with {\tt boot = TRUE}).} 
   \label{tab:MediateOptions}
   \end{center}
@@ -694,7 +694,7 @@ the example data set included with the library.
 \begin{verbatim}
 R> library("mediation")
 mediation: R Package for Causal Mediation Analysis
-Version: 2.0
+Version: 3.0
 R> data("jobs")
 \end{verbatim}
 This dataset is from the Job Search Intervention Study (JOBS II)
@@ -767,16 +767,16 @@ function prints out the results of the analysis in tabular form:
 \begin{verbatim}
 R> summary(out.2)
 
- Causal Mediation Analysis
+ Causal Mediation Analysis 
 
 Quasi-Bayesian Confidence Intervals
 
-Mediation Effect:  -0.01385 95 % CI  -0.033175  0.002333
-Direct Effect:  -0.03879 95 % CI  -0.11989  0.04682
-Total Effect:  -0.05264 95 % CI  -0.13324  0.03459
-Proportion of Total Effect via Mediation:  0.2146 95 % CI  -1.387  1.906
+Mediation Effect:  -0.01375 95 % CI  -0.031812  0.003299 
+Direct Effect:  -0.03873 95 % CI  -0.11938  0.04668 
+Total Effect:  -0.05247 95 % CI  -0.13431  0.03150 
+Proportion of Total Effect via Mediation:  0.2028 95 % CI  -1.383  1.934 
 
-Sample Size Used: 899
+Sample Size Used: 899 
 \end{verbatim}
 The output from the {\tt summary} function displays the estimates
 for the average causal mediation effect, direct effect, total effect,
@@ -789,7 +789,7 @@ the bottom.  In this case, we
 find that job search self-efficacy mediated the effect of the
 treatment on depression in the negative direction. This effect,
 however, was small with a point estimate of $-.014$ and the $95\%$
-confidence interval $(-.033,-.002)$ barely covers $0$.
+confidence interval $(-.032,-.003)$ barely covers $0$.
 
 These results can be graphically presented by using the {\tt plot} function:
 \begin{verbatim}
@@ -822,23 +822,23 @@ R> out.3 <- mediate(model.m, model.y, sims = 1000, boot = TRUE,
                     treat = "treat", mediator = "job_seek")
 R> summary(out.3)
 
- Causal Mediation Analysis
+ Causal Mediation Analysis 
 
 Quasi-Bayesian Confidence Intervals
 
-Mediation Effect_0:  -0.01829 95 % CI  -0.046754  0.005477
-Mediation Effect_1:  -0.01164 95 % CI  -0.027492  0.003419
-Direct Effect_0:  -0.03577 95 % CI  -0.1170  0.0420
-Direct Effect_1:  -0.02912 95 % CI  -0.10900  0.05012
-Total Effect:  -0.04741 95 % CI  -0.13040  0.03249
-Proportion of Total Effect via Mediation_0:  0.2821 95 % CI  -2.254  3.517
-Proportion of Total Effect via Mediation_1:  0.1801 95 % CI  -1.535  2.253
+Mediation Effect_0:  -0.01899 95 % CI  -0.045271  0.003649 
+Mediation Effect_1:  -0.01203 95 % CI  -0.029640  0.002195 
+Direct Effect_0:  -0.03596 95 % CI  -0.1187  0.0426 
+Direct Effect_1:  -0.02899 95 % CI  -0.10879  0.05082 
+Total Effect:  -0.04799 95 % CI  -0.13495  0.03154 
+Proportion of Total Effect via Mediation_0:  0.2912 95 % CI  -3.386  2.707 
+Proportion of Total Effect via Mediation_1:  0.1823 95 % CI  -1.994  2.018 
 
-Mediation Effect (Average):  -0.01496 95 % CI  -0.034988  0.004684
-Direct Effect (Average):  -0.03245 95 % CI  -0.11272  0.04712
-Proportion of Total Effect via Mediation (Average):  0.2321 95 % CI  -1.889  2.860
+Mediation Effect (Average):  -0.01551 95 % CI  -0.035757  0.003138 
+Direct Effect (Average):  -0.03248 95 % CI  -0.1129  0.0464 
+Proportion of Total Effect via Mediation (Average):  0.2381 95 % CI  -2.867  2.443 
 
-Sample Size Used: 899
+Sample Size Used: 899 
 \end{verbatim}
 Again using the \texttt{summary} function provides a table of the
 results. Now estimates for the mediation effects, direct effects and
@@ -847,7 +847,7 @@ to the levels of the treatment and are printed as such in the tabular
 summary.  In this case, the mediation effect under the treatment
 condition, listed as \texttt{Mediation Effect\_1} is estimated to be
 $-.012$ while the mediation effect under the control condition,
-\texttt{Mediation Effect\_0}, is $-.018$.  The bottom of the table shows
+\texttt{Mediation Effect\_0}, is $-.019$.  The bottom of the table shows
 the overall summary of these quantities averaged over the two treatment levels,
 as well as the number of data points.
 
@@ -884,6 +884,7 @@ flexible nonlinear fits.  This presents no difficulties for the
 alter the outcome model using the \texttt{gam} function from the
 \texttt{mgcv} library.
 \begin{verbatim}
+R> library(mgcv)
 R> model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age + occp + marital
                  + nonwhite + educ + income, data = jobs)
 R> model.y <- gam(depress2 ~ treat + s(job_seek, bs = "cr")  + depress1 + econ_hard
@@ -943,17 +944,17 @@ R> summary(out.5)
 
 Confidence Intervals Based on Nonparametric Bootstrap
 
-Mediation Effect_0:  -0.02285 95 % CI  -0.052889  0.003819 
-Mediation Effect_1:  -0.01710 95 % CI  -0.039015  0.002544 
-Direct Effect_0:  -0.01093 95 % CI  -0.09689  0.07581 
-Direct Effect_1:  -0.005191 95 % CI  -0.08789  0.07816 
-Total Effect:  -0.02804 95 % CI  -0.11704  0.06002 
-Proportion of Total Effect via Mediation_0:  0.3817 95 % CI  -4.315  6.295 
-Proportion of Total Effect via Mediation_1:  0.2742 95 % CI  -3.915  4.472 
+Mediation Effect_0:  -0.02254 95 % CI  -0.051956  0.004447 
+Mediation Effect_1:  -0.0171 95 % CI  -0.038895  0.002281 
+Direct Effect_0:  -0.009742 95 % CI  -0.09718  0.07924 
+Direct Effect_1:  -0.004302 95 % CI  -0.08926  0.08285 
+Total Effect:  -0.02684 95 % CI  -0.11932  0.06449 
+Proportion of Total Effect via Mediation_0:  0.3892 95 % CI  -4.411  9.161 
+Proportion of Total Effect via Mediation_1:  0.2768 95 % CI  -3.614  6.960 
 
-Mediation Effect (Average):  -0.01998 95 % CI  -0.045832  0.003162 
-Direct Effect (Average):  -0.008063 95 % CI  -0.09149  0.07672 
-Proportion of Total Effect via Mediation (Average):  0.3237 95 % CI  -4.053  5.166 
+Mediation Effect (Average):  -0.01982 95 % CI  -0.045831  0.003105 
+Direct Effect (Average):  -0.007022 95 % CI  -0.09207  0.08178 
+Proportion of Total Effect via Mediation (Average):  0.3398 95 % CI  -3.870  8.105 
 
 Sample Size Used: 899 
 \end{verbatim}
@@ -976,6 +977,7 @@ for the quantile regression models as well.  Below we estimate the
 mediator with a standard linear regression, while for the outcome we
 use \texttt{rq} to model the median.
 \begin{verbatim}
+R> library(quantreg)
 R> model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age + occp + marital
                  + nonwhite + educ + income, data = jobs)
 R> model.y <- rq(depress2 ~ treat + job_seek + depress1 + econ_hard + sex
@@ -989,10 +991,10 @@ R> summary(out.6)
 
 Confidence Intervals Based on Nonparametric Bootstrap
 
-Mediation Effect:  -0.01426 95 % CI  -0.031162  0.002092 
-Direct Effect:  -0.04152 95 % CI  -0.12300  0.03562 
-Total Effect:  -0.05577 95 % CI  -0.14335  0.02364 
-Proportion of Total Effect via Mediation:  0.2000 95 % CI  -2.866  2.300 
+Mediation Effect:  -0.01424 95 % CI  -0.031317  0.002109 
+Direct Effect:  -0.04165 95 % CI  -0.12413  0.03538 
+Total Effect:  -0.05589 95 % CI  -0.14305  0.02377 
+Proportion of Total Effect via Mediation:  0.2042 95 % CI  -2.003  2.707 
 
 Sample Size Used: 899 
 \end{verbatim}
@@ -1041,17 +1043,17 @@ R> summary(out.7)
 
 Quasi-Bayesian Confidence Intervals
 
-Mediation Effect_0:  0.003340 95 % CI  -0.0009266  0.0101511 
-Mediation Effect_1:  0.003588 95 % CI  -0.001001  0.010833 
-Direct Effect_0:  0.05592 95 % CI  -0.004395  0.116298 
-Direct Effect_1:  0.05617 95 % CI  -0.004405  0.116453 
-Total Effect:  0.05951 95 % CI  -0.0006978  0.1196860 
-Proportion of Total Effect via Mediation_0:  0.04671 95 % CI  -0.06537  0.40433 
-Proportion of Total Effect via Mediation_1:  0.05055 95 % CI  -0.06854  0.40859 
+Mediation Effect_0:  0.003290 95 % CI  -0.0009537  0.0098747 
+Mediation Effect_1:  0.003538 95 % CI  -0.001052  0.010728 
+Direct Effect_0:  0.05514 95 % CI  -0.006427  0.113568 
+Direct Effect_1:  0.05538 95 % CI  -0.006487  0.114191 
+Total Effect:  0.05867 95 % CI  -0.003816  0.117091 
+Proportion of Total Effect via Mediation_0:  0.0455 95 % CI  -0.0768  0.4070 
+Proportion of Total Effect via Mediation_1:  0.05042 95 % CI  -0.0777  0.4110 
 
-Mediation Effect (Average):  0.003464 95 % CI  -0.0009614  0.0105733 
-Direct Effect (Average):  0.05604 95 % CI  -0.0044  0.1164 
-Proportion of Total Effect via Mediation (Average):  0.0484 95 % CI  -0.06695  0.40646 
+Mediation Effect (Average):  0.003414 95 % CI  -0.001003  0.010269 
+Direct Effect (Average):  0.05526 95 % CI  -0.006457  0.113879 
+Proportion of Total Effect via Mediation (Average):  0.04802 95 % CI  -0.07725  0.41005 
 
 Sample Size Used: 899 
 \end{verbatim}
@@ -1103,17 +1105,17 @@ R> summary(out.8)
 
 Quasi-Bayesian Confidence Intervals
 
-Mediation Effect_0:  -0.01815 95 % CI  -0.037383 -0.003393 
-Mediation Effect_1:  -0.02035 95 % CI  -0.039359 -0.003966 
-Direct Effect_0:  -0.03076 95 % CI  -0.11109  0.04833 
-Direct Effect_1:  -0.03296 95 % CI  -0.11524  0.04722 
-Total Effect:  -0.05111 95 % CI  -0.12946  0.03085 
-Proportion of Total Effect via Mediation_0:  0.2695 95 % CI  -2.430  3.154 
-Proportion of Total Effect via Mediation_1:  0.3135 95 % CI  -2.906  3.379 
+Mediation Effect_0:  -0.01823 95 % CI  -0.038944 -0.002616 
+Mediation Effect_1:  -0.02040 95 % CI  -0.038965 -0.003155 
+Direct Effect_0:  -0.02823 95 % CI  -0.10786  0.05154 
+Direct Effect_1:  -0.03039 95 % CI  -0.11164  0.04764 
+Total Effect:  -0.04863 95 % CI  -0.13146  0.02839 
+Proportion of Total Effect via Mediation_0:  0.2782 95 % CI  -3.055  3.325 
+Proportion of Total Effect via Mediation_1:  0.3162 95 % CI  -3.443  3.628 
 
-Mediation Effect (Average):  -0.01925 95 % CI  -0.035705 -0.004607 
-Direct Effect (Average):  -0.03186 95 % CI  -0.11337  0.04748 
-Proportion of Total Effect via Mediation (Average):  0.301 95 % CI  -2.496  2.757 
+Mediation Effect (Average):  -0.01932 95 % CI  -0.037878 -0.003201 
+Direct Effect (Average):  -0.02931 95 % CI  -0.11052  0.04807 
+Proportion of Total Effect via Mediation (Average):  0.301 95 % CI  -3.016  3.477 
 
 Sample Size Used: 899 
 \end{verbatim}
@@ -1147,6 +1149,17 @@ Once we have estimated these two models, analysis proceeds as before,
 R> out.9 <- mediate(model.m, model.y, sims = 1000, treat = "treat",
                      mediator = "job_disc")
 R> summary(out.9)
+
+ Causal Mediation Analysis 
+
+Quasi-Bayesian Confidence Intervals
+
+Mediation Effect:  -0.01048 95 % CI  -0.03188  0.01008 
+Direct Effect:  -0.03311 95 % CI  -0.10759  0.04848 
+Total Effect:  -0.04360 95 % CI  -0.12376  0.03895 
+Proportion of Total Effect via Mediation:  0.1726 95 % CI  -2.752  2.077 
+
+Sample Size Used: 899 
 \end{verbatim}
 Again, for any of these data types, analysts can relax the
 no-interaction assumption as before by including the interaction
@@ -1207,23 +1220,25 @@ proportion of the \emph{original} variance explained by an unobserved
 confounder, which we denote as $\widetilde{R}^2_M\widetilde{R}^2_Y$ .
 \begin{verbatim}
 R> summary(sens.cont)
-
-Mediation Sensitivity Analysis
+Mediation Sensitivity Analysis for Average Causal Mediation Effect
 
 Sensitivity Region
 
-       Rho Med. Eff. 95% CI Lower 95% CI Upper R^2_M*R^2_Y* R^2_M~R^2_Y~
-[1,] -0.25    0.0056      -0.0008       0.0120       0.0625       0.0403
-[2,] -0.20    0.0012      -0.0035       0.0058       0.0400       0.0258
-[3,] -0.15   -0.0032      -0.0084       0.0020       0.0225       0.0145
-[4,] -0.10   -0.0074      -0.0150       0.0001       0.0100       0.0064
+        Rho Med. Eff. 95% CI Lower 95% CI Upper R^2_M*R^2_Y* R^2_M~R^2_Y~
+                
+[14,] -0.30    0.0064      -0.0025       0.0153       0.0900       0.0588
+[15,] -0.25    0.0028      -0.0026       0.0082       0.0625       0.0408
+[16,] -0.20   -0.0007      -0.0049       0.0036       0.0400       0.0261
+[17,] -0.15   -0.0040      -0.0105       0.0025       0.0225       0.0147
 
-Rho at which ACME = 0: -0.1867
 
-R^2_M*R^2_Y* at which ACME = 0: 0.0349
+Rho at which ACME = 0: -0.2 
 
-R^2_M~R^2_Y~ at which ACME = 0: 0.0225
 
+R^2_M*R^2_Y* at which ACME = 0: 0.04 
+
+
+R^2_M~R^2_Y~ at which ACME = 0: 0.0261 
 \end{verbatim}
 The table above presents the estimated mediation effect along with its
 confidence interval for each value of $\rho$.  The reader can verify

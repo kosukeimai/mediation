@@ -49,7 +49,8 @@ Users should note that computation can take significant time for \code{medsens}.
 \item{R2tilde.d.thresh, R2tilde.z.thresh}{the values of the product of "R square tildes" for which the average causal mediation and direct effects are zero, respectively.}
 \item{r.square.y, r.square.m}{the usual R square statistics for the outcome and mediator models.}
 \item{INT}{a logical value indicating whether interaction between the treatment and mediator is allowed in the original mediate object.}
-\item{effect.type}{ the 'effect.type' argument used.}
+\item{conf.level}{the confidence level used.}
+\item{effect.type}{the 'effect.type' argument used.}
 \item{type}{a character string indicating the type of the mediator and outcome models used. Currently either "ct" (linear mediator and outcome models), 'bm' (binary mediator and linear outcome models) or 'bo' (linear mediator and binary outcome models).}
 }
 

@@ -73,15 +73,13 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         d0 <- d1 <- z0 <- z1 <- matrix(NA, length(rho), 1)
         d0.var <- d1.var <- z0.var <- z1.var <- matrix(NA, length(rho), 1)
 
-        # Estimate Error Correlation
-        data <- model.frame(model.y)
-        if(INT){
-            mod.y <- update(model.y,as.formula(paste(". ~ . -", TM, "-", mediator)), data=data)
-        } else {
-            mod.y <- update(model.y,as.formula(paste(". ~ . -", mediator)), data=data)
-        }
-#        err.cr <- cor(model.m$resid, mod.y$resid)
-#            ## FIX: This is only used for INT=F which is also unnecessary
+#        # Estimate Error Correlation
+#        data <- model.frame(model.y)
+#        if(INT){
+#            mod.y <- update(model.y,as.formula(paste(". ~ . -", TM, "-", mediator)), data=data)
+#        } else {
+#            mod.y <- update(model.y,as.formula(paste(". ~ . -", mediator)), data=data)
+#        }
 
         for(i in 1:length(rho)){
             e.cor <- rho[i]
@@ -615,8 +613,8 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         R2star.d.thresh=R2star.d.thresh, R2tilde.d.thresh=R2tilde.d.thresh,
         R2star.z.thresh=R2star.z.thresh, R2tilde.z.thresh=R2tilde.z.thresh,
         r.square.y=r.sq.y, r.square.m=r.sq.m,
-        rho.by=rho.by, sims=sims, INT=INT, effect.type=effect.type,
-        type=type)
+        rho.by=rho.by, sims=sims, INT=INT, conf.level = x$conf.level,
+        effect.type=effect.type, type=type)
     class(out) <- "medsens"
     out
 }
@@ -635,27 +633,27 @@ print.summary.medsens <- function(x, ...){
     }
     if(x$INT || x$type=="bo"){
         if("indirect" %in% etype.vec){
-            tab.d0 <- cbind(x$rho, round(x$d0,4), round(x$lower.d0,4), 
-                round(x$upper.d0, 4), x$ind.d0, x$R2star.prod, round(x$R2tilde.prod, 4))
+            tab.d0 <- cbind(round(x$rho,4), round(x$d0,4), round(x$lower.d0,4), 
+                round(x$upper.d0, 4), x$ind.d0, round(x$R2star.prod,4), round(x$R2tilde.prod, 4))
             if(sum(x$ind.d0)==1){
                 tab.d0 <- as.matrix(tab.d0[x$ind.d0==1, -5])
                 tab.d0 <- t(tab.d0)
             } else {
                 tab.d0 <- tab.d0[x$ind.d0==1, -5]
             }
-            colnames(tab.d0) <-  c("Rho", "Med. Eff.", "Med. Eff. CI Lower", 
-                "Med. Eff. CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
+            colnames(tab.d0) <-  c("Rho", "Med. Eff.", paste(100*x$conf.level, "% CI Lower", sep=""), 
+                paste(100*x$conf.level, "% CI Upper", sep=""), "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.d0) <- NULL
-            tab.d1 <- cbind(x$rho, round(x$d1,4), round(x$lower.d1,4), 
-                round(x$upper.d1, 4), x$ind.d1, x$R2star.prod, round(x$R2tilde.prod, 4))
+            tab.d1 <- cbind(round(x$rho,4), round(x$d1,4), round(x$lower.d1,4), 
+                round(x$upper.d1, 4), x$ind.d1, round(x$R2star.prod,4), round(x$R2tilde.prod, 4))
             if(sum(x$ind.d1)==1){
                 tab.d1 <- as.matrix(tab.d1[x$ind.d1==1, -5])
                 tab.d1 <- t(tab.d1)
             } else {
                 tab.d1 <- tab.d1[x$ind.d1==1, -5]
             }
-            colnames(tab.d1) <-  c("Rho", "Med. Eff.", "Med. Eff. CI Lower", 
-                "Med. Eff. CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
+            colnames(tab.d1) <-  c("Rho", "Med. Eff.", paste(100*x$conf.level, "% CI Lower", sep=""), 
+                paste(100*x$conf.level, "% CI Upper", sep=""), "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.d1) <- NULL
             cat("\nMediation Sensitivity Analysis: Average Mediation Effect\n")
             cat("\nSensitivity Region: ACME for Control Group\n\n")
@@ -671,27 +669,27 @@ print.summary.medsens <- function(x, ...){
             invisible(x)
         }
         if("direct" %in% etype.vec){
-            tab.z0 <- cbind(x$rho, round(x$z0,4), round(x$lower.z0,4), 
-                round(x$upper.z0, 4), x$ind.z0, x$R2star.prod, round(x$R2tilde.prod, 4))
+            tab.z0 <- cbind(round(x$rho,4), round(x$z0,4), round(x$lower.z0,4), 
+                round(x$upper.z0, 4), x$ind.z0, round(x$R2star.prod,4), round(x$R2tilde.prod, 4))
             if(sum(x$ind.z0)==1){
                 tab.z0 <- as.matrix(tab.z0[x$ind.z0==1, -5])
                 tab.z0 <- t(tab.z0)
             } else {
                 tab.z0 <- tab.z0[x$ind.z0==1, -5]
             }
-            colnames(tab.z0) <-  c("Rho", "Dir. Eff.", "Dir. Eff. CI Lower", 
-                "Dir. Eff. CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
+            colnames(tab.z0) <-  c("Rho", "Dir. Eff.", paste(100*x$conf.level, "% CI Lower", sep=""), 
+                paste(100*x$conf.level, "% CI Upper", sep=""), "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.z0) <- NULL
-            tab.z1 <- cbind(x$rho, round(x$z1,4), round(x$lower.z1,4), 
-                round(x$upper.z1, 4), x$ind.z1, x$R2star.prod, round(x$R2tilde.prod, 4))
+            tab.z1 <- cbind(round(x$rho,4), round(x$z1,4), round(x$lower.z1,4), 
+                round(x$upper.z1, 4), x$ind.z1, round(x$R2star.prod,4), round(x$R2tilde.prod, 4))
             if(sum(x$ind.z1)==1){
                 tab.z1 <- as.matrix(tab.z1[x$ind.z1==1, -5])
                 tab.z1 <- t(tab.z1)
             } else {
                 tab.z1 <- tab.z1[x$ind.z1==1, -5]
             }
-            colnames(tab.z1) <-  c("Rho", "Dir. Eff.", "Dir. Eff. CI Lower", 
-                "Dir. Eff. CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
+            colnames(tab.z1) <-  c("Rho", "Dir. Eff.", paste(100*x$conf.level, "% CI Lower", sep=""), 
+                paste(100*x$conf.level, "% CI Upper", sep=""), "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.z1) <- NULL
             cat("\nMediation Sensitivity Analysis: Average Direct Effect\n")
             cat("\nSensitivity Region: ADE for Control Group\n\n")
@@ -708,16 +706,16 @@ print.summary.medsens <- function(x, ...){
         }
     } else {
         if("indirect" %in% etype.vec){
-            tab <- cbind(x$rho, round(x$d0, 4), round(x$lower.d0, 4), 
-                round(x$upper.d0, 4), x$ind.d0, x$R2star.prod, round(x$R2tilde.prod,4))
+            tab <- cbind(round(x$rho,4), round(x$d0, 4), round(x$lower.d0, 4), 
+                round(x$upper.d0, 4), x$ind.d0, round(x$R2star.prod,4), round(x$R2tilde.prod,4))
             if(sum(x$ind.d0)==1){
                 tab <- as.matrix(tab[x$ind.d0==1, -5])
                 tab <- t(tab)
             } else {
                 tab <- tab[x$ind.d0==1, -5]
             }
-            colnames(tab) <-  c("Rho", "Med. Eff.", "Med. Eff. CI Lower", 
-                "Med. Eff. CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
+            colnames(tab) <-  c("Rho", "Med. Eff.", paste(100*x$conf.level, "% CI Lower", sep=""), 
+                paste(100*x$conf.level, "% CI Upper", sep=""), "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab) <- NULL
             cat("\nMediation Sensitivity Analysis for Average Causal Mediation Effect\n")
             cat("\nSensitivity Region\n\n")
@@ -728,16 +726,16 @@ print.summary.medsens <- function(x, ...){
             invisible(x)
         }
         if("direct" %in% etype.vec){
-            tab.z <- cbind(x$rho, round(x$z0, 4), round(x$lower.z0, 4), 
-                round(x$upper.z0, 4), x$ind.z0, x$R2star.prod, round(x$R2tilde.prod,4))
+            tab.z <- cbind(round(x$rho,4), round(x$z0, 4), round(x$lower.z0, 4), 
+                round(x$upper.z0, 4), x$ind.z0, round(x$R2star.prod,4), round(x$R2tilde.prod,4))
             if(sum(x$ind.z0)==1){
                 tab.z <- as.matrix(tab.z[x$ind.z0==1, -5])
                 tab.z <- t(tab.z)
             } else {
                 tab.z <- tab.z[x$ind.z0==1, -5]
             }
-            colnames(tab.z) <- c("Rho", "Dir. Eff.", "Dir. Eff. CI Lower", 
-                "Dir. Eff. CI Upper", "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
+            colnames(tab.z) <- c("Rho", "Dir. Eff.", paste(100*x$conf.level, "% CI Lower", sep=""), 
+                paste(100*x$conf.level, "% CI Upper", sep=""), "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.z) <- NULL
             cat("\nMediation Sensitivity Analysis for Average Direct Effect\n")
             cat("\nSensitivity Region\n\n")

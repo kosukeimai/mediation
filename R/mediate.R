@@ -53,11 +53,6 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
         model.m <- eval.parent(call.m)
         model.y <- eval.parent(call.y)
     }
-    
-
- 
-
-
             
     # Record class of model.m as "ClassM"
     if(isGam.m){
@@ -114,9 +109,6 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
         } else {
         weights<-weights.m
         }
-
-    
-    
     
     # Factor treatment indicator
     isFactorT.m <- is.factor(m.data[,treat])
@@ -202,15 +194,9 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
         } else {
             PredictMc <- PredictM0.tmp
         }
-cat("Simulation ", parent.frame()$j, "\n")
-print(table(PredictMt))
-print(table(PredictMc))
-cat("\n")
         if(isFactorM) {
-            labMt <- m.levels[sort(unique(PredictMt))]
-            labMc <- m.levels[sort(unique(PredictMc))]
-            pred.data.t[,mediator] <- factor(PredictMt, labels = labMt)
-            pred.data.c[,mediator] <- factor(PredictMc, labels = labMc)
+            pred.data.t[,mediator] <- factor(PredictMt, levels=1:m, labels=m.levels)
+            pred.data.c[,mediator] <- factor(PredictMc, levels=1:m, labels=m.levels)
         } else {
             pred.data.t[,mediator] <- PredictMt
             pred.data.c[,mediator] <- PredictMc
@@ -368,33 +354,10 @@ cat("\n")
                 pred.data <- predictY.dataprep(1,1,1,0)
                 pred.data.t <- pred.data$t
                 pred.data.c <- pred.data$c
-print(dim(pred.data.t))
-print(dim(pred.data.c))
-                if(isVglm.y){
-                    ymat.t <- model.matrix(model.y@terms, data=pred.data.t) 
-                    ymat.c <- model.matrix(model.y@terms, data=pred.data.c) 
-                } else {
-                    ymat.t <- model.matrix(terms(model.y), data=pred.data.t) 
-                    ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
-                }
-print(dim(ymat.t))
-print(dim(ymat.c))
-                if(ncol(ymat.t) != ncol(model.matrix(model.y))){
-                    ymat.t.temp <- matrix(0, nrow=nrow(pred.data.t), 
-                            ncol=ncol(model.matrix(model.y)), dimnames=dimnames(model.matrix(model.y)))
-                    ymat.t.temp[,colnames(ymat.t)] <- ymat.t
-                    ymat.t <- ymat.t.temp
-                }
-                if(ncol(ymat.c) != ncol(model.matrix(model.y))){
-                    ymat.c.temp <- matrix(0, nrow=nrow(pred.data.c), 
-                            ncol=ncol(model.matrix(model.y)), dimnames=dimnames(model.matrix(model.y)))
-                    ymat.c.temp[,colnames(ymat.c)] <- ymat.c
-                    ymat.c <- ymat.c.temp
-                }
-print(dim(ymat.t))
-print(dim(ymat.c))
-print(colnames(TMmodel))
-print(colnames(ymat.t))
+                
+                ymat.t <- model.matrix(terms(model.y), data=pred.data.t) 
+                ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
+                
                 if(isVglm.y){
                     if(vfamily=="tobit") {
                         Pr1.tmp <- ymat.t %*% TMmodel[j,-2]
@@ -573,17 +536,18 @@ print(colnames(ymat.t))
                 index <- sample(1:n, n, repl=TRUE)
                 Call.M$data <- m.data[index,]
                 Call.Y.t$data <- y.data[index,]
-                #only select weights that are included in the bootstrap sample
+                # only select weights that are included in the bootstrap sample
                 Call.M$weights <- m.data[index,"(weights)"]
                 Call.Y.t$weights  <- y.data[index,"(weights)"]
                 
+                # TODO: Verify if below is unnecessary with all outcome model types.
                 if(ClassM=="polr" && length(unique(y.data[index,mediator]))!=m){
                         stop("insufficient variation on mediator")
                 }
                 
                 # Refit Models with Resampled Data
                 new.fit.M <- model.m <- eval.parent(Call.M)
-                new.fit.t <- model.y <-eval.parent(Call.Y.t)
+                new.fit.t <- model.y <- eval.parent(Call.Y.t)
                 #####
                 #Extraction of weights from models
                 #####                
@@ -877,8 +841,16 @@ print(colnames(ymat.t))
             new.fit.t <- eval.parent(call.y)
             
             if(ClassM=="polr" && length(unique(y.data[index,mediator]))!=m){
-                stop("insufficient variation on mediator")
+                # Modify the coefficients when mediator has empty cells
+                coefnames.y <- names(model.y$coefficients)
+                coefnames.new.y <- names(new.fit.t$coefficients)
+                new.fit.t.coef <- rep(0, length(coefnames.y))
+                names(new.fit.t.coef) <- coefnames.y
+                new.fit.t.coef[coefnames.new.y] <- new.fit.t$coefficients
+                new.fit.t$coefficients <- new.fit.t.coef
             }
+#                stop("insufficient variation on mediator")
+#            }
             
             #####################################
             # Mediator Predictions
@@ -1044,13 +1016,6 @@ print(colnames(ymat.t))
 
 
 
-#print.mediate <- function(x, ...){
-#    print(unlist(x[1:11]))
-#    invisible(x)
-#}
-
-
-
 summary.mediate <- function(object, ...){
     structure(object, class = c("summary.mediate", class(object)))
 }
@@ -1106,13 +1071,6 @@ print.summary.mediate <- function(x, ...){
     } 
     invisible(x)
 }
-
-
-
-#print.mediate.order <- function(x, ...){
-#    print(unlist(x[1:50]))
-#    invisible(x)
-#}
 
 
 

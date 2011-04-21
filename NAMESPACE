@@ -1,10 +1,24 @@
 importFrom(MASS, mvrnorm)
-export(mediate, medsens, summary.mediate, summary.medsens, plot.medsens)
+importFrom(Matrix, Diagonal, kronecker)
+
+export(mediate, summary.mediate, plot.mediate,
+       summary.mediate.order, plot.mediate.order,
+       medsens, summary.medsens, plot.medsens,
+       mediations, summary.mediations, plot.mediations,
+       summary.mediations.order, plot.mediations.order)
 
 S3method(summary, mediate)
+S3method(summary, mediate.order)
 S3method(summary, medsens)
+S3method(summary, mediations)
+S3method(summary, mediations.order)
+S3method(plot, mediate)
+S3method(plot, mediate.order)
 S3method(plot, medsens)
-S3method(print, mediate)
-S3method(print, medsens)
+S3method(plot, mediations)
+S3method(plot, mediations.order)
 S3method(print, summary.mediate)
+S3method(print, summary.mediate.order)
 S3method(print, summary.medsens)
+S3method(print, summary.mediations)
+S3method(print, summary.mediations.order)
