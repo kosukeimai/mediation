@@ -47,8 +47,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
         }
         call.m$data <- call.y$data <- newdata
         if(c("(weights)") %in% names(newdata)){
-        #call.m$weights <- call.y$weights <- newdata[,"(weights)"] 
-        call.m$weights <- call.y$weights <- model.weights(newdata) 
+            call.m$weights <- call.y$weights <- model.weights(newdata) 
         }
         model.m <- eval.parent(call.m)
         model.y <- eval.parent(call.y)
@@ -91,24 +90,22 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
     m <- length(sort(unique(model.frame(model.m)[,1])))
     m.min <- as.numeric(sort(model.frame(model.m)[,1])[1])
     
-    #####
-    #Extraction of weights from models
-    #####
-        weights.m<-model.weights(m.data)
-        weights.y<-model.weights(y.data)
-        
-        if(is.null(weights.m)){
-        weights.m<-rep(1,nrow(m.data))
-        }
-        if(is.null(weights.y)){
-        weights.m<-rep(1,nrow(y.data))
-        }
-        
-        if(!all(weights.m==weights.y)) {
-        stop("Weights on outcome and mediator model not identical")
-        } else {
-        weights<-weights.m
-        }
+    # Extracting weights from models
+    weights.m <- model.weights(m.data)
+    weights.y <- model.weights(y.data)
+    
+    if(is.null(weights.m)){
+        weights.m <- rep(1,nrow(m.data))
+    }
+    if(is.null(weights.y)){
+        weights.y <- rep(1,nrow(y.data))
+    }
+    
+    if(!all(weights.m == weights.y)) {
+        stop("Weights on outcome and mediator models not identical")
+    } else {
+        weights <- weights.m
+    }
     
     # Factor treatment indicator
     isFactorT.m <- is.factor(m.data[,treat])
@@ -495,13 +492,13 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
             }
             
             rm(Pr1, Pr0, PredictM1, PredictM0, TMmodel, MModel) 
-            zeta.1 <- t(as.matrix(apply(zeta.1.tmp, 2, weighted.mean,w=weights)))
+            zeta.1 <- t(as.matrix(apply(zeta.1.tmp, 2, weighted.mean, w=weights)))
             rm(zeta.1.tmp)
-            zeta.0 <- t(as.matrix(apply(zeta.0.tmp, 2, weighted.mean,w=weights)))
+            zeta.0 <- t(as.matrix(apply(zeta.0.tmp, 2, weighted.mean, w=weights)))
             rm(zeta.0.tmp)
-            delta.1 <- t(as.matrix(apply(delta.1.tmp, 2, weighted.mean,w=weights)))
+            delta.1 <- t(as.matrix(apply(delta.1.tmp, 2, weighted.mean, w=weights)))
             rm(delta.1.tmp)
-            delta.0 <- t(as.matrix(apply(delta.0.tmp, 2, weighted.mean,w=weights)))
+            delta.0 <- t(as.matrix(apply(delta.0.tmp, 2, weighted.mean, w=weights)))
             rm(delta.0.tmp)
             tau <- (zeta.1 + delta.0 + zeta.0 + delta.1)/2
             
