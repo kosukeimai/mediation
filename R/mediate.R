@@ -533,7 +533,6 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                 index <- sample(1:n, n, repl=TRUE)
                 Call.M$data <- m.data[index,]
                 Call.Y.t$data <- y.data[index,]
-                # only select weights that are included in the bootstrap sample
                 Call.M$weights <- m.data[index,"(weights)"]
                 Call.Y.t$weights  <- y.data[index,"(weights)"]
                 
@@ -545,22 +544,6 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                 # Refit Models with Resampled Data
                 new.fit.M <- model.m <- eval.parent(Call.M)
                 new.fit.t <- model.y <- eval.parent(Call.Y.t)
-                #####
-                #Extraction of weights from models
-                #####                
-                weights.m<-model.weights(model.frame(model.m))
-                weights.y<-model.weights(model.frame(model.y))
-                
-                        if(is.null(weights.m)){
-                        weights.m<-rep(1,nrow(model.frame(model.m)))
-                        }
-                        if(is.null(weights.y)){
-                        weights.m<-rep(1,nrow(model.frame(model.y)))
-                        }
-                        weights<-weights.m
-                     
-               
-                
                 
                 #####################################
                 #  Mediator Predictions
@@ -716,10 +699,10 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                 rm(pred.data.t, pred.data.c, pred.data, pr.1, pr.0, pr.mat)
                 
                 # Compute all QoIs
-                zeta.1[b] <- weighted.mean(zeta.1.tmp,weights)
-                zeta.0[b] <- weighted.mean(zeta.0.tmp,weights)
-                delta.1[b] <- weighted.mean(delta.1.tmp,weights)
-                delta.0[b] <- weighted.mean(delta.0.tmp,weights)
+                zeta.1[b] <- weighted.mean(zeta.1.tmp, weights)
+                zeta.0[b] <- weighted.mean(zeta.0.tmp, weights)
+                delta.1[b] <- weighted.mean(delta.1.tmp, weights)
+                delta.0[b] <- weighted.mean(delta.0.tmp, weights)
                 tau[b] <- (zeta.1[b] + zeta.0[b] + delta.0[b] + delta.1[b])/2
                 
             }  # bootstrap loop ends
@@ -785,7 +768,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                         INT=INT, conf.level=conf.level,
                         model.y=model.y, model.m=model.m, 
                         control.value=control.value, treat.value=treat.value,
-                        nobs=n, weights=weights)
+                        nobs=n)
         } else {
             out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
                         z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci, 
@@ -834,6 +817,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
             call.y <- model.y$call
             call.m$data <- m.data[index,]
             call.y$data <- y.data[index,]
+            call.m$weights <- m.data[index,"(weights)"]
+            call.y$weights  <- y.data[index,"(weights)"]
             new.fit.M <- eval.parent(call.m)
             new.fit.t <- eval.parent(call.y)
             
@@ -959,10 +944,10 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
             rm(pred.data.t, pred.data.c, pred.data, probs_p1, probs_p0)
             
             # Compute all QoIs
-            zeta.1[b,] <- apply(zeta.1.tmp, 2, mean)
-            zeta.0[b,] <- apply(zeta.0.tmp, 2, mean)
-            delta.1[b,] <- apply(delta.1.tmp, 2, mean)
-            delta.0[b,] <- apply(delta.0.tmp, 2, mean)
+            zeta.1[b,] <- apply(zeta.1.tmp, 2, weighted.mean, w=weights)
+            zeta.0[b,] <- apply(zeta.0.tmp, 2, weighted.mean, w=weights)
+            delta.1[b,] <- apply(delta.1.tmp, 2, weighted.mean, w=weights)
+            delta.0[b,] <- apply(delta.0.tmp, 2, weighted.mean, w=weights)
             tau[b,] <- (zeta.1[b,] + zeta.0[b,] + delta.0[b,] + delta.1[b,])/2
             
         }  # Bootstrap loop ends
@@ -996,7 +981,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                         boot=boot, treat=treat, mediator=mediator, 
                         INT=INT, conf.level=conf.level,
                         model.y=model.y, model.m=model.m, 
-                        control.value=control.value, treat.value=treat.value, nobs=n, weights=weights)
+                        control.value=control.value, treat.value=treat.value, nobs=n)
         } else {
             out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
                         tau.coef=tau.coef, tau.ci=tau.ci, 
