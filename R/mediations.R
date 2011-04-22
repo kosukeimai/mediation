@@ -31,69 +31,50 @@ mediations <- function(datasets, treatment, mediators, outcome,
                                         mediators[j], covariates)
                     }
                 }
-                
-                if(is.null(weights)) {
-                    # run Mediator model using new data/specification
-                    if(families[1] == "binomial") {  
-                        result1 <- glm(f1, family=binomial("probit"), data=dataarg)
-                    } else if(families[1] == "quantile") {
-                        result1 <- rq(f1, data=dataarg, tau=tau.m)
-                    } else if(families[1] == "oprobit") {
-                        result1 <- polr(f1, method = "probit", data=dataarg)
-                    } else if (families[1] == "gaussian") {
-                        result1 <- glm(f1, family="gaussian", data=dataarg)
-                    } else {
-                        stop("mediations does not support this model for the mediator")
-                    }
-                    
-                    # run Outcome model using new data/specification
-                    if(families[2] == "binomial") {  
-                        result2 <- glm(f2, family=binomial("probit"), data=dataarg)
-                    } else if(families[2] == "quantile") {
-                        result2 <- rq(f2, data=dataarg, tau=tau.y)
-                    } else if(families[2] == "tobit") {
-                        result2 <- vglm(f2, tobit(Lower=LowerY,Upper=UpperY), data=dataarg)
-                    } else if(families[2]== "oprobit"){
-                        result2 <- polr(f2, method = "probit", data=dataarg)
-                    } else if(families[2]== "gaussian"){
-                        result2 <- glm(f2, family="gaussian", data=dataarg)
-                    } else {
-                        stop("mediations does not support this model for the outcome")
-                    }   
-                } else {
+
+                 if(!is.null(weights)) {
                     weight1 <- sprintf("dataarg$%s", weights)
-                    weights <- as.data.frame(eval(parse(text=weight1)))
+                    weight <- as.data.frame(eval(parse(text=weight1)))
+                    }
                     # run Mediator model using new data/specification
                     if(families[1] == "binomial") {  
-                        result1 <- glm(f1, family=binomial("probit"), weights=weights,
+                        result1 <- glm(f1, family=binomial("probit"), weights=weight,
                                         data=dataarg)
                     } else if(families[1] == "quantile") {
+                        if(!is.null(weights)) {
                         stop("Weights not supported with quantile regression")
+                        } else {
+                        result1 <- rq(f1, data=dataarg, tau=tau.m)
+                        }
                     } else if(families[1] == "oprobit") {
-                        result1 <- polr(f1, method = "probit", weights=weights, data=dataarg)
+                        result1 <- polr(f1, method = "probit", weights=weight, data=dataarg)
                     } else if (families[1] == "gaussian") {
-                        result1 <- glm(f1, family="gaussian", weights=weights, data=dataarg)
+                        result1 <- glm(f1, family="gaussian", weights=weight, data=dataarg)
                     } else {
                         stop("mediations does not support this model for the mediator")
                     }
                     
                     # run Outcome model using new data/specification
                     if(families[2] == "binomial") {  
-                        result2 <- glm(f2, family=binomial("probit"), weights=weights,
+                        result2 <- glm(f2, family=binomial("probit"), weights=weight,
                                         data=dataarg)
                     } else if(families[2] == "quantile") {
+                        if(!is.null(weights)) {
                         stop("Weights not supported with quantile regression")
+                        } else {
+                        result2 <- rq(f2, data=dataarg, tau=tau.y)
+                        }
                     } else if(families[2] == "tobit") {
-                        result2 <- vglm(f2, tobit(Lower=LowerY,Upper=UpperY), weights=weights,
+                        result2 <- vglm(f2, tobit(Lower=LowerY,Upper=UpperY), weights=weight,
                                         data=dataarg)
                     } else if(families[2]== "oprobit"){
-                        result2 <- polr(f2, method = "probit", weights=weights, data=dataarg)
+                        result2 <- polr(f2, method = "probit", weights=weight, data=dataarg)
                     } else if(families[2]== "gaussian"){
-                        result2 <- glm(f2, family="gaussian", weights=weights, data=newdata)
+                        result2 <- glm(f2, family="gaussian", weights=weight, data=dataarg)
                     } else {
                         print("mediations does not support this model for the outcome")
                     }
-                }
+                
                 
                 if(is.null(weight.storage)){
                 out[[(count)]] <- mediate(result1, result2, sims=sims, 
