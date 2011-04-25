@@ -1,4 +1,4 @@
-importFrom(MASS, mvrnorm)
+importFrom(MASS, mvrnorm, gamma.shape)
 importFrom(Matrix, Diagonal, kronecker)
 
 export(mediate, summary.mediate, plot.mediate,

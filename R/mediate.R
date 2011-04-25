@@ -60,6 +60,11 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
         ClassM <- class(model.m)[1]
     }
     
+    # Record family of model.m if GLM
+    if(ClassM=="glm"){
+        FamilyM <- model.m$family$family
+    }
+    
     # Record class of model.y as "ClassY"
     if(isGam.y){
         ClassY <- class(model.y)[2]
@@ -102,7 +107,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
     }
     
     if(!all(weights.m == weights.y)) {
-        stop("Weights on outcome and mediator models not identical")
+        stop("weights on outcome and mediator models not identical")
     } else {
         weights <- weights.m
     }
@@ -221,7 +226,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
             MModel.coef <- model.m$coef
             if(ClassM=="polr"){  # TRUE if model.m is ordered
                 if(is.null(model.m$Hess)){
-                    cat("mediator model does not contain 'Hessian';")
+                    cat("mediator model object does not contain 'Hessian';")
                 }
                 k <- length(model.m$coef)
                 MModel.var.cov <- vcov(model.m)[(1:k),(1:k)]
@@ -271,15 +276,48 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
             
             ### Case I-1-a: GLM Mediator
             if(ClassM=="glm"){
-                PredictM1 <- model.m$family$linkinv(MModel %*% t(mmat.t))
-                PredictM0 <- model.m$family$linkinv(MModel %*% t(mmat.c))
+                muM1 <- model.m$family$linkinv(MModel %*% t(mmat.t))
+                muM0 <- model.m$family$linkinv(MModel %*% t(mmat.c))
+                
+                if(FamilyM == "poisson"){
+                    PredictM1 <- matrix(rpois(sims*n, lambda = muM1), nrow = sims)
+                    PredictM0 <- matrix(rpois(sims*n, lambda = muM0), nrow = sims)
+                } else if (FamilyM == "Gamma") {
+                    sh <- gamma.shape(model.m)
+                    shape <- rnorm(sims, sh$alpha, sh$SE) %*% t(weights)
+#                    shape <- rep(sh$alpha, sims) %*% t(weights)
+                    PredictM1 <- matrix(rgamma(n*sims, shape = shape, 
+                                        scale = muM1/shape), nrow = sims)
+                    PredictM0 <- matrix(rgamma(n*sims, shape = shape, 
+                                        scale = muM0/shape), nrow = sims)
+                } else if (FamilyM == "binomial"){
+                    PredictM1 <- matrix(rbinom(n*sims, size = weights, 
+                                        prob = muM1)/weights, nrow = sims)
+                    PredictM0 <- matrix(rbinom(n*sims, size = weights, 
+                                        prob = muM0)/weights, nrow = sims)
+                } else if (FamilyM == "gaussian"){
+                    sigma <- sqrt(summary(model.m)$dispersion)
+                    error <- rnorm(sims*n, mean=0, sd=sigma)
+                    PredictM1 <- muM1 + matrix(error, nrow=sims)
+                    PredictM0 <- muM0 + matrix(error, nrow=sims)
+                } else if (Family == "inverse.gaussian"){
+                    disp <- summary(model.m)$dispersion
+                    PredictM1 <- matrix(SuppDists::rinvGauss(n*sims, nu = muM1,
+                                        lambda = weights/disp), nrow = sims)
+                    PredictM0 <- matrix(SuppDists::rinvGauss(n*sims, nu = muM0,
+                                        lambda = weights/disp), nrow = sims)
+                } else {
+                    stop("unsupported glm family")
+                }
             
             ### Case I-1-b: Ordered mediator
             } else if(ClassM=="polr"){
-                if(model.m$method=="logit"){
+                if(model.m$method=="logistic"){
                     linkfn <- plogis
-                } else {
+                } else if(model.m$method=="probit") {
                     linkfn <- pnorm
+                } else {
+                    stop("unsupported polr method; use 'logistic' or 'probit'")
                 }
                 
                 m.cat <- sort(unique(model.frame(model.m)[,1]))
@@ -331,11 +369,11 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
             ### Case I-1-c: Other 
             } else {
                 sigma <- summary(model.m)$sigma
-                error <- rnorm(n, mean=0, sd=sigma)
-                PredictM1 <- MModel %*% t(mmat.t)
-                PredictM0 <- MModel %*% t(mmat.c)
-                PredictM1 <- PredictM1 + error
-                PredictM0 <- PredictM0 + error
+                error <- rnorm(sims*n, mean=0, sd=sigma)
+                muM1 <- MModel %*% t(mmat.t)
+                muM0 <- MModel %*% t(mmat.c)
+                PredictM1 <- muM1 + matrix(error, nrow=sims)
+                PredictM0 <- muM0 + matrix(error, nrow=sims)
                 rm(error)
             }
             rm(mmat.t, mmat.c)
@@ -561,9 +599,37 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                 
                 ### Case I-2-a: GLM Mediator
                 if(ClassM=="glm"){
-                    PredictM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
-                    PredictM0 <- predict(new.fit.M, type="response", newdata=pred.data.c)
+                    PredictM1 <- simulate(update(new.fit.M, data=pred.data.t))
+                    PredictM0 <- simulate(update(new.fit.M, data=pred.data.c))
                     
+#                    muM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
+#                    muM0 <- predict(new.fit.M, type="response", newdata=pred.data.c)
+#                    
+#                    if(FamilyM == "poisson"){
+#                        PredictM1 <- rpois(n, lambda = muM1)
+#                        PredictM0 <- rpois(n, lambda = muM0)
+#                    } else if (FamilyM == "Gamma") {
+#                        shape <- gamma.shape(model.m)$alpha * weights
+#                        PredictM1 <- rgamma(n, shape = shape, scale = muM1/shape)
+#                        PredictM0 <- rgamma(n, shape = shape, scale = muM0/shape)
+#                    } else if (FamilyM == "binomial"){
+#                        PredictM1 <- rbinom(n, size = weights, prob = muM1)/weights
+#                        PredictM0 <- rbinom(n, size = weights, prob = muM0)/weights
+#                    } else if (FamilyM == "gaussian"){
+#                        sigma <- sqrt(summary(model.m)$dispersion)
+#                        error <- rnorm(n, mean=0, sd=sigma)
+#                        PredictM1 <- muM1 + error
+#                        PredictM0 <- muM0 + error
+#                    } else if (Family == "inverse.gaussian"){
+#                        disp <- summary(model.m)$dispersion
+#                        PredictM1 <- SuppDists::rinvGauss(n*sims, nu = muM1,
+#                                            lambda = weights/disp)
+#                        PredictM0 <- SuppDists::rinvGauss(n*sims, nu = muM0,
+#                                            lambda = weights/disp)
+#                    } else {
+#                        stop("unsupported glm family")
+#                    }
+            
                 ### Case I-2-b: Ordered Mediator
                 } else if(ClassM=="polr") {
                     probs_m1 <- predict(new.fit.M, newdata=pred.data.t, type="probs")
