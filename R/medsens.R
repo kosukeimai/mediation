@@ -78,14 +78,6 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         d0 <- d1 <- z0 <- z1 <- matrix(NA, length(rho), 1)
         d0.var <- d1.var <- z0.var <- z1.var <- matrix(NA, length(rho), 1)
 
-#        # Estimate Error Correlation
-#        data <- model.frame(model.y)
-#        if(INT){
-#            mod.y <- update(model.y,as.formula(paste(". ~ . -", TM, "-", mediator)), data=data)
-#        } else {
-#            mod.y <- update(model.y,as.formula(paste(". ~ . -", mediator)), data=data)
-#        }
-
         for(i in 1:length(rho)){
             e.cor <- rho[i]
             b.dif <- 1
@@ -103,13 +95,10 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
             X.1 <- cbind(m.mat, m.zero)
             X.2 <- cbind(y.zero, y.mat)
             X <- rbind(X.1, X.2)
-#            X.1bar <- apply(X.1, 2, mean)
-#            X.2bar <- apply(X.2, 2, mean)
-
-            m.frame <- model.frame(model.m) * weights^(-1/2)
-            y.frame <- model.frame(model.y) * weights^(-1/2)
-            Y.c <- rbind(as.matrix(m.frame[,1]), as.matrix(y.frame[,1]))
-
+            
+            Y.c <- as.matrix(c(model.response(model.frame(model.m)), 
+                                model.response(model.frame(model.y)))) * weights^(-1/2)
+            
             # Estimates of OLS Start Values
             inxx <- solve(crossprod(X))
             b.ols <- inxx %*% crossprod(X,Y.c)
@@ -332,7 +321,7 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
             ## Step 2-1: Obtain the initial Y model with the correction term
             adj <- lambda(model.m, Mmodel.coef.boot[k,]) * rho[i] # the adjustment term
             w <- 1 - rho[i]^2*lambda(model.m, Mmodel.coef.boot[k,])*(lambda(model.m, Mmodel.coef.boot[k,]) + mu.boot[,k])
-            y.t.data.adj <- data.frame(y.t.data, w, adj)
+            y.t.data.adj <- data.frame(y.t.data, w, adj, weights)
             model.y.adj <- update(model.y, as.formula(paste(". ~ . + adj")), 
                                 weights = w*weights, data = y.t.data.adj)
             sigma.3 <- summary(model.y.adj)$sigma
@@ -564,7 +553,7 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
     #########################################################
     # Calculate rho at which ACME=0
     
-    if(INT){
+    if(INT || type=="bo"){
         if("indirect" %in% etype.vec){
             ii <- which(abs(d0-0)==min(abs(d0-0)))
             kk <- which(abs(d1-0)==min(abs(d1-0)))

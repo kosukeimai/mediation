@@ -99,6 +99,10 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
     weights.m <- model.weights(m.data)
     weights.y <- model.weights(y.data)
     
+    if(!is.null(weights.m) && ClassM == "glm" && FamilyM == "binomial"){
+        message("weights taken as sampling weights, not total number of trials")
+    }
+    
     if(is.null(weights.m)){
         weights.m <- rep(1,nrow(m.data))
     }
@@ -284,17 +288,16 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                     PredictM1 <- matrix(rpois(sims*n, lambda = muM1), nrow = sims)
                     PredictM0 <- matrix(rpois(sims*n, lambda = muM0), nrow = sims)
                 } else if (FamilyM == "Gamma") {
-                    sh <- gamma.shape(model.m)
-                    shape <- rep(sh$alpha, sims) %*% t(weights)
+                    shape <- gamma.shape(model.m)$alpha
                     PredictM1 <- matrix(rgamma(n*sims, shape = shape, 
                                         scale = muM1/shape), nrow = sims)
                     PredictM0 <- matrix(rgamma(n*sims, shape = shape, 
                                         scale = muM0/shape), nrow = sims)
                 } else if (FamilyM == "binomial"){
-                    PredictM1 <- matrix(rbinom(n*sims, size = weights, 
-                                        prob = muM1)/weights, nrow = sims)
-                    PredictM0 <- matrix(rbinom(n*sims, size = weights, 
-                                        prob = muM0)/weights, nrow = sims)
+                    PredictM1 <- matrix(rbinom(n*sims, size = 1, 
+                                        prob = muM1), nrow = sims)
+                    PredictM0 <- matrix(rbinom(n*sims, size = 1, 
+                                        prob = muM0), nrow = sims)
                 } else if (FamilyM == "gaussian"){
                     sigma <- sqrt(summary(model.m)$dispersion)
                     error <- rnorm(sims*n, mean=0, sd=sigma)
@@ -303,9 +306,9 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                 } else if (FamilyM == "inverse.gaussian"){
                     disp <- summary(model.m)$dispersion
                     PredictM1 <- matrix(SuppDists::rinvGauss(n*sims, nu = muM1,
-                                        lambda = weights/disp), nrow = sims)
+                                        lambda = 1/disp), nrow = sims)
                     PredictM0 <- matrix(SuppDists::rinvGauss(n*sims, nu = muM0,
-                                        lambda = weights/disp), nrow = sims)
+                                        lambda = 1/disp), nrow = sims)
                 } else {
                     stop("unsupported glm family")
                 }
@@ -368,7 +371,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
             
             ### Case I-1-c: Linear
             } else if(ClassM=="lm"){
-                sigma <- summary(model.m)$sigma  # / sqrt(weights)
+                sigma <- summary(model.m)$sigma
                 error <- rnorm(sims*n, mean=0, sd=sigma)
                 muM1 <- MModel %*% t(mmat.t)
                 muM0 <- MModel %*% t(mmat.c)
@@ -603,36 +606,31 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                 ### Case I-2-a: GLM Mediator
                 if(ClassM=="glm" || isGam.m){
                 
-                    PredictM1 <- simulate(update(new.fit.M, data=pred.data.t))
-                    PredictM0 <- simulate(update(new.fit.M, data=pred.data.c))
-                    
-#                    muM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
-#                    muM0 <- predict(new.fit.M, type="response", newdata=pred.data.c)
-#                    
-#                    if(FamilyM == "poisson"){
-#                        PredictM1 <- rpois(n, lambda = muM1)
-#                        PredictM0 <- rpois(n, lambda = muM0)
-#                    } else if (FamilyM == "Gamma") {
-#                        shape <- gamma.shape(model.m)$alpha * weights
-#                        PredictM1 <- rgamma(n, shape = shape, scale = muM1/shape)
-#                        PredictM0 <- rgamma(n, shape = shape, scale = muM0/shape)
-#                    } else if (FamilyM == "binomial"){
-#                        PredictM1 <- rbinom(n, size = weights, prob = muM1)/weights
-#                        PredictM0 <- rbinom(n, size = weights, prob = muM0)/weights
-#                    } else if (FamilyM == "gaussian"){
-#                        sigma <- sqrt(summary(model.m)$dispersion)
-#                        error <- rnorm(n, mean=0, sd=sigma)
-#                        PredictM1 <- muM1 + error
-#                        PredictM0 <- muM0 + error
-#                    } else if (Family == "inverse.gaussian"){
-#                        disp <- summary(model.m)$dispersion
-#                        PredictM1 <- SuppDists::rinvGauss(n*sims, nu = muM1,
-#                                            lambda = weights/disp)
-#                        PredictM0 <- SuppDists::rinvGauss(n*sims, nu = muM0,
-#                                            lambda = weights/disp)
-#                    } else {
-#                        stop("unsupported glm family")
-#                    }
+                muM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
+                muM0 <- predict(new.fit.M, type="response", newdata=pred.data.c)
+                
+                if(FamilyM == "poisson"){
+                    PredictM1 <- rpois(n, lambda = muM1)
+                    PredictM0 <- rpois(n, lambda = muM0)
+                } else if (FamilyM == "Gamma") {
+                    shape <- gamma.shape(model.m)$alpha
+                    PredictM1 <- rgamma(n, shape = shape, scale = muM1/shape)
+                    PredictM0 <- rgamma(n, shape = shape, scale = muM0/shape)
+                } else if (FamilyM == "binomial"){
+                    PredictM1 <- rbinom(n, size = 1, prob = muM1)
+                    PredictM0 <- rbinom(n, size = 1, prob = muM0)
+                } else if (FamilyM == "gaussian"){
+                    sigma <- sqrt(summary(model.m)$dispersion)
+                    error <- rnorm(n, mean=0, sd=sigma)
+                    PredictM1 <- muM1 + error
+                    PredictM0 <- muM0 + error
+                } else if (FamilyM == "inverse.gaussian"){
+                    disp <- summary(model.m)$dispersion
+                    PredictM1 <- SuppDists::rinvGauss(n, nu = muM1, lambda = 1/disp)
+                    PredictM0 <- SuppDists::rinvGauss(n, nu = muM0, lambda = 1/disp)
+                } else {
+                    stop("unsupported glm family")
+                }
             
                 ### Case I-2-b: Ordered Mediator
                 } else if(ClassM=="polr") {
@@ -665,7 +663,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                     
                 ### Case I-2-d: Linear
                 } else if(ClassM=="lm"){
-                    sigma <- summary(new.fit.M)$sigma / sqrt(weights)
+                    sigma <- summary(new.fit.M)$sigma
                     error <- rnorm(n, mean=0, sd=sigma)
                     PredictM1 <- predict(new.fit.M, type="response", 
                                           newdata=pred.data.t) + error
@@ -922,8 +920,31 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
             ### Case II-a: GLM Mediator
             if(ClassM=="glm" || isGam.m){
                 
-                PredictM1 <- simulate(update(new.fit.M, data=pred.data.t))
-                PredictM0 <- simulate(update(new.fit.M, data=pred.data.c))
+                muM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
+                muM0 <- predict(new.fit.M, type="response", newdata=pred.data.c)
+                
+                if(FamilyM == "poisson"){
+                    PredictM1 <- rpois(n, lambda = muM1)
+                    PredictM0 <- rpois(n, lambda = muM0)
+                } else if (FamilyM == "Gamma") {
+                    shape <- gamma.shape(model.m)$alpha
+                    PredictM1 <- rgamma(n, shape = shape, scale = muM1/shape)
+                    PredictM0 <- rgamma(n, shape = shape, scale = muM0/shape)
+                } else if (FamilyM == "binomial"){
+                    PredictM1 <- rbinom(n, size = 1, prob = muM1)
+                    PredictM0 <- rbinom(n, size = 1, prob = muM0)
+                } else if (FamilyM == "gaussian"){
+                    sigma <- sqrt(summary(model.m)$dispersion)
+                    error <- rnorm(n, mean=0, sd=sigma)
+                    PredictM1 <- muM1 + error
+                    PredictM0 <- muM0 + error
+                } else if (FamilyM == "inverse.gaussian"){
+                    disp <- summary(model.m)$dispersion
+                    PredictM1 <- SuppDists::rinvGauss(n, nu = muM1, lambda = 1/disp)
+                    PredictM0 <- SuppDists::rinvGauss(n, nu = muM0, lambda = 1/disp)
+                } else {
+                    stop("unsupported glm family")
+                }
                     
             ### Case II-b: Ordered Mediator
             } else if(ClassM=="polr") {
