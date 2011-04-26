@@ -273,10 +273,11 @@ on robust standard errors regardless of the {\tt robustSE} argument.
 treatment-mediator interaction.  The old {\tt INT} argument is therefore deprecated 
 (but still accepted with a warning).
 
-\item The prior weights in input model objects are now correctly handled by
-the {\tt mediate} function.  The estimated quantities will thus be weighted averages
-when the mediator and outcome models are fitted with a non-{\tt NULL} {\tt weights}
-argument. This will be useful if, for example, data come from a complex survey.
+\item Sampling weights can now be used for the {\tt mediate} and {\tt medsens}
+functions via the {\tt weights} arguments in the input mediator and outcome models.
+The estimated quantities will thus be weighted averages when the mediator and 
+outcome models are fitted with a non-{\tt NULL} {\tt weights} argument. This 
+will be useful if, for example, data come from a complex survey.
 
 \item We have added a new function {\tt mediations} to easily conduct multiple
 causal mediation analyses for different treatment-mediator-outcome combinations.
@@ -637,6 +638,10 @@ point and uncertainty estimates of causal mediation effects. For
 example, while \bmediation\ can estimate average causal mediation
 effects for censored outcomes with the tobit model, it
 has not yet been extended to cases involving censored mediators.
+In addition, {\tt mediate} can be used with common generalized linear models 
+(GLMs) such as binary logit and probit, Poisson and gamma regression models, 
+but it cannot be used with binomial mediator models with multiple trials.
+
 In each situation handled by \bmediation, it is possible to have an
 interaction term between treatment status and the mediator variable,
 in which case the estimated quantities of interest will be reported
