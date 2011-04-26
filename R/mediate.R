@@ -276,6 +276,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
             
             ### Case I-1-a: GLM Mediator
             if(ClassM=="glm"){
+                
                 muM1 <- model.m$family$linkinv(MModel %*% t(mmat.t))
                 muM0 <- model.m$family$linkinv(MModel %*% t(mmat.c))
                 
@@ -284,8 +285,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                     PredictM0 <- matrix(rpois(sims*n, lambda = muM0), nrow = sims)
                 } else if (FamilyM == "Gamma") {
                     sh <- gamma.shape(model.m)
-                    shape <- rnorm(sims, sh$alpha, sh$SE) %*% t(weights)
-#                    shape <- rep(sh$alpha, sims) %*% t(weights)
+                    shape <- rep(sh$alpha, sims) %*% t(weights)
                     PredictM1 <- matrix(rgamma(n*sims, shape = shape, 
                                         scale = muM1/shape), nrow = sims)
                     PredictM0 <- matrix(rgamma(n*sims, shape = shape, 
