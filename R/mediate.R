@@ -60,8 +60,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
         ClassM <- class(model.m)[1]
     }
     
-    # Record family of model.m if GLM
-    if(ClassM=="glm"){
+    # Record family of model.m
+    if(ClassM=="glm" || isGam.m){
         FamilyM <- model.m$family$family
     }
     
@@ -275,7 +275,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
             mmat.c <- model.matrix(terms(model.m), data=pred.data.c)
             
             ### Case I-1-a: GLM Mediator
-            if(ClassM=="glm"){
+            if(ClassM == "glm"){
                 
                 muM1 <- model.m$family$linkinv(MModel %*% t(mmat.t))
                 muM0 <- model.m$family$linkinv(MModel %*% t(mmat.c))
@@ -366,15 +366,18 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                     PredictM0[i,] <- apply(draws_m0, 1, indexmax)
                 }
             
-            ### Case I-1-c: Other 
-            } else {
-                sigma <- summary(model.m)$sigma
+            ### Case I-1-c: Linear
+            } else if(ClassM=="lm"){
+                sigma <- summary(model.m)$sigma  # / sqrt(weights)
                 error <- rnorm(sims*n, mean=0, sd=sigma)
                 muM1 <- MModel %*% t(mmat.t)
                 muM0 <- MModel %*% t(mmat.c)
                 PredictM1 <- muM1 + matrix(error, nrow=sims)
                 PredictM0 <- muM0 + matrix(error, nrow=sims)
                 rm(error)
+                
+            } else {
+                stop("mediator model is not yet implemented")
             }
             rm(mmat.t, mmat.c)
             
@@ -598,7 +601,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                 }
                 
                 ### Case I-2-a: GLM Mediator
-                if(ClassM=="glm"){
+                if(ClassM=="glm" || isGam.m){
+                
                     PredictM1 <- simulate(update(new.fit.M, data=pred.data.t))
                     PredictM0 <- simulate(update(new.fit.M, data=pred.data.c))
                     
@@ -659,19 +663,18 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                     PredictM0 <- rowSums(X.c * t(newfits$coefficients))
                     rm(newfits, X.t, X.c)
                     
-                ### Case I-2-d: Other
-                } else {
-                    if(isGam.m){
-                        sigma <- summary(new.fit.M)$scale
-                    } else {
-                        sigma <- summary(new.fit.M)$sigma
-                    }
+                ### Case I-2-d: Linear
+                } else if(ClassM=="lm"){
+                    sigma <- summary(new.fit.M)$sigma / sqrt(weights)
                     error <- rnorm(n, mean=0, sd=sigma)
                     PredictM1 <- predict(new.fit.M, type="response", 
                                           newdata=pred.data.t) + error
                     PredictM0 <- predict(new.fit.M, type="response", 
                                           newdata=pred.data.c) + error
                     rm(error)
+                    
+                } else {
+                    stop("mediator model is not yet implemented")
                 }
                
                 #####################################
@@ -917,7 +920,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
             } 
             
             ### Case II-a: GLM Mediator
-            if(ClassM=="glm"){
+            if(ClassM=="glm" || isGam.m){
+                
                 PredictM1 <- simulate(update(new.fit.M, data=pred.data.t))
                 PredictM0 <- simulate(update(new.fit.M, data=pred.data.c))
                     
@@ -951,19 +955,17 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                 PredictM0 <- rowSums(X.c * t(newfits$coefficients))
                 rm(newfits, X.t, X.c)
                     
-            ### Case II-d: Other
-            } else {
-                if(isGam.m){
-                    sigma <- summary(new.fit.M)$scale
-                } else {
-                    sigma <- summary(new.fit.M)$sigma
-                }
+            ### Case II-d: Linear
+            } else if(ClassM=="lm"){
+                sigma <- summary(new.fit.M)$sigma
                 error <- rnorm(n, mean=0, sd=sigma)
                 PredictM1 <- predict(new.fit.M, type="response",
                                       newdata=pred.data.t) + error
                 PredictM0 <- predict(new.fit.M, type="response",
                                       newdata=pred.data.c) + error
                 rm(error)
+            } else {
+                stop("mediator model is not yet implemented")
             }
             
             #####################################
