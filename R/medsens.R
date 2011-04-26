@@ -17,7 +17,6 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
     INT <- x$INT
     low <- (1 - x$conf.level)/2; high <- 1 - low
 
-
     # Setting Variable labels
     ## Uppercase letters (e.g. T) = labels in the input matrix
     ## Uppercase letters + ".out" (e.g. T.out) = labels in the regression output
@@ -58,6 +57,12 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
     rho <- seq(-1+rho.by, 1-rho.by, rho.by)
     R2star.prod <- rho^2
     
+    ## Extracting weights
+    weights <- model.weights(y.t.data)
+    if(is.null(weights)){
+        weights <- rep(1,nrow(y.t.data))
+    }
+    
     ## Initializing Containers
     d0 <- d1 <- z0 <- z1 <- nu0 <- nu1 <- tau <-
     upper.d0 <- upper.d1 <- upper.z0 <- upper.z1 <- upper.nu0 <- upper.nu1 <- upper.tau <-
@@ -86,8 +91,8 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
             b.dif <- 1
 
             # Stacked Equations
-            m.mat <- model.matrix(model.m)
-            y.mat <- model.matrix(model.y)
+            m.mat <- model.matrix(model.m) * weights^(-1/2)
+            y.mat <- model.matrix(model.y) * weights^(-1/2)
             m.k <- ncol(m.mat)
             m.n <- nrow(m.mat)
             y.k <- ncol(y.mat)
@@ -98,11 +103,11 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
             X.1 <- cbind(m.mat, m.zero)
             X.2 <- cbind(y.zero, y.mat)
             X <- rbind(X.1, X.2)
-            X.1bar <- apply(X.1, 2, mean)
-            X.2bar <- apply(X.2, 2, mean)
+#            X.1bar <- apply(X.1, 2, mean)
+#            X.2bar <- apply(X.2, 2, mean)
 
-            m.frame <- model.frame(model.m)
-            y.frame <- model.frame(model.y)
+            m.frame <- model.frame(model.m) * weights^(-1/2)
+            y.frame <- model.frame(model.y) * weights^(-1/2)
             Y.c <- rbind(as.matrix(m.frame[,1]), as.matrix(y.frame[,1]))
 
             # Estimates of OLS Start Values
@@ -154,34 +159,30 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
             v.y <- v.cov[(m.k+1):(m.k+y.k),(m.k+1):(m.k+y.k)]
             
             if(INT && ("direct" %in% etype.vec)){
-                m.bar <- apply(m.mat, 2, mean)
+                m.bar <- apply(model.matrix(model.m), 2, weighted.mean, w=weights)
                 m.covt.coefs <- -(match(c("(Intercept)", paste(T.out)),
                                                     names(model.m$coefficients), NULL))
                 m.bar.covts <- -(match(c("(Intercept)", paste(T.out)),
                                                     names(m.bar), NULL))
                 if(length(m.coefs[m.covt.coefs, ]) != 0){
                     model.m.bar.z0 <- ( m.coefs["(Intercept)", ] +
-                                0*m.coefs[paste(T.out), ] +
                                 sum(t(m.coefs[m.covt.coefs, ]) %*% m.bar[m.bar.covts]) )
-                    v.model.m.bar.z0 <- ( v.m["(Intercept)","(Intercept)"] + 0*v.m[T.out,T.out] +
+                    v.model.m.bar.z0 <- ( v.m["(Intercept)","(Intercept)"] +
                                 sum(t(m.bar[m.bar.covts])%*%(v.m[m.covt.coefs, m.covt.coefs])%*%
-                                (m.bar[m.bar.covts])) + 2*0*v.m["(Intercept)",T.out] +
-                                2*0*sum(t(m.bar[m.bar.covts])%*%(v.m[T.out,][m.bar.covts])) +
-                                2*0*sum(t(m.bar[m.bar.covts])%*%v.m["(Intercept)",][m.bar.covts]) )
-                    model.m.bar.z1 <- ( m.coefs["(Intercept)", ] + 1*m.coefs[paste(T.out), ] +
+                                (m.bar[m.bar.covts])) )
+                    model.m.bar.z1 <- ( m.coefs["(Intercept)", ] + m.coefs[paste(T.out), ] +
                                 sum(m.coefs[m.covt.coefs, ] * m.bar[m.bar.covts]) )
-                    v.model.m.bar.z1 <- ( v.m["(Intercept)","(Intercept)"] + 1*v.m[T.out,T.out] +
+                    v.model.m.bar.z1 <- ( v.m["(Intercept)","(Intercept)"] + v.m[T.out,T.out] +
                                 sum(t(m.bar[m.bar.covts])%*%(v.m[m.covt.coefs, m.covt.coefs])%*%
-                                (m.bar[m.bar.covts])) + 2*1*v.m["(Intercept)",T.out] +
-                                2*1*sum(t(m.bar[m.bar.covts])%*%(v.m[T.out,][m.bar.covts])) +
-                                2*1*sum(t(m.bar[m.bar.covts])%*%v.m["(Intercept)",][m.bar.covts]) )
+                                (m.bar[m.bar.covts])) + 2*v.m["(Intercept)",T.out] +
+                                2*sum(t(m.bar[m.bar.covts])%*%(v.m[T.out,][m.bar.covts])) +
+                                2*sum(t(m.bar[m.bar.covts])%*%v.m["(Intercept)",][m.bar.covts]) )
                 } else {
-                    model.m.bar.z0 <- m.coefs["(Intercept)", ] + 0*m.coefs[paste(T.out), ]
-                    v.model.m.bar.z0 <- ( v.m["(Intercept)","(Intercept)"] + 0*v.m[T.out,T.out] +
-                                        2*0*v.m["(Intercept)",T.out] )
-                    model.m.bar.z1 <- m.coefs["(Intercept)", ] + 1*m.coefs[paste(T.out), ]
-                    v.model.m.bar.z1 <- ( v.m["(Intercept)","(Intercept)"] + 1*v.m[T.out,T.out] +
-                                        2*1*v.m["(Intercept)",T.out] )
+                    model.m.bar.z0 <- m.coefs["(Intercept)", ]
+                    v.model.m.bar.z0 <- v.m["(Intercept)","(Intercept)"]
+                    model.m.bar.z1 <- m.coefs["(Intercept)", ] + m.coefs[paste(T.out), ]
+                    v.model.m.bar.z1 <- ( v.m["(Intercept)","(Intercept)"] + v.m[T.out,T.out] +
+                                        2*v.m["(Intercept)",T.out] )
                 }
             }
 
@@ -216,13 +217,11 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
                 }
             }
 
-            #Save Variance Estimates
+            # Save Variance Estimates
             if(INT){
                 if("indirect" %in% etype.vec){
-                    d0.var[i,] <- (y.coefs[paste(mediator),] +
-                        0*y.coefs[paste(TM.out),])^2*v.m[T.out,T.out] +
-                        m.coefs[paste(T.out),]^2*(v.y[mediator,mediator] +
-                        0*v.y[TM.out, TM.out] + 0*2*v.y[mediator, TM.out])
+                    d0.var[i,] <- y.coefs[paste(mediator),]^2 * v.m[T.out,T.out] +
+                        m.coefs[paste(T.out),]^2 * v.y[mediator,mediator]
                     d1.var[i,] <- (y.coefs[paste(mediator),] +
                         y.coefs[paste(TM.out),])^2*v.m[T.out,T.out] +
                         m.coefs[paste(T.out),]^2*(v.y[mediator,mediator] +
@@ -285,7 +284,7 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
     #########################################################
     if (class.y == "lm" & class.m == "glm") {
         type <- "bm"
-
+        
         ## Variable values (LABEL.value)
         Y.value <- y.t.data[,1]
         y.k <- length(model.y$coef)
@@ -297,10 +296,8 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         Mmodel.coef.boot <- mvrnorm(sims, mu=Mmodel.coef, Sigma=Mmodel.var.cov) # bootstrap M-model parameters
 
         # Step 1-2: Sample lambda_0 and lambda_1; lambdas are (n x sims) matrix
-        m.mat <- model.matrix(model.m)
-        m.mat.1 <- model.matrix(model.m)
+        m.mat <- m.mat.1 <- m.mat.0 <- model.matrix(model.m)
         m.mat.1[,T.out] <- 1 # M-model matrix with t=1
-        m.mat.0 <- model.matrix(model.m)
         m.mat.0[,T.out] <- 0 # M-model matrix with t=0
         mu.boot <- m.mat %*% t(Mmodel.coef.boot) # E(M|T,X)
         mu.1.boot <- m.mat.1 %*% t(Mmodel.coef.boot) # E(M|T=1,X)
@@ -309,7 +306,7 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         # Step 1-3: Define lambda function (inverse Mill's ratio)
         lambda <- function(mmodel, mcoef) {
             mu <- model.matrix(mmodel) %*% mcoef
-            m <- mmodel$y #this is M
+            m <- mmodel$y # this is M
             return((m*dnorm(-mu)-(1-m)*dnorm(-mu))/(m*pnorm(mu)+(1-m)*pnorm(-mu)))
         }
 
@@ -336,7 +333,8 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
             adj <- lambda(model.m, Mmodel.coef.boot[k,]) * rho[i] # the adjustment term
             w <- 1 - rho[i]^2*lambda(model.m, Mmodel.coef.boot[k,])*(lambda(model.m, Mmodel.coef.boot[k,]) + mu.boot[,k])
             y.t.data.adj <- data.frame(y.t.data, w, adj)
-            model.y.adj <- update(model.y, as.formula(paste(". ~ . + adj")), weights=w, data=y.t.data.adj)
+            model.y.adj <- update(model.y, as.formula(paste(". ~ . + adj")), 
+                                weights = w*weights, data = y.t.data.adj)
             sigma.3 <- summary(model.y.adj)$sigma
 
             ## Step 2-2: Update the Y model via Iterative FGLS
@@ -344,7 +342,8 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
             while(abs(sigma.dif) > eps){
                 Y.star <- Y.value - sigma.3 * adj
                 y.t.data.star <- data.frame(Y.star, y.t.data.adj)
-                model.y.update <- update(model.y, as.formula(paste("Y.star ~ .")), weights=w, data=y.t.data.star)
+                model.y.update <- update(model.y, as.formula(paste("Y.star ~ .")), 
+                                weights = w*weights, data = y.t.data.star)
                 sigma.3.temp <- summary(model.y.update)$sigma
                 sigma.dif <- sigma.3.temp - sigma.3
                 sigma.3 <- sigma.3.temp
@@ -359,20 +358,23 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
             ## Step 2-4: Simulate ACMEs; means are over observations
             if(INT){
                 if("indirect" %in% etype.vec){
-                    d1.boot[k] <- mean( (Ymodel.coef.boot[k,M.out] + Ymodel.coef.boot[k,TM.out]) *
-                        (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
-                    d0.boot[k] <- mean( (Ymodel.coef.boot[k,M.out]) * (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
+                    d1.boot[k] <- weighted.mean( (Ymodel.coef.boot[k,M.out] + Ymodel.coef.boot[k,TM.out]) *
+                                            (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])), w = weights )
+                    d0.boot[k] <- weighted.mean( (Ymodel.coef.boot[k,M.out]) * (pnorm(mu.1.boot[,k]) - 
+                                            pnorm(mu.0.boot[,k])), w = weights )
                 }
                 if("direct" %in% etype.vec){
-                    z1.boot[k] <- mean( sum(Ymodel.coef.boot[k,c(T.out,TM.out)]) * pnorm(mu.1.boot[,k]) +
-                                        Ymodel.coef.boot[k,T.out] * pnorm(-mu.1.boot[k]) )
-                    z0.boot[k] <- mean( sum(Ymodel.coef.boot[k,c(T.out,TM.out)]) * pnorm(mu.0.boot[,k]) +
-                                        Ymodel.coef.boot[k,T.out] * pnorm(-mu.0.boot[k]) )
+                    z1.boot[k] <- weighted.mean( sum(Ymodel.coef.boot[k,c(T.out,TM.out)]) * 
+                                        pnorm(mu.1.boot[,k]) + Ymodel.coef.boot[k,T.out] * 
+                                        pnorm(-mu.1.boot[k]), w = weights )
+                    z0.boot[k] <- weighted.mean( sum(Ymodel.coef.boot[k,c(T.out,TM.out)]) * 
+                                        pnorm(mu.0.boot[,k]) + Ymodel.coef.boot[k,T.out] * 
+                                        pnorm(-mu.0.boot[k]), w = weights )
                 }
             } else {
                 if("indirect" %in% etype.vec){
-                    d0.boot[k] <- d1.boot[k] <- mean((Ymodel.coef.boot[k,M.out]) *
-                        (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])) )
+                    d0.boot[k] <- d1.boot[k] <- weighted.mean( Ymodel.coef.boot[k,M.out] *
+                        (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])), w = weights )
                 }
                 if("direct" %in% etype.vec){
                     z0.boot[k] <- z1.boot[k] <- Ymodel.coef.boot[k,T.out]
@@ -488,26 +490,26 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
                 sigma.1star.boot[k] <- sqrt(gamma.boot[k]^2 * 
                     sigma.2.boot[k]^2+2*gamma.boot[k]*rho[i]*sigma.2.boot[k]+1)
                 if("indirect" %in% etype.vec){
-                    d0.boot[k] <- mean( pnorm(y.mat.0 %*% YTmodel.coef.boot[k,] +
+                    d0.boot[k] <- weighted.mean( pnorm(y.mat.0 %*% YTmodel.coef.boot[k,] +
                         gamma.boot[k]*beta2.boot[k] / sigma.1star.boot[k]) - 
-                        pnorm(y.mat.0 %*% YTmodel.coef.boot[k,]) )
-                    d1.boot[k] <- mean( pnorm(y.mat.1 %*% YTmodel.coef.boot[k,]) - 
+                        pnorm(y.mat.0 %*% YTmodel.coef.boot[k,]), w = weights)
+                    d1.boot[k] <- weighted.mean( pnorm(y.mat.1 %*% YTmodel.coef.boot[k,]) - 
                         pnorm(y.mat.1 %*% YTmodel.coef.boot[k,] -
-                        gamma.boot[k]*beta2.boot[k] / sigma.1star.boot[k]) )
-                    tau.boot[k] <- mean( pnorm(y.mat.1 %*% YTmodel.coef.boot[k,]) - 
-                        pnorm(y.mat.0 %*% YTmodel.coef.boot[k,]) )
+                        gamma.boot[k]*beta2.boot[k] / sigma.1star.boot[k]), w = weights )
+                    tau.boot[k] <- weighted.mean( pnorm(y.mat.1 %*% YTmodel.coef.boot[k,]) - 
+                        pnorm(y.mat.0 %*% YTmodel.coef.boot[k,]), w = weights )
                     nu0.boot[k] <- d0.boot[k]/tau.boot[k]
                     nu1.boot[k] <- d1.boot[k]/tau.boot[k]
                 }
                 if("direct" %in% etype.vec){
                     beta3.boot[k] <- sigma.1star.boot[k] * YTmodel.coef.boot[k,T.out] -
                          beta2.boot[k]*gamma.boot[k]
-                    z0.boot[k] <- mean( pnorm(y.mat.0 %*% YTmodel.coef.boot[k,] +
+                    z0.boot[k] <- weighted.mean( pnorm(y.mat.0 %*% YTmodel.coef.boot[k,] +
                         beta3.boot[k] / sigma.1star.boot[k]) -
-                        pnorm(y.mat.0 %*% YTmodel.coef.boot[k,]) )
-                    z1.boot[k] <- mean( pnorm(y.mat.1 %*% YTmodel.coef.boot[k,]) -
+                        pnorm(y.mat.0 %*% YTmodel.coef.boot[k,]), w = weights )
+                    z1.boot[k] <- weighted.mean( pnorm(y.mat.1 %*% YTmodel.coef.boot[k,]) -
                         pnorm(y.mat.1 %*% YTmodel.coef.boot[k,] - 
-                        beta3.boot[k] / sigma.1star.boot[k]) )
+                        beta3.boot[k] / sigma.1star.boot[k]), w = weights )
                 }
             }
 
@@ -548,9 +550,9 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         # Save R2 tilde values
         r.sq.m <- summary(model.m)$r.squared
         y.mat <- model.matrix(model.y)
-        fitted<- y.mat %*% Ymodel.coef
+        fitted <- y.mat %*% Ymodel.coef
         var.ystar <- var(fitted)
-        r.sq.y <-var.ystar/(1+var.ystar)
+        r.sq.y <- var.ystar/(1+var.ystar)
         R2tilde.prod <- rho^2*(1-r.sq.m)*(1-r.sq.y)
 #        err.cr <- mean(rho12.boot) # Rho_12 estimate
 

@@ -2,7 +2,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                     treat="treat.name", mediator="med.name", 
                     control=NULL, conf.level=.95,
                     control.value=0, treat.value=1, 
-                    long=TRUE, dropobs=FALSE,  robustSE = FALSE, ...){
+                    long=TRUE, dropobs=FALSE, robustSE = FALSE, ...){
     
     # Warn users who still use INT option
     if(match("INT", names(match.call()), 0L)){
@@ -300,7 +300,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                     error <- rnorm(sims*n, mean=0, sd=sigma)
                     PredictM1 <- muM1 + matrix(error, nrow=sims)
                     PredictM0 <- muM0 + matrix(error, nrow=sims)
-                } else if (Family == "inverse.gaussian"){
+                } else if (FamilyM == "inverse.gaussian"){
                     disp <- summary(model.m)$dispersion
                     PredictM1 <- matrix(SuppDists::rinvGauss(n*sims, nu = muM1,
                                         lambda = weights/disp), nrow = sims)
@@ -918,9 +918,9 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
             
             ### Case II-a: GLM Mediator
             if(ClassM=="glm"){
-                PredictM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
-                PredictM0 <- predict(new.fit.M, type="response", newdata=pred.data.c)
-            
+                PredictM1 <- simulate(update(new.fit.M, data=pred.data.t))
+                PredictM0 <- simulate(update(new.fit.M, data=pred.data.c))
+                    
             ### Case II-b: Ordered Mediator
             } else if(ClassM=="polr") {
                 probs_m1 <- predict(new.fit.M, type="probs", newdata=pred.data.t)
