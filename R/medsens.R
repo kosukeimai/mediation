@@ -282,15 +282,16 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         # Step 1-1: Sample M model parameters
         Mmodel.coef <- model.m$coef
         Mmodel.var.cov <- vcov(model.m)
-        Mmodel.coef.boot <- mvrnorm(sims, mu=Mmodel.coef, Sigma=Mmodel.var.cov) # bootstrap M-model parameters
+        Mmodel.coef.sim <- mvrnorm(sims, mu=Mmodel.coef, Sigma=Mmodel.var.cov)
+            # simulate M-model parameters
 
         # Step 1-2: Sample lambda_0 and lambda_1; lambdas are (n x sims) matrix
         m.mat <- m.mat.1 <- m.mat.0 <- model.matrix(model.m)
         m.mat.1[,T.out] <- 1 # M-model matrix with t=1
         m.mat.0[,T.out] <- 0 # M-model matrix with t=0
-        mu.boot <- m.mat %*% t(Mmodel.coef.boot) # E(M|T,X)
-        mu.1.boot <- m.mat.1 %*% t(Mmodel.coef.boot) # E(M|T=1,X)
-        mu.0.boot <- m.mat.0 %*% t(Mmodel.coef.boot) # E(M|T=0,X)
+        mu.sim <- m.mat %*% t(Mmodel.coef.sim) # E(M|T,X)
+        mu.1.sim <- m.mat.1 %*% t(Mmodel.coef.sim) # E(M|T=1,X)
+        mu.0.sim <- m.mat.0 %*% t(Mmodel.coef.sim) # E(M|T=0,X)
 
         # Step 1-3: Define lambda function (inverse Mill's ratio)
         lambda <- function(mmodel, mcoef) {
@@ -309,18 +310,19 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
             z0 <- z1 <- upper.z0 <- upper.z1 <- 
             lower.z0 <- lower.z1 <- ind.z0 <- ind.z1 <- matrix(NA, length(rho), 1)
         }
-        Ymodel.coef.boot <- matrix(NA, sims, y.k)
-        colnames(Ymodel.coef.boot) <- names(model.y$coef)
-        sigma.3.boot <- rep(NA, sims)
-        d0.boot <- d1.boot <- z0.boot <- z1.boot <- rep(NA, sims)
+        Ymodel.coef.sim <- matrix(NA, sims, y.k)
+        colnames(Ymodel.coef.sim) <- names(model.y$coef)
+        sigma.3.sim <- rep(NA, sims)
+        d0.sim <- d1.sim <- z0.sim <- z1.sim <- rep(NA, sims)
         ## START OF RHO LOOP
         for(i in 1:length(rho)){
 
             ## START OF SIMULATION LOOP
             for(k in 1:sims){
             ## Step 2-1: Obtain the initial Y model with the correction term
-            adj <- lambda(model.m, Mmodel.coef.boot[k,]) * rho[i] # the adjustment term
-            w <- 1 - rho[i]^2*lambda(model.m, Mmodel.coef.boot[k,])*(lambda(model.m, Mmodel.coef.boot[k,]) + mu.boot[,k])
+            adj <- lambda(model.m, Mmodel.coef.sim[k,]) * rho[i] # the adjustment term
+            w <- 1 - rho[i]^2*lambda(model.m, Mmodel.coef.sim[k,]) * 
+                (lambda(model.m, Mmodel.coef.sim[k,]) + mu.sim[,k])
             y.t.data.adj <- data.frame(y.t.data, w, adj, weights)
             model.y.adj <- update(model.y, as.formula(paste(". ~ . + adj")), 
                                 weights = w*weights, data = y.t.data.adj)
@@ -341,32 +343,32 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
             ## Step 2-3: Simulate Y model parameters
             Ymodel.coef <- model.y.update$coef
             Ymodel.var.cov <- vcov(model.y.update)
-            Ymodel.coef.boot[k,] <- mvrnorm(1, mu=Ymodel.coef, Sigma=Ymodel.var.cov) 
+            Ymodel.coef.sim[k,] <- mvrnorm(1, mu=Ymodel.coef, Sigma=Ymodel.var.cov) 
                 # draw one simulation sample of Y-model parameters for each k
 
             ## Step 2-4: Simulate ACMEs; means are over observations
             if(INT){
                 if("indirect" %in% etype.vec){
-                    d1.boot[k] <- weighted.mean( (Ymodel.coef.boot[k,M.out] + Ymodel.coef.boot[k,TM.out]) *
-                                            (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])), w = weights )
-                    d0.boot[k] <- weighted.mean( (Ymodel.coef.boot[k,M.out]) * (pnorm(mu.1.boot[,k]) - 
-                                            pnorm(mu.0.boot[,k])), w = weights )
+                    d1.sim[k] <- weighted.mean( (Ymodel.coef.sim[k,M.out] + Ymodel.coef.sim[k,TM.out]) *
+                                            (pnorm(mu.1.sim[,k]) - pnorm(mu.0.sim[,k])), w = weights )
+                    d0.sim[k] <- weighted.mean( (Ymodel.coef.sim[k,M.out]) * (pnorm(mu.1.sim[,k]) - 
+                                            pnorm(mu.0.sim[,k])), w = weights )
                 }
                 if("direct" %in% etype.vec){
-                    z1.boot[k] <- weighted.mean( sum(Ymodel.coef.boot[k,c(T.out,TM.out)]) * 
-                                        pnorm(mu.1.boot[,k]) + Ymodel.coef.boot[k,T.out] * 
-                                        pnorm(-mu.1.boot[k]), w = weights )
-                    z0.boot[k] <- weighted.mean( sum(Ymodel.coef.boot[k,c(T.out,TM.out)]) * 
-                                        pnorm(mu.0.boot[,k]) + Ymodel.coef.boot[k,T.out] * 
-                                        pnorm(-mu.0.boot[k]), w = weights )
+                    z1.sim[k] <- weighted.mean( sum(Ymodel.coef.sim[k,c(T.out,TM.out)]) * 
+                                        pnorm(mu.1.sim[,k]) + Ymodel.coef.sim[k,T.out] * 
+                                        pnorm(-mu.1.sim[k]), w = weights )
+                    z0.sim[k] <- weighted.mean( sum(Ymodel.coef.sim[k,c(T.out,TM.out)]) * 
+                                        pnorm(mu.0.sim[,k]) + Ymodel.coef.sim[k,T.out] * 
+                                        pnorm(-mu.0.sim[k]), w = weights )
                 }
             } else {
                 if("indirect" %in% etype.vec){
-                    d0.boot[k] <- d1.boot[k] <- weighted.mean( Ymodel.coef.boot[k,M.out] *
-                        (pnorm(mu.1.boot[,k]) - pnorm(mu.0.boot[,k])), w = weights )
+                    d0.sim[k] <- d1.sim[k] <- weighted.mean( Ymodel.coef.sim[k,M.out] *
+                        (pnorm(mu.1.sim[,k]) - pnorm(mu.0.sim[,k])), w = weights )
                 }
                 if("direct" %in% etype.vec){
-                    z0.boot[k] <- z1.boot[k] <- Ymodel.coef.boot[k,T.out]
+                    z0.sim[k] <- z1.sim[k] <- Ymodel.coef.sim[k,T.out]
                 }
             }
 
@@ -375,22 +377,22 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
 
         ## Step 2-5: Compute Outputs
         if("indirect" %in% etype.vec){
-            d0[i] <- mean(d0.boot)
-            d1[i] <- mean(d1.boot)
-            upper.d0[i] <- quantile(d0.boot, high)
-            upper.d1[i] <- quantile(d1.boot, high)
-            lower.d0[i] <- quantile(d0.boot, low)
-            lower.d1[i] <- quantile(d1.boot, low)
+            d0[i] <- mean(d0.sim)
+            d1[i] <- mean(d1.sim)
+            upper.d0[i] <- quantile(d0.sim, high)
+            upper.d1[i] <- quantile(d1.sim, high)
+            lower.d0[i] <- quantile(d0.sim, low)
+            lower.d1[i] <- quantile(d1.sim, low)
             ind.d0[i] <- as.numeric(lower.d0[i] < 0 & upper.d0[i] > 0)
             ind.d1[i] <- as.numeric(lower.d1[i] < 0 & upper.d1[i] > 0)
         }
         if("direct" %in% etype.vec){
-            z0[i] <- mean(z0.boot)
-            z1[i] <- mean(z1.boot)
-            upper.z0[i] <- quantile(z0.boot, high)
-            upper.z1[i] <- quantile(z1.boot, high)
-            lower.z0[i] <- quantile(z0.boot, low)
-            lower.z1[i] <- quantile(z1.boot, low)
+            z0[i] <- mean(z0.sim)
+            z1[i] <- mean(z1.sim)
+            upper.z0[i] <- quantile(z0.sim, high)
+            upper.z1[i] <- quantile(z1.sim, high)
+            lower.z0[i] <- quantile(z0.sim, low)
+            lower.z1[i] <- quantile(z1.sim, low)
             ind.z0[i] <- as.numeric(lower.z0[i] < 0 & upper.z0[i] > 0)
             ind.z1[i] <- as.numeric(lower.z1[i] < 0 & upper.z1[i] > 0)
         }
@@ -423,34 +425,34 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         Mmodel.coef <- model.m$coef
         m.k <- length(model.m$coef)
         Mmodel.var.cov <- vcov(model.m)
-        Mmodel.coef.boot <- mvrnorm(sims, mu=Mmodel.coef, Sigma=Mmodel.var.cov)
+        Mmodel.coef.sim <- mvrnorm(sims, mu=Mmodel.coef, Sigma=Mmodel.var.cov)
         if(is.factor(y.t.data[,treat])){
-            beta2.boot <- Mmodel.coef.boot[,T.out]
+            beta2.sim <- Mmodel.coef.sim[,T.out]
         } else {
-            beta2.boot <- Mmodel.coef.boot[,treat]
+            beta2.sim <- Mmodel.coef.sim[,treat]
         }
 
         sigma.2 <- summary(model.m)$sigma
         sig2.shape <- model.m$df/2
         sig2.invscale <- (model.m$df/2) * sigma.2^2
-        sigma.2.boot <- sqrt(1 / rgamma(sims, shape = sig2.shape, scale = 1/sig2.invscale))
+        sigma.2.sim <- sqrt(1 / rgamma(sims, shape = sig2.shape, scale = 1/sig2.invscale))
 
         ## Step 1-2: Simulate Y model parameters
         Ymodel.coef <- model.y$coef
         Ymodel.var.cov <- vcov(model.y)
         y.k <- length(Ymodel.coef)
-        Ymodel.coef.boot <- mvrnorm(sims, mu=Ymodel.coef, Sigma=Ymodel.var.cov)
-        colnames(Ymodel.coef.boot) <- names(Ymodel.coef)
-        gamma.tilde <- Ymodel.coef.boot[,M.out]
+        Ymodel.coef.sim <- mvrnorm(sims, mu=Ymodel.coef, Sigma=Ymodel.var.cov)
+        colnames(Ymodel.coef.sim) <- names(Ymodel.coef)
+        gamma.tilde <- Ymodel.coef.sim[,M.out]
 
         # Step 2: Compute ACME via the procedure in IKT
         ## Step 2-1: Estimate Error Correlation from inconsistent estimate of Y on M
-        rho12.boot <- (sigma.2.boot * gamma.tilde) / (1 + sqrt(sigma.2.boot^2*gamma.tilde^2))
+        rho12.sim <- (sigma.2.sim * gamma.tilde) / (1 + sqrt(sigma.2.sim^2*gamma.tilde^2))
 
         ## Step 2-2: Calculate alpha_1, beta_1 and xi_1
-        YTmodel.coef.boot <- Ymodel.coef.boot[,!colnames(Ymodel.coef.boot)%in%M.out] * 
-            sqrt(1-rho12.boot^2) %x% t(rep(1,y.k-1)) + Mmodel.coef.boot * 
-            (rho12.boot/sigma.2.boot) %x% t(rep(1,y.k-1))
+        YTmodel.coef.sim <- Ymodel.coef.sim[,!colnames(Ymodel.coef.sim)%in%M.out] * 
+            sqrt(1-rho12.sim^2) %x% t(rep(1,y.k-1)) + Mmodel.coef.sim * 
+            (rho12.sim/sigma.2.sim) %x% t(rep(1,y.k-1))
 
         ## Step 2-3: Calculate Gamma
         ## Data matrices for the Y model less M
@@ -468,67 +470,67 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         tau <- nu0 <- nu1 <- 
         upper.tau <- upper.nu0 <- upper.nu1 <-
         lower.tau <- lower.nu0 <- lower.nu1 <- rep(NA, length(rho))
-        d0.boot <- d1.boot <- z0.boot <- z1.boot <- 
-        sigma.1star.boot <- beta3.boot <- 
-        tau.boot <- nu0.boot <- nu1.boot <- rep(NA, sims)
+        d0.sim <- d1.sim <- z0.sim <- z1.sim <- 
+        sigma.1star.sim <- beta3.sim <- 
+        tau.sim <- nu0.sim <- nu1.sim <- rep(NA, sims)
 
         ## START OF RHO LOOP
         for(i in 1:length(rho)){
-            gamma.boot <- (-rho[i] + rho12.boot*sqrt((1-rho[i]^2)/(1-rho12.boot^2)))/sigma.2.boot
+            gamma.sim <- (-rho[i] + rho12.sim*sqrt((1-rho[i]^2)/(1-rho12.sim^2)))/sigma.2.sim
             for(k in 1:sims){
-                sigma.1star.boot[k] <- sqrt(gamma.boot[k]^2 * 
-                    sigma.2.boot[k]^2+2*gamma.boot[k]*rho[i]*sigma.2.boot[k]+1)
+                sigma.1star.sim[k] <- sqrt(gamma.sim[k]^2 * 
+                    sigma.2.sim[k]^2+2*gamma.sim[k]*rho[i]*sigma.2.sim[k]+1)
                 if("indirect" %in% etype.vec){
-                    d0.boot[k] <- weighted.mean( pnorm(y.mat.0 %*% YTmodel.coef.boot[k,] +
-                        gamma.boot[k]*beta2.boot[k] / sigma.1star.boot[k]) - 
-                        pnorm(y.mat.0 %*% YTmodel.coef.boot[k,]), w = weights)
-                    d1.boot[k] <- weighted.mean( pnorm(y.mat.1 %*% YTmodel.coef.boot[k,]) - 
-                        pnorm(y.mat.1 %*% YTmodel.coef.boot[k,] -
-                        gamma.boot[k]*beta2.boot[k] / sigma.1star.boot[k]), w = weights )
-                    tau.boot[k] <- weighted.mean( pnorm(y.mat.1 %*% YTmodel.coef.boot[k,]) - 
-                        pnorm(y.mat.0 %*% YTmodel.coef.boot[k,]), w = weights )
-                    nu0.boot[k] <- d0.boot[k]/tau.boot[k]
-                    nu1.boot[k] <- d1.boot[k]/tau.boot[k]
+                    d0.sim[k] <- weighted.mean( pnorm(y.mat.0 %*% YTmodel.coef.sim[k,] +
+                        gamma.sim[k]*beta2.sim[k] / sigma.1star.sim[k]) - 
+                        pnorm(y.mat.0 %*% YTmodel.coef.sim[k,]), w = weights)
+                    d1.sim[k] <- weighted.mean( pnorm(y.mat.1 %*% YTmodel.coef.sim[k,]) - 
+                        pnorm(y.mat.1 %*% YTmodel.coef.sim[k,] -
+                        gamma.sim[k]*beta2.sim[k] / sigma.1star.sim[k]), w = weights )
+                    tau.sim[k] <- weighted.mean( pnorm(y.mat.1 %*% YTmodel.coef.sim[k,]) - 
+                        pnorm(y.mat.0 %*% YTmodel.coef.sim[k,]), w = weights )
+                    nu0.sim[k] <- d0.sim[k]/tau.sim[k]
+                    nu1.sim[k] <- d1.sim[k]/tau.sim[k]
                 }
                 if("direct" %in% etype.vec){
-                    beta3.boot[k] <- sigma.1star.boot[k] * YTmodel.coef.boot[k,T.out] -
-                         beta2.boot[k]*gamma.boot[k]
-                    z0.boot[k] <- weighted.mean( pnorm(y.mat.0 %*% YTmodel.coef.boot[k,] +
-                        beta3.boot[k] / sigma.1star.boot[k]) -
-                        pnorm(y.mat.0 %*% YTmodel.coef.boot[k,]), w = weights )
-                    z1.boot[k] <- weighted.mean( pnorm(y.mat.1 %*% YTmodel.coef.boot[k,]) -
-                        pnorm(y.mat.1 %*% YTmodel.coef.boot[k,] - 
-                        beta3.boot[k] / sigma.1star.boot[k]), w = weights )
+                    beta3.sim[k] <- sigma.1star.sim[k] * YTmodel.coef.sim[k,T.out] -
+                         beta2.sim[k]*gamma.sim[k]
+                    z0.sim[k] <- weighted.mean( pnorm(y.mat.0 %*% YTmodel.coef.sim[k,] +
+                        beta3.sim[k] / sigma.1star.sim[k]) -
+                        pnorm(y.mat.0 %*% YTmodel.coef.sim[k,]), w = weights )
+                    z1.sim[k] <- weighted.mean( pnorm(y.mat.1 %*% YTmodel.coef.sim[k,]) -
+                        pnorm(y.mat.1 %*% YTmodel.coef.sim[k,] - 
+                        beta3.sim[k] / sigma.1star.sim[k]), w = weights )
                 }
             }
 
             ## Step 2-4: Compute Outputs
             if("indirect" %in% etype.vec){
-                d0[i] <- mean(d0.boot) # ACME(t=0)
-                d1[i] <- mean(d1.boot) # ACME(t=1)
-                upper.d0[i] <- quantile(d0.boot, high)
-                upper.d1[i] <- quantile(d1.boot, high)
-                lower.d0[i] <- quantile(d0.boot, low)
-                lower.d1[i] <- quantile(d1.boot, low)
-                tau[i] <- mean(tau.boot) # ATE
-                nu0[i] <- mean(nu0.boot) # Proportion Mediated (t=0)
-                nu1[i] <- mean(nu1.boot) # Proportion Mediated (t=0)
-                upper.tau[i] <- quantile(tau.boot, high)
-                upper.nu0[i] <- quantile(nu0.boot, high)
-                upper.nu1[i] <- quantile(nu1.boot, high)
-                lower.tau[i] <- quantile(tau.boot, low)
-                lower.nu0[i] <- quantile(nu0.boot, low)
-                lower.nu1[i] <- quantile(nu1.boot, low)
+                d0[i] <- mean(d0.sim) # ACME(t=0)
+                d1[i] <- mean(d1.sim) # ACME(t=1)
+                upper.d0[i] <- quantile(d0.sim, high)
+                upper.d1[i] <- quantile(d1.sim, high)
+                lower.d0[i] <- quantile(d0.sim, low)
+                lower.d1[i] <- quantile(d1.sim, low)
+                tau[i] <- mean(tau.sim) # ATE
+                nu0[i] <- mean(nu0.sim) # Proportion Mediated (t=0)
+                nu1[i] <- mean(nu1.sim) # Proportion Mediated (t=0)
+                upper.tau[i] <- quantile(tau.sim, high)
+                upper.nu0[i] <- quantile(nu0.sim, high)
+                upper.nu1[i] <- quantile(nu1.sim, high)
+                lower.tau[i] <- quantile(tau.sim, low)
+                lower.nu0[i] <- quantile(nu0.sim, low)
+                lower.nu1[i] <- quantile(nu1.sim, low)
                 ind.d0[i] <- as.numeric(lower.d0[i] < 0 & upper.d0[i] > 0)
                 ind.d1[i] <- as.numeric(lower.d1[i] < 0 & upper.d1[i] > 0)
             }
             if("direct" %in% etype.vec){
-                z0[i] <- mean(z0.boot) # ACME(t=0)
-                z1[i] <- mean(z1.boot) # ACME(t=1)
-                upper.z0[i] <- quantile(z0.boot, high)
-                upper.z1[i] <- quantile(z1.boot, high)
-                lower.z0[i] <- quantile(z0.boot, low)
-                lower.z1[i] <- quantile(z1.boot, low)
+                z0[i] <- mean(z0.sim) # ACME(t=0)
+                z1[i] <- mean(z1.sim) # ACME(t=1)
+                upper.z0[i] <- quantile(z0.sim, high)
+                upper.z1[i] <- quantile(z1.sim, high)
+                lower.z0[i] <- quantile(z0.sim, low)
+                lower.z1[i] <- quantile(z1.sim, low)
                 ind.z0[i] <- as.numeric(lower.z0[i] < 0 & upper.z0[i] > 0)
                 ind.z1[i] <- as.numeric(lower.z1[i] < 0 & upper.z1[i] > 0)
             }
@@ -543,7 +545,6 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         var.ystar <- var(fitted)
         r.sq.y <- var.ystar/(1+var.ystar)
         R2tilde.prod <- rho^2*(1-r.sq.m)*(1-r.sq.y)
-#        err.cr <- mean(rho12.boot) # Rho_12 estimate
 
     ## END OF CASE 3: Binary Outcome + Continuous Mediator
     }
@@ -560,23 +561,23 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
             err.cr.1.d <- rho[ii]
             err.cr.2.d <- rho[kk]
             err.cr.d <- c(err.cr.1.d, err.cr.2.d)
-            }
+        }
         if("direct" %in% etype.vec){
             ii.z <- which(abs(z0-0)==min(abs(z0-0)))
             kk.z <- which(abs(z1-0)==min(abs(z1-0)))
             err.cr.1.z <- rho[ii.z]
             err.cr.2.z <- rho[kk.z]
             err.cr.z <- c(err.cr.1.z, err.cr.2.z)
-            }
+        }
     } else {
         if("indirect" %in% etype.vec){
             ii <- which(abs(d0-0)==min(abs(d0-0)))
             err.cr.d <- rho[ii]
-            }
+        }
         if("direct" %in% etype.vec){
             ii.z <- which(abs(z0-0)==min(abs(z0-0)))
             err.cr.z <- rho[ii.z]
-            }
+        }
     }
 
     if("indirect" %in% etype.vec){
@@ -588,24 +589,24 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         R2tilde.z.thresh <- err.cr.z^2*(1-r.sq.m)*(1-r.sq.y)
     }
         
-    out <- list(rho = rho, 
-        err.cr.d=err.cr.d, d0=d0, d1=d1,
+    out <- list(
+        d0=d0, d1=d1,
         upper.d0=upper.d0, lower.d0=lower.d0, 
         upper.d1=upper.d1, lower.d1=lower.d1, 
-        ind.d0=ind.d0, ind.d1=ind.d1, 
-        err.cr.z=err.cr.z, z0=z0, z1=z1, 
+        z0=z0, z1=z1, 
         upper.z0=upper.z0, lower.z0=lower.z0,
         upper.z1=upper.z1, lower.z1=lower.z1, 
-        ind.z0=ind.z0, ind.z1=ind.z1,
         tau=tau, upper.tau=upper.tau, lower.tau=lower.tau, 
         nu0=nu0, nu1=nu1, upper.nu0=upper.nu0, upper.nu1=upper.nu1,
         lower.nu0=lower.nu0, lower.nu1=lower.nu1,
+        rho = rho, rho.by=rho.by, sims=sims,
+        err.cr.d=err.cr.d, err.cr.z=err.cr.z, 
+        ind.d0=ind.d0, ind.d1=ind.d1, ind.z0=ind.z0, ind.z1=ind.z1,
         R2star.prod=R2star.prod, R2tilde.prod=R2tilde.prod,
         R2star.d.thresh=R2star.d.thresh, R2tilde.d.thresh=R2tilde.d.thresh,
         R2star.z.thresh=R2star.z.thresh, R2tilde.z.thresh=R2tilde.z.thresh,
         r.square.y=r.sq.y, r.square.m=r.sq.m,
-        rho.by=rho.by, sims=sims, INT=INT, conf.level = x$conf.level,
-        effect.type=effect.type, type=type)
+        INT=INT, conf.level = x$conf.level, effect.type=effect.type, type=type)
     class(out) <- "medsens"
     out
 }
@@ -894,18 +895,23 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                     lower <- x$lower.d0
                     upper <- x$upper.d0
                 }
-                plot.default(x$rho, d0, type="n", xlab="", ylab="", main=main0, xlim=xlim, ylim=ylim, ...)
-                polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
+                plot.default(x$rho, d0, type="n", xlab="", ylab="", main=main0, 
+                            xlim=xlim, ylim=ylim, ...)
+                polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), 
+                        border=FALSE, col=8, lty=2, lwd=lwd)
                 lines(x$rho, d0, lty=1, lwd=lwd)
                 abline(h=0)
                 abline(v=0)
                 abline(h=weighted.mean(c(d0[floor(1/x$rho.by)],d0[ceiling(1/x$rho.by)]),
-                        c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
+                        c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), 
+                        lty=2, lwd=lwd)
                 if(is.null(xlab))
-                    title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
+                    title(xlab = expression(paste("Sensitivity Parameter: ", rho)), 
+                        line=2.5, cex.lab=.9)
                     else title(xlab = xlab)
                 if(is.null(ylab))
-                    title(ylab = expression(paste("Average Mediation Effect: ", bar(delta)(0))), line=2.5, cex.lab=.9)
+                    title(ylab = expression(paste("Average Mediation Effect: ", 
+                        bar(delta)(0))), line=2.5, cex.lab=.9)
                     else title(ylab = ylab)
 
                 # Delta_1
@@ -924,18 +930,23 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                     lower <- x$lower.d1
                     upper <- x$upper.d1
                 }
-                plot.default(x$rho, d1, type="n", xlab="", ylab="", main=main1, xlim=xlim, ylim=ylim,...)
-                polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
+                plot.default(x$rho, d1, type="n", xlab="", ylab="", main=main1, 
+                            xlim=xlim, ylim=ylim,...)
+                polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), 
+                        border=FALSE, col=8, lty=2, lwd=lwd)
                 lines(x$rho, d1, lty=1, lwd=lwd)
                 abline(h=0)
                 abline(v=0)
                 abline(h=weighted.mean(c(d1[floor(1/x$rho.by)],d1[ceiling(1/x$rho.by)]),
-                        c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
+                        c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), 
+                        lty=2, lwd=lwd)
                 if(is.null(xlab))
-                    title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
+                    title(xlab = expression(paste("Sensitivity Parameter: ", rho)), 
+                        line=2.5, cex.lab=.9)
                     else title(xlab = xlab)
                 if(is.null(ylab))
-                    title(ylab = expression(paste("Average Mediation Effect: ", bar(delta)(1))), line=2.5, cex.lab=.9)
+                    title(ylab = expression(paste("Average Mediation Effect: ", 
+                        bar(delta)(1))), line=2.5, cex.lab=.9)
                     else title(ylab = ylab)
             }
             
@@ -956,18 +967,23 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                     lower <- x$lower.z0
                     upper <- x$upper.z0
                 }
-                plot.default(x$rho, z0, type="n", xlab="", ylab="", main=main0, xlim=xlim, ylim=ylim, ...)
-                polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
+                plot.default(x$rho, z0, type="n", xlab="", ylab="", main=main0, 
+                            xlim=xlim, ylim=ylim, ...)
+                polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), 
+                        border=FALSE, col=8, lty=2, lwd=lwd)
                 lines(x$rho, z0, lty=1, lwd=lwd)
                 abline(h=0)
                 abline(v=0)
                 abline(h=weighted.mean(c(z0[floor(1/x$rho.by)],z0[ceiling(1/x$rho.by)]),
-                        c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
+                        c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), 
+                        lty=2, lwd=lwd)
                 if(is.null(xlab))
-                    title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
+                    title(xlab = expression(paste("Sensitivity Parameter: ", rho)), 
+                        line=2.5, cex.lab=.9)
                     else title(xlab = xlab)
                 if(is.null(ylab))
-                    title(ylab = expression(paste("Average Direct Effect: ", bar(zeta)(0))), line=2.5, cex.lab=.9)
+                    title(ylab = expression(paste("Average Direct Effect: ", 
+                        bar(zeta)(0))), line=2.5, cex.lab=.9)
                     else title(ylab = ylab)
 
                 # Zeta_1
@@ -986,18 +1002,23 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                     lower <- x$lower.z1
                     upper <- x$upper.z1
                 }
-                plot.default(x$rho, z1, type="n", xlab="", ylab="", main=main1, xlim=xlim, ylim=ylim,...)
-                polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
+                plot.default(x$rho, z1, type="n", xlab="", ylab="", main=main1, 
+                            xlim=xlim, ylim=ylim,...)
+                polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), 
+                        border=FALSE, col=8, lty=2, lwd=lwd)
                 lines(x$rho, z1, lty=1, lwd=lwd)
                 abline(h=0)
                 abline(v=0)
                 abline(h=weighted.mean(c(z1[floor(1/x$rho.by)],z1[ceiling(1/x$rho.by)]),
-                        c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
+                        c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), 
+                        lty=2, lwd=lwd)
                 if(is.null(xlab))
-                    title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
+                    title(xlab = expression(paste("Sensitivity Parameter: ", rho)), 
+                        line=2.5, cex.lab=.9)
                     else title(xlab = xlab)
                 if(is.null(ylab))
-                    title(ylab = expression(paste("Average Direct Effect: ", bar(zeta)(1))), line=2.5, cex.lab=.9)
+                    title(ylab = expression(paste("Average Direct Effect: ", 
+                        bar(zeta)(1))), line=2.5, cex.lab=.9)
                     else title(ylab = ylab)
             }
             
@@ -1019,18 +1040,23 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                     lower <- x$lower.d0
                     upper <- x$upper.d0
                 }
-                plot.default(x$rho, d0, type="n", xlab="", ylab="", main=main0, xlim=xlim, ylim=ylim, ...)
-                polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
+                plot.default(x$rho, d0, type="n", xlab="", ylab="", main=main0, 
+                            xlim=xlim, ylim=ylim, ...)
+                polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), 
+                        border=FALSE, col=8, lty=2, lwd=lwd)
                 lines(x$rho, d0, lty=1, lwd=lwd)
                 abline(h=0)
                 abline(v=0)
                 abline(h=weighted.mean(c(d0[floor(1/x$rho.by)],d0[ceiling(1/x$rho.by)]),
-                    c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
+                    c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), 
+                    lty=2, lwd=lwd)
                 if(is.null(xlab))
-                    title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
+                    title(xlab = expression(paste("Sensitivity Parameter: ", rho)), 
+                        line=2.5, cex.lab=.9)
                     else title(xlab = xlab)
                 if(is.null(ylab))
-                    title(ylab = expression(paste("Average Mediation Effect: ", bar(delta)(t))), line=2.5, cex.lab=.9)
+                    title(ylab = expression(paste("Average Mediation Effect: ", 
+                        bar(delta)(t))), line=2.5, cex.lab=.9)
                     else title(ylab = ylab)
             }
             if("direct" %in% etype.vec){
@@ -1049,18 +1075,23 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                     lower <- x$lower.z0
                     upper <- x$upper.z0
                 }
-                plot.default(x$rho, z0, type="n", xlab="", ylab="", main=main1, xlim=xlim, ylim=ylim, ...)
-                polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), border=FALSE, col=8, lty=2, lwd=lwd)
+                plot.default(x$rho, z0, type="n", xlab="", ylab="", main=main1, 
+                            xlim=xlim, ylim=ylim, ...)
+                polygon(x=c(x$rho, rev(x$rho)), y=c(lower, rev(upper)), 
+                        border=FALSE, col=8, lty=2, lwd=lwd)
                 lines(x$rho, z0, lty=1, lwd=lwd)
                 abline(h=0)
                 abline(v=0)
                 abline(h=weighted.mean(c(z0[floor(1/x$rho.by)],z0[ceiling(1/x$rho.by)]),
-                    c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), lty=2, lwd=lwd)
+                    c(1-1/x$rho.by+floor(1/x$rho.by), 1/x$rho.by-floor(1/x$rho.by))), 
+                    lty=2, lwd=lwd)
                 if(is.null(xlab))
-                    title(xlab = expression(paste("Sensitivity Parameter: ", rho)), line=2.5, cex.lab=.9)
+                    title(xlab = expression(paste("Sensitivity Parameter: ", rho)), 
+                        line=2.5, cex.lab=.9)
                     else title(xlab = xlab)
                 if(is.null(ylab))
-                    title(ylab = expression(paste("Average Direct Effect: ", bar(zeta)(t))), line=2.5, cex.lab=.9)
+                    title(ylab = expression(paste("Average Direct Effect: ", 
+                        bar(zeta)(t))), line=2.5, cex.lab=.9)
                     else title(ylab = ylab)
             }
         }
@@ -1099,11 +1130,14 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                     d0.p <- approx(x$d0[((length(x$d0)+1)/2):length(x$d0)], n=dlength)$y
                     d0mat.p <- matrix(d0.p[Rprod.mat/0.0001+1], nrow=length(R2M))
                     if(is.null(main) & r.type == "residual")
-                        main0 <- expression(paste("ACME"[0], "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
-                                                    (lambda[2]*lambda[3])==1))
+                        main0 <- expression(paste("ACME"[0], 
+                                            "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
+                                            (lambda[2]*lambda[3])==1))
                     else if(is.null(main) & r.type == "total")
-                        main0 <- expression(paste("ACME"[0], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", 
-                                                    (lambda[2]*lambda[3])==1))
+                        main0 <- expression(paste("ACME"[0], 
+                                            "(", tilde(R)[M]^{2}, "," , 
+                                            tilde(R)[Y]^2, "), sgn", 
+                                            (lambda[2]*lambda[3])==1))
                     else main0 <- main
                     contour(R2M, R2Y, d0mat.p, levels=levels0, main=main0, 
                             xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
@@ -1112,11 +1146,14 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                     d0.n <- rev(approx(x$d0[1:((length(x$d0)+1)/2)], n=dlength)$y)
                     d0mat.n <- matrix(d0.n[Rprod.mat/0.0001+1], nrow=length(R2M))
                     if(is.null(main) & r.type == "residual")
-                        main0 <- expression(paste("ACME"[0],"(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
-                                                    (lambda[2]*lambda[3])==-1))
+                        main0 <- expression(paste("ACME"[0],
+                                            "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
+                                            (lambda[2]*lambda[3])==-1))
                     else if(is.null(main) & r.type == "total")
-                        main0 <- expression(paste("ACME"[0], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", 
-                                                    (lambda[2]*lambda[3])==-1))
+                        main0 <- expression(paste("ACME"[0], 
+                                            "(", tilde(R)[M]^{2}, "," , 
+                                            tilde(R)[Y]^2, "), sgn", 
+                                            (lambda[2]*lambda[3])==-1))
                     else main0 <- main
                     contour(R2M, R2Y, d0mat.n, levels=levels0, main=main0, 
                             xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
@@ -1141,11 +1178,14 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                     d1.p <- approx(x$d1[((length(x$d1)+1)/2):length(x$d1)], n=dlength)$y
                     d1mat.p <- matrix(d1.p[Rprod.mat/0.0001+1], nrow=length(R2M))
                     if(is.null(main) & r.type == "residual")
-                        main1 <- expression(paste("ACME"[1], "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
-                                                    (lambda[2]*lambda[3])==1))
+                        main1 <- expression(paste("ACME"[1], 
+                                            "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
+                                            (lambda[2]*lambda[3])==1))
                     else if(is.null(main) & r.type == "total")
-                        main1 <- expression(paste("ACME"[1], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", 
-                                                    (lambda[2]*lambda[3])==1))
+                        main1 <- expression(paste("ACME"[1], 
+                                            "(", tilde(R)[M]^{2}, "," , 
+                                            tilde(R)[Y]^2, "), sgn", 
+                                            (lambda[2]*lambda[3])==1))
                     else main1 <- main
                     contour(R2M, R2Y, d1mat.p, levels=levels1, main=main1, 
                             xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd, ...)
@@ -1154,11 +1194,14 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                     d1.n <- rev(approx(x$d1[1:((length(x$d1)+1)/2)], n=dlength)$y)
                     d1mat.n <- matrix(d1.n[Rprod.mat/0.0001+1], nrow=length(R2M))
                     if(is.null(main) & r.type == "residual")
-                        main1 <- expression(paste("ACME"[1], "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
-                                                    (lambda[2]*lambda[3])==-1))
+                        main1 <- expression(paste("ACME"[1], 
+                                            "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
+                                            (lambda[2]*lambda[3])==-1))
                     else if(is.null(main) & r.type == "total")
-                        main1 <- expression(paste("ACME"[1], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", 
-                                                    (lambda[2]*lambda[3])==-1))
+                        main1 <- expression(paste("ACME"[1], 
+                                            "(", tilde(R)[M]^{2}, "," , 
+                                            tilde(R)[Y]^2, "), sgn", 
+                                            (lambda[2]*lambda[3])==-1))
                     else main1 <- main
                     contour(R2M, R2Y, d1mat.n, levels=levels1, main=main1, 
                             xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd, ...)
@@ -1185,11 +1228,14 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                     z0.p <- approx(x$z0[((length(x$z0)+1)/2):length(x$z0)], n=dlength)$y
                     z0mat.p <- matrix(z0.p[Rprod.mat/0.0001+1], nrow=length(R2M))
                     if(is.null(main) & r.type == "residual")
-                        main0 <- expression(paste("ADE"[0], "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
-                                                    (lambda[2]*lambda[3])==1))
+                        main0 <- expression(paste("ADE"[0], 
+                                            "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
+                                            (lambda[2]*lambda[3])==1))
                     else if(is.null(main) & r.type == "total")
-                        main0 <- expression(paste("ADE"[0], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", 
-                                                    (lambda[2]*lambda[3])==1))
+                        main0 <- expression(paste("ADE"[0], 
+                                            "(", tilde(R)[M]^{2}, "," , 
+                                            tilde(R)[Y]^2, "), sgn", 
+                                            (lambda[2]*lambda[3])==1))
                     else main0 <- main
                     contour(R2M, R2Y, z0mat.p, levels=levels0, main=main0, 
                             xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
@@ -1198,11 +1244,14 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                     z0.n <- rev(approx(x$z0[1:((length(x$z0)+1)/2)], n=dlength)$y)
                     z0mat.n <- matrix(z0.n[Rprod.mat/0.0001+1], nrow=length(R2M))
                     if(is.null(main) & r.type == "residual")
-                        main0 <- expression(paste("ADE"[0],"(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
-                                                    (lambda[2]*lambda[3])==-1))
+                        main0 <- expression(paste("ADE"[0],
+                                            "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
+                                            (lambda[2]*lambda[3])==-1))
                     else if(is.null(main) & r.type == "total")
-                        main0 <- expression(paste("ADE"[0], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", 
-                                                    (lambda[2]*lambda[3])==-1))
+                        main0 <- expression(paste("ADE"[0], 
+                                            "(", tilde(R)[M]^{2}, "," , 
+                                            tilde(R)[Y]^2, "), sgn", 
+                                            (lambda[2]*lambda[3])==-1))
                     else main0 <- main
                     contour(R2M, R2Y, z0mat.n, levels=levels0, main=main0, 
                             xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
@@ -1227,11 +1276,14 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                     z1.p <- approx(x$z1[((length(x$z1)+1)/2):length(x$z1)], n=dlength)$y
                     z1mat.p <- matrix(z1.p[Rprod.mat/0.0001+1], nrow=length(R2M))
                     if(is.null(main) & r.type == "residual")
-                        main1 <- expression(paste("ADE"[1], "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
-                                                    (lambda[2]*lambda[3])==1))
+                        main1 <- expression(paste("ADE"[1], 
+                                            "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
+                                            (lambda[2]*lambda[3])==1))
                     else if(is.null(main) & r.type == "total")
-                        main1 <- expression(paste("ADE"[1], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", 
-                                                    (lambda[2]*lambda[3])==1))
+                        main1 <- expression(paste("ADE"[1], 
+                                            "(", tilde(R)[M]^{2}, "," , 
+                                            tilde(R)[Y]^2, "), sgn", 
+                                            (lambda[2]*lambda[3])==1))
                     else main1 <- main
                     contour(R2M, R2Y, z1mat.p, levels=levels1, main=main1, 
                             xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd, ...)
@@ -1240,11 +1292,14 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                     z1.n <- rev(approx(x$z1[1:((length(x$z1)+1)/2)], n=dlength)$y)
                     z1mat.n <- matrix(z1.n[Rprod.mat/0.0001+1], nrow=length(R2M))
                     if(is.null(main) & r.type == "residual")
-                        main1 <- expression(paste("ADE"[1], "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
-                                                    (lambda[2]*lambda[3])==-1))
+                        main1 <- expression(paste("ADE"[1], 
+                                            "(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
+                                            (lambda[2]*lambda[3])==-1))
                     else if(is.null(main) & r.type == "total")
-                        main1 <- expression(paste("ADE"[1], "(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", 
-                                                    (lambda[2]*lambda[3])==-1))
+                        main1 <- expression(paste("ADE"[1], 
+                                            "(", tilde(R)[M]^{2}, "," , 
+                                            tilde(R)[Y]^2, "), sgn", 
+                                            (lambda[2]*lambda[3])==-1))
                     else main1 <- main
                     contour(R2M, R2Y, z1mat.n, levels=levels1, main=main1, 
                             xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd, ...)
@@ -1272,11 +1327,14 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                     d0.p <- approx(x$d0[((length(x$d0)+1)/2):length(x$d0)], n=dlength)$y
                     d0mat.p <- matrix(d0.p[Rprod.mat/0.0001+1], nrow=length(R2M))
                     if(is.null(main) & r.type == "residual")
-                        main0 <- expression(paste("ACME(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
-                                                    (lambda[2]*lambda[3])==1))
+                        main0 <- expression(paste("ACME(", 
+                                            R[M]^{2},"*,", R[Y]^2,"*), sgn", 
+                                            (lambda[2]*lambda[3])==1))
                     else if(is.null(main) & r.type == "total")
-                        main0 <- expression(paste("ACME(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", 
-                                                    (lambda[2]*lambda[3])==1))
+                        main0 <- expression(paste("ACME(", 
+                                            tilde(R)[M]^{2}, "," , 
+                                            tilde(R)[Y]^2, "), sgn", 
+                                            (lambda[2]*lambda[3])==1))
                     else main0 <- main
                     contour(R2M, R2Y, d0mat.p, levels=levels0, main=main0, 
                             xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
@@ -1285,11 +1343,14 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                     d0.n <- rev(approx(x$d0[1:((length(x$d0)+1)/2)], n=dlength)$y)
                     d0mat.n <- matrix(d0.n[Rprod.mat/0.0001+1], nrow=length(R2M))
                     if(is.null(main) & r.type == "residual")
-                        main0 <- expression(paste("ACME(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
-                                                    (lambda[2]*lambda[3])==-1))
+                        main0 <- expression(paste("ACME(", 
+                                            R[M]^{2},"*,", R[Y]^2,"*), sgn", 
+                                            (lambda[2]*lambda[3])==-1))
                     else if(is.null(main) & r.type == "total")
-                        main0 <- expression(paste("ACME(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", 
-                                                    (lambda[2]*lambda[3])==-1))
+                        main0 <- expression(paste("ACME(", 
+                                            tilde(R)[M]^{2}, "," , 
+                                            tilde(R)[Y]^2, "), sgn", 
+                                            (lambda[2]*lambda[3])==-1))
                     else main0 <- main
                     contour(R2M, R2Y, d0mat.n, levels=levels0, main=main0, 
                             xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
@@ -1315,11 +1376,14 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                     z0.p <- approx(x$z0[((length(x$z0)+1)/2):length(x$z0)], n=dlength)$y
                     z0mat.p <- matrix(z0.p[Rprod.mat/0.0001+1], nrow=length(R2M))
                     if(is.null(main) & r.type == "residual")
-                        main0 <- expression(paste("ADE(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
-                                                    (lambda[2]*lambda[3])==1))
+                        main0 <- expression(paste("ADE(", 
+                                            R[M]^{2},"*,", R[Y]^2,"*), sgn", 
+                                            (lambda[2]*lambda[3])==1))
                     else if(is.null(main) & r.type == "total")
-                        main0 <- expression(paste("ADE(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", 
-                                                    (lambda[2]*lambda[3])==1))
+                        main0 <- expression(paste("ADE(", 
+                                            tilde(R)[M]^{2}, "," , 
+                                            tilde(R)[Y]^2, "), sgn", 
+                                            (lambda[2]*lambda[3])==1))
                     else main0 <- main
                     contour(R2M, R2Y, z0mat.p, levels=levels0, main=main0, 
                             xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
@@ -1328,11 +1392,14 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                     z0.n <- rev(approx(x$z0[1:((length(x$z0)+1)/2)], n=dlength)$y)
                     z0mat.n <- matrix(z0.n[Rprod.mat/0.0001+1], nrow=length(R2M))
                     if(is.null(main) & r.type == "residual")
-                        main0 <- expression(paste("ADE(", R[M]^{2},"*,", R[Y]^2,"*), sgn", 
-                                                    (lambda[2]*lambda[3])==-1))
+                        main0 <- expression(paste("ADE(", 
+                                            R[M]^{2},"*,", R[Y]^2,"*), sgn", 
+                                            (lambda[2]*lambda[3])==-1))
                     else if(is.null(main) & r.type == "total")
-                        main0 <- expression(paste("ADE(", tilde(R)[M]^{2}, "," , tilde(R)[Y]^2, "), sgn", 
-                                                    (lambda[2]*lambda[3])==-1))
+                        main0 <- expression(paste("ADE(", 
+                                            tilde(R)[M]^{2}, "," , 
+                                            tilde(R)[Y]^2, "), sgn", 
+                                            (lambda[2]*lambda[3])==-1))
                     else main0 <- main
                     contour(R2M, R2Y, z0mat.n, levels=levels0, main=main0, 
                             xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)

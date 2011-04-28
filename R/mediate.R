@@ -824,10 +824,10 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                         d0.sims=delta.0, d1.sims=delta.1,
                         z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci, 
                         z0.sims=zeta.0, z1.sims=zeta.1, 
-                        tau.coef=tau.coef, tau.ci=tau.ci, 
-                        tau.sims=tau,
                         n0=n0, n1=n1, n0.ci=n0.ci, n1.ci=n1.ci,
                         n0.sims=nu.0, n1.sims=nu.1,
+                        tau.coef=tau.coef, tau.ci=tau.ci, 
+                        tau.sims=tau,
                         d.avg=d.avg, d.avg.ci=d.avg.ci, d.avg.sims=delta.avg,
                         z.avg=z.avg, z.avg.ci=z.avg.ci, z.avg.sims=zeta.avg,
                         n.avg=n.avg, n.avg.ci=n.avg.ci, n.avg.sims=nu.avg,
@@ -839,8 +839,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
         } else {
             out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
                         z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci, 
-                        tau.coef=tau.coef, tau.ci=tau.ci, 
                         n0=n0, n1=n1, n0.ci=n0.ci, n1.ci=n1.ci,
+                        tau.coef=tau.coef, tau.ci=tau.ci, 
                         d.avg=d.avg, d.avg.ci=d.avg.ci,
                         z.avg=z.avg, z.avg.ci=z.avg.ci,
                         n.avg=n.avg, n.avg.ci=n.avg.ci,
@@ -898,8 +898,6 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                 new.fit.t.coef[coefnames.new.y] <- new.fit.t$coefficients
                 new.fit.t$coefficients <- new.fit.t.coef
             }
-#                stop("insufficient variation on mediator")
-#            }
             
             #####################################
             # Mediator Predictions
@@ -1260,8 +1258,7 @@ plot.mediate <- function(x, treatment = NULL,
     
     # Plot
     plot(param$coef.vec.1, y.axis, type = "n", xlab = xlab, ylab = "",
-            yaxt = "n", xlim = xlim, ylim = ylim, main = main, ...) 
-            # create empty plot with labels
+            yaxt = "n", xlim = xlim, ylim = ylim, main = main, ...)
     
     # Set offset values depending on number of bars to plot
     if(length(treatment) == 1){
@@ -1277,12 +1274,9 @@ plot.mediate <- function(x, treatment = NULL,
         points(param$tau.vec[1], 1, type = "p", pch = 19, cex = cex, col = col)
         segments(param$tau.vec[2], 1 , param$tau.vec[3], 1 , 
                 lwd = lwd, col = col)
-         
-             # coef +/-1.96*se = 95% interval, lwd adjusts line thickness
     }
     if(0 %in% treatment) {
         points(param$coef.vec.0, y.axis - adj, type = "p", pch = 1, cex = cex, col = col)
-         # plot coefficients as points, turning off axes and labels. 
         segments(param$lower.vec.0, y.axis - adj, param$upper.vec.0, y.axis - adj, 
                 lwd = lwd, lty = 3, col = col)
     }
@@ -1293,7 +1287,6 @@ plot.mediate <- function(x, treatment = NULL,
     }
     y.axis.new <- c(3,2,1)
     axis(2, at = y.axis.new, labels = ylab, las = 1, tick = TRUE, ...)
-         # draw y-axis with tick marks, make labels perpendicular to axis and closer to axis
     abline(v = 0, lty = 2)
 }
 
@@ -1373,8 +1366,7 @@ plot.mediate.order <- function(x, treatment = NULL,
     
     # Plot
     plot(param$coef.vec.1[1,], y.axis, type = "n", xlab = xlab, ylab = "",
-            yaxt = "n", xlim = xlim, ylim = ylim, main = main, ...) 
-            # create empty plot with labels
+            yaxt = "n", xlim = xlim, ylim = ylim, main = main, ...)
     
     # Set offset values depending on number of bars to plot
     if(length(treatment) == 1){
@@ -1405,7 +1397,6 @@ plot.mediate.order <- function(x, treatment = NULL,
         for(z in 1:nrow(param$coef.vec.0)){
             points(param$coef.vec.0[z,], y.axis - adj.0, 
                     type = "p", pch = 1, cex = cex, col = col)
-             # plot coefficients as points, turning off axes and labels. 
             segments(param$lower.vec.0[z,], y.axis - adj.0, 
                     param$upper.vec.0[z,], y.axis - adj.0, 
                     lwd = lwd, lty = 3, col = col)
@@ -1427,6 +1418,5 @@ plot.mediate.order <- function(x, treatment = NULL,
                     
     y.axis.new <- c(3,2,1)
     axis(2, at = y.axis.new, labels = ylab, las = 1, tick = TRUE, ...)
-         # draw y-axis with tick marks, make labels perpendicular to axis and closer to axis
     abline(v = 0, lty = 2)
 }

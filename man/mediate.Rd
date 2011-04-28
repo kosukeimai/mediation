@@ -18,7 +18,7 @@ mediate(model.m, model.y, sims=1000, boot=FALSE,
 \item{model.m}{ a fitted model object for mediator.  Can be of class 'lm', 'polr', 'glm', 'gam', or 'rq'.} 
 \item{model.y}{ a fitted model object for outcome.  Can be of class 'lm', 'polr', 'glm', 'gam', 'vglm', or 'rq'.} 
 \item{sims}{ number of Monte Carlo draws for nonparametric bootstrap or quasi-Bayesian approximation.} 
-\item{boot}{ a logical value. if 'FALSE' a quasi-Bayesian approximation is used for confidence interval; if TRUE nonparametric bootstrap will be used. Default is 'FALSE'.}
+\item{boot}{ a logical value. if 'FALSE' a quasi-Bayesian approximation is used for confidence intervals; if 'TRUE' nonparametric bootstrap will be used. Default is 'FALSE'.}
 \item{conf.level}{ level of the returned two-sided confidence intervals.  Default is to return
 the 2.5 and 97.5 percentiles of the simulated quantities.} 
 \item{treat}{ a character string indicating the name of treatment variable used in the models.  The treatment can be either binary (integer or a two-valued factor) or continuous (numeric).}
@@ -48,7 +48,7 @@ As of version 3.0, the mediator model can be of either 'lm', 'glm', 'polr', 'gam
 
 For the outcome model, the censored regression model fitted via package \code{\link{VGAM}} (of class 'vglm' with 'family@vfamily' equal to "tobit") can be used in addition to the models listed above for the mediator.  The 'mediate' function is not compatible with censored regression models fitted via other packages.  When the quantile regression is used for the outcome model ('rq'), the estimated quantities are quantile causal mediation effects, quantile direct effects and etc., instead of the average effects.
 
-The quasi-Bayesian approximation (King et al. 2000) cannot be used if 'model.m' is of class 'rq' or if 'model.y' is of class 'gam' or 'polr'. In these cases, either error is returned or nonparametric bootstrap is forced. Users should note that use of the nonparametric bootstrap often requires significant computing time, especially when 'sims' is set to a large value.
+The quasi-Bayesian approximation (King et al. 2000) cannot be used if 'model.m' is of class 'rq' or 'gam', or if 'model.y' is of class 'gam' or 'polr'. In these cases, either error is returned or nonparametric bootstrap is forced. Users should note that use of the nonparametric bootstrap often requires significant computing time, especially when 'sims' is set to a large value.
 
 The 'control' argument must be provided when 'gam' is used for the outcome model and user wants to allow ACME and ADE to vary as functions of \eqn{t} (i.e., to relax the "no interaction" assumption). Note that the outcome model must be fitted via package \code{\link{mgcv}} with appropriate formula using \code{\link{s}} constructs (see Imai et al. 2009 in the references). For other model types, the interaction can be allowed by including an interaction term between \eqn{T} and \eqn{M} in the linear predictor of the outcome model. As of version 3.0, the 'INT' argument is deprecated and the existence of the interaction term is automatically detected (except for 'gam' outcome models).
 
@@ -72,15 +72,18 @@ The function \code{summary} (i.e., \code{summary.mediate} or \code{summary.media
 \item{tau.coef}{point estimate for total effect.}
 \item{tau.ci}{confidence interval for total effect.}
 \item{tau.sims}{a vector of length 'sims' containing simulation draws of the total effect.}
+\item{d.avg, z.avg, n.avg}{simple averages of d0 and d1, z0 and z1, n0 and n1, respectively, which users may want to use as summary values when those quantities differ.}
+\item{d.avg.ci, z.avg.ci, n.avg.ci}{confidence intervals for the above.}
+\item{d.avg.sims, z.avg.sims, n.avg.sims}{vectors of length 'sims' containing simulation draws of d.avg, z.avg and n.avg, respectively.}
 \item{boot}{logical, the 'boot' argument used.}
-\item{INT}{a logical value indicating whether the model specification allows the effects to differ between the treatment and control conditions.}
 \item{treat}{a character string indicating the name of the 'treat' variable used.}
 \item{mediator}{a character string indicating the name of the 'mediator' variable used.}
+\item{INT}{a logical value indicating whether the model specification allows the effects to differ between the treatment and control conditions.}
 \item{conf.level}{the confidence level used. }
-\item{model.m}{the mediator model used.}
 \item{model.y}{the outcome model used.}
-\item{treat.value}{value of the treatment variable used as the treatment condition.}
+\item{model.m}{the mediator model used.}
 \item{control.value}{value of the treatment variable used as the control condition.}
+\item{treat.value}{value of the treatment variable used as the treatment condition.}
 \item{nobs}{number of observations in the model frame for 'model.m' and 'model.y'. May differ from the numbers in the original models input to 'mediate' if 'dropobs' was 'TRUE'.}
 }
 
