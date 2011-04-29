@@ -19,10 +19,10 @@ mediations(datasets, treatment, mediators, outcome,
 \item{outcome}{ a vector of character strings indicating the names of the outcome variables contained within each data frame. All of the outcomes will be used with each treatment variable and must be in each data frame.}
 \item{covariates}{ a character string representing the set of pre-treatment covariate names (as they appear in the data frame) to be included in each model. The value must take the form of standard model formula, with each additive component separated by "+", etc. (see example below). All covariates must be in each data frame. Default is 'NULL'.}
 \item{families}{ a vector of length two specifying the types of the mediator and outcome models. Currently only supports "gaussian" (for linear regression), "binomial" (for binary probit), "oprobit" (for ordered probit) and "quantile" (for quantile regression, see 'tau'). For the outcome the tobit model ("tobit") is also available in addition to the mediator model options.}
-\item{tau.m}{ a numeric value specifying the quantile to be used for a quantile regression for the mediator model. Only relevant if the first element of 'families' is "quantile". See \code{\link{rq}}.}
-\item{tau.y}{ a numeric value specifying the quantile to be used for a quantile regression for the outcome model. Only relevant if the second element of 'families' is "quantile". See \code{\link{rq}}.}
-\item{LowerY}{ a numeric value indicating the lower bound for the tobit outcome model. See \code{\link{tobit}}.}
-\item{UpperY}{ a numeric value indicating the upper bound for the tobit outcome model. See \code{\link{tobit}}.}
+\item{tau.m}{ a numeric value specifying the quantile to be used for a quantile regression for the mediator model. Only relevant if the first element of 'families' is "quantile". See \code{rq}.}
+\item{tau.y}{ a numeric value specifying the quantile to be used for a quantile regression for the outcome model. Only relevant if the second element of 'families' is "quantile". See \code{rq}.}
+\item{LowerY}{ a numeric value indicating the lower bound for the tobit outcome model. See \code{tobit}.}
+\item{UpperY}{ a numeric value indicating the upper bound for the tobit outcome model. See \code{tobit}.}
 \item{interaction}{ a logical value indicating whether the treatment and mediator variables should be interacted. This will apply to applications of \code{\link{mediate}} to all the treatment/mediator/outcome combinations.}
 \item{conf.level}{ confidence level used in each application of the \code{\link{mediate}} function.}
 \item{sims}{ an integer indicating the desired number of simulations to run \code{\link{mediate}} for. This will apply to all applications of 'mediate' to all the treatment/mediator/outcome combinations.}
@@ -36,7 +36,7 @@ mediations(datasets, treatment, mediators, outcome,
 
 The 'mediations' function can be used with either multiple mediators and a single outcome, a single mediator and multiple outcomes, or multiple mediators and outcomes. For example, with three different treatments, user will create three different data frames, each containing a treatment variable. In addition, if there are also four different mediators, each of these will be contained in each data frame, along with the outcome variable. The function will estimate all of the combinations of treatment variables and mediators instead of separate lines of code being written for each one.
 
-Individual elements of the output list (see "Value") may be passed through \code{\link[=summary.mediate]{summary}} and  \code{\link[=plot.mediate]{plot}} for tabular and graphical summaries of the results. Alternatively, the entire output may be directly passed to \code{\link[=summary.mediations]{summary}} or \code{\link[plot.mediations]{plot}} for all results to be inspected. 
+Individual elements of the output list (see "Value") may be passed through \code{\link[=summary.mediate]{summary}} and  \code{\link[=plot.mediate]{plot}} for tabular and graphical summaries of the results. Alternatively, the entire output may be directly passed to \code{\link[=summary.mediations]{summary}} or \code{\link[=plot.mediations]{plot}} for all results to be inspected. 
 
 The default value of 'covariates' is 'NULL' and no covariate will be included in either mediator or outcome models without a custom value. It should be noted that users typically should have pre-treatment covariates to make the sequential ignorability assumption more plausible.
 
@@ -47,7 +47,7 @@ There are several limitations to the code. First, it works only with a subset of
 \author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu},
 Teppei Yamamoto, Princeton University, \email{tyamamot@princeton.edu}.}
  
-\seealso{\code{\link{mediate}}, \code{\link{summary.mediations}}, \code{\link{plot.mediations}}, \code{\link{rq}}, \code{\link{tobit}}.}
+\seealso{\code{\link{mediate}}, \code{\link{summary.mediations}}, \code{\link{plot.mediations}}, \code{rq}, \code{tobit}.}
 
 \examples{ 
 \dontrun{

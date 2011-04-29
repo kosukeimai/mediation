@@ -1,5 +1,6 @@
 \name{plot.mediations}
 \alias{plot.mediations}
+\alias{plot.mediations.order}
 \title{Plotting Indirect, Direct, and Total Effects from Multiple Mediation Analyses}
 
 \description{
@@ -10,7 +11,7 @@ Function to plot results from multiple causal mediation analyses conducted via t
 
 \usage{ 
 
-\method{plot}{mediations', 'mediations.order}(x, which = names(x),
+\method{plot}{mediations}(x, which = names(x),
             ask = prod(par("mfcol")) < length(which) && dev.interactive(), ...)
 }
 

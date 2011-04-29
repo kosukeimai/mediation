@@ -129,7 +129,7 @@ plot.mediations.order <- function(x, which = names(x),
         on.exit(devAskNewPage(oask))
     }
     for(i in 1:length(which)){
-        plot.order.mediate(x[[i]], xlab = which[i], ...)
+        plot.mediate.order(x[[i]], xlab = which[i], ...)
     }
 }
 

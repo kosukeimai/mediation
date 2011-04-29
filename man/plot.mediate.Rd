@@ -1,11 +1,12 @@
 \name{plot.mediate} 
 \alias{plot.mediate} 
+\alias{plot.mediate.order} 
 \title{Plotting Indirect, Direct, and Total Effects from Mediation Analysis} 
 \description{ 
 Function to plot results from \code{mediate}. The vertical axis lists indirect, direct, and total effects and the horizontal axis indicates the respective magnitudes. Most standard options for plot function available.
 } 
 \usage{
-\method{plot}{mediate', 'mediate.order}(x, treatment = NULL,
+\method{plot}{mediate}(x, treatment = NULL,
     labels = c("ACME","Direct\nEffect","Total\nEffect"), 
     xlim = NULL, ylim = NULL, xlab = "", ylab = "",
     main = NULL, lwd = 1.5, cex = .85,

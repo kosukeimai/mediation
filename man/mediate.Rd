@@ -28,15 +28,15 @@ the 2.5 and 97.5 percentiles of the simulated quantities.}
 \item{treat.value}{ value of the treatment variable used as the treatment condition. Only relevant when 'treat' is continuous. Default is 1.}
 \item{long}{ a logical value. If 'TRUE', the output will contain the entire sets of simulation draws of the the average causal mediation effects, direct effects, proportions mediated, and total effect. Default is 'TRUE'.}
 \item{dropobs}{ a logical value indicating the behavior when the model frames of 'model.m' and 'model.y' are composed of different observations. If 'TRUE', models will be re-fitted using the intersection of the two data frames. If 'FALSE', error is returned. Default is 'FALSE'.}
-\item{robustSE}{ a logical value. If 'TRUE', heteroskedasticisy-consistent standard errors will be used in quasi-Bayesian simulations. Ignored if 'boot' is 'TRUE' or neither 'model.m' nor 'model.y' has a method for \code{\link{vcovHC}} in the \code{\link{sandwich}} package. Default is 'FALSE'.}
-\item{...}{ other arguments passed to \code{\link{vcovHC}} in the \code{\link{sandwich}} package: typically the 'type' argument. Ignored if 'robustSE' is 'FALSE'.}
+\item{robustSE}{ a logical value. If 'TRUE', heteroskedasticisy-consistent standard errors will be used in quasi-Bayesian simulations. Ignored if 'boot' is 'TRUE' or neither 'model.m' nor 'model.y' has a method for \code{vcovHC} in the \code{sandwich} package. Default is 'FALSE'.}
+\item{...}{ other arguments passed to \code{vcovHC} in the \code{sandwich} package: typically the 'type' argument. Ignored if 'robustSE' is 'FALSE'.}
 }
 
 \details{This is the workhorse function for estimating causal mediation effects for a variety of data types. The average causal mediation effect (ACME) represents the expected difference in the potential outcome when the mediator took the value that would realize under the treatment condition as opposed to the control condition, while the treatment status itself is held constant. That is,
-\deqn{\delta(t) \ = \ \E\{Y(t, M(t_1)) - Y(t, M(t_0))\},}{%
+\deqn{\delta(t) \ = \ E\{Y(t, M(t_1)) - Y(t, M(t_0))\},}{%
     \delta(t) = E[Y(t, M(t1)) - Y(t, M(t0))],}
 where \eqn{t, t_1, t_0}{t, t1, t0} are particular values of the treatment \eqn{T} such that \eqn{t_1 \neq t_0}{t1 != t0}, \eqn{M(t)} is the potential mediator, and \eqn{Y(t,m)} is the potential outcome variable. The average direct effect (ADE) is defined similarly as,
-\deqn{\zeta(t) \ = \ \E\{Y(t_1, M(t)) - Y(t_0, M(t))\},}{%
+\deqn{\zeta(t) \ = \ E\{Y(t_1, M(t)) - Y(t_0, M(t))\},}{%
     \zeta(t) = E[Y(t1, M(t)) - Y(t0, M(t))],}
 which represents the expected difference in the potential outcome when the treatment is changed but the mediator is held constant at the value that would realize if the treatment equals \eqn{t}. The two quantities on average add up to the total effect of the treatment on the outcome, \eqn{\tau}. See the references for more details.
 
@@ -46,7 +46,7 @@ The prior weights in the mediator and outcome models are taken as sampling weigh
 
 As of version 3.0, the mediator model can be of either 'lm', 'glm', 'polr', 'gam', or 'rq' class, corresponding respectively to the linear regression models, generalized linear models, ordered response models, generalized additive models, or quantile regression models. For binary response models, the 'mediator' must be a numeric variable with values 0 or 1 as opposed to a factor. Quasi-likelihood-based inferences are not allowed for the mediator model because the functional form must be exactly specified for the estimation algorithm to work.  The 'binomial' family can only be used for binary response mediators and cannot be used for multiple-trial responses.  This is due to conflicts between how the latter type of models are implemented in \code{\link{glm}} and how 'mediate' is currently written.
 
-For the outcome model, the censored regression model fitted via package \code{\link{VGAM}} (of class 'vglm' with 'family@vfamily' equal to "tobit") can be used in addition to the models listed above for the mediator.  The 'mediate' function is not compatible with censored regression models fitted via other packages.  When the quantile regression is used for the outcome model ('rq'), the estimated quantities are quantile causal mediation effects, quantile direct effects and etc., instead of the average effects.
+For the outcome model, the censored regression model fitted via package \code{VGAM} (of class 'vglm' with 'family@vfamily' equal to "tobit") can be used in addition to the models listed above for the mediator.  The 'mediate' function is not compatible with censored regression models fitted via other packages.  When the quantile regression is used for the outcome model ('rq'), the estimated quantities are quantile causal mediation effects, quantile direct effects and etc., instead of the average effects.
 
 The quasi-Bayesian approximation (King et al. 2000) cannot be used if 'model.m' is of class 'rq' or 'gam', or if 'model.y' is of class 'gam' or 'polr'. In these cases, either error is returned or nonparametric bootstrap is forced. Users should note that use of the nonparametric bootstrap often requires significant computing time, especially when 'sims' is set to a large value.
 
@@ -98,7 +98,7 @@ Teppei Yamamoto, Princeton University, \email{tyamamot@princeton.edu},
 Luke Keele, Ohio State University, \email{keele.4@osu.edu}, 
 Kosuke Imai, Princeton University, \email{kimai@princeton.edu} }
  
-\seealso{\code{\link{medsens}}, \code{\link{plot.mediate}}, \code{\link{summary.mediate}}, \code{\link{mediations}}, \code{\link{vcovHC}}}
+\seealso{\code{\link{medsens}}, \code{\link{plot.mediate}}, \code{\link{summary.mediate}}, \code{\link{mediations}}, \code{vcovHC} }
 
 \examples{ 
 # Examples with JOBS II Field Experiment
@@ -147,6 +147,7 @@ ordbin <- mediate(b.ord, d.bin, sims=50, treat="treat", mediator="job_disc")
 summary(ordbin)
 
 # Using heteroskedasticity-consistent standard errors
+require(sandwich)
 ordbin.rb <- mediate(b.ord, d.bin, sims=50, treat="treat", mediator="job_disc",
             robustSE=TRUE)
 summary(ordbin.rb)
@@ -154,6 +155,7 @@ summary(ordbin.rb)
 ######################################################
 # Example 3: Quantile Causal Mediation Effect
 ######################################################
+require(quantreg)
 c.quan <- rq(depress2 ~ treat + job_seek + econ_hard + sex + age, data=jobs,
             tau = 0.5)  # median
 contquan <- mediate(b, c.quan, sims=50, treat="treat", mediator="job_seek")
@@ -162,6 +164,7 @@ summary(contquan)
 ######################################################
 # Example 4: GAM Outcome
 ######################################################
+require(mgcv)
 c.gam <- gam(depress2 ~ treat + s(job_seek, bs="cr") + 
             econ_hard + sex + age, data=jobs)
 contgam <- mediate(b, c.gam, sims=10, treat="treat", 

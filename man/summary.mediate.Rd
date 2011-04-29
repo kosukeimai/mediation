@@ -10,9 +10,9 @@ Function to report results from mediation analysis. Reported categories are medi
 } 
 \usage{
 
-  \method{summary}{mediate', 'mediate.order}(object, ...)
+  \method{summary}{mediate}(object, ...)
 
-  \method{print}{summary.mediate', 'summary.mediate.order}(x, ...)
+  \method{print}{summary.mediate}(x, ...)
 
 } 
 

@@ -1,6 +1,8 @@
 \name{summary.mediations} 
-\alias{summary.mediations} 
-\alias{print.summary.mediations} 
+\alias{summary.mediations}
+\alias{summary.mediations.order}
+\alias{print.summary.mediations}
+\alias{print.summary.mediations.order}
 
 \title{Summarizing Output from Multiple Mediation Analyses} 
 \description{ 
@@ -8,9 +10,9 @@ The 'summary.mediations' function produces a summary of results from multiple ca
 } 
 \usage{
 
-  \method{summary}{mediations', 'mediations.order}(object, ...) 
+  \method{summary}{mediations}(object, ...) 
 
-  \method{print}{summary.mediations', 'summary.mediations.order}(x, ...)
+  \method{print}{summary.mediations}(x, ...)
 
 } 
 
