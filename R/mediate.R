@@ -1217,8 +1217,8 @@ plot.process <- function(model) {
 
 
 plot.mediate <- function(x, treatment = NULL,
-                        xlim = NULL, xlab = "", ylim = NULL,
-                        ylab = c("ACME","Direct\nEffect","Total\nEffect"), 
+                        labels = c("ACME","Direct\nEffect","Total\nEffect"), 
+                        xlim = NULL, ylim = NULL, xlab = "", ylab = "",
                         main = NULL, lwd = 1.5, cex = .85,
                         col = "black", ...){
     # Determine which graph to plot
@@ -1257,7 +1257,7 @@ plot.mediate <- function(x, treatment = NULL,
     }
     
     # Plot
-    plot(param$coef.vec.1, y.axis, type = "n", xlab = xlab, ylab = "",
+    plot(param$coef.vec.1, y.axis, type = "n", xlab = xlab, ylab = ylab,
             yaxt = "n", xlim = xlim, ylim = ylim, main = main, ...)
     
     # Set offset values depending on number of bars to plot
@@ -1286,7 +1286,7 @@ plot.mediate <- function(x, treatment = NULL,
                 lwd = lwd, col = col) 
     }
     y.axis.new <- c(3,2,1)
-    axis(2, at = y.axis.new, labels = ylab, las = 1, tick = TRUE, ...)
+    axis(2, at = y.axis.new, labels = labels, las = 1, tick = TRUE, ...)
     abline(v = 0, lty = 2)
 }
 
@@ -1325,8 +1325,8 @@ plot.process.order <- function(model){
 
 
 plot.mediate.order <- function(x, treatment = NULL,
-                        xlim = NULL, ylim = NULL, xlab = "",
-                        ylab = c("ACME","Direct\nEffect","Total\nEffect"), 
+                        labels = c("ACME","Direct\nEffect","Total\nEffect"), 
+                        xlim = NULL, ylim = NULL, xlab = "", ylab = "",
                         main = NULL, lwd = 1.5, cex = .85,
                         col = "black", ...){
     # Determine which graph to plot
@@ -1365,7 +1365,7 @@ plot.mediate.order <- function(x, treatment = NULL,
     }
     
     # Plot
-    plot(param$coef.vec.1[1,], y.axis, type = "n", xlab = xlab, ylab = "",
+    plot(param$coef.vec.1[1,], y.axis, type = "n", xlab = xlab, ylab = ylab,
             yaxt = "n", xlim = xlim, ylim = ylim, main = main, ...)
     
     # Set offset values depending on number of bars to plot
@@ -1417,6 +1417,6 @@ plot.mediate.order <- function(x, treatment = NULL,
             }
                     
     y.axis.new <- c(3,2,1)
-    axis(2, at = y.axis.new, labels = ylab, las = 1, tick = TRUE, ...)
+    axis(2, at = y.axis.new, labels = labels, las = 1, tick = TRUE, ...)
     abline(v = 0, lty = 2)
 }

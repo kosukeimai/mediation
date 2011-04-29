@@ -36,7 +36,7 @@ mediations <- function(datasets, treatment, mediators, outcome,
                     weight1 <- sprintf("dataarg$%s", weights)
                     weight <- as.data.frame(eval(parse(text=weight1)))
                 } else {
-                dataarg$weight<-weight<-rep(1,nrow(dataarg))
+                    dataarg$weight <- weight <- rep(1,nrow(dataarg))
                 }
                 
                 # run Mediator model using new data/specification
