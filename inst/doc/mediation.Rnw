@@ -1,7 +1,11 @@
+%\VignetteIndexEntry{mediation}
+
 \documentclass[11pt,letterpaper]{article}
 %% === margins ===
 \addtolength{\hoffset}{-0.75in} \addtolength{\voffset}{-0.75in}
 \addtolength{\textwidth}{1.5in} \addtolength{\textheight}{1.5in}
+
+\usepackage{Sweave}
 
 %% === basic packages ===
 \usepackage{latexsym}
@@ -1537,7 +1541,8 @@ science research in several critical directions.
 
 \clearpage
 \pdfbookmark[1]{References}{References}
-\bibliography{my,imai,../../../paper/keele_revised2,../../../paper/TingleyBib}
+%\bibliography{my,imai,../../../paper/keele_revised2,../../../paper/TingleyBib}
 
+\input{mediation.bbl}
 
 \end{document}
