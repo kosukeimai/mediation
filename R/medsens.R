@@ -547,6 +547,8 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         R2tilde.prod <- rho^2*(1-r.sq.m)*(1-r.sq.y)
 
     ## END OF CASE 3: Binary Outcome + Continuous Mediator
+    } else {
+        stop("mediate object fitted with non-supported model combinations")
     }
     
     #########################################################
