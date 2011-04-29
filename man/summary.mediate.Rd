@@ -6,7 +6,7 @@
 
 \title{Summarizing Output from Mediation Analysis} 
 \description{ 
-Function to report results from mediation analysis. Reported categories are mediation effect, direct effect, total effect, and proportion of total effect mediated. All quantities reported with confidence intervals. Effects are reported separately for the treatment and control conditions if the treatment-mediator interaction is allowed in the mediation analysis.
+Function to report results from mediation analysis. Reported categories are mediation effect, direct effect, total effect, and proportion of total effect mediated. All quantities reported with confidence intervals. If the treatment-mediator interaction is allowed in the mediation analysis, effects are reported separately for the treatment and control conditions as well as the simple averages of these effects are displayed at the bottom of the summary table.
 } 
 \usage{
 

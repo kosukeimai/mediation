@@ -6,8 +6,8 @@ Function to plot results from \code{mediate}. The vertical axis lists indirect, 
 } 
 \usage{
 \method{plot}{mediate', 'mediate.order}(x, treatment = NULL,
-    xlim = NULL, ylim = NULL, xlab = "",
-    ylab = c("ACME","Direct\nEffect","Total\nEffect"), 
+    labels = c("ACME","Direct\nEffect","Total\nEffect"), 
+    xlim = NULL, ylim = NULL, xlab = "", ylab = "",
     main = NULL, lwd = 1.5, cex = .85,
     col = "black", ...)
 }
