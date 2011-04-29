@@ -22,8 +22,8 @@ This function is used to plot results from the 'medsens' function. Causal averag
 \item{r.type}{ type of the R square parameter to be used in "R2" plots. If "residual", effects are plotted against the proportions of the residual variances that are explained by the unobserved confounder.  If "total", the proportions of the total variances are used as sensitivity parameters.  Only relevant if 'sens.par' is "R2".}
 \item{sign.prod}{ a value indicating the direction of hypothesized confounding in the sensitivity analysis. If "positive", the confounder is assumed to affect the mediator and outcome variable in the same direction; if "negative" the effects are assumed to be in opposite directions.  Only relevant if sens.par is set to "R2".}
 \item{pr.plot}{ a logical value. If 'TRUE', the "proportions mediated" will be plotted instead of the average causal mediation effects or direct effects.  Currently only available if the object 'medsens' is based on the linear mediator and binary probit outcome models. Default is 'FALSE'.}
-\item{smooth.effect}{ a logical value indicating whether the estimated mediation effects are smoothed via \code{\link{lowess}} before being plotted.}
-\item{smooth.ci}{ a logical value indicating whether the confidence bands are smoothed via \code{\link{lowess}} before being plotted.}
+\item{smooth.effect}{ a logical value indicating whether the estimated mediation effects are smoothed via \code{\link{lowess}} before being plotted. Default is 'FALSE'.}
+\item{smooth.ci}{ a logical value indicating whether the confidence bands are smoothed via \code{\link{lowess}} before being plotted. Default is 'FALSE'.}
 \item{ask}{ a logical value. If 'TRUE', the user is asked for input before a new figure is plotted.  Default is to ask only if the number of plots on current screen is fewer than necessary.}
 \item{levels}{ vector of levels at which to draw contour lines. Only relevant if 'sens.par' is set to "R2". If 'NULL', default values in \code{\link{contour.default}} are used.}
 \item{xlab}{ label for the x axis. Default labels are used if 'NULL'.} 

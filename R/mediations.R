@@ -145,7 +145,7 @@ print.summary.mediations <- function(x, ...){
     name.list <- names(x)
     for(i in 1:length(name.list)){
         cat("Specification", name.list[i], "\n") 
-        print(summary.mediate(x[[i]])  )
+        print(summary.mediate(x[[i]]))
     }
 }
 

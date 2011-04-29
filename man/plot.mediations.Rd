@@ -20,6 +20,7 @@ Function to plot results from multiple causal mediation analyses conducted via t
 \item{x}{ output from the mediations function.}
 \item{which}{ subset of names(x), indicating which model combinations to be plotted. Default is to plot all.}
 \item{ask}{ logical. If 'TRUE', the user is asked for input before a new figure is plotted.  Default is to ask only if the number of plots on current screen is fewer the number implied by 'which'.}
+\item{...}{ arguments passed to the \code{\link{plot.mediate}} function for individual plots.}
 }
 
 
