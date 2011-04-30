@@ -1,0 +1,65 @@
+citHeader("To cite package 'mediation' in publications please use:")
+
+## R >= 2.8.0 passes package metadata to citation().
+if(!exists("meta") || is.null(meta)) meta <- packageDescription("mediation")
+year <- sub("-.*", "", meta$Date)
+note <- sprintf("R package version %s", meta$Version)
+
+
+citEntry(entry = "Article",
+  title        = "Identification, Inference, and Sensitivity Analysis for Causal Mediation Effects",
+  author       = personList(as.person("Kosuke Imai"),
+                            as.person("Luke Keele"),
+                            as.person("Teppei Yamamoto")),
+  journal      = "Statistical Science",
+  year         = "2010",
+  volume       = "25",
+  number       = "1",
+  pages        = "51--71",
+  url          = "http://imai.princeton.edu/research/mediation.html",
+
+  textVersion  =
+  paste("Kosuke Imai, Luke Keele and Teppei Yamamoto (2010).",
+        "Identification, Inference and Sensitivity Analysis for Causal Mediation Effects.",
+        "Statistical Science, 25(1), 51-71.")
+)
+
+citEntry(entry = "Article",
+  title        = "A General Approach to Causal Mediation Analysis",
+  author       = personList(as.person("Kosuke Imai"),
+                            as.person("Luke Keele"),
+                            as.person("Dustin Tingley")),
+  journal      = "Psychological Methods",
+  year         = "2010",
+  volume       = "15",
+  number       = "4",
+  pages        = "309--334",
+  url          = "http://imai.princeton.edu/research/BaronKenny.html",
+
+  textVersion  =
+  paste("Kosuke Imai, Luke Keele and Dustin Tingley (2010).",
+        "A General Approach to Causal Mediation Analysis.",
+        "Psychological Methods, 15(4), 309-334.")
+)
+
+citEntry(entry = "Manual",
+         title = "mediation: R Package for Causal Mediation Analysis",
+         author = personList(as.person("Dustin Tingley"),
+                             as.person("Teppei Yamamoto"),
+                             as.person("Luke Keele"),
+                             as.person("Kosuke Imai")),
+         year = year,
+         note = note,
+         url = "http://CRAN.R-project.org/package=mediation",
+
+         textVersion =
+         paste("Dustin Tingley, Teppei Yamamot, Luke Keele and Kosuke Imai",
+           sprintf("(%s).", year),	 
+               "mediation: R Package for Causal Mediation Analysis.",
+         paste(note, ".", sep = ""),
+               "URL http://CRAN.R-project.org/package=mediation")
+)
+
+
+
+

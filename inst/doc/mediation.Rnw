@@ -91,7 +91,7 @@ pdfstartview=FitH, breaklinks=true, urlbordercolor={0 1 0}, citebordercolor={0 0
 \newcommand{\blind}{0}
 \newcommand{\polisci}{1}
 
-\newcommand{\tit}{Causal Mediation Analysis in R}
+\newcommand{\tit}{Causal Mediation Analysis Using R}
 
 
 
