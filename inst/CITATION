@@ -42,6 +42,25 @@ citEntry(entry = "Article",
         "Psychological Methods, 15(4), 309-334.")
 )
 
+citEntry(entry = "InCollection",
+  title        = "Causal Mediation Analysis Using R",
+  author       = personList(as.person("Kosuke Imai"),
+                            as.person("Luke Keele"),
+                            as.person("Dustin Tingley"),
+                            as.person("Teppei Yamamoto")),
+  booktitle    = "Advances in Social Science Research Using R",
+  year         = "2009",
+  editor       = personList(as.person("H.D. Vinod")),
+  publisher    = "Springer",
+  address      = "New York",
+  
+  textVersion  =
+  paste("Kosuke Imai, Luke Keele, Dustin Tingley and Teppei Yamamoto (2009).",
+        "Causal Mediation Analysis Using R.",
+        "In Advances in Social Science Research Using R, ed. H. D. Vinod,",
+        "New York: Springer.")
+)
+
 citEntry(entry = "Manual",
          title = "mediation: R Package for Causal Mediation Analysis",
          author = personList(as.person("Dustin Tingley"),
