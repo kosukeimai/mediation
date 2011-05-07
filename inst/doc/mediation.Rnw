@@ -117,7 +117,7 @@ pdfstartview=FitH, breaklinks=true, urlbordercolor={0 1 0}, citebordercolor={0 0
       Columbus, OH 43210 Phone: 614-247-4256, Email:
       keele.4@polisci.osu.edu}
     \quad \quad Dustin Tingley\thanks{Assistant Professor, Government Department, Harvard University. Email:
-      \href{dtingley@gov.harvard.edu}{dtingley@princeton.edu}, URL:
+      \href{dtingley@gov.harvard.edu}{dtingley@gov.harvard.edu}, URL:
       \href{http://scholar.harvard.edu/dtingley}{http://scholar.harvard.edu/dtingley}}
     \quad \quad Teppei Yamamoto\thanks{Ph.D. candidate, Department of
       Politics, Princeton University, Princeton NJ 08544, Email: tyamamot@princeton.edu}
