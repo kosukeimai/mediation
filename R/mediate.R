@@ -2,7 +2,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                     treat="treat.name", mediator="med.name", 
                     control=NULL, conf.level=.95,
                     control.value=0, treat.value=1, 
-                    long=TRUE, dropobs=FALSE, robustSE = FALSE, ...){
+                    long=TRUE, dropobs=FALSE, robustSE = FALSE, cluster=NULL, ...){
     
     # Warn users who still use INT option
     if(match("INT", names(match.call()), 0L)){
@@ -15,6 +15,22 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
         warning("'robustSE' is ignored for nonparametric bootstrap")
     }
     
+    if(robustSE & !is.null(cluster)){
+        stop("Choose either robustSE or cluster SE option")
+    }
+
+    if(!is.null(cluster)){    
+    getvcov <- function(dat,fm, cluster){
+              #fm is the model object  
+              attach(dat, warn.conflicts = F)
+              M <- length(unique(cluster))  
+              N <- length(cluster)              
+              K <- fm$rank                     
+              dfc <- (M/(M-1))*((N-1)/(N-K)) 
+              uj  <- apply(estfun(fm),2, function(x) tapply(x, cluster, sum));
+              vcovCL <- dfc*sandwich(fm, meat=crossprod(uj)/N)
+              out <- vcovCL}
+    }
     
     # Model type indicators
     isGam.y <- class(model.y)[1] == "gam"
@@ -237,6 +253,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
             } else {
                 if(robustSE){
                     MModel.var.cov <- vcovHC(model.m, ...)
+                } else if(!is.null(cluster)){
+                    MModel.var.cov <- getvcov(m.data, model.m, cluster)
                 } else {
                     MModel.var.cov <- vcov(model.m)
                 }
@@ -252,6 +270,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
             } else{
                 if(robustSE){
                     TMmodel.var.cov <- vcovHC(model.y, ...)
+                } else if(!is.null(cluster)){
+                    TMmodel.var.cov <- getvcov(y.data, model.y, cluster)
                 } else {
                     TMmodel.var.cov <- vcov(model.y)
                 }
