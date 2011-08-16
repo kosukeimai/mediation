@@ -224,7 +224,7 @@ improvement.  The user-level changes from the previous version include:
 \begin{itemize}
 \item More model types have been added to the main mediation analysis function {\tt mediate}.
 In addition to the models already implemented in the previous version, the {\tt mediate}
-function can now be used for ordered response models fitted via the {\tt polr}
+function can now be used for ordered response models fitted via the {\tt polr} or {\tt bayespolr}
 function, quantile regressions for mediators fitted via the {\tt qr} function in package
 {\tt quantreg}, and the tobit model for censored outcome variables fitted via the
 {\tt vglm} function in package {\tt VGAM}.  These models have not been made available
@@ -618,7 +618,7 @@ Linear ({\tt lm}) & \checkmark & \checkmark & \checkmark$^\ast$ & \checkmark &
                                                   \checkmark & \checkmark$^\ast$  \\
 GLM (probit etc. via {\tt glm})  & \checkmark & \checkmark & \checkmark$^\ast$ & \checkmark &
                                                   \checkmark & \checkmark$^\ast$  \\
-Ordered ({\tt polr}) & \checkmark & \checkmark & \checkmark$^\ast$ & \checkmark &
+Ordered ({\tt polr}/{\tt bayespolr}) & \checkmark & \checkmark & \checkmark$^\ast$ & \checkmark &
                                                   \checkmark & \checkmark$^\ast$  \\
 Censored (tobit via {\tt vglm}) & - & - & - & - & - & - \\
 Quantile ({\tt rq}) & \checkmark$^\ast$ & \checkmark$^\ast$ & \checkmark$^\ast$ & \checkmark$^\ast$ &
@@ -1138,8 +1138,9 @@ used for the 95\% confidence intervals.
 
 When the mediator is an ordered variable, we switch to an ordered
 probit model for the mediator.  In \bR, the \texttt{polr} function
-in the \texttt{MASS} library provides this functionality.  Thus, we
-fit the outcome and mediator models below,
+in the \texttt{MASS} library provides this functionality.  (Alternatively,
+the \texttt{bayespolr} function in the \texttt{arm} library can also be used.)
+Thus, we fit the outcome and mediator models below,
 \begin{verbatim}
 R> model.m <- polr(job_disc ~ treat + depress1 + econ_hard + sex + age 
                 + occp + marital + nonwhite + educ + income, 

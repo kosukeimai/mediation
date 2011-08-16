@@ -15,8 +15,8 @@ mediate(model.m, model.y, sims=1000, boot=FALSE,
 } 
 
 \arguments{ 
-\item{model.m}{ a fitted model object for mediator.  Can be of class 'lm', 'polr', 'glm', 'gam', or 'rq'.} 
-\item{model.y}{ a fitted model object for outcome.  Can be of class 'lm', 'polr', 'glm', 'gam', 'vglm', or 'rq'.} 
+\item{model.m}{ a fitted model object for mediator.  Can be of class 'lm', 'polr', 'bayespolr', 'glm', 'gam', or 'rq'.} 
+\item{model.y}{ a fitted model object for outcome.  Can be of class 'lm', 'polr', 'bayespolr', 'glm', 'gam', 'vglm', or 'rq'.} 
 \item{sims}{ number of Monte Carlo draws for nonparametric bootstrap or quasi-Bayesian approximation.} 
 \item{boot}{ a logical value. if 'FALSE' a quasi-Bayesian approximation is used for confidence intervals; if 'TRUE' nonparametric bootstrap will be used. Default is 'FALSE'.}
 \item{conf.level}{ level of the returned two-sided confidence intervals.  Default is to return
@@ -44,11 +44,11 @@ When both the mediator model ('model.m') and outcome model ('model.y') are linea
 
 The prior weights in the mediator and outcome models are taken as sampling weights and the estimated effects will be weighted averages when non-NULL weights are used in fitting 'model.m' and 'model.y'. This will be useful when data does not come from a simple random sample, for example. 
 
-As of version 3.0, the mediator model can be of either 'lm', 'glm', 'polr', 'gam', or 'rq' class, corresponding respectively to the linear regression models, generalized linear models, ordered response models, generalized additive models, or quantile regression models. For binary response models, the 'mediator' must be a numeric variable with values 0 or 1 as opposed to a factor. Quasi-likelihood-based inferences are not allowed for the mediator model because the functional form must be exactly specified for the estimation algorithm to work.  The 'binomial' family can only be used for binary response mediators and cannot be used for multiple-trial responses.  This is due to conflicts between how the latter type of models are implemented in \code{\link{glm}} and how 'mediate' is currently written.
+As of version 3.0, the mediator model can be of either 'lm', 'glm', 'polr'/'bayespolr', 'gam', or 'rq' class, corresponding respectively to the linear regression models, generalized linear models, ordered response models, generalized additive models, or quantile regression models. For binary response models, the 'mediator' must be a numeric variable with values 0 or 1 as opposed to a factor. Quasi-likelihood-based inferences are not allowed for the mediator model because the functional form must be exactly specified for the estimation algorithm to work.  The 'binomial' family can only be used for binary response mediators and cannot be used for multiple-trial responses.  This is due to conflicts between how the latter type of models are implemented in \code{\link{glm}} and how 'mediate' is currently written.
 
 For the outcome model, the censored regression model fitted via package \code{VGAM} (of class 'vglm' with 'family@vfamily' equal to "tobit") can be used in addition to the models listed above for the mediator.  The 'mediate' function is not compatible with censored regression models fitted via other packages.  When the quantile regression is used for the outcome model ('rq'), the estimated quantities are quantile causal mediation effects, quantile direct effects and etc., instead of the average effects.
 
-The quasi-Bayesian approximation (King et al. 2000) cannot be used if 'model.m' is of class 'rq' or 'gam', or if 'model.y' is of class 'gam' or 'polr'. In these cases, either error is returned or nonparametric bootstrap is forced. Users should note that use of the nonparametric bootstrap often requires significant computing time, especially when 'sims' is set to a large value.
+The quasi-Bayesian approximation (King et al. 2000) cannot be used if 'model.m' is of class 'rq' or 'gam', or if 'model.y' is of class 'gam', 'polr' or 'bayespolr'. In these cases, either error is returned or nonparametric bootstrap is forced. Users should note that use of the nonparametric bootstrap often requires significant computing time, especially when 'sims' is set to a large value.
 
 The 'control' argument must be provided when 'gam' is used for the outcome model and user wants to allow ACME and ADE to vary as functions of \eqn{t} (i.e., to relax the "no interaction" assumption). Note that the outcome model must be fitted via package \code{\link{mgcv}} with appropriate formula using \code{\link{s}} constructs (see Imai et al. 2009 in the references). For other model types, the interaction can be allowed by including an interaction term between \eqn{T} and \eqn{M} in the linear predictor of the outcome model. As of version 3.0, the 'INT' argument is deprecated and the existence of the interaction term is automatically detected (except for 'gam' outcome models).
 
@@ -56,7 +56,7 @@ When the treatment variable is continuous, user must specify the values of \eqn{
 }
 
 
-\value{\code{mediate} returns an object of class "\code{mediate}" (or "\code{mediate.order}" if the outcome model used is 'polr'), a list that contains the components listed below.  Some of these elements are not available if 'long' is set to 'FALSE' by the user.
+\value{\code{mediate} returns an object of class "\code{mediate}" (or "\code{mediate.order}" if the outcome model used is 'polr' or 'bayespolr'), a list that contains the components listed below.  Some of these elements are not available if 'long' is set to 'FALSE' by the user.
 
 The function \code{summary} (i.e., \code{summary.mediate} or \code{summary.mediate.order}) can be used to obtain a table of the results.  The function \code{plot} (i.e., \code{plot.mediate} or \code{plot.mediate.order}) can be used to produce a plot of the estimated average causal mediation, average direct, and total effects along with their confidence intervals.
 
