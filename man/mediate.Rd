@@ -10,7 +10,7 @@ mediate(model.m, model.y, sims=1000, boot=FALSE,
         treat="treat.name", mediator="med.name", 
         control=NULL, conf.level=.95, 
         control.value=0, treat.value=1, 
-        long=TRUE, dropobs=FALSE, robustSE=FALSE, ...)
+        long=TRUE, dropobs=FALSE, robustSE=FALSE, cluster=NULL, ...)
 
 } 
 
@@ -29,6 +29,7 @@ the 2.5 and 97.5 percentiles of the simulated quantities.}
 \item{long}{ a logical value. If 'TRUE', the output will contain the entire sets of simulation draws of the the average causal mediation effects, direct effects, proportions mediated, and total effect. Default is 'TRUE'.}
 \item{dropobs}{ a logical value indicating the behavior when the model frames of 'model.m' and 'model.y' are composed of different observations. If 'TRUE', models will be re-fitted using the intersection of the two data frames. If 'FALSE', error is returned. Default is 'FALSE'.}
 \item{robustSE}{ a logical value. If 'TRUE', heteroskedasticisy-consistent standard errors will be used in quasi-Bayesian simulations. Ignored if 'boot' is 'TRUE' or neither 'model.m' nor 'model.y' has a method for \code{vcovHC} in the \code{sandwich} package. Default is 'FALSE'.}
+\item{cluster}{a character string indicating the name of a variable to be used for clustering standard errors.}
 \item{...}{ other arguments passed to \code{vcovHC} in the \code{sandwich} package: typically the 'type' argument. Ignored if 'robustSE' is 'FALSE'.}
 }
 
