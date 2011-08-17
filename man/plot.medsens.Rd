@@ -12,7 +12,7 @@ This function is used to plot results from the 'medsens' function. Causal averag
         pr.plot = FALSE, smooth.effect = FALSE, smooth.ci = FALSE, 
         ask = prod(par("mfcol")) < nplots, levels = NULL, 
         xlab = NULL, ylab = NULL, xlim = NULL, ylim = NULL, 
-        main = NULL, lwd = par("lwd"), labcex = 0.6, ...)
+        main = NULL, lwd = par("lwd"), ...)
 
 } 
 
@@ -32,7 +32,6 @@ This function is used to plot results from the 'medsens' function. Causal averag
 \item{ylim}{ limits of the y axis. If 'NULL' default values are used.} 
 \item{main}{ main title for the plot. If 'NULL', default titles are used.}
 \item{lwd}{ width of the lines used in graphs.}
-\item{labcex}{ size of the labels for the contour lines. Only relevant for "R2" plots.}
 \item{...}{ additional arguments to be passed to plotting functions.} 
 } 
 

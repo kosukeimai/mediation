@@ -749,7 +749,7 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
         pr.plot = FALSE, smooth.effect = FALSE, smooth.ci = FALSE, 
         ask = prod(par("mfcol")) < nplots, levels = NULL, 
         xlab = NULL, ylab = NULL, xlim = NULL, ylim = NULL, 
-        main = NULL, lwd = par("lwd"), labcex = 0.6, ...){
+        main = NULL, lwd = par("lwd"), ...){
     
     # Compatibility with previous version
     if(r.type[1L] == 1 | r.type[1L] == "star") r.type <- "residual"
@@ -1141,9 +1141,9 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                                             tilde(R)[Y]^2, "), sgn", 
                                             (lambda[2]*lambda[3])==1))
                     else main0 <- main
-                    contour(R2M, R2Y, d0mat.p, levels=levels0, main=main0, labcex=labcex,
+                    contour(R2M, R2Y, d0mat.p, levels=levels0, main=main0, 
                             xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
-                    contour(R2M, R2Y, d0mat.p, levels=0, lwd=lwd+1, add=TRUE, labcex=labcex)
+                    contour(R2M, R2Y, d0mat.p, levels=0, lwd=lwd+1, add=TRUE, drawlabels=FALSE)
                 } else {
                     d0.n <- rev(approx(x$d0[1:((length(x$d0)+1)/2)], n=dlength)$y)
                     d0mat.n <- matrix(d0.n[Rprod.mat/0.0001+1], nrow=length(R2M))
@@ -1157,9 +1157,9 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                                             tilde(R)[Y]^2, "), sgn", 
                                             (lambda[2]*lambda[3])==-1))
                     else main0 <- main
-                    contour(R2M, R2Y, d0mat.n, levels=levels0, main=main0, labcex=labcex,
-                            xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
-                    contour(R2M, R2Y, d0mat.n, levels=0, lwd=lwd+1, add=TRUE, labcex=labcex)
+                    contour(R2M, R2Y, d0mat.n, levels=levels0, main=main0, 
+                            xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd, ...)
+                    contour(R2M, R2Y, d0mat.n, levels=0, lwd=lwd+1, add=TRUE, drawlabels=FALSE)
                 }
                 if(is.null(xlab) & r.type == "residual")
                     title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
@@ -1189,9 +1189,9 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                                             tilde(R)[Y]^2, "), sgn", 
                                             (lambda[2]*lambda[3])==1))
                     else main1 <- main
-                    contour(R2M, R2Y, d1mat.p, levels=levels1, main=main1, labcex=labcex,
+                    contour(R2M, R2Y, d1mat.p, levels=levels1, main=main1, 
                             xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd, ...)
-                    contour(R2M, R2Y, d1mat.p, levels=0, lwd=lwd+1, add=TRUE, labcex=labcex)
+                    contour(R2M, R2Y, d1mat.p, levels=0, lwd=lwd+1, add=TRUE, drawlabels=FALSE)
                 } else {
                     d1.n <- rev(approx(x$d1[1:((length(x$d1)+1)/2)], n=dlength)$y)
                     d1mat.n <- matrix(d1.n[Rprod.mat/0.0001+1], nrow=length(R2M))
@@ -1205,9 +1205,9 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                                             tilde(R)[Y]^2, "), sgn", 
                                             (lambda[2]*lambda[3])==-1))
                     else main1 <- main
-                    contour(R2M, R2Y, d1mat.n, levels=levels1, main=main1, labcex=labcex,
+                    contour(R2M, R2Y, d1mat.n, levels=levels1, main=main1, 
                             xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd, ...)
-                    contour(R2M, R2Y, d1mat.n, levels=0, lwd=lwd+1, add=TRUE, labcex=labcex)
+                    contour(R2M, R2Y, d1mat.n, levels=0, lwd=lwd+1, add=TRUE, drawlabels=FALSE)
                 }
                 if(is.null(xlab) & r.type == "residual")
                     title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
@@ -1239,9 +1239,9 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                                             tilde(R)[Y]^2, "), sgn", 
                                             (lambda[2]*lambda[3])==1))
                     else main0 <- main
-                    contour(R2M, R2Y, z0mat.p, levels=levels0, main=main0, labcex=labcex,
+                    contour(R2M, R2Y, z0mat.p, levels=levels0, main=main0, 
                             xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
-                    contour(R2M, R2Y, z0mat.p, levels=0, lwd=lwd+1, add=TRUE, labcex=labcex)
+                    contour(R2M, R2Y, z0mat.p, levels=0, lwd=lwd+1, add=TRUE, drawlabels=FALSE)
                 } else {
                     z0.n <- rev(approx(x$z0[1:((length(x$z0)+1)/2)], n=dlength)$y)
                     z0mat.n <- matrix(z0.n[Rprod.mat/0.0001+1], nrow=length(R2M))
@@ -1255,9 +1255,9 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                                             tilde(R)[Y]^2, "), sgn", 
                                             (lambda[2]*lambda[3])==-1))
                     else main0 <- main
-                    contour(R2M, R2Y, z0mat.n, levels=levels0, main=main0, labcex=labcex,
+                    contour(R2M, R2Y, z0mat.n, levels=levels0, main=main0, 
                             xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
-                    contour(R2M, R2Y, z0mat.n, levels=0, lwd=lwd+1, add=TRUE, labcex=labcex)
+                    contour(R2M, R2Y, z0mat.n, levels=0, lwd=lwd+1, add=TRUE, drawlabels=FALSE)
                 }
                 if(is.null(xlab) & r.type == "residual")
                     title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
@@ -1287,9 +1287,9 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                                             tilde(R)[Y]^2, "), sgn", 
                                             (lambda[2]*lambda[3])==1))
                     else main1 <- main
-                    contour(R2M, R2Y, z1mat.p, levels=levels1, main=main1, labcex=labcex,
+                    contour(R2M, R2Y, z1mat.p, levels=levels1, main=main1, 
                             xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd, ...)
-                    contour(R2M, R2Y, z1mat.p, levels=0, lwd=lwd+1, add=TRUE, labcex=labcex)
+                    contour(R2M, R2Y, z1mat.p, levels=0, lwd=lwd+1, add=TRUE, drawlabels=FALSE)
                 } else {
                     z1.n <- rev(approx(x$z1[1:((length(x$z1)+1)/2)], n=dlength)$y)
                     z1mat.n <- matrix(z1.n[Rprod.mat/0.0001+1], nrow=length(R2M))
@@ -1303,9 +1303,9 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                                             tilde(R)[Y]^2, "), sgn", 
                                             (lambda[2]*lambda[3])==-1))
                     else main1 <- main
-                    contour(R2M, R2Y, z1mat.n, levels=levels1, main=main1, labcex=labcex,
+                    contour(R2M, R2Y, z1mat.n, levels=levels1, main=main1, 
                             xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd, ...)
-                    contour(R2M, R2Y, z1mat.n, levels=0, lwd=lwd+1, add=TRUE, labcex=labcex)
+                    contour(R2M, R2Y, z1mat.n, levels=0, lwd=lwd+1, add=TRUE, drawlabels=FALSE)
                 }
                 if(is.null(xlab) & r.type == "residual")
                     title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
@@ -1338,9 +1338,9 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                                             tilde(R)[Y]^2, "), sgn", 
                                             (lambda[2]*lambda[3])==1))
                     else main0 <- main
-                    contour(R2M, R2Y, d0mat.p, levels=levels0, main=main0, labcex=labcex,
+                    contour(R2M, R2Y, d0mat.p, levels=levels0, main=main0, 
                             xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
-                    contour(R2M, R2Y, d0mat.p, levels=0, lwd=lwd+1, add=TRUE, labcex=labcex)
+                    contour(R2M, R2Y, d0mat.p, levels=0, lwd=lwd+1, add=TRUE, drawlabels=FALSE)
                 } else {
                     d0.n <- rev(approx(x$d0[1:((length(x$d0)+1)/2)], n=dlength)$y)
                     d0mat.n <- matrix(d0.n[Rprod.mat/0.0001+1], nrow=length(R2M))
@@ -1354,9 +1354,9 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                                             tilde(R)[Y]^2, "), sgn", 
                                             (lambda[2]*lambda[3])==-1))
                     else main0 <- main
-                    contour(R2M, R2Y, d0mat.n, levels=levels0, main=main0, labcex=labcex,
+                    contour(R2M, R2Y, d0mat.n, levels=levels0, main=main0, 
                             xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
-                    contour(R2M, R2Y, d0mat.n, levels=0, lwd=lwd+1, add=TRUE, labcex=labcex)
+                    contour(R2M, R2Y, d0mat.n, levels=0, lwd=lwd+1, add=TRUE, drawlabels=FALSE)
                 }
                 if(is.null(xlab) & r.type == "residual")
                     title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
@@ -1387,9 +1387,9 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                                             tilde(R)[Y]^2, "), sgn", 
                                             (lambda[2]*lambda[3])==1))
                     else main0 <- main
-                    contour(R2M, R2Y, z0mat.p, levels=levels0, main=main0, labcex=labcex,
+                    contour(R2M, R2Y, z0mat.p, levels=levels0, main=main0, 
                             xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
-                    contour(R2M, R2Y, z0mat.p, levels=0, lwd=lwd+1, add=TRUE, labcex=labcex)
+                    contour(R2M, R2Y, z0mat.p, levels=0, lwd=lwd+1, add=TRUE, drawlabels=FALSE)
                 } else {
                     z0.n <- rev(approx(x$z0[1:((length(x$z0)+1)/2)], n=dlength)$y)
                     z0mat.n <- matrix(z0.n[Rprod.mat/0.0001+1], nrow=length(R2M))
@@ -1403,9 +1403,9 @@ plot.medsens <- function(x, sens.par = c("rho", "R2"),
                                             tilde(R)[Y]^2, "), sgn", 
                                             (lambda[2]*lambda[3])==-1))
                     else main0 <- main
-                    contour(R2M, R2Y, z0mat.n, levels=levels0, main=main0, labcex=labcex,
+                    contour(R2M, R2Y, z0mat.n, levels=levels0, main=main0, 
                             xlab=xlab, ylab=ylab, ylim=ylim, xlim=xlim, lwd=lwd,...)
-                    contour(R2M, R2Y, z0mat.n, levels=0, lwd=lwd+1, add=TRUE, labcex=labcex)
+                    contour(R2M, R2Y, z0mat.n, levels=0, lwd=lwd+1, add=TRUE, drawlabels=FALSE)
                 }
                 if(is.null(xlab) & r.type == "residual")
                     title(xlab=expression(paste(R[M]^{2},"*")), line=2.5, cex.lab=.9)
