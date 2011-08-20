@@ -273,6 +273,16 @@ robust standard errors.  However, these standard errors are currently not carrie
 through for sensitivity analysis; the output of {\tt medsens} will not be based
 on robust standard errors regardless of the {\tt robustSE} argument.
 
+\item Confidence intervals can now be calculated using one way clustered 
+standard errors\footnote{See 
+\href{http://people.su.se/~ma/clustering.pdf}{http://people.su.se/$\sim$ma/clustering.pdf} 
+for a discussion of the implementation.} for some parametric models (e.g., 
+{\tt lm}, {\tt glm}). This feature is controlled by the new {\tt cluster} 
+argument of the {\\tt mediate} function. These standard errors are currently 
+not carried through for sensitivity analysis. The {\tt cluster} option is 
+enabled by specified the variable on which to cluster. The default is to not 
+cluster and hence is set to null. 
+
 \item Users no longer need to manually indicate whether their models include a 
 treatment-mediator interaction.  The old {\tt INT} argument is therefore deprecated 
 (but still accepted with a warning).
