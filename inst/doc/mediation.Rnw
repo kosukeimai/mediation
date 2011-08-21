@@ -102,7 +102,7 @@ pdfstartview=FitH, breaklinks=true, urlbordercolor={0 1 0}, citebordercolor={0 0
 {\title{\bf \tit\thanks{This paper is an updated version of the tutorial
     for package {\bf mediation} which was previously published in an edited
     volume: \citet{imai:etal:10}.
-    The description is based on version 3.0 of {\bf mediation} and included as
+    The description is based on version 3.1 of {\bf mediation} and included as
     the package's vignette.
     Financial support from the National Science Foundation
     (SES-0752050) is acknowledged.}}
@@ -211,12 +211,18 @@ following command,
 R> update.packages("mediation")
 \end{verbatim}
 
-\section{New Features in Version 3.0}
+\section{New Features in Versions 3.x}
 
-This section describes the recent update (version 3.0) to the {\tt mediation}
-package.  Readers may wish to skip this section and come back later if they are
-not already familiar with previous versions of the package.
+This section describes the new features implemented since the release
+of \bmediation\ version 3.0. Although the rest of this document has
+also been updated to incorporate those additional features, we discuss
+them separately here for those readers who are already familiar with
+previous versions of the package and only want specific information
+about the recent updates. Those who are new to this package can safely
+skip this section and obtain the same information elsewhere in this
+vignette or in the help documents.
 
+\subsection{Features Added in Version 3.0}
 We implemented many new features in version 3.0,
 along with numerous small changes to the internal code for efficiency
 improvement.  The user-level changes from the previous version include:
@@ -224,7 +230,7 @@ improvement.  The user-level changes from the previous version include:
 \begin{itemize}
 \item More model types have been added to the main mediation analysis function {\tt mediate}.
 In addition to the models already implemented in the previous version, the {\tt mediate}
-function can now be used for ordered response models fitted via the {\tt polr} or {\tt bayespolr}
+function can now be used for ordered response models fitted via the {\tt polr}
 function, quantile regressions for mediators fitted via the {\tt qr} function in package
 {\tt quantreg}, and the tobit model for censored outcome variables fitted via the
 {\tt vglm} function in package {\tt VGAM}.  These models have not been made available
@@ -273,16 +279,6 @@ robust standard errors.  However, these standard errors are currently not carrie
 through for sensitivity analysis; the output of {\tt medsens} will not be based
 on robust standard errors regardless of the {\tt robustSE} argument.
 
-\item Confidence intervals can now be calculated using one way clustered 
-standard errors\footnote{See 
-\href{http://people.su.se/~ma/clustering.pdf}{http://people.su.se/$\sim$ma/clustering.pdf} 
-for a discussion of the implementation.} for some parametric models (e.g., 
-{\tt lm}, {\tt glm}). This feature is controlled by the new {\tt cluster} 
-argument of the {\\tt mediate} function. These standard errors are currently 
-not carried through for sensitivity analysis. The {\tt cluster} option is 
-enabled by specified the variable on which to cluster. The default is to not 
-cluster and hence is set to null. 
-
 \item Users no longer need to manually indicate whether their models include a 
 treatment-mediator interaction.  The old {\tt INT} argument is therefore deprecated 
 (but still accepted with a warning).
@@ -299,6 +295,28 @@ Both {\tt summary} and {\tt plot} methods have also been added for this function
 The function is intended for exploratory analyses only and users are cautioned against
 its potential abuse.  See Section~\ref{sec:mediations} for more discussion.
 
+\end{itemize}
+
+\subsection{Features Added in Version 3.1}
+We made minor updates to the \bmediation\ package upon the release of
+version 3.1.
+
+\begin{itemize}
+
+\item Confidence intervals can now be calculated using one way clustered 
+standard errors\footnote{See 
+  \href{http://people.su.se/~ma/clustering.pdf}{http://people.su.se/$\sim$ma/clustering.pdf} 
+  for a discussion of the implementation.} 
+for some parametric models (e.g., 
+{\tt lm}, {\tt glm}). This feature is controlled by the new {\tt cluster} 
+argument of the {\tt mediate} function. These standard errors are currently 
+not carried through for sensitivity analysis. The {\tt cluster} option is 
+enabled by specifying the variable on which to cluster. The default is to not 
+cluster and hence is set to {\tt NULL}. 
+
+\item Ordered mediator and outcome models can now be fitted via the
+  {\tt bayespolr} function in the {\tt arm} package, along with the
+  {\tt polr} function. 
 \end{itemize}
 
 \section{The Software}
@@ -765,7 +783,8 @@ call, inference proceeds via the quasi-Bayesian Monte Carlo
 approximation using Algorithm~1 rather than Algorithm~2.  In this case,
 heteroskedasticity-robust standard errors can be used for the calculation of
 confidence intervals for some types of models by setting the {\tt robustSE}
-argument to {\tt TRUE}.  Finally, we must also
+argument to {\tt TRUE}. Cluster-robust standard errors can also be
+used by the {\tt cluster} argument. Finally, we must also
 specify the variable names for the treatment indicator and the
 mediator variable using {\tt treat} and {\tt mediator}, respectively.
 \begin{verbatim}
