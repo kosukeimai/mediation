@@ -83,8 +83,8 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
             b.dif <- 1
 
             # Stacked Equations
-            m.mat <- model.matrix(model.m) * weights^(-1/2)
-            y.mat <- model.matrix(model.y) * weights^(-1/2)
+            m.mat <- model.matrix(model.m) * weights^(1/2)
+            y.mat <- model.matrix(model.y) * weights^(1/2)
             m.k <- ncol(m.mat)
             m.n <- nrow(m.mat)
             y.k <- ncol(y.mat)
@@ -97,7 +97,7 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
             X <- rbind(X.1, X.2)
             
             Y.c <- as.matrix(c(model.response(model.frame(model.m)), 
-                                model.response(model.frame(model.y)))) * weights^(-1/2)
+                                model.response(model.frame(model.y)))) * weights^(1/2)
             
             # Estimates of OLS Start Values
             inxx <- solve(crossprod(X))
