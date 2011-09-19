@@ -4,4 +4,5 @@ version      date  description
 2.1      09/14/09  Implemented sparse matrix improvements
 3.0      04/29/11  Various functionalities added
 3.1      08/22/11  More functionalities added
+3.1.1    09/18/11  Bug in medsens weights fixed; damaged PDFs fixed
 

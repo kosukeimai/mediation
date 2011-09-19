@@ -119,8 +119,11 @@ pdfstartview=FitH, breaklinks=true, urlbordercolor={0 1 0}, citebordercolor={0 0
     \quad \quad Dustin Tingley\thanks{Assistant Professor, Government Department, Harvard University. Email:
       \href{dtingley@gov.harvard.edu}{dtingley@gov.harvard.edu}, URL:
       \href{http://scholar.harvard.edu/dtingley}{http://scholar.harvard.edu/dtingley}}
-    \quad \quad Teppei Yamamoto\thanks{Ph.D. candidate, Department of
-      Politics, Princeton University, Princeton NJ 08544, Email: tyamamot@princeton.edu}
+    \quad \quad Teppei Yamamoto\thanks{Assistant Professor, Department of
+        Political Science, Massachusetts Institute of Technology, 77 Massachusetts
+        Avenue, Cambridge, MA 02139. Phone: 617-253-6959, Email:
+        \href{mailto:teppei@mit.edu}{teppei@mit.edu}, URL:
+        \href{http://web.mit.edu/teppei/www}{http://web.mit.edu/teppei/www}}
 }
 
 \date{ \today
