@@ -5,4 +5,5 @@ version      date  description
 3.0      04/29/11  Various functionalities added
 3.1      08/22/11  More functionalities added
 3.1.1    09/18/11  Bug in medsens weights fixed; damaged PDFs fixed
+3.1.2    09/19/11  Fixed wrong plots in the vignette
 
