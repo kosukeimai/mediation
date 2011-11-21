@@ -28,7 +28,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
               K <- fm$rank                     
               dfc <- (M/(M-1))*((N-1)/(N-K)) 
               uj  <- apply(estfun(fm),2, function(x) tapply(x, cluster, sum));
-              vcovCL <- dfc*sandwich(fm, meat=crossprod(uj)/N)
+              vcovCL <- dfc*sandwich(fm, meat. = crossprod(uj)/N)
               out <- vcovCL}
     }
     
@@ -594,7 +594,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
             
             # Bootstrap loop begins
             for(b in 1:sims){
-                index <- sample(1:n, n, repl=TRUE)
+                index <- sample(1:n, n, replace = TRUE)
                 Call.M$data <- m.data[index,]
                 Call.Y.t$data <- y.data[index,]
                 Call.M$weights <- m.data[index,"(weights)"]
@@ -899,7 +899,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
             
             # Resampling Step
             # Pull off data.star.
-            index <- sample(1:n, n, repl=TRUE)
+            index <- sample(1:n, n, replace = TRUE)
             call.m <- model.m$call
             call.y <- model.y$call
             call.m$data <- m.data[index,]
