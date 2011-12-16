@@ -29,17 +29,10 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         rownames(newdata) <- newdata$Row.names
         newdata <- newdata[,-1L]
         rm(odata.m, odata.y)
-                
-        if(isS4(model.m)){
-            call.m <- model.m@call
-        } else {
-            call.m <- model.m$call
-        }
-        if(isS4(model.y)){
-            call.y <- model.y@call
-        } else {
-            call.y <- model.y$call
-        }
+
+        call.m <- getCall(model.m)
+        call.y <- getCall(model.y)
+        
         call.m$data <- call.y$data <- newdata
         if(c("(weights)") %in% names(newdata)){
             call.m$weights <- call.y$weights <- model.weights(newdata) 
@@ -89,7 +82,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     } else{
         n <- n.m
     }
-    m <- length(sort(unique(model.frame(model.m)[,1])))  # TODO: Check if this is ever used
+    m <- length(sort(unique(model.frame(model.m)[,1])))
     
     # Extracting weights from models
     weights.m <- model.weights(m.data)
@@ -142,8 +135,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         } else {
             cat.0 <- t.levels[1]
             cat.1 <- t.levels[2]
-            warning("treatment and control values do not match factor levels --- \n
-            using ", cat.0, " and ", cat.1, "as control and treatment, respectively")
+            warning("treatment and control values do not match factor levels; using ", cat.0, " and ", cat.1, " as control and treatment, respectively")
         }
     } else {
         cat.0 <- control.value
@@ -176,65 +168,6 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         dfc <- (M/(M-1))*((N-1)/(N-K)) 
         uj  <- apply(estfun(fm),2, function(x) tapply(x, cluster, sum));
         dfc*sandwich(fm, meat. = crossprod(uj)/N)
-    }
-    
-    predictY.dataprep <- function(T.t,T.c,M.t,M.c){
-        ## Prepare model matrix for outcome predictions; arguments 0 or 1
-        ## Objects that must exist in surrounding environment:
-        ##    y.data, cat.1, cat.0,
-        ##    t.levels, m.levels, isFactorT, isFactorM,
-        ##    PredictM1, PredictM0, treat, mediator, control,
-        ##    boot, j (if !boot)
-        
-        pred.data.t <- pred.data.c <- y.data
-        
-        # Set treatment values
-        cat.t <- ifelse(T.t, cat.1, cat.0)
-        cat.c <- ifelse(T.c, cat.1, cat.0)
-        cat.t.ctrl <- ifelse(T.t, cat.0, cat.1)
-        cat.c.ctrl <- ifelse(T.c, cat.0, cat.1)
-        if(isFactorT){
-            pred.data.t[,treat] <- factor(cat.t, levels = t.levels)
-            pred.data.c[,treat] <- factor(cat.c, levels = t.levels)
-            if(!is.null(control)){
-                pred.data.t[,control] <- factor(cat.t.ctrl, levels = t.levels)
-                pred.data.c[,control] <- factor(cat.c.ctrl, levels = t.levels)
-            }
-        } else {
-            pred.data.t[,treat] <- cat.t
-            pred.data.c[,treat] <- cat.c
-            if(!is.null(control)){
-                pred.data.t[,control] <- cat.t.ctrl
-                pred.data.c[,control] <- cat.c.ctrl
-            }
-        }
-        
-        # Set mediator values
-        if(boot){
-            PredictM1.tmp <- PredictM1
-            PredictM0.tmp <- PredictM0
-        } else {
-            PredictM1.tmp <- PredictM1[j,]
-            PredictM0.tmp <- PredictM0[j,]
-        }
-        if(M.t){
-            PredictMt <- PredictM1.tmp
-        } else {
-            PredictMt <- PredictM0.tmp
-        }
-        if(M.c){
-            PredictMc <- PredictM1.tmp
-        } else {
-            PredictMc <- PredictM0.tmp
-        }
-        if(isFactorM) {
-            pred.data.t[,mediator] <- factor(PredictMt, levels=1:m, labels=m.levels)
-            pred.data.c[,mediator] <- factor(PredictMc, levels=1:m, labels=m.levels)
-        } else {
-            pred.data.t[,mediator] <- PredictMt
-            pred.data.c[,mediator] <- PredictMc
-        }
-        return(list(t=pred.data.t, c=pred.data.c))
     }
         
     ############################################################################
@@ -270,12 +203,9 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                     MModel.var.cov <- vcov(model.m)
                 }
             }
+
+            TMmodel.coef <- coef(model.y)
             
-            if(isS4(model.y)){
-                TMmodel.coef <- model.y@coefficients
-            } else {
-                TMmodel.coef <- model.y$coef
-            }
             if(isRq.y){
                 TMmodel.var.cov <- summary(model.y, covariance=TRUE)$cov
             } else{
@@ -309,7 +239,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
             mmat.t <- model.matrix(terms(model.m), data=pred.data.t)
             mmat.c <- model.matrix(terms(model.m), data=pred.data.c)
             
-            ### Case I-1-a: GLM Mediator (including GAMs)
+            ### Case I-1-a: GLM Mediator
             if(isGlm.m){
                 
                 muM1 <- model.m$family$linkinv(MModel %*% t(mmat.t))
@@ -418,181 +348,92 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
             #####################################
             ##  Outcome Predictions
             #####################################
-            # ACME(1)
-            Pr1 <- matrix(, nrow=n, ncol=sims)
-            Pr0 <- matrix(, nrow=n, ncol=sims)
+
+            effects.tmp <- array(NA, dim = c(n, sims, 4))
+            for(e in 1:4){
+                tt <- switch(e, c(1,1,1,0), c(0,0,1,0), c(1,0,1,1), c(1,0,0,0))
+                Pr1 <- matrix(, nrow=n, ncol=sims)
+                Pr0 <- matrix(, nrow=n, ncol=sims)
             
-            for(j in 1:sims){
-                pred.data <- predictY.dataprep(1,1,1,0)
-                pred.data.t <- pred.data$t
-                pred.data.c <- pred.data$c
-                
-                ymat.t <- model.matrix(terms(model.y), data=pred.data.t) 
-                ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
-                
-                if(isVglm.y){
-                    if(VfamilyY=="tobit") {
-                        Pr1.tmp <- ymat.t %*% TMmodel[j,-2]
-                        Pr0.tmp <- ymat.c %*% TMmodel[j,-2]
-                        Pr1[,j] <- pmin(pmax(Pr1.tmp, model.y@misc$Lower), model.y@misc$Upper)
-                        Pr0[,j] <- pmin(pmax(Pr0.tmp, model.y@misc$Lower), model.y@misc$Upper)
+                for(j in 1:sims){
+                    pred.data.t <- pred.data.c <- y.data
+        
+                    # Set treatment values
+                    cat.t <- ifelse(tt[1], cat.1, cat.0)
+                    cat.c <- ifelse(tt[2], cat.1, cat.0)
+                    cat.t.ctrl <- ifelse(tt[1], cat.0, cat.1)
+                    cat.c.ctrl <- ifelse(tt[2], cat.0, cat.1)
+                    if(isFactorT){
+                        pred.data.t[,treat] <- factor(cat.t, levels = t.levels)
+                        pred.data.c[,treat] <- factor(cat.c, levels = t.levels)
+                        if(!is.null(control)){
+                            pred.data.t[,control] <- factor(cat.t.ctrl, levels = t.levels)
+                            pred.data.c[,control] <- factor(cat.c.ctrl, levels = t.levels)
+                        }
                     } else {
-                        stop("outcome model is in unsupported vglm family")
+                        pred.data.t[,treat] <- cat.t
+                        pred.data.c[,treat] <- cat.c
+                        if(!is.null(control)){
+                            pred.data.t[,control] <- cat.t.ctrl
+                            pred.data.c[,control] <- cat.c.ctrl
+                        }
                     }
-                } else {
-                    Pr1[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.t)
-                    Pr0[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.c)
-                }
-                
-                rm(ymat.t, ymat.c, pred.data.t, pred.data.c, pred.data)
-            }
-            
-            if(isGlm.y){
-                Pr1 <- apply(Pr1, 2, model.y$family$linkinv)
-                Pr0 <- apply(Pr0, 2, model.y$family$linkinv)
-                delta.1.tmp <- Pr1 - Pr0
-            } else {
-                delta.1.tmp <- Pr1 - Pr0
-            }
-            rm(Pr1, Pr0)
                     
-            # ACME(0)
-            Pr1 <- matrix(, nrow=n, ncol=sims)
-            Pr0 <- matrix(, nrow=n, ncol=sims)
-            
-            for(j in 1:sims){
-                pred.data <- predictY.dataprep(0,0,1,0)
-                pred.data.t <- pred.data$t
-                pred.data.c <- pred.data$c
-                
-                ymat.t <- model.matrix(terms(model.y), data=pred.data.t) 
-                ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
-                
-                if(isVglm.y){
-                    if(VfamilyY=="tobit") {
-                        Pr1.tmp <- ymat.t %*% TMmodel[j,-2]
-                        Pr0.tmp <- ymat.c %*% TMmodel[j,-2]
-                        Pr1[,j] <- pmin(pmax(Pr1.tmp, model.y@misc$Lower), model.y@misc$Upper)
-                        Pr0[,j] <- pmin(pmax(Pr0.tmp, model.y@misc$Lower), model.y@misc$Upper)
+                    # Set mediator values
+                    PredictMt <- PredictM1[j,] * tt[3] + PredictM0[j,] * (1 - tt[3])
+                    PredictMc <- PredictM1[j,] * tt[4] + PredictM0[j,] * (1 - tt[4])
+                    if(isFactorM) {
+                        pred.data.t[,mediator] <- factor(PredictMt, levels=1:m, labels=m.levels)
+                        pred.data.c[,mediator] <- factor(PredictMc, levels=1:m, labels=m.levels)
                     } else {
-                        stop("outcome model is in unsupported vglm family")
+                        pred.data.t[,mediator] <- PredictMt
+                        pred.data.c[,mediator] <- PredictMc
                     }
-                } else {
+                
+                    ymat.t <- model.matrix(terms(model.y), data=pred.data.t) 
+                    ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
+                
+                    if(isVglm.y){
+                        if(VfamilyY=="tobit") {
+                            Pr1.tmp <- ymat.t %*% TMmodel[j,-2]
+                            Pr0.tmp <- ymat.c %*% TMmodel[j,-2]
+                            Pr1[,j] <- pmin(pmax(Pr1.tmp, model.y@misc$Lower), model.y@misc$Upper)
+                            Pr0[,j] <- pmin(pmax(Pr0.tmp, model.y@misc$Lower), model.y@misc$Upper)
+                        } else {
+                            stop("outcome model is in unsupported vglm family")
+                        }
+                    } else {
                         Pr1[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.t)
                         Pr0[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.c)
-                }
-                rm(ymat.t, ymat.c, pred.data.t, pred.data.c, pred.data)
-            }
-            
-            if(isGlm.y){
-                Pr1 <- apply(Pr1, 2, model.y$family$linkinv)
-                Pr0 <- apply(Pr0, 2, model.y$family$linkinv)
-                delta.0.tmp <- Pr1 - Pr0
-            } else {
-                delta.0.tmp <- Pr1 - Pr0
-            }
-            rm(Pr1, Pr0)
-            
-            # DE(1)
-            Pr1 <- matrix(, nrow=n, ncol=sims)
-            Pr0 <- matrix(, nrow=n, ncol=sims)
-            
-            for(j in 1:sims){
-                pred.data <- predictY.dataprep(1,0,1,1)
-                pred.data.t <- pred.data$t
-                pred.data.c <- pred.data$c
-                
-                ymat.t <- model.matrix(terms(model.y), data=pred.data.t) 
-                ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
-                
-                if(isVglm.y){
-                    if(VfamilyY=="tobit") {
-                        Pr1.tmp <- ymat.t %*% TMmodel[j,-2]
-                        Pr0.tmp <- ymat.c %*% TMmodel[j,-2]
-                        Pr1[,j] <- pmin(pmax(Pr1.tmp, model.y@misc$Lower), model.y@misc$Upper)
-                        Pr0[,j] <- pmin(pmax(Pr0.tmp, model.y@misc$Lower), model.y@misc$Upper)
-                    } else {
-                        stop("outcome model is in unsupported vglm family")
                     }
+                    rm(ymat.t, ymat.c, pred.data.t, pred.data.c)
+                }
+                
+                if(isGlm.y){
+                    Pr1 <- apply(Pr1, 2, model.y$family$linkinv)
+                    Pr0 <- apply(Pr0, 2, model.y$family$linkinv)
+                    effects.tmp[,,e] <- Pr1 - Pr0
                 } else {
-                    Pr1[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.t)
-                    Pr0[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.c)
+                    effects.tmp[,,e] <- Pr1 - Pr0
                 }
-                rm(ymat.t, ymat.c, pred.data.t, pred.data.c, pred.data)
-            }    
-            
-            if(isGlm.y){
-                Pr1 <- apply(Pr1, 2, model.y$family$linkinv)
-                Pr0 <- apply(Pr0, 2, model.y$family$linkinv)
-                zeta.1.tmp <- Pr1 - Pr0
-            } else {
-                zeta.1.tmp <- Pr1 - Pr0
-            }
-            rm(Pr1, Pr0)
-            
-            # DE(0)
-            Pr1 <- matrix(, nrow=n, ncol=sims)
-            Pr0 <- matrix(, nrow=n, ncol=sims)
-            
-            for(j in 1:sims){
-                pred.data <- predictY.dataprep(1,0,0,0)
-                pred.data.t <- pred.data$t
-                pred.data.c <- pred.data$c
-                
-                ymat.t <- model.matrix(terms(model.y), data=pred.data.t) 
-                ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
-                
-                if(isVglm.y){
-                    if(VfamilyY=="tobit") {
-                        Pr1.tmp <- ymat.t %*% TMmodel[j,-2]
-                        Pr0.tmp <- ymat.c %*% TMmodel[j,-2]
-                        Pr1[,j] <- pmin(pmax(Pr1.tmp, model.y@misc$Lower), model.y@misc$Upper)
-                        Pr0[,j] <- pmin(pmax(Pr0.tmp, model.y@misc$Lower), model.y@misc$Upper)
-                    } else {
-                        stop("outcome model is in unsupported vglm family")
-                    }
-                } else {        
-                    Pr1[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.t)
-                    Pr0[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.c)
-                }
-                rm(ymat.t, ymat.c, pred.data.t, pred.data.c, pred.data)
+                rm(Pr1, Pr0)
             }
             
-            if(isGlm.y){
-                Pr1 <- apply(Pr1, 2, model.y$family$linkinv)
-                Pr0 <- apply(Pr0, 2, model.y$family$linkinv)
-                zeta.0.tmp <- Pr1 - Pr0
-            } else {
-                zeta.0.tmp <- Pr1 - Pr0
-            }
-            
-            rm(Pr1, Pr0, PredictM1, PredictM0, TMmodel, MModel) 
-            zeta.1 <- t(as.matrix(apply(zeta.1.tmp, 2, weighted.mean, w=weights)))
-            rm(zeta.1.tmp)
-            zeta.0 <- t(as.matrix(apply(zeta.0.tmp, 2, weighted.mean, w=weights)))
-            rm(zeta.0.tmp)
-            delta.1 <- t(as.matrix(apply(delta.1.tmp, 2, weighted.mean, w=weights)))
-            rm(delta.1.tmp)
-            delta.0 <- t(as.matrix(apply(delta.0.tmp, 2, weighted.mean, w=weights)))
-            rm(delta.0.tmp)
+            rm(PredictM1, PredictM0, TMmodel, MModel) 
+            delta.1 <- t(as.matrix(apply(effects.tmp[,,1], 2, weighted.mean, w=weights)))
+            delta.0 <- t(as.matrix(apply(effects.tmp[,,2], 2, weighted.mean, w=weights)))
+            zeta.1 <- t(as.matrix(apply(effects.tmp[,,3], 2, weighted.mean, w=weights)))
+            zeta.0 <- t(as.matrix(apply(effects.tmp[,,4], 2, weighted.mean, w=weights)))
+            rm(effects.tmp)
             tau <- (zeta.1 + delta.0 + zeta.0 + delta.1)/2
-            
             
         ########################################################################
         ## Case I-2: Nonparametric Bootstrap
         ########################################################################
         } else {
-            
-            if(isS4(model.m)){
-                Call.M <- model.m@call
-            } else {
-                Call.M <- model.m$call
-            }
-            if(isS4(model.y)){
-                Call.Y.t <- model.y@call
-            } else {
-                Call.Y.t <- model.y$call
-            }
+
+            Call.M <- getCall(model.m)
+            Call.Y <- getCall(model.y)
             
             # Storage
             delta.1 <- matrix(NA, sims, 1)
@@ -601,15 +442,13 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
             zeta.0 <- matrix(NA, sims, 1)
             tau <- matrix(NA, sims, 1)
             
-            
-            
             # Bootstrap loop begins
             for(b in 1:sims){
                 index <- sample(1:n, n, replace = TRUE)
                 Call.M$data <- m.data[index,]
-                Call.Y.t$data <- y.data[index,]
+                Call.Y$data <- y.data[index,]
                 Call.M$weights <- m.data[index,"(weights)"]
-                Call.Y.t$weights  <- y.data[index,"(weights)"]
+                Call.Y$weights  <- y.data[index,"(weights)"]
                 
                 # TODO: Verify if below is unnecessary with all outcome model types.
                 if(isOrdered.m && length(unique(y.data[index,mediator]))!=m){
@@ -618,7 +457,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                 
                 # Refit Models with Resampled Data
                 new.fit.M <- model.m <- eval.parent(Call.M)
-                new.fit.t <- model.y <- eval.parent(Call.Y.t)
+                new.fit.t <- model.y <- eval.parent(Call.Y)
                 
                 #####################################
                 #  Mediator Predictions
@@ -637,32 +476,32 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                 ### Case I-2-a: GLM Mediator (including GAMs)
                 if(isGlm.m){
                 
-                muM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
-                muM0 <- predict(new.fit.M, type="response", newdata=pred.data.c)
+                    muM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
+                    muM0 <- predict(new.fit.M, type="response", newdata=pred.data.c)
                 
-                if(FamilyM == "poisson"){
-                    PredictM1 <- rpois(n, lambda = muM1)
-                    PredictM0 <- rpois(n, lambda = muM0)
-                } else if (FamilyM == "Gamma") {
-                    shape <- gamma.shape(model.m)$alpha
-                    PredictM1 <- rgamma(n, shape = shape, scale = muM1/shape)
-                    PredictM0 <- rgamma(n, shape = shape, scale = muM0/shape)
-                } else if (FamilyM == "binomial"){
-                    PredictM1 <- rbinom(n, size = 1, prob = muM1)
-                    PredictM0 <- rbinom(n, size = 1, prob = muM0)
-                } else if (FamilyM == "gaussian"){
-                    sigma <- sqrt(summary(model.m)$dispersion)
-                    error <- rnorm(n, mean=0, sd=sigma)
-                    PredictM1 <- muM1 + error
-                    PredictM0 <- muM0 + error
-                } else if (FamilyM == "inverse.gaussian"){
-                    disp <- summary(model.m)$dispersion
-                    PredictM1 <- SuppDists::rinvGauss(n, nu = muM1, lambda = 1/disp)
-                    PredictM0 <- SuppDists::rinvGauss(n, nu = muM0, lambda = 1/disp)
-                } else {
-                    stop("unsupported glm family")
-                }
-            
+                    if(FamilyM == "poisson"){
+                        PredictM1 <- rpois(n, lambda = muM1)
+                        PredictM0 <- rpois(n, lambda = muM0)
+                    } else if (FamilyM == "Gamma") {
+                        shape <- gamma.shape(model.m)$alpha
+                        PredictM1 <- rgamma(n, shape = shape, scale = muM1/shape)
+                        PredictM0 <- rgamma(n, shape = shape, scale = muM0/shape)
+                    } else if (FamilyM == "binomial"){
+                        PredictM1 <- rbinom(n, size = 1, prob = muM1)
+                        PredictM0 <- rbinom(n, size = 1, prob = muM0)
+                    } else if (FamilyM == "gaussian"){
+                        sigma <- sqrt(summary(model.m)$dispersion)
+                        error <- rnorm(n, mean=0, sd=sigma)
+                        PredictM1 <- muM1 + error
+                        PredictM0 <- muM0 + error
+                    } else if (FamilyM == "inverse.gaussian"){
+                        disp <- summary(model.m)$dispersion
+                        PredictM1 <- SuppDists::rinvGauss(n, nu = muM1, lambda = 1/disp)
+                        PredictM0 <- SuppDists::rinvGauss(n, nu = muM0, lambda = 1/disp)
+                    } else {
+                        stop("unsupported glm family")
+                    }
+                    
                 ### Case I-2-b: Ordered Mediator
                 } else if(isOrdered.m) {
                     probs_m1 <- predict(new.fit.M, newdata=pred.data.t, type="probs")
@@ -709,98 +548,67 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                 #####################################
                 #  Outcome Predictions
                 #####################################
-                # ACME(1)
-                pred.data <- predictY.dataprep(1,1,1,0)
-                pred.data.t <- pred.data$t
-                pred.data.c <- pred.data$c
-                
-                if(isRq.y){
-                    pr.1 <- predict(new.fit.t, type="response",
-                                         newdata=pred.data.t, interval="none")
-                    pr.0 <- predict(new.fit.t, type="response",
-                                         newdata=pred.data.c, interval="none")
-                } else {
-                    pr.1 <- predict(new.fit.t, type="response",
-                                         newdata=pred.data.t)
-                    pr.0 <- predict(new.fit.t, type="response",
-                                         newdata=pred.data.c)
-                }
-                pr.mat <- as.matrix(cbind(pr.1, pr.0))
-                delta.1.tmp <- pr.mat[,1] - pr.mat[,2]
-                
-                rm(pred.data.t, pred.data.c, pred.data, pr.1, pr.0, pr.mat)
-                
-                
-                # ACME(0)
-                pred.data <- predictY.dataprep(0,0,1,0)
-                pred.data.t <- pred.data$t
-                pred.data.c <- pred.data$c
-                
-                if(isRq.y){
-                    pr.1 <- predict(new.fit.t, type="response",
+                effects.tmp <- matrix(NA, nrow = n, ncol = 4)
+                for(e in 1:4){
+                    tt <- switch(e, c(1,1,1,0), c(0,0,1,0), c(1,0,1,1), c(1,0,0,0))
+                    pred.data.t <- pred.data.c <- y.data
+                    
+                    # Set treatment values
+                    cat.t <- ifelse(tt[1], cat.1, cat.0)
+                    cat.c <- ifelse(tt[2], cat.1, cat.0)
+                    cat.t.ctrl <- ifelse(tt[1], cat.0, cat.1)
+                    cat.c.ctrl <- ifelse(tt[2], cat.0, cat.1)
+                    if(isFactorT){
+                        pred.data.t[,treat] <- factor(cat.t, levels = t.levels)
+                        pred.data.c[,treat] <- factor(cat.c, levels = t.levels)
+                        if(!is.null(control)){
+                            pred.data.t[,control] <- factor(cat.t.ctrl, levels = t.levels)
+                            pred.data.c[,control] <- factor(cat.c.ctrl, levels = t.levels)
+                        }
+                    } else {
+                        pred.data.t[,treat] <- cat.t
+                        pred.data.c[,treat] <- cat.c
+                        if(!is.null(control)){
+                            pred.data.t[,control] <- cat.t.ctrl
+                            pred.data.c[,control] <- cat.c.ctrl
+                        }
+                    }
+                    
+                    # Set mediator values
+                    PredictM1.tmp <- PredictM1
+                    PredictM0.tmp <- PredictM0
+                    PredictMt <- PredictM1 * tt[3] + PredictM0 * (1 - tt[3])
+                    PredictMc <- PredictM1 * tt[4] + PredictM0 * (1 - tt[4])
+                    if(isFactorM) {
+                        pred.data.t[,mediator] <- factor(PredictMt, levels=1:m, labels=m.levels)
+                        pred.data.c[,mediator] <- factor(PredictMc, levels=1:m, labels=m.levels)
+                    } else {
+                        pred.data.t[,mediator] <- PredictMt
+                        pred.data.c[,mediator] <- PredictMc
+                    }
+                    
+                    if(isRq.y){
+                        pr.1 <- predict(new.fit.t, type="response",
                                         newdata=pred.data.t, interval="none")
-                    pr.0 <- predict(new.fit.t, type="response",
-                                        newdata=pred.data.c, interval="none");
-                } else {
-                    pr.1 <- predict(new.fit.t, type="response",
-                                        newdata=pred.data.t)
-                    pr.0 <- predict(new.fit.t, type="response",
-                                        newdata=pred.data.c)
-                }
-                pr.mat <- as.matrix(cbind(pr.1, pr.0))
-                delta.0.tmp <-pr.mat[,1] - pr.mat[,2]
-                
-                rm(pred.data.t, pred.data.c, pred.data, pr.1, pr.0, pr.mat)
-               
-                
-                # DE(1)
-                pred.data <- predictY.dataprep(1,0,1,1)
-                pred.data.t <- pred.data$t
-                pred.data.c <- pred.data$c
-                
-                if(isRq.y){
-                    pr.1 <- predict(new.fit.t, type="response",
-                                        newdata=pred.data.t, interval="none")
-                    pr.0 <- predict(new.fit.t, type="response",
+                        pr.0 <- predict(new.fit.t, type="response",
                                         newdata=pred.data.c, interval="none")
-                } else {
-                    pr.1 <- predict(new.fit.t, type="response",
+                    } else {
+                        pr.1 <- predict(new.fit.t, type="response",
                                         newdata=pred.data.t)
-                    pr.0 <- predict(new.fit.t, type="response",
+                        pr.0 <- predict(new.fit.t, type="response",
                                         newdata=pred.data.c)
+                    }
+                    pr.mat <- as.matrix(cbind(pr.1, pr.0))
+                    effects.tmp[,e] <- pr.mat[,1] - pr.mat[,2]
+                    
+                    rm(pred.data.t, pred.data.c, pr.1, pr.0, pr.mat)
                 }
-                pr.mat <- as.matrix(cbind(pr.1, pr.0))
-                zeta.1.tmp <- pr.mat[,1] - pr.mat[,2]
-                
-                rm(pred.data.t, pred.data.c, pred.data, pr.1, pr.0, pr.mat)
-                
-                
-                # DE(0)
-                pred.data <- predictY.dataprep(1,0,0,0)
-                pred.data.t <- pred.data$t
-                pred.data.c <- pred.data$c
-                
-                if(isRq.y){
-                    pr.1 <- predict(new.fit.t, type="response",
-                                            newdata=pred.data.t, interval="none")
-                    pr.0 <- predict(new.fit.t, type="response",
-                                            newdata=pred.data.c, interval="none")
-                } else {
-                    pr.1 <- predict(new.fit.t, type="response",
-                                            newdata=pred.data.t)
-                    pr.0 <- predict(new.fit.t, type="response",
-                                            newdata=pred.data.c)
-                }
-                pr.mat <- as.matrix(cbind(pr.1, pr.0))
-                zeta.0.tmp <-pr.mat[,1] - pr.mat[,2]
-                
-                rm(pred.data.t, pred.data.c, pred.data, pr.1, pr.0, pr.mat)
                 
                 # Compute all QoIs
-                zeta.1[b] <- weighted.mean(zeta.1.tmp, weights)
-                zeta.0[b] <- weighted.mean(zeta.0.tmp, weights)
-                delta.1[b] <- weighted.mean(delta.1.tmp, weights)
-                delta.0[b] <- weighted.mean(delta.0.tmp, weights)
+                delta.1[b] <- weighted.mean(effects.tmp[,1], weights)
+                delta.0[b] <- weighted.mean(effects.tmp[,2], weights)
+                zeta.1[b] <- weighted.mean(effects.tmp[,3], weights)
+                zeta.0[b] <- weighted.mean(effects.tmp[,4], weights)
                 tau[b] <- (zeta.1[b] + zeta.0[b] + delta.0[b] + delta.1[b])/2
                 
             }  # bootstrap loop ends
@@ -839,13 +647,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         n.avg.ci <- quantile(nu.avg, c(low,high), na.rm=TRUE)
         
         # Detect whether models include T-M interaction
-        if(!isS4(model.y)) {
-            INT <- paste(treat,mediator,sep=":") %in% attr(model.y$terms,"term.labels") | 
-                 paste(mediator,treat,sep=":") %in% attr(model.y$terms,"term.labels") 
-        } else {
-            INT <- paste(treat,mediator,sep=":") %in% attr(model.y@terms,"term.labels") |
-                 paste(mediator,treat,sep=":") %in% attr(model.y@terms,"term.labels") 
-        }
+        INT <- paste(treat,mediator,sep=":") %in% attr(terms(model.y),"term.labels") | 
+               paste(mediator,treat,sep=":") %in% attr(terms(model.y),"term.labels") 
         if(!INT & isGam.y){
             INT <- !isTRUE(all.equal(d0, d1))  # if gam, determine empirically
         }
@@ -891,8 +694,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     ############################################################################
     } else {
         if(boot != TRUE){
-            warning("ordered outcome model can only be used with 
-                     nonparametric bootstrap - option forced")
+            warning("ordered outcome model can only be used with nonparametric bootstrap - option forced")
             boot <- TRUE
         }
         
@@ -1022,51 +824,55 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
             #####################################
             #  Outcome Predictions
             #####################################
-            # ACME(1)
-            pred.data <- predictY.dataprep(1,1,1,0)
-            pred.data.t <- pred.data$t
-            pred.data.c <- pred.data$c
-            
-            probs_p1 <- predict(new.fit.t, newdata=pred.data.t, type="probs")
-            probs_p0 <- predict(new.fit.t, newdata=pred.data.c, type="probs")
-            delta.1.tmp <-  probs_p1 - probs_p0
-            rm(pred.data.t, pred.data.c, pred.data, probs_p1, probs_p0)
-            
-            # ACME(0)
-            pred.data <- predictY.dataprep(0,0,1,0)
-            pred.data.t <- pred.data$t
-            pred.data.c <- pred.data$c
-            
-            probs_p1 <- predict(new.fit.t, newdata=pred.data.t, type="probs")
-            probs_p0 <- predict(new.fit.t, newdata=pred.data.c, type="probs")
-            delta.0.tmp <- probs_p1 - probs_p0
-            rm(pred.data.t, pred.data.c, pred.data, probs_p1, probs_p0)
-            
-            # DE(1)
-            pred.data <- predictY.dataprep(1,0,1,1)
-            pred.data.t <- pred.data$t
-            pred.data.c <- pred.data$c
-            
-            probs_p1 <- predict(new.fit.t, newdata=pred.data.t, type="probs")
-            probs_p0 <- predict(new.fit.t, newdata=pred.data.c, type="probs")
-            zeta.1.tmp <- probs_p1 - probs_p0
-            rm(pred.data.t, pred.data.c, pred.data, probs_p1, probs_p0)
-            
-            # DE(0)
-            pred.data <- predictY.dataprep(1,0,0,0)
-            pred.data.t <- pred.data$t
-            pred.data.c <- pred.data$c
-            
-            probs_p1 <- predict(new.fit.t, newdata=pred.data.t, type="probs")
-            probs_p0 <- predict(new.fit.t, newdata=pred.data.c, type="probs")
-            zeta.0.tmp <- probs_p1 - probs_p0
-            rm(pred.data.t, pred.data.c, pred.data, probs_p1, probs_p0)
+            effects.tmp <- array(NA, dim = c(n, n.ycat, 4))
+            for(e in 1:4){
+                tt <- switch(e, c(1,1,1,0), c(0,0,1,0), c(1,0,1,1), c(1,0,0,0))
+                pred.data.t <- pred.data.c <- y.data
+                
+                # Set treatment values
+                cat.t <- ifelse(tt[1], cat.1, cat.0)
+                cat.c <- ifelse(tt[2], cat.1, cat.0)
+                cat.t.ctrl <- ifelse(tt[1], cat.0, cat.1)
+                cat.c.ctrl <- ifelse(tt[2], cat.0, cat.1)
+                if(isFactorT){
+                    pred.data.t[,treat] <- factor(cat.t, levels = t.levels)
+                    pred.data.c[,treat] <- factor(cat.c, levels = t.levels)
+                    if(!is.null(control)){
+                        pred.data.t[,control] <- factor(cat.t.ctrl, levels = t.levels)
+                        pred.data.c[,control] <- factor(cat.c.ctrl, levels = t.levels)
+                    }
+                } else {
+                    pred.data.t[,treat] <- cat.t
+                    pred.data.c[,treat] <- cat.c
+                    if(!is.null(control)){
+                        pred.data.t[,control] <- cat.t.ctrl
+                        pred.data.c[,control] <- cat.c.ctrl
+                    }
+                }
+                
+                # Set mediator values
+                PredictM1.tmp <- PredictM1
+                PredictM0.tmp <- PredictM0
+                PredictMt <- PredictM1 * tt[3] + PredictM0 * (1 - tt[3])
+                PredictMc <- PredictM1 * tt[4] + PredictM0 * (1 - tt[4])
+                if(isFactorM) {
+                    pred.data.t[,mediator] <- factor(PredictMt, levels=1:m, labels=m.levels)
+                    pred.data.c[,mediator] <- factor(PredictMc, levels=1:m, labels=m.levels)
+                } else {
+                    pred.data.t[,mediator] <- PredictMt
+                    pred.data.c[,mediator] <- PredictMc
+                }
+                probs_p1 <- predict(new.fit.t, newdata=pred.data.t, type="probs")
+                probs_p0 <- predict(new.fit.t, newdata=pred.data.c, type="probs")
+                effects.tmp[,,e] <- probs_p1 - probs_p0
+                rm(pred.data.t, pred.data.c, probs_p1, probs_p0)
+            }
             
             # Compute all QoIs
-            zeta.1[b,] <- apply(zeta.1.tmp, 2, weighted.mean, w=weights)
-            zeta.0[b,] <- apply(zeta.0.tmp, 2, weighted.mean, w=weights)
-            delta.1[b,] <- apply(delta.1.tmp, 2, weighted.mean, w=weights)
-            delta.0[b,] <- apply(delta.0.tmp, 2, weighted.mean, w=weights)
+            delta.1[b,] <- apply(effects.tmp[,,1], 2, weighted.mean, w=weights)
+            delta.0[b,] <- apply(effects.tmp[,,2], 2, weighted.mean, w=weights)
+            zeta.1[b,] <- apply(effects.tmp[,,3], 2, weighted.mean, w=weights)
+            zeta.0[b,] <- apply(effects.tmp[,,4], 2, weighted.mean, w=weights)
             tau[b,] <- (zeta.1[b,] + zeta.0[b,] + delta.0[b,] + delta.1[b,])/2
             
         }  # Bootstrap loop ends
