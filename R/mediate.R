@@ -1,8 +1,9 @@
-mediate <- function(model.m, model.y, sims=1000, boot=FALSE, 
-                    treat="treat.name", mediator="med.name", 
-                    control=NULL, conf.level=.95,
-                    control.value=0, treat.value=1, 
-                    long=TRUE, dropobs=FALSE, robustSE = FALSE, cluster=NULL, ...){
+mediate <- function(model.m, model.y, sims = 1000, boot = FALSE, 
+                    treat = "treat.name", mediator = "med.name", 
+                    control = NULL, conf.level = .95,
+                    control.value = 0, treat.value = 1, 
+                    long = TRUE, dropobs = FALSE, 
+                    robustSE = FALSE, cluster = NULL, ...){
     
     # Warn users who still use INT option
     if(match("INT", names(match.call()), 0L)){
@@ -18,28 +19,6 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
     if(robustSE & !is.null(cluster)){
         stop("Choose either robustSE or cluster SE option")
     }
-
-    if(!is.null(cluster)){    
-    getvcov <- function(dat,fm, cluster){
-              #fm is the model object  
-              attach(dat, warn.conflicts = F)
-              M <- length(unique(cluster))  
-              N <- length(cluster)              
-              K <- fm$rank                     
-              dfc <- (M/(M-1))*((N-1)/(N-K)) 
-              uj  <- apply(estfun(fm),2, function(x) tapply(x, cluster, sum));
-              vcovCL <- dfc*sandwich(fm, meat. = crossprod(uj)/N)
-              out <- vcovCL}
-    }
-    
-    # Model type indicators
-    isGam.y <- class(model.y)[1] == "gam"
-    isGam.m <- class(model.m)[1] == "gam"
-    isVglm.y <- class(model.y)[1] == "vglm"
-    isRq.y <- class(model.y)[1] == "rq"
-    isRq.m <- class(model.m)[1] == "rq"
-    isOrdered.y <- inherits(model.y, "polr")
-    isOrdered.m <- inherits(model.m, "polr")
     
     # Drop observations not common to both mediator and outcome models
     if(dropobs){
@@ -69,27 +48,27 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
         model.y <- eval.parent(call.y)
     }
             
-    # Record class of model.m as "ClassM"
-    if(isGam.m){
-        ClassM <- class(model.m)[2]
-    } else {
-        ClassM <- class(model.m)[1]
-    }
+    # Model type indicators
+    isGam.y <- inherits(model.y, "gam")
+    isGam.m <- inherits(model.m, "gam")
+    isGlm.y <- inherits(model.y, "glm")  # Note gam also inherits "glm"
+    isGlm.m <- inherits(model.m, "glm")  # Note gam also inherits "glm"
+    isLm.y <- inherits(model.y, "lm")    # Note gam and glm also inherit "lm"
+    isLm.m <- inherits(model.m, "lm")    # Note gam and glm also inherit "lm"
+    isVglm.y <- inherits(model.y, "vglm")
+    isRq.y <- inherits(model.y, "rq")
+    isRq.m <- inherits(model.m, "rq")
+    isOrdered.y <- inherits(model.y, "polr")
+    isOrdered.m <- inherits(model.m, "polr")
     
-    # Record family of model.m
-    if(ClassM=="glm" || isGam.m){
+    # Record family of model.m if glm
+    if(isGlm.m){
         FamilyM <- model.m$family$family
     }
     
-    # Record class of model.y as "ClassY"
-    if(isGam.y){
-        ClassY <- class(model.y)[2]
-    } else {
-        ClassY <- class(model.y)[1]
-        if(isVglm.y){
-            vfamily <- model.y@family@vfamily
-            # Indicates which vglm model (currently always tobit)
-        }
+    # Record vfamily of model.y if vglm (currently only tobit)
+    if(isVglm.y){
+        VfamilyY <- model.y@family@vfamily
     }
     
     # Warning for control option in non-GAM outcome models
@@ -102,20 +81,21 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
     m.data <- model.frame(model.m)  # Call.M$data
     y.data <- model.frame(model.y)  # Call.Y$data
     
-    # Numbers of observations/variables/categories
+    # Numbers of observations and categories
     n.m <- length(m.data[,1])
-    n <- n.y <- length(y.data[,1])
+    n.y <- length(y.data[,1])
     if(n.m != n.y){
         stop("number of observations do not match between mediator and outcome models")
+    } else{
+        n <- n.m
     }
-    m <- length(sort(unique(model.frame(model.m)[,1])))
-    m.min <- as.numeric(sort(model.frame(model.m)[,1])[1])
+    m <- length(sort(unique(model.frame(model.m)[,1])))  # TODO: Check if this is ever used
     
     # Extracting weights from models
     weights.m <- model.weights(m.data)
     weights.y <- model.weights(y.data)
     
-    if(!is.null(weights.m) && ClassM == "glm" && FamilyM == "binomial"){
+    if(!is.null(weights.m) && isGlm.m && FamilyM == "binomial"){
         message("weights taken as sampling weights, not total number of trials")
     }
     
@@ -125,26 +105,45 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
     if(is.null(weights.y)){
         weights.y <- rep(1,nrow(y.data))
     }
-    
     if(!all(weights.m == weights.y)) {
         stop("weights on outcome and mediator models not identical")
     } else {
         weights <- weights.m
     }
     
+    # Convert character treatment to factor
+    if(is.character(m.data[,treat])){
+        m.data[,treat] <- factor(m.data[,treat])
+    }
+    if(is.character(y.data[,treat])){
+        y.data[,treat] <- factor(y.data[,treat])
+    }
+    
+    # Convert character mediator to factor
+    if(is.character(y.data[,mediator])){
+        y.data[,mediator] <- factor(y.data[,mediator])
+    }
+
     # Factor treatment indicator
     isFactorT.m <- is.factor(m.data[,treat])
     isFactorT.y <- is.factor(y.data[,treat])
+    if(isFactorT.m != isFactorT.y){
+        stop("treatment variable types differ in mediator and outcome models")
+    } else {
+        isFactorT <- isFactorT.y
+    }
     
-    if(isFactorT.y){
+    if(isFactorT){
         # TODO: Allow non-binary factor treatment
         t.levels <- levels(y.data[,treat])
-        if(sum(c(treat.value, control.value) %in% t.levels)){
+        if(treat.value %in% t.levels & control.value %in% t.levels){
             cat.0 <- control.value
             cat.1 <- treat.value
         } else {
             cat.0 <- t.levels[1]
             cat.1 <- t.levels[2]
+            warning("treatment and control values do not match factor levels --- \n
+            using ", cat.0, " and ", cat.1, "as control and treatment, respectively")
         }
     } else {
         cat.0 <- control.value
@@ -167,11 +166,23 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
         order(x)[length(x)]
     }
     
+    getvcov <- function(dat, fm, cluster){
+        ## Compute cluster robust standard errors
+        ## fm is the model object  
+        attach(dat, warn.conflicts = F)
+        M <- length(unique(cluster))  
+        N <- length(cluster)              
+        K <- fm$rank                     
+        dfc <- (M/(M-1))*((N-1)/(N-K)) 
+        uj  <- apply(estfun(fm),2, function(x) tapply(x, cluster, sum));
+        dfc*sandwich(fm, meat. = crossprod(uj)/N)
+    }
+    
     predictY.dataprep <- function(T.t,T.c,M.t,M.c){
         ## Prepare model matrix for outcome predictions; arguments 0 or 1
         ## Objects that must exist in surrounding environment:
         ##    y.data, cat.1, cat.0,
-        ##    t.levels, m.levels, isFactorT.y, isFactorM,
+        ##    t.levels, m.levels, isFactorT, isFactorM,
         ##    PredictM1, PredictM0, treat, mediator, control,
         ##    boot, j (if !boot)
         
@@ -182,7 +193,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
         cat.c <- ifelse(T.c, cat.1, cat.0)
         cat.t.ctrl <- ifelse(T.t, cat.0, cat.1)
         cat.c.ctrl <- ifelse(T.c, cat.0, cat.1)
-        if(isFactorT.y){
+        if(isFactorT){
             pred.data.t[,treat] <- factor(cat.t, levels = t.levels)
             pred.data.c[,treat] <- factor(cat.c, levels = t.levels)
             if(!is.null(control)){
@@ -287,7 +298,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
             pred.data.t <- m.data
             pred.data.c <- m.data
             
-            if(isFactorT.m){
+            if(isFactorT){
                 pred.data.t[,treat] <- factor(cat.1, levels = t.levels)
                 pred.data.c[,treat] <- factor(cat.0, levels = t.levels)
             } else {
@@ -298,8 +309,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
             mmat.t <- model.matrix(terms(model.m), data=pred.data.t)
             mmat.c <- model.matrix(terms(model.m), data=pred.data.c)
             
-            ### Case I-1-a: GLM Mediator
-            if(ClassM == "glm"){
+            ### Case I-1-a: GLM Mediator (including GAMs)
+            if(isGlm.m){
                 
                 muM1 <- model.m$family$linkinv(MModel %*% t(mmat.t))
                 muM0 <- model.m$family$linkinv(MModel %*% t(mmat.c))
@@ -390,7 +401,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                 }
             
             ### Case I-1-c: Linear
-            } else if(ClassM=="lm"){
+            } else if(isLm.m){
                 sigma <- summary(model.m)$sigma
                 error <- rnorm(sims*n, mean=0, sd=sigma)
                 muM1 <- MModel %*% t(mmat.t)
@@ -420,7 +431,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                 ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
                 
                 if(isVglm.y){
-                    if(vfamily=="tobit") {
+                    if(VfamilyY=="tobit") {
                         Pr1.tmp <- ymat.t %*% TMmodel[j,-2]
                         Pr0.tmp <- ymat.c %*% TMmodel[j,-2]
                         Pr1[,j] <- pmin(pmax(Pr1.tmp, model.y@misc$Lower), model.y@misc$Upper)
@@ -436,7 +447,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                 rm(ymat.t, ymat.c, pred.data.t, pred.data.c, pred.data)
             }
             
-            if(ClassY=="glm"){
+            if(isGlm.y){
                 Pr1 <- apply(Pr1, 2, model.y$family$linkinv)
                 Pr0 <- apply(Pr0, 2, model.y$family$linkinv)
                 delta.1.tmp <- Pr1 - Pr0
@@ -458,7 +469,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                 ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
                 
                 if(isVglm.y){
-                    if(vfamily=="tobit") {
+                    if(VfamilyY=="tobit") {
                         Pr1.tmp <- ymat.t %*% TMmodel[j,-2]
                         Pr0.tmp <- ymat.c %*% TMmodel[j,-2]
                         Pr1[,j] <- pmin(pmax(Pr1.tmp, model.y@misc$Lower), model.y@misc$Upper)
@@ -473,7 +484,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                 rm(ymat.t, ymat.c, pred.data.t, pred.data.c, pred.data)
             }
             
-            if(ClassY=="glm"){
+            if(isGlm.y){
                 Pr1 <- apply(Pr1, 2, model.y$family$linkinv)
                 Pr0 <- apply(Pr0, 2, model.y$family$linkinv)
                 delta.0.tmp <- Pr1 - Pr0
@@ -495,7 +506,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                 ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
                 
                 if(isVglm.y){
-                    if(vfamily=="tobit") {
+                    if(VfamilyY=="tobit") {
                         Pr1.tmp <- ymat.t %*% TMmodel[j,-2]
                         Pr0.tmp <- ymat.c %*% TMmodel[j,-2]
                         Pr1[,j] <- pmin(pmax(Pr1.tmp, model.y@misc$Lower), model.y@misc$Upper)
@@ -510,7 +521,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                 rm(ymat.t, ymat.c, pred.data.t, pred.data.c, pred.data)
             }    
             
-            if(ClassY=="glm"){
+            if(isGlm.y){
                 Pr1 <- apply(Pr1, 2, model.y$family$linkinv)
                 Pr0 <- apply(Pr0, 2, model.y$family$linkinv)
                 zeta.1.tmp <- Pr1 - Pr0
@@ -532,7 +543,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                 ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
                 
                 if(isVglm.y){
-                    if(vfamily=="tobit") {
+                    if(VfamilyY=="tobit") {
                         Pr1.tmp <- ymat.t %*% TMmodel[j,-2]
                         Pr0.tmp <- ymat.c %*% TMmodel[j,-2]
                         Pr1[,j] <- pmin(pmax(Pr1.tmp, model.y@misc$Lower), model.y@misc$Upper)
@@ -547,7 +558,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                 rm(ymat.t, ymat.c, pred.data.t, pred.data.c, pred.data)
             }
             
-            if(ClassY=="glm"){
+            if(isGlm.y){
                 Pr1 <- apply(Pr1, 2, model.y$family$linkinv)
                 Pr0 <- apply(Pr0, 2, model.y$family$linkinv)
                 zeta.0.tmp <- Pr1 - Pr0
@@ -615,7 +626,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                 pred.data.t <- m.data
                 pred.data.c <- m.data
                 
-                if(isFactorT.m){
+                if(isFactorT){
                     pred.data.t[,treat] <- factor(cat.1, levels = t.levels)
                     pred.data.c[,treat] <- factor(cat.0, levels = t.levels)
                 } else {
@@ -623,8 +634,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                     pred.data.c[,treat] <- cat.0
                 }
                 
-                ### Case I-2-a: GLM Mediator
-                if(ClassM=="glm" || isGam.m){
+                ### Case I-2-a: GLM Mediator (including GAMs)
+                if(isGlm.m){
                 
                 muM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
                 muM0 <- predict(new.fit.M, type="response", newdata=pred.data.c)
@@ -682,7 +693,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                     rm(newfits, X.t, X.c)
                     
                 ### Case I-2-d: Linear
-                } else if(ClassM=="lm"){
+                } else if(isLm.m){
                     sigma <- summary(new.fit.M)$sigma
                     error <- rnorm(n, mean=0, sd=sigma)
                     PredictM1 <- predict(new.fit.M, type="response", 
@@ -927,7 +938,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
             pred.data.c <- m.data
             pred.data.c[,treat] <- cat.0
             
-            if(isFactorT.m){
+            if(isFactorT){
                 pred.data.t[,treat] <- as.factor(pred.data.t[,treat])
                 pred.data.c[,treat] <- as.factor(pred.data.c[,treat])
             } else { 
@@ -936,8 +947,8 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
             } 
 
             
-            ### Case II-a: GLM Mediator
-            if(ClassM=="glm" || isGam.m){
+            ### Case II-a: GLM Mediator (including GAMs)
+            if(isGlm.m){
                 
                 muM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
                 muM0 <- predict(new.fit.M, type="response", newdata=pred.data.c)
@@ -996,7 +1007,7 @@ mediate <- function(model.m, model.y, sims=1000, boot=FALSE,
                 rm(newfits, X.t, X.c)
                     
             ### Case II-d: Linear
-            } else if(ClassM=="lm"){
+            } else if(isLm.m){
                 sigma <- summary(new.fit.M)$sigma
                 error <- rnorm(n, mean=0, sd=sigma)
                 PredictM1 <- predict(new.fit.M, type="response",
