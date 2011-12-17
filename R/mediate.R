@@ -127,7 +127,6 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     }
     
     if(isFactorT){
-        # TODO: Allow non-binary factor treatment
         t.levels <- levels(y.data[,treat])
         if(treat.value %in% t.levels & control.value %in% t.levels){
             cat.0 <- control.value
@@ -180,7 +179,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         ########################################################################
         ## Case I-1: Quasi-Bayesian Monte Carlo
         ########################################################################
-        if(boot == FALSE){
+        if(!boot){
             # Error if gam outcome or quantile mediator
             if(isGam.m | isGam.y | isRq.m){
                 stop("'boot' must be 'TRUE' for models used")
@@ -348,7 +347,6 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
             #####################################
             ##  Outcome Predictions
             #####################################
-
             effects.tmp <- array(NA, dim = c(n, sims, 4))
             for(e in 1:4){
                 tt <- switch(e, c(1,1,1,0), c(0,0,1,0), c(1,0,1,1), c(1,0,0,0))
