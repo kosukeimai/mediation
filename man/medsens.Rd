@@ -64,7 +64,7 @@ Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation Analy
 \author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu}, 
 Teppei Yamamoto, Princeton University, \email{tyamamot@princeton.edu}, 
 Jaquilyn Waddell-Boie, Princeton University, \email{jwaddell@princeton.edu},
-Luke Keele, Ohio State University, \email{keele.4@osu.edu}, 
+Luke Keele, Penn State University, \email{ljk20@psu.edu}, 
 Kosuke Imai, Princeton University, \email{kimai@princeton.edu} }
  
 \seealso{\code{\link{mediate}}, \code{\link{summary.medsens}}, \code{\link{plot.medsens}}.}

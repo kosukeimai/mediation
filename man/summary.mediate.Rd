@@ -1,8 +1,10 @@
 \name{summary.mediate} 
 \alias{summary.mediate} 
-\alias{summary.mediate.order} 
+\alias{summary.mediate.order}
+\alias{summary.mediate.npdiscrete}  
 \alias{print.summary.mediate} 
 \alias{print.summary.mediate.order}
+\alias{print.summary.mediate.npdiscrete}
 
 \title{Summarizing Output from Mediation Analysis} 
 \description{ 
@@ -30,7 +32,7 @@ Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation Analy
 
 \author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu}, 
 Teppei Yamamoto, Princeton University, \email{tyamamot@princeton.edu}, 
-Luke Keele, Ohio State University, \email{keele.4@osu.edu}, 
+Luke Keele, Penn State University, \email{ljk20@psu.edu}, 
 Kosuke Imai, Princeton University, \email{kimai@princeton.edu} }
  
 \seealso{\code{\link{mediate}}, \code{\link{plot.mediate}}, \code{\link{summary}}.}
