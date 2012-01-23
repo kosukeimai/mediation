@@ -6,11 +6,13 @@
 } 
 \usage{
 
-mediate(model.m, model.y, sims=1000, boot=FALSE, 
-        treat="treat.name", mediator="med.name", 
-        control=NULL, conf.level=.95, 
-        control.value=0, treat.value=1, 
-        long=TRUE, dropobs=FALSE, robustSE=FALSE, cluster=NULL, ...)
+mediate(model.m, model.y, sims = 1000, boot = FALSE, 
+        treat = "treat.name", mediator = "med.name", 
+	covariates = NULL,
+        control = NULL, conf.level = .95, 
+        control.value = 0, treat.value = 1, 
+        long = TRUE, dropobs = FALSE,
+	robustSE = FALSE, cluster = NULL, ...)
 
 } 
 
@@ -23,6 +25,7 @@ mediate(model.m, model.y, sims=1000, boot=FALSE,
 the 2.5 and 97.5 percentiles of the simulated quantities.} 
 \item{treat}{ a character string indicating the name of treatment variable used in the models.  The treatment can be either binary (integer or a two-valued factor) or continuous (numeric).}
 \item{mediator}{ a character string indicating the name of mediator variable used in the models.}
+\item{covariates}{ a list or data frame containing values for a subset of the pre-treatment covariates in 'model.m' and 'model.y'. If provided, the function will return the estimates conditional on those covariate values.}
 \item{control}{ a character string indicating the name of control group indicator. Only relevant if 'model.y' is of class 'gam'. If provided, 'd0', 'z0' and 'n0' are allowed to differ from 'd1', 'z1' and 'n1', respectively.}
 \item{control.value}{ value of the treatment variable used as the control condition. Only relevant when 'treat' is continuous.  Default is 0.}
 \item{treat.value}{ value of the treatment variable used as the treatment condition. Only relevant when 'treat' is continuous. Default is 1.}
@@ -42,6 +45,8 @@ where \eqn{t, t_1, t_0}{t, t1, t0} are particular values of the treatment \eqn{T
 which represents the expected difference in the potential outcome when the treatment is changed but the mediator is held constant at the value that would realize if the treatment equals \eqn{t}. The two quantities on average add up to the total effect of the treatment on the outcome, \eqn{\tau}. See the references for more details.
 
 When both the mediator model ('model.m') and outcome model ('model.y') are linear, the results will be identical to the usual LSEM method by Baron and Kenny (1986).  The function can, however, accommodate other data types including binary, ordered and count outcomes and mediators as well as censored outcomes.  Variables can also be modeled nonparametrically, semiparametrically, or using quantile regressions.
+
+If it is desired that inference be made conditional on specific values of the pre-treatment covariates included in the model, the `covariates' argument can be used to set those values as a list or data frame. The list may contain either the entire set or any strict subset of the covariates in the model; in the latter case, the effects will be averaged over the other covariates. The `covariates' argument will be particularly useful when the models contain interactions between the covariates and the treatment and/or mediator (the so-called ``moderated mediation'').
 
 The prior weights in the mediator and outcome models are taken as sampling weights and the estimated effects will be weighted averages when non-NULL weights are used in fitting 'model.m' and 'model.y'. This will be useful when data does not come from a simple random sample, for example. 
 
@@ -127,6 +132,16 @@ summary(contcont.boot)
 d <- lm(depress2 ~ treat + job_seek + treat:job_seek + econ_hard + sex + age, data=jobs)
 contcont.int <- mediate(b, d, sims=50, treat="treat", mediator="job_seek")
 summary(contcont.int)
+
+# Allowing ``moderated mediation'' with respect to age
+b.int <- lm(job_seek ~ treat*age + econ_hard + sex, data=jobs)
+d.int <- lm(depress2 ~ treat*job_seek*age + econ_hard + sex, data=jobs)
+contcont.age20 <- mediate(b.int, d.int, sims=50, treat="treat", mediator="job_seek",
+			covariates = list(age = 20))
+contcont.age70 <- mediate(b.int, d.int, sims=50, treat="treat", mediator="job_seek",
+			covariates = list(age = 70))
+summary(contcont.age20)
+summary(contcont.age70)
 
 # Continuous treatment
 jobs$treat_cont <- jobs$treat + rnorm(nrow(jobs))  # (hypothetical) continuous treatment

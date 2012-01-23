@@ -1,5 +1,6 @@
 mediate <- function(model.m, model.y, sims = 1000, boot = FALSE, 
                     treat = "treat.name", mediator = "med.name", 
+                    covariates = NULL,
                     control = NULL, conf.level = .95,
                     control.value = 0, treat.value = 1, 
                     long = TRUE, dropobs = FALSE, 
@@ -7,8 +8,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     
     # Warn users who still use INT option
     if(match("INT", names(match.call()), 0L)){
-        warning("'INT' is deprecated - existence of interaction term
-        is now automatically detected")
+        warning("'INT' is deprecated - existence of interaction term is now automatically detected")
     }
     
     # Warning for robustSE used with boot
@@ -224,8 +224,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
             #####################################
             #  Mediator Predictions
             #####################################
-            pred.data.t <- m.data
-            pred.data.c <- m.data
+            pred.data.t <- pred.data.c <- m.data
             
             if(isFactorT){
                 pred.data.t[,treat] <- factor(cat.1, levels = t.levels)
@@ -235,14 +234,24 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                 pred.data.c[,treat] <- cat.0
             }
             
+            if(!is.null(covariates)){
+            	for(p in 1:length(covariates)){
+            		vl <- names(covariates[p])
+            		x <- ifelse(is.factor(pred.data.t[,vl]),
+            						factor(covariates[[p]], levels = levels(m.data[,vl])),
+            						covariates[[p]])
+            		pred.data.t[,vl] <- pred.data.c[,vl] <- x
+            	}
+            }
+            
             mmat.t <- model.matrix(terms(model.m), data=pred.data.t)
             mmat.c <- model.matrix(terms(model.m), data=pred.data.c)
             
             ### Case I-1-a: GLM Mediator
             if(isGlm.m){
                 
-                muM1 <- model.m$family$linkinv(MModel %*% t(mmat.t))
-                muM0 <- model.m$family$linkinv(MModel %*% t(mmat.c))
+                muM1 <- model.m$family$linkinv(tcrossprod(MModel, mmat.t))
+                muM0 <- model.m$family$linkinv(tcrossprod(MModel, mmat.c))
                 
                 if(FamilyM == "poisson"){
                     PredictM1 <- matrix(rpois(sims*n, lambda = muM1), nrow = sims)
@@ -289,8 +298,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                 mmat.t <- mmat.t[,-1]
                 mmat.c <- mmat.c[,-1]
                 
-                ystar_m1 <- MModel %*% t(mmat.t) 
-                ystar_m0 <- MModel %*% t(mmat.c)
+                ystar_m1 <- tcrossprod(MModel, mmat.t)
+                ystar_m0 <- tcrossprod(MModel, mmat.c)
                 
                 PredictM1 <- matrix(,nrow=sims, ncol=n)
                 PredictM0 <- matrix(,nrow=sims, ncol=n)
@@ -333,8 +342,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
             } else if(isLm.m){
                 sigma <- summary(model.m)$sigma
                 error <- rnorm(sims*n, mean=0, sd=sigma)
-                muM1 <- MModel %*% t(mmat.t)
-                muM0 <- MModel %*% t(mmat.c)
+                muM1 <- tcrossprod(MModel, mmat.t)
+                muM0 <- tcrossprod(MModel, mmat.c)
                 PredictM1 <- muM1 + matrix(error, nrow=sims)
                 PredictM0 <- muM0 + matrix(error, nrow=sims)
                 rm(error)
@@ -355,7 +364,17 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
             
                 for(j in 1:sims){
                     pred.data.t <- pred.data.c <- y.data
-        
+                    
+		            if(!is.null(covariates)){
+        		    	for(p in 1:length(covariates)){
+            				vl <- names(covariates[p])
+            				x <- ifelse(is.factor(pred.data.t[,vl]),
+            								factor(covariates[[p]], levels = levels(y.data[,vl])),
+            								covariates[[p]])
+     			       		pred.data.t[,vl] <- pred.data.c[,vl] <- x
+            			}
+		            }
+		            
                     # Set treatment values
                     cat.t <- ifelse(tt[1], cat.1, cat.0)
                     cat.c <- ifelse(tt[2], cat.1, cat.0)
@@ -410,10 +429,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                 if(isGlm.y){
                     Pr1 <- apply(Pr1, 2, model.y$family$linkinv)
                     Pr0 <- apply(Pr0, 2, model.y$family$linkinv)
-                    effects.tmp[,,e] <- Pr1 - Pr0
-                } else {
-                    effects.tmp[,,e] <- Pr1 - Pr0
                 }
+                effects.tmp[,,e] <- Pr1 - Pr0
                 rm(Pr1, Pr0)
             }
             
@@ -460,8 +477,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                 #####################################
                 #  Mediator Predictions
                 #####################################
-                pred.data.t <- m.data
-                pred.data.c <- m.data
+                pred.data.t <- pred.data.c <- m.data
                 
                 if(isFactorT){
                     pred.data.t[,treat] <- factor(cat.1, levels = t.levels)
@@ -471,6 +487,16 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                     pred.data.c[,treat] <- cat.0
                 }
                 
+	            if(!is.null(covariates)){
+    	        	for(p in 1:length(covariates)){
+        	    		vl <- names(covariates[p])
+            			x <- ifelse(is.factor(pred.data.t[,vl]),
+            							factor(covariates[[p]], levels = levels(m.data[,vl])),
+            							covariates[[p]])
+  		          		pred.data.t[,vl] <- pred.data.c[,vl] <- x
+        	    	}
+           		}
+            
                 ### Case I-2-a: GLM Mediator (including GAMs)
                 if(isGlm.m){
                 
@@ -550,7 +576,17 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                 for(e in 1:4){
                     tt <- switch(e, c(1,1,1,0), c(0,0,1,0), c(1,0,1,1), c(1,0,0,0))
                     pred.data.t <- pred.data.c <- y.data
-                    
+
+		            if(!is.null(covariates)){
+   	 	        		for(p in 1:length(covariates)){
+        	    			vl <- names(covariates[p])
+            				x <- ifelse(is.factor(pred.data.t[,vl]),
+            								factor(covariates[[p]], levels = levels(y.data[,vl])),
+            								covariates[[p]])
+        	    			pred.data.t[,vl] <- pred.data.c[,vl] <- x
+            			}
+            		}
+                                
                     # Set treatment values
                     cat.t <- ifelse(tt[1], cat.1, cat.0)
                     cat.c <- ifelse(tt[2], cat.1, cat.0)
@@ -663,7 +699,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                         d.avg=d.avg, d.avg.ci=d.avg.ci, d.avg.sims=delta.avg,
                         z.avg=z.avg, z.avg.ci=z.avg.ci, z.avg.sims=zeta.avg,
                         n.avg=n.avg, n.avg.ci=n.avg.ci, n.avg.sims=nu.avg,
-                        boot=boot, treat=treat, mediator=mediator, 
+                        boot=boot, treat=treat, mediator=mediator,
+                        covariates=covariates, 
                         INT=INT, conf.level=conf.level,
                         model.y=model.y, model.m=model.m, 
                         control.value=control.value, treat.value=treat.value,
@@ -676,7 +713,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                         d.avg=d.avg, d.avg.ci=d.avg.ci,
                         z.avg=z.avg, z.avg.ci=z.avg.ci,
                         n.avg=n.avg, n.avg.ci=n.avg.ci,
-                        boot=boot, treat=treat, mediator=mediator, 
+                        boot=boot, treat=treat, mediator=mediator,
+                        covariates=covariates,
                         INT=INT, conf.level=conf.level,
                         model.y=model.y, model.m=model.m, 
                         control.value=control.value, treat.value=treat.value,
@@ -698,7 +736,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         
         n.ycat <- length(unique(model.response(y.data)))
         
-        # Storage - Now Dynamic
+        # Storage
         delta.1 <- matrix(NA, sims, n.ycat)
         delta.0 <- matrix(NA, sims, n.ycat)
         zeta.1 <- matrix(NA, sims, n.ycat)
@@ -733,20 +771,26 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
             #####################################
             # Mediator Predictions
             #####################################
-            pred.data.t <- m.data
-            pred.data.t[,treat] <- cat.1
-            pred.data.c <- m.data
-            pred.data.c[,treat] <- cat.0
-            
+            pred.data.t <- pred.data.c <- m.data
+                
             if(isFactorT){
-                pred.data.t[,treat] <- as.factor(pred.data.t[,treat])
-                pred.data.c[,treat] <- as.factor(pred.data.c[,treat])
-            } else { 
-                pred.data.t[,treat] <- as.numeric(pred.data.t[,treat])
-                pred.data.c[,treat] <- as.numeric(pred.data.c[,treat])
-            } 
-
-            
+                 pred.data.t[,treat] <- factor(cat.1, levels = t.levels)
+                 pred.data.c[,treat] <- factor(cat.0, levels = t.levels)
+            } else {
+                 pred.data.t[,treat] <- cat.1
+                 pred.data.c[,treat] <- cat.0
+            }
+                
+            if(!is.null(covariates)){
+   	        	for(p in 1:length(covariates)){
+       	    		vl <- names(covariates[p])
+           			x <- ifelse(is.factor(pred.data.t[,vl]),
+           							factor(covariates[[p]], levels = levels(m.data[,vl])),
+           							covariates[[p]])
+ 	          		pred.data.t[,vl] <- pred.data.c[,vl] <- x
+       	    	}
+       		}
+           
             ### Case II-a: GLM Mediator (including GAMs)
             if(isGlm.m){
                 
@@ -827,6 +871,16 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                 tt <- switch(e, c(1,1,1,0), c(0,0,1,0), c(1,0,1,1), c(1,0,0,0))
                 pred.data.t <- pred.data.c <- y.data
                 
+	            if(!is.null(covariates)){
+	        		for(p in 1:length(covariates)){
+       	    			vl <- names(covariates[p])
+           				x <- ifelse(is.factor(pred.data.t[,vl]),
+          								factor(covariates[[p]], levels = levels(y.data[,vl])),
+           								covariates[[p]])
+       	    			pred.data.t[,vl] <- pred.data.c[,vl] <- x
+           			}
+           		}
+                                
                 # Set treatment values
                 cat.t <- ifelse(tt[1], cat.1, cat.0)
                 cat.c <- ifelse(tt[2], cat.1, cat.0)
@@ -901,7 +955,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                         tau.coef=tau.coef, tau.ci=tau.ci, 
                         z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci, 
                         z1.sims=zeta.1, z0.sims=zeta.0, tau.sims=tau,
-                        boot=boot, treat=treat, mediator=mediator, 
+                        boot=boot, treat=treat, mediator=mediator,
+                        covariates=covariates,
                         INT=INT, conf.level=conf.level,
                         model.y=model.y, model.m=model.m, 
                         control.value=control.value, treat.value=treat.value, nobs=n)
@@ -909,7 +964,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
             out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
                         tau.coef=tau.coef, tau.ci=tau.ci, 
                         z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci,  
-                        boot=boot, treat=treat, mediator=mediator, 
+                        boot=boot, treat=treat, mediator=mediator,
+                        covariates=covariates, 
                         INT=INT, conf.level=conf.level,
                         model.y=model.y, model.m=model.m, 
                         control.value=control.value, treat.value=treat.value, nobs=n)
@@ -930,10 +986,14 @@ summary.mediate <- function(object, ...){
 print.summary.mediate <- function(x, ...){
     clp <- 100 * x$conf.level
     cat("\n Causal Mediation Analysis \n\n")
-    if(x$boot==TRUE){
+    if(x$boot){
         cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
     } else {
         cat("Quasi-Bayesian Confidence Intervals\n\n")
+    }
+    
+    if(!is.null(x$covariates)){
+    	cat("(Inference Conditional on the Covariate Values Specified in `covariates')\n\n")
     }
     
     printone <- x$INT == FALSE && (class(x$model.y)[1] %in% c("lm", "rq") ||
@@ -1014,6 +1074,9 @@ print.summary.mediate.order <- function(x, ...){
     
     cat("\n Causal Mediation Analysis \n\n")
     cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
+    if(!is.null(x$covariates)){
+    	cat("(Inference Conditional on the Covariate Values Specified in `covariates')\n\n")
+    }
     print(tab.d0, digits=4)
     cat("\n")
     print(tab.d1, digits=4)
