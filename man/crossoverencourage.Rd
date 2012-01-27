@@ -17,6 +17,7 @@ crossoverencourage(outcome=outcome,mediator1=mediator1,mediator2=mediator2,treat
 
 \details{This function calculates causal mediation effects (CME) for the parallel encouragement design. The CME represents the expected difference 
 
+#this stuff needs to be written out. See page 22.
 \deqn{\delta(t) \ = \ E\{Y(t, M(t_1)) - Y(t, M(t_0))\},}
 #in the potential outcome when the mediator took the value that would realize under the treatment condition as opposed to the control condition, while the treatment status itself is held constant. \deqn{\delta(t) \ = \ E\{Y(t, M(t_1)) - Y(t, M(t_0))\},}{%
 #    \delta(t) = E[Y(t, M(t1)) - Y(t, M(t0))],}
