@@ -1,5 +1,5 @@
 
-crossoverencourage<-function(outcome=outcome,mediator1=mediator1,mediator2=mediator2,treatment=treatment,encouragement=encouragement,sims=100, conf.level=.95) {
+crossoverencourage<-function(outcome=outcome,mediator1=mediator1,mediator2=mediator2,treatment=treatment,encouragement=encouragement,sims=1000, conf.level=.95) {
 
         data<-matrix(,nrow=length(outcome),ncol=5)
 
@@ -80,7 +80,7 @@ crossoverencourage<-function(outcome=outcome,mediator1=mediator1,mediator2=media
         d.p.c.ci <- quantile(d.p.c, c(low,high), na.rm=TRUE)
         d.p.t.ci <- quantile(d.p.t, c(low,high), na.rm=TRUE)
 
-        out<-list(d.p.c.mu = d.p.c.mu, d.p.t.mu = d.p.t.mu,d.p.c.ci = d.p.c.ci, d.p.t.ci = d.p.t.ci,d.p.c=d.p.c,d.p.t=d.p.t,conf.level=conf.level)
+        out<-list(d.p.c.mu = d.p.c.mu, d.p.t.mu = d.p.t.mu,d.p.c.ci = d.p.c.ci, d.p.t.ci = d.p.t.ci,d.p.c=d.p.c,d.p.t=d.p.t,nobs=n,sims=sims,conf.level=conf.level)
 
         class(out) <- "crossoverencourage"
         out
