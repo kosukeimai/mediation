@@ -66,7 +66,7 @@ crossoverencourage<-function(outcome=outcome,mediator1=mediator1,mediator2=media
                 d.p.t[b]<-(PH0/(A010-A011))*(G0111+G0110-G0100-G0110*A011-G0101*A010)+((1-PH0)/(A001-A000))*(G0010-G0001-G0000+G0000*A000+G0011*A001)
 
         }#bootstraploop
-        #replace any instances of infinity
+        #replace any instances of infinity. Teppei, this happened a couple times in simulations I did. 
         d.p.c[d.p.c==-Inf]<-NA
         d.p.t[d.p.t==-Inf]<-NA
         d.p.c[d.p.c==Inf]<-NA
@@ -74,7 +74,7 @@ crossoverencourage<-function(outcome=outcome,mediator1=mediator1,mediator2=media
 
         low <- (1 - conf.level)/2
         high <- 1 - low
-        #We probably want to take the median rather than the mean so outlier draws have less influence?
+        #Do we want to take the median rather than the mean so outlier draws have less influence?
         d.p.c.mu<-mean(d.p.c, na.rm=TRUE)
         d.p.t.mu<-mean(d.p.t, na.rm=TRUE)
         d.p.c.ci <- quantile(d.p.c, c(low,high), na.rm=TRUE)
