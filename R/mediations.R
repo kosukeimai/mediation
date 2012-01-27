@@ -15,7 +15,7 @@ mediations <- function(datasets, treatment, mediators, outcome,
             for (j in 1:length(mediators)) {
                 # create model formulas
                 if(is.null(covariates)) {
-                    f1 <- sprintf("%s ~ %s + %s", mediators[j], treatment[i])
+                    f1 <- sprintf("%s ~ %s ", mediators[j], treatment[i])
                     if (interaction) {
                         f2 <- sprintf("%s ~ %s * %s", outcome[o], treatment[i], mediators[j])
                     } else {
