@@ -1,8 +1,107 @@
 
 #source("C:/Users/dtingley/Documents/mediation/software/setupBoundsData.R")
 
+
+#WRAPPER FUNCTIONS
+
+#single experiment design
+mediate.sed<-function(outcome,mediator,treatment,encouragement=NULL,SI=TRUE) {
+
+    if(SI) {
+    out<-mediate.np()#this will be luke's function
+    } else {
+    out<-mechanism.bounds(outcome,mediator,treatment,encouragement=NULL,design=SED)
+    }
+
+#I'm not sure how to return things correctly so things play nicely with the summary functions. right now we return "out" from mechanism.bounds function. I'm forgetting how to make this sort of wrapper thing work
+return(out)
+}
+
+
+
+#parallel design
+mediate.pd<-function(outcome,mediator,treatment,encouragement,NINT=TRUE,conf.level=.95) {
+
+    if(NINT) {     
+     out<-boot.pd(outcome,mediator,treatment,encouragement,NINT,conf.level)
+    } else {
+    out<-mechanism.bounds(outcome,mediator,treatment,encouragement,design="PD")
+    }
+    
+return(out)
+}
+
+
+#parallel encouragement design
+mediate.ped<-function(outcome,mediator,treatment,encouragement=NULL) {
+
+    out<-mechanism.bounds(outcome,mediator,treatment,encouragement=NULL,design="PED")
+    return(out)
+    
+}
+
+
+
+
+#WORKHORSE FUNCTIONS
+
+#parallel design under no interaction assumption
+    boot.pd<-function(outcome,mediator, treatment,encouragement,sims=100, conf.level=.95) {
+    
+    n.o <- length(outcome)
+    n.t <- length(treatment)
+    n.m <- length(mediator)
+    n.z<-length(encouragement)
+   
+
+        if(n.o != n.t | n.t != n.m |n.m !=n.z){
+            stop("Error: Number of observations not the same in treatment, outcome, mediator, and encouragement data")
+        }
+    orig.length<-length(outcome)
+    data<-matrix(,nrow=length(outcome),ncol=3)
+
+    data[,1]<-outcome
+    data[,2]<-treatment
+    data[,3]<-mediator
+    data[,4]<-encouragement
+    data<-as.data.frame(data)
+    names(data)<-c("Y","T","M","D")
+    
+    
+    acme<- matrix(NA, sims, 1)
+        # Bootstrap function.
+                for(b in 1:sims){
+                    index <- sample(1:n, n, replace = TRUE)
+                    d<-data[index,]
+            
+            d0.temp<-mean(d$Y[D$T==1 & d$D==0) - mean(d$Y[d$T==0 & d$D==0)
+            
+            weight.m1<-sum(d$M==1 & d$D==1 )/sum(d$D==1)
+            weight.m0<-sum(d$M==0 & d$D==1 )/sum(d$D==1)
+            m1<-mean(d$Y[d$T==1 & d$M==1 & d$D==1) - mean(d$Y[d$T==0 & d$M==1 & d$D==1)
+            m0<-mean(d$Y[d$T==1 & d$M==0 & d$D==1) - mean(d$Y[d$T==0 & d$M==0 & d$D==1)
+            acme[b]<-weight.m1*m1 + weight.m0*m0
+            }
+
+        acme[acme==-Inf]<-NA
+        acme[acme==Inf]<-NA
+        
+        low <- (1 - conf.level)/2
+        high <- 1 - low
+
+        acme.mu<-median(acme, na.rm=TRUE)
+        acme.ci <- quantile(acme.mu, c(low,high), na.rm=TRUE)
+        
+        out<-list(acme.mu=acme.mu, acme.ci=acme.ci,acme=acme,conf.level=conf.level,sims=sims)
+        out
+
+    }
+    
+    
+    
+
 #Bounds Function for parallel, parallel encouragement, and single experiment designs
-mechanism.bounds<-function(outcome=outcome,mediator=mediator,treatment=treatment,encouragement=NULL,design=NULL) {
+mechanism.bounds<-function(outcome,mediator,treatment,encouragement=NULL,design=NULL) {
 
     n.o <- length(outcome)
     n.t <- length(treatment)
