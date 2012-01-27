@@ -8,11 +8,11 @@
 
 mediate(model.m, model.y, sims = 1000, boot = FALSE, 
         treat = "treat.name", mediator = "med.name", 
-	covariates = NULL,
+        covariates = NULL,
         control = NULL, conf.level = .95, 
         control.value = 0, treat.value = 1, 
         long = TRUE, dropobs = FALSE,
-	robustSE = FALSE, cluster = NULL, ...)
+        robustSE = FALSE, cluster = NULL, ...)
 
 } 
 
@@ -27,8 +27,8 @@ the 2.5 and 97.5 percentiles of the simulated quantities.}
 \item{mediator}{ a character string indicating the name of mediator variable used in the models.}
 \item{covariates}{ a list or data frame containing values for a subset of the pre-treatment covariates in 'model.m' and 'model.y'. If provided, the function will return the estimates conditional on those covariate values.}
 \item{control}{ a character string indicating the name of control group indicator. Only relevant if 'model.y' is of class 'gam'. If provided, 'd0', 'z0' and 'n0' are allowed to differ from 'd1', 'z1' and 'n1', respectively.}
-\item{control.value}{ value of the treatment variable used as the control condition. Only relevant when 'treat' is continuous.  Default is 0.}
-\item{treat.value}{ value of the treatment variable used as the treatment condition. Only relevant when 'treat' is continuous. Default is 1.}
+\item{control.value}{ value of the treatment variable used as the control condition. Default is 0.}
+\item{treat.value}{ value of the treatment variable used as the treatment condition. Default is 1.}
 \item{long}{ a logical value. If 'TRUE', the output will contain the entire sets of simulation draws of the the average causal mediation effects, direct effects, proportions mediated, and total effect. Default is 'TRUE'.}
 \item{dropobs}{ a logical value indicating the behavior when the model frames of 'model.m' and 'model.y' are composed of different observations. If 'TRUE', models will be re-fitted using the intersection of the two data frames. If 'FALSE', error is returned. Default is 'FALSE'.}
 \item{robustSE}{ a logical value. If 'TRUE', heteroskedasticisy-consistent standard errors will be used in quasi-Bayesian simulations. Ignored if 'boot' is 'TRUE' or neither 'model.m' nor 'model.y' has a method for \code{vcovHC} in the \code{sandwich} package. Default is 'FALSE'.}
@@ -58,7 +58,7 @@ The quasi-Bayesian approximation (King et al. 2000) cannot be used if 'model.m' 
 
 The 'control' argument must be provided when 'gam' is used for the outcome model and user wants to allow ACME and ADE to vary as functions of \eqn{t} (i.e., to relax the "no interaction" assumption). Note that the outcome model must be fitted via package \code{\link{mgcv}} with appropriate formula using \code{\link{s}} constructs (see Imai et al. 2009 in the references). For other model types, the interaction can be allowed by including an interaction term between \eqn{T} and \eqn{M} in the linear predictor of the outcome model. As of version 3.0, the 'INT' argument is deprecated and the existence of the interaction term is automatically detected (except for 'gam' outcome models).
 
-When the treatment variable is continuous, user must specify the values of \eqn{t_1}{t1} and \eqn{t_0}{t0} using the 'treat.value' and 'control.value' arguments, respectively.  The value of \eqn{t} in the above expressions is set to \eqn{t_0}{t0} for 'd0', 'z0', etc. and to \eqn{t_1}{t1} for 'd1', 'z1', etc.
+When the treatment variable is continuous or a factor with multiple levels, user must specify the values of \eqn{t_1}{t1} and \eqn{t_0}{t0} using the 'treat.value' and 'control.value' arguments, respectively.  The value of \eqn{t} in the above expressions is set to \eqn{t_0}{t0} for 'd0', 'z0', etc. and to \eqn{t_1}{t1} for 'd1', 'z1', etc.
 }
 
 
