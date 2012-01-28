@@ -5,7 +5,11 @@
 #WRAPPER FUNCTIONS. we will write man files for each of these. This way we don't have to write more complicated man files functions like mechanism.bounds AND so it forces people to link the structure of their design to the function they use.
 
 #single experiment design
-mediate.sed<-function(outcome,mediator,treatment,encouragement=NULL,SI=TRUE) {
+mediate.sed<-function(outcome,mediator,treatment,encouragement=NULL,SI=NULL) {
+
+    if(is.null(SI)){
+    stop("You must specify whether you would like to make the sequential ignorability assumption.")
+    }
 
     if(SI) {
     out<-mediate.np()#this will be luke's function
