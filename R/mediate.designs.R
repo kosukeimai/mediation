@@ -2,19 +2,20 @@
 #source("C:/Users/dtingley/Documents/mediation/software/setupBoundsData.R")
 
 
-#WRAPPER FUNCTIONS
+#WRAPPER FUNCTIONS. we will write man files for each of these. This way we don't have to write more complicated man files functions like mechanism.bounds AND so it forces people to link the structure of their design to the function they use.
 
 #single experiment design
 mediate.sed<-function(outcome,mediator,treatment,encouragement=NULL,SI=TRUE) {
 
     if(SI) {
     out<-mediate.np()#this will be luke's function
+    out$design<-"sed.np.si"
+    #class(out) <- "mediate.design"  Luke, please make the class of your function's input "mediate.design". 
     } else {
-    out<-mechanism.bounds(outcome,mediator,treatment,encouragement=NULL,design=SED)
+    out<-mechanism.bounds(outcome,mediator,treatment,encouragement=NULL,design="SED")
+    out$design<-"sed.np.nosi"
     }
-
-#I'm not sure how to return things correctly so things play nicely with the summary functions. right now we return "out" from mechanism.bounds function. I'm forgetting how to make this sort of wrapper thing work
-return(out)
+    out
 }
 
 
@@ -23,21 +24,18 @@ return(out)
 mediate.pd<-function(outcome,mediator,treatment,encouragement,NINT=TRUE,conf.level=.95) {
 
     if(NINT) {     
-     out<-boot.pd(outcome,mediator,treatment,encouragement,NINT,conf.level)
+    out<-boot.pd(outcome,mediator,treatment,encouragement,NINT,conf.level)
     } else {
     out<-mechanism.bounds(outcome,mediator,treatment,encouragement,design="PD")
     }
-    
-return(out)
+    out
 }
 
 
 #parallel encouragement design
-mediate.ped<-function(outcome,mediator,treatment,encouragement=NULL) {
-
-    out<-mechanism.bounds(outcome,mediator,treatment,encouragement=NULL,design="PED")
-    return(out)
-    
+mediate.ped<-function(outcome,mediator,treatment,encouragement) {
+    out<-mechanism.bounds(outcome,mediator,treatment,encouragement,design="PED")
+    out
 }
 
 
@@ -46,27 +44,27 @@ mediate.ped<-function(outcome,mediator,treatment,encouragement=NULL) {
 #WORKHORSE FUNCTIONS
 
 #parallel design under no interaction assumption
-    boot.pd<-function(outcome,mediator, treatment,encouragement,sims=100, conf.level=.95) {
+boot.pd<-function(outcome,mediator, treatment,encouragement,sims=100, conf.level=.95) {
     
     n.o <- length(outcome)
     n.t <- length(treatment)
     n.m <- length(mediator)
     n.z<-length(encouragement)
    
-
-        if(n.o != n.t | n.t != n.m |n.m !=n.z){
-            stop("Error: Number of observations not the same in treatment, outcome, mediator, and encouragement data")
-        }
+    if(n.o != n.t | n.t != n.m |n.m !=n.z){
+        stop("Error: Number of observations not the same in treatment, outcome, mediator, and encouragement data")
+    }
+    
     orig.length<-length(outcome)
     data<-matrix(,nrow=length(outcome),ncol=3)
-
     data[,1]<-outcome
     data[,2]<-treatment
     data[,3]<-mediator
     data[,4]<-encouragement
     data<-as.data.frame(data)
     names(data)<-c("Y","T","M","D")
-    
+    data<-na.omit(data)
+    n.obs<-nrow(data)
     
     acme<- matrix(NA, sims, 1)
         # Bootstrap function.
@@ -88,11 +86,9 @@ mediate.ped<-function(outcome,mediator,treatment,encouragement=NULL) {
         
         low <- (1 - conf.level)/2
         high <- 1 - low
-
         acme.mu<-median(acme, na.rm=TRUE)
-        acme.ci <- quantile(acme.mu, c(low,high), na.rm=TRUE)
-        
-        out<-list(acme.mu=acme.mu, acme.ci=acme.ci,acme=acme,conf.level=conf.level,sims=sims)
+        acme.ci <- quantile(acme.mu, c(low,high), na.rm=TRUE)       
+        out<-list(d=acme.mu, d.ci=acme.ci,d.sims=acme,conf.level=conf.level,sims=sims,design="pd.nint")
         out
 
     }
@@ -319,56 +315,81 @@ mechanism.bounds<-function(outcome,mediator,treatment,encouragement=NULL,design=
 
                 #function output
                 if(design=="SED"){
-                out<-list(Single.t = S.t, Single.c = S.c, manip=manip,design=design, nobs=nobs)
+                out<-list(d1 = S.t, d0 = S.c, manip=manip, design=design, nobs=nobs)
                 }
                 if(design=="PD"){
-                out<-list(Parallel.t = P.t, Parallel.c = P.c, manip=manip,design=design, nobs=nobs)
+                out<-list(d1 = P.t, d0 = P.c, manip=manip,design=design, nobs=nobs)
                 }
                 if(design=="PED") {
-                out<-list(BE.t=BE.t, BE.c=BE.c,  BET.t=BET.t, BET.c=BET.c, manip=manip, design=design, nobs=nobs)
+                out<-list(d1=BE.t, d0=BE.c,  d1.p=BET.t, d0.p=BET.c, manip=manip, design=design, nobs=nobs)
                 }
 
 
     rm(d)
-    class(out) <- "mechanism.bounds"
+    class(out) <- "mediate.design"
     out
 }
 
 
-summary.mechanism.bounds <- function(object, ...){
-    structure(object, class = c("summary.mechanism.bounds", class(object)))
+summary.mediate.design <- function(object, ...){
+    structure(object, class = c("summary.mediate.design", class(object)))
 }
 
 
 
-print.summary.mechanism.bounds <- function(x, ...){
+print.summary.mediate.design <- function(x, ...){
     cat("\n Bounds for Causal Mediation Effects \n\n")
     cat("Design / Treatment Condition / Lower and Upper Bounds \n\n")
 
         # Print values
-        if(x$design=="SED"){
-        cat("Single Experiment Design, Treatment ", format(x$Single.t, digits=4), "\n")
-        cat("Single Experiment Design, Control ", format(x$Single.c, digits=4), "\n")
-            cat("\n\n")
-    cat("Sample Size Used:", x$nobs,"\n\n")
+        if(x$design=="sed.np.nosi"|x$design=="PD"){
+        
+            if(x$design=="sed.np.nosi"){
+            cat("\n Single Experiment Design, No SI Assumption, Bounds \n\n")
+            }
+            if(x$design=="PD"){
+            cat("\n Parallel Design, Interaction Allowed, Bounds \n\n")
+            }
+            
+            cat("Mediation Effect_0", format(x$d0, digits=4), "\n")
+            cat("Mediation Effect_1", format(x$d1, digits=4), "\n")
+                cat("\n\n")
+            cat("Sample Size Used:", x$nobs,"\n\n")
         }
 
-        if(x$design=="PD"){
-            cat("Parallel Design, Treatment ", format(x$Parallel.t, digits=4), "\n")
-            cat("Parallel Design, Control ", format(x$Parallel.c, digits=4), "\n")
-            cat("\n\n")
-            cat("Sample Size Used:", x$nobs,"\n\n")
-            }
-
+        if(x$design=="pd.nint"){
+                clp <- 100 * x$conf.level
+                cat("\n Parallel Design, No Interaction Assumed \n\n")
+                cat("Mediation Effect: ", format(x$d0, digits=4), clp, "% CI ",
+                format(x$d0.ci, digits=4), "\n")   
+        }
+        
+        
         if(x$design=="PED"){
-            cat("Parallel Encouragment Design, Treatment, Population ", format(x$BE.t, digits=4), "\n")
-            cat("Parallel Encouragment Design, Treatment, Complier ", format(x$BET.t, digits=4), "\n")
-            cat("Parallel Encouragment Design, Control, Population ", format(x$BE.c, digits=4), "\n")
-            cat("Parallel Encouragment Design, Control, Complier ", format(x$BET.c, digits=4), "\n")
+            cat("Parallel Encouragment Design, Treatment, Population ", format(x$d1, digits=4), "\n")
+            cat("Parallel Encouragment Design, Treatment, Complier ", format(x$d1.p, digits=4), "\n")
+            cat("Parallel Encouragment Design, Control, Population ", format(x$d0, digits=4), "\n")
+            cat("Parallel Encouragment Design, Control, Complier ", format(x$d0.p, digits=4), "\n")
             cat("\n\n")
             cat("Sample Size Used:", x$nobs,"\n\n")
             }
+            
+            
+        if(x$design=="ced"){            
+            clp <- 100 * x$conf.level
+                cat("\n Crossover Encouragment Design \n\n")
+                cat("Mediation Effect_0: ", format(x$d0, digits=4), clp, "% CI ",
+                format(x$d0.ci, digits=4), "\n")
+                cat("Mediation Effect_1: ", format(x$d1, digits=4), clp, "% CI ",
+                format(x$d1.ci, digits=4), "\n")
+                cat("\n\n")
+                cat("Sample Size Used:", x$nobs,"\n\n")
+        }
+        
+        #Luke we need your summary function here.
+        
 
+        
 
     invisible(x)
 }

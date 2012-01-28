@@ -80,7 +80,7 @@ crossoverencourage<-function(outcome=outcome,mediator1=mediator1,mediator2=media
         d.p.c.ci <- quantile(d.p.c, c(low,high), na.rm=TRUE)
         d.p.t.ci <- quantile(d.p.t, c(low,high), na.rm=TRUE)
 
-        out<-list(d.p.c.mu = d.p.c.mu, d.p.t.mu = d.p.t.mu,d.p.c.ci = d.p.c.ci, d.p.t.ci = d.p.t.ci,d.p.c=d.p.c,d.p.t=d.p.t,nobs=n,sims=sims,conf.level=conf.level)
+        out<-list(d0 = d.p.c.mu, d1 = d.p.t.mu, d0.ci = d.p.c.ci, d1.ci = d.p.t.ci, d0.sims=d.p.c, d1.sims=d.p.t, nobs=n,sims=sims,conf.level=conf.level)
 
         class(out) <- "crossoverencourage"
         out
