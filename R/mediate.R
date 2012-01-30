@@ -44,15 +44,17 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     # Model type indicators
     isGam.y <- inherits(model.y, "gam")
     isGam.m <- inherits(model.m, "gam")
-    isGlm.y <- inherits(model.y, "glm")  # Note gam also inherits "glm"
-    isGlm.m <- inherits(model.m, "glm")  # Note gam also inherits "glm"
-    isLm.y <- inherits(model.y, "lm")    # Note gam and glm also inherit "lm"
-    isLm.m <- inherits(model.m, "lm")    # Note gam and glm also inherit "lm"
+    isGlm.y <- inherits(model.y, "glm")  # Note gam and bayesglm also inherits "glm"
+    isGlm.m <- inherits(model.m, "glm")  # Note gam and bayesglm also inherits "glm"
+    isLm.y <- inherits(model.y, "lm")    # Note gam, glm and bayesglm also inherit "lm"
+    isLm.m <- inherits(model.m, "lm")    # Note gam, glm and bayesglm also inherit "lm"
     isVglm.y <- inherits(model.y, "vglm")
     isRq.y <- inherits(model.y, "rq")
     isRq.m <- inherits(model.m, "rq")
-    isOrdered.y <- inherits(model.y, "polr")
-    isOrdered.m <- inherits(model.m, "polr")
+    isOrdered.y <- inherits(model.y, "polr")  # Note bayespolr also inherits "polr"
+    isOrdered.m <- inherits(model.m, "polr")  # Note bayespolr also inherits "polr"
+    isSurvreg.y <- inherits(model.y, "survreg")
+    isSurvreg.m <- inherits(model.m, "survreg")
     
     # Record family of model.m if glm
     if(isGlm.m){
@@ -186,13 +188,23 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
             }
             
             # Get mean and variance parameters for simulations
-            MModel.coef <- model.m$coef
+            if(isSurvreg.m){
+            	MModel.coef <- c(coef(model.m), model.m$scale)
+            } else {
+	            MModel.coef <- coef(model.m)
+            }
+            
             if(isOrdered.m){
                 if(is.null(model.m$Hess)){
-                    cat("mediator model object does not contain 'Hessian';")
+                    cat("Mediator model object does not contain 'Hessian';")
                 }
-                k <- length(model.m$coef)
+                k <- length(MModel.coef)
                 MModel.var.cov <- vcov(model.m)[(1:k),(1:k)]
+            } else if(isSurvreg.m){
+            	MModel.var.cov <- vcov(model.m)
+            	if(robustSE | !is.null(cluster)){
+            		cat("Using (cluster) robust standard errors as specified in model.m\n")
+            	}
             } else {
                 if(robustSE){
                     MModel.var.cov <- vcovHC(model.m, ...)
@@ -203,23 +215,28 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                 }
             }
 
-            TMmodel.coef <- coef(model.y)
+            YModel.coef <- coef(model.y)
             
             if(isRq.y){
-                TMmodel.var.cov <- summary(model.y, covariance=TRUE)$cov
-            } else{
+                YModel.var.cov <- summary(model.y, covariance=TRUE)$cov
+            } else if(isSurvreg.y){
+            	YModel.var.cov <- vcov(model.y)
+            	if(robustSE | !is.null(cluster)){
+            		cat("Using (cluster) robust standard errors as specified in model.y\n")
+            	}
+            } else {
                 if(robustSE){
-                    TMmodel.var.cov <- vcovHC(model.y, ...)
+                    YModel.var.cov <- vcovHC(model.y, ...)
                 } else if(!is.null(cluster)){
-                    TMmodel.var.cov <- getvcov(y.data, model.y, cluster)
+                    YModel.var.cov <- getvcov(y.data, model.y, cluster)
                 } else {
-                    TMmodel.var.cov <- vcov(model.y)
+                    YModel.var.cov <- vcov(model.y)
                 }
             }
             
             # Draw model coefficients from normal
             MModel <- mvrnorm(sims, mu=MModel.coef, Sigma=MModel.var.cov)
-            TMmodel <- mvrnorm(sims, mu=TMmodel.coef, Sigma=TMmodel.var.cov)
+            YModel <- mvrnorm(sims, mu=YModel.coef, Sigma=YModel.var.cov)
             
             #####################################
             #  Mediator Predictions
@@ -348,6 +365,32 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                 PredictM0 <- muM0 + matrix(error, nrow=sims)
                 rm(error)
                 
+            ### Case I-1-d: Survreg
+            
+            
+            
+            } else if(isSurvreg.m){
+       			dd <- survreg.distributions[[model.m$dist]]
+				if (is.null(dd$itrans)){
+					itrans <- function(x) x
+				} else {
+					itrans <- dd$itrans
+				}
+				dname <- dd$dist
+				if(is.null(dname)){
+					dname <- model.m$dist
+				}
+				scale <- MModel[,ncol(MModel)]
+				lpM1 <- tcrossprod(MModel[,1:(ncol(MModel)-1)], mmat.t)
+				lpM0 <- tcrossprod(MModel[,1:(ncol(MModel)-1)], mmat.c)
+				error <- switch(dname,
+								extreme = NULL, ## TODO: Sample from extreme via rgev
+								gaussian = rnorm(sims*n),
+								logistic = rlogis(sims*n),
+								t = rt(sims*n, df=dd$parms))
+			
+			
+								
             } else {
                 stop("mediator model is not yet implemented")
             }
@@ -412,16 +455,16 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                 
                     if(isVglm.y){
                         if(VfamilyY=="tobit") {
-                            Pr1.tmp <- ymat.t %*% TMmodel[j,-2]
-                            Pr0.tmp <- ymat.c %*% TMmodel[j,-2]
+                            Pr1.tmp <- ymat.t %*% YModel[j,-2]
+                            Pr0.tmp <- ymat.c %*% YModel[j,-2]
                             Pr1[,j] <- pmin(pmax(Pr1.tmp, model.y@misc$Lower), model.y@misc$Upper)
                             Pr0[,j] <- pmin(pmax(Pr0.tmp, model.y@misc$Lower), model.y@misc$Upper)
                         } else {
                             stop("outcome model is in unsupported vglm family")
                         }
                     } else {
-                        Pr1[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.t)
-                        Pr0[,j] <- t(as.matrix(TMmodel[j,])) %*% t(ymat.c)
+                        Pr1[,j] <- t(as.matrix(YModel[j,])) %*% t(ymat.t)
+                        Pr0[,j] <- t(as.matrix(YModel[j,])) %*% t(ymat.c)
                     }
                     rm(ymat.t, ymat.c, pred.data.t, pred.data.c)
                 }
@@ -434,7 +477,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                 rm(Pr1, Pr0)
             }
             
-            rm(PredictM1, PredictM0, TMmodel, MModel) 
+            rm(PredictM1, PredictM0, YModel, MModel) 
             delta.1 <- t(as.matrix(apply(effects.tmp[,,1], 2, weighted.mean, w=weights)))
             delta.0 <- t(as.matrix(apply(effects.tmp[,,2], 2, weighted.mean, w=weights)))
             zeta.1 <- t(as.matrix(apply(effects.tmp[,,3], 2, weighted.mean, w=weights)))
