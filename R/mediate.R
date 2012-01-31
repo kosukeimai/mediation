@@ -77,8 +77,10 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     y.data <- model.frame(model.y)  # Call.Y$data
     
     # Numbers of observations and categories
-    n.m <- length(m.data[,1])
-    n.y <- length(y.data[,1])
+#    n.m <- length(m.data[,1])
+#    n.y <- length(y.data[,1])
+    n.m <- nrow(m.data)
+    n.y <- nrow(y.data)
     if(n.m != n.y){
         stop("number of observations do not match between mediator and outcome models")
     } else{
@@ -366,9 +368,6 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                 rm(error)
                 
             ### Case I-1-d: Survreg
-            
-            
-            
             } else if(isSurvreg.m){
        			dd <- survreg.distributions[[model.m$dist]]
 				if (is.null(dd$itrans)){
@@ -380,17 +379,21 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
 				if(is.null(dname)){
 					dname <- model.m$dist
 				}
-				scale <- MModel[,ncol(MModel)]
+				scale <- dd$scale
+				if(is.null(scale)){
+    				scale <- MModel[,ncol(MModel)]
+				}
 				lpM1 <- tcrossprod(MModel[,1:(ncol(MModel)-1)], mmat.t)
 				lpM0 <- tcrossprod(MModel[,1:(ncol(MModel)-1)], mmat.c)
 				error <- switch(dname,
-								extreme = NULL, ## TODO: Sample from extreme via rgev
+								extreme = log(rweibull(sims*n, shape=1, scale=1)),
 								gaussian = rnorm(sims*n),
 								logistic = rlogis(sims*n),
 								t = rt(sims*n, df=dd$parms))
+			    PredictM1 <- itrans(lpM1 + scale * matrix(error, nrow=sims))
+			    PredictM0 <- itrans(lpM0 + scale * matrix(error, nrow=sims))
+			    rm(error)
 			
-			
-								
             } else {
                 stop("mediator model is not yet implemented")
             }
