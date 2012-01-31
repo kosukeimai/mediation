@@ -190,10 +190,12 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
             }
             
             # Get mean and variance parameters for simulations
-            if(isSurvreg.m){
-            	MModel.coef <- c(coef(model.m), model.m$scale)
+            if(isSurvreg.m && is.null(survreg.distributions[[model.m$dist]]$scale)){
+            	MModel.coef <- c(coef(model.m), log(model.m$scale))
+            	scalesim.m <- TRUE
             } else {
 	            MModel.coef <- coef(model.m)
+	            scalesim.m <- FALSE
             }
             
             if(isOrdered.m){
@@ -204,8 +206,11 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                 MModel.var.cov <- vcov(model.m)[(1:k),(1:k)]
             } else if(isSurvreg.m){
             	MModel.var.cov <- vcov(model.m)
-            	if(robustSE | !is.null(cluster)){
-            		cat("Using (cluster) robust standard errors as specified in model.m\n")
+            	if(robustSE){
+            		warning("`robustSE' ignored for survival models; fit the model with `robust' option instead\n")
+            	}
+            	if(!is.null(cluster)){
+            		warning("`cluster' ignored for survival models; fit the model with 'cluster()' term in the formula\n")
             	}
             } else {
                 if(robustSE){
@@ -379,12 +384,15 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
 				if(is.null(dname)){
 					dname <- model.m$dist
 				}
-				scale <- dd$scale
-				if(is.null(scale)){
-    				scale <- MModel[,ncol(MModel)]
+				if(scalesim.m){
+    				scale <- exp(MModel[,ncol(MModel)])
+					lpM1 <- tcrossprod(MModel[,1:(ncol(MModel)-1)], mmat.t)
+					lpM0 <- tcrossprod(MModel[,1:(ncol(MModel)-1)], mmat.c)
+				} else {
+					scale <- dd$scale
+					lpM1 <- tcrossprod(MModel, mmat.t)
+					lpM0 <- tcrossprod(MModel, mmat.c)
 				}
-				lpM1 <- tcrossprod(MModel[,1:(ncol(MModel)-1)], mmat.t)
-				lpM0 <- tcrossprod(MModel[,1:(ncol(MModel)-1)], mmat.c)
 				error <- switch(dname,
 								extreme = log(rweibull(sims*n, shape=1, scale=1)),
 								gaussian = rnorm(sims*n),
@@ -506,19 +514,43 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
             # Bootstrap loop begins
             for(b in 1:sims){
                 index <- sample(1:n, n, replace = TRUE)
-                Call.M$data <- m.data[index,]
+                
+                if(isSurvreg.m){
+                	if(ncol(b.surv$y) > 2){
+                		stop("unsupported censoring type")
+                	}
+                	mname <- names(m.data)[1]
+                	if(substr(mname, 1, 4) != "Surv"){
+                		stop("refit the survival model with `Surv' used directly in model formula")
+                	}
+                	nc <- nchar(mediator)
+                	eventname <- substr(mname, 5 + nc + 3, nchar(mname) - 1)
+                	if(nchar(eventname) == 0){
+	                	m.data.tmp <- data.frame(m.data, 
+    	            							as.numeric(m.data[,1L][,1L]))
+            	    	names(m.data.tmp)[c(1L, ncol(m.data)+1)] <- c(mname, mediator)
+                	} else {
+	                	m.data.tmp <- data.frame(m.data, 
+    	            							as.numeric(m.data[,1L][,1L]), 
+        	        							as.numeric(model.m$y[,2]))
+            	    	names(m.data.tmp)[c(1L, ncol(m.data)+(1:2))] <- c(mname, mediator, eventname)
+                	}
+                	Call.M$data <- m.data.tmp[index,]
+                } else {
+                	Call.M$data <- m.data[index,]
+                }
+                
                 Call.Y$data <- y.data[index,]
                 Call.M$weights <- m.data[index,"(weights)"]
                 Call.Y$weights  <- y.data[index,"(weights)"]
-                
-                # TODO: Verify if below is unnecessary with all outcome model types.
+
                 if(isOrdered.m && length(unique(y.data[index,mediator]))!=m){
                         stop("insufficient variation on mediator")
                 }
                 
                 # Refit Models with Resampled Data
-                new.fit.M <- model.m <- eval.parent(Call.M)
-                new.fit.t <- model.y <- eval.parent(Call.Y)
+                new.fit.M <- eval.parent(Call.M)
+                new.fit.Y <- eval.parent(Call.Y)
                 
                 #####################################
                 #  Mediator Predictions
@@ -553,19 +585,19 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                         PredictM1 <- rpois(n, lambda = muM1)
                         PredictM0 <- rpois(n, lambda = muM0)
                     } else if (FamilyM == "Gamma") {
-                        shape <- gamma.shape(model.m)$alpha
+                        shape <- gamma.shape(new.fit.M)$alpha
                         PredictM1 <- rgamma(n, shape = shape, scale = muM1/shape)
                         PredictM0 <- rgamma(n, shape = shape, scale = muM0/shape)
                     } else if (FamilyM == "binomial"){
                         PredictM1 <- rbinom(n, size = 1, prob = muM1)
                         PredictM0 <- rbinom(n, size = 1, prob = muM0)
                     } else if (FamilyM == "gaussian"){
-                        sigma <- sqrt(summary(model.m)$dispersion)
+                        sigma <- sqrt(summary(new.fit.M)$dispersion)
                         error <- rnorm(n, mean=0, sd=sigma)
                         PredictM1 <- muM1 + error
                         PredictM0 <- muM0 + error
                     } else if (FamilyM == "inverse.gaussian"){
-                        disp <- summary(model.m)$dispersion
+                        disp <- summary(new.fit.M)$dispersion
                         PredictM1 <- SuppDists::rinvGauss(n, nu = muM1, lambda = 1/disp)
                         PredictM0 <- SuppDists::rinvGauss(n, nu = muM0, lambda = 1/disp)
                     } else {
@@ -611,6 +643,30 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                                           newdata=pred.data.c) + error
                     rm(error)
                     
+	            ### Case I-2-e: Survreg
+   		        } else if(isSurvreg.m){
+       				dd <- survreg.distributions[[new.fit.M$dist]]
+					if (is.null(dd$itrans)){
+						itrans <- function(x) x
+					} else {
+						itrans <- dd$itrans
+					}
+					dname <- dd$dist
+					if(is.null(dname)){
+						dname <- new.fit.M$dist
+					}
+					scale <- new.fit.M$scale
+					lpM1 <- predict(new.fit.M, newdata=pred.data.t, type="linear")
+					lpM0 <- predict(new.fit.M, newdata=pred.data.c, type="linear")
+					error <- switch(dname,
+									extreme = log(rweibull(n, shape=1, scale=1)),
+									gaussian = rnorm(n),
+									logistic = rlogis(n),
+									t = rt(n, df=dd$parms))
+				    PredictM1 <- as.numeric(itrans(lpM1 + scale * error))
+				    PredictM0 <- as.numeric(itrans(lpM0 + scale * error))
+				    rm(error)
+
                 } else {
                     stop("mediator model is not yet implemented")
                 }
@@ -668,14 +724,14 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                     }
                     
                     if(isRq.y){
-                        pr.1 <- predict(new.fit.t, type="response",
+                        pr.1 <- predict(new.fit.Y, type="response",
                                         newdata=pred.data.t, interval="none")
-                        pr.0 <- predict(new.fit.t, type="response",
+                        pr.0 <- predict(new.fit.Y, type="response",
                                         newdata=pred.data.c, interval="none")
                     } else {
-                        pr.1 <- predict(new.fit.t, type="response",
+                        pr.1 <- predict(new.fit.Y, type="response",
                                         newdata=pred.data.t)
-                        pr.0 <- predict(new.fit.t, type="response",
+                        pr.0 <- predict(new.fit.Y, type="response",
                                         newdata=pred.data.c)
                     }
                     pr.mat <- as.matrix(cbind(pr.1, pr.0))
@@ -795,23 +851,48 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
             # Resampling Step
             # Pull off data.star.
             index <- sample(1:n, n, replace = TRUE)
-            call.m <- model.m$call
-            call.y <- model.y$call
-            call.m$data <- m.data[index,]
-            call.y$data <- y.data[index,]
-            call.m$weights <- m.data[index,"(weights)"]
-            call.y$weights  <- y.data[index,"(weights)"]
-            new.fit.M <- eval.parent(call.m)
-            new.fit.t <- eval.parent(call.y)
+            Call.M <- model.m$call
+            Call.Y <- model.y$call
+            
+            if(isSurvreg.m){
+            	if(ncol(b.surv$y) > 2){
+                	stop("unsupported censoring type")
+                }
+                mname <- names(m.data)[1]
+                if(substr(mname, 1, 4) != "Surv"){
+                	stop("refit the survival model with `Surv' used directly in model formula")
+                }
+                nc <- nchar(mediator)
+                eventname <- substr(mname, 5 + nc + 3, nchar(mname) - 1)
+                if(nchar(eventname) == 0){
+	               	m.data.tmp <- data.frame(m.data, 
+    	           							as.numeric(m.data[,1L][,1L]))
+            	   	names(m.data.tmp)[c(1L, ncol(m.data)+1)] <- c(mname, mediator)
+                } else {
+	               	m.data.tmp <- data.frame(m.data, 
+    	           							as.numeric(m.data[,1L][,1L]), 
+        	       							as.numeric(model.m$y[,2]))
+            	   	names(m.data.tmp)[c(1L, ncol(m.data)+(1:2))] <- c(mname, mediator, eventname)
+                }
+                Call.M$data <- m.data.tmp[index,]
+            } else {
+                Call.M$data <- m.data[index,]
+            }
+            
+            Call.Y$data <- y.data[index,]
+            Call.M$weights <- m.data[index,"(weights)"]
+            Call.Y$weights  <- y.data[index,"(weights)"]
+            new.fit.M <- eval.parent(Call.M)
+            new.fit.Y <- eval.parent(Call.Y)
             
             if(isOrdered.m && length(unique(y.data[index,mediator]))!=m){
                 # Modify the coefficients when mediator has empty cells
                 coefnames.y <- names(model.y$coefficients)
-                coefnames.new.y <- names(new.fit.t$coefficients)
-                new.fit.t.coef <- rep(0, length(coefnames.y))
-                names(new.fit.t.coef) <- coefnames.y
-                new.fit.t.coef[coefnames.new.y] <- new.fit.t$coefficients
-                new.fit.t$coefficients <- new.fit.t.coef
+                coefnames.new.y <- names(new.fit.Y$coefficients)
+                new.fit.Y.coef <- rep(0, length(coefnames.y))
+                names(new.fit.Y.coef) <- coefnames.y
+                new.fit.Y.coef[coefnames.new.y] <- new.fit.Y$coefficients
+                new.fit.Y$coefficients <- new.fit.Y.coef
             }
             
             #####################################
@@ -905,6 +986,31 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                 PredictM0 <- predict(new.fit.M, type="response",
                                       newdata=pred.data.c) + error
                 rm(error)
+
+	        ### Case I-2-e: Survreg
+   		    } else if(isSurvreg.m){
+       			dd <- survreg.distributions[[new.fit.M$dist]]
+				if (is.null(dd$itrans)){
+					itrans <- function(x) x
+				} else {
+					itrans <- dd$itrans
+				}
+				dname <- dd$dist
+				if(is.null(dname)){
+					dname <- new.fit.M$dist
+				}
+				scale <- new.fit.M$scale
+				lpM1 <- predict(new.fit.M, newdata=pred.data.t, type="linear")
+				lpM0 <- predict(new.fit.M, newdata=pred.data.c, type="linear")
+				error <- switch(dname,
+								extreme = log(rweibull(n, shape=1, scale=1)),
+								gaussian = rnorm(n),
+								logistic = rlogis(n),
+								t = rt(n, df=dd$parms))
+				PredictM1 <- as.numeric(itrans(lpM1 + scale * error))
+				PredictM0 <- as.numeric(itrans(lpM0 + scale * error))
+				rm(error)
+
             } else {
                 stop("mediator model is not yet implemented")
             }
@@ -960,8 +1066,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                     pred.data.t[,mediator] <- PredictMt
                     pred.data.c[,mediator] <- PredictMc
                 }
-                probs_p1 <- predict(new.fit.t, newdata=pred.data.t, type="probs")
-                probs_p0 <- predict(new.fit.t, newdata=pred.data.c, type="probs")
+                probs_p1 <- predict(new.fit.Y, newdata=pred.data.t, type="probs")
+                probs_p0 <- predict(new.fit.Y, newdata=pred.data.c, type="probs")
                 effects.tmp[,,e] <- probs_p1 - probs_p0
                 rm(pred.data.t, pred.data.c, probs_p1, probs_p0)
             }
