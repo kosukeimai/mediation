@@ -1,6 +1,6 @@
 mediate <- function(model.m, model.y, sims = 1000, boot = FALSE, 
                     treat = "treat.name", mediator = "med.name", 
-                    covariates = NULL,
+                    covariates = NULL, outcome = NULL,
                     control = NULL, conf.level = .95,
                     control.value = 0, treat.value = 1, 
                     long = TRUE, dropobs = FALSE, 
@@ -8,16 +8,20 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     
     # Warn users who still use INT option
     if(match("INT", names(match.call()), 0L)){
-        warning("'INT' is deprecated - existence of interaction term is now automatically detected")
+        warning("'INT' is deprecated - existence of interaction terms is now automatically detected from model formulas")
     }
     
-    # Warning for robustSE used with boot
+    # Warning for robustSE and cluster used with boot
     if(robustSE && boot){
         warning("'robustSE' is ignored for nonparametric bootstrap")
     }
     
+    if(!is.null(cluster) && boot){
+        warning("'cluster' is ignored for nonparametric bootstrap")
+    }
+    
     if(robustSE & !is.null(cluster)){
-        stop("Choose either robustSE or cluster SE option")
+        stop("choose either `robustSE' or `cluster' option, not both")
     }
     
     # Drop observations not common to both mediator and outcome models
@@ -66,10 +70,13 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         VfamilyY <- model.y@family@vfamily
     }
     
-    # Warning for control option in non-GAM outcome models
+    # Warning for unused options
     if(!is.null(control) && !isGam.y){
         warning("'control' is only used for GAM outcome models - ignored")
         control <- NULL
+    }
+    if(!is.null(outcome) && !(isSurvreg.y && boot)){
+        warning("'outcome' is only relevant for survival outcome models with bootstrap - ignored")
     }
     
     # Model frames for M and Y models
@@ -189,7 +196,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                 stop("'boot' must be 'TRUE' for models used")
             }
             
-            # Get mean and variance parameters for simulations
+            # Get mean and variance parameters for mediator simulations 
             if(isSurvreg.m && is.null(survreg.distributions[[model.m$dist]]$scale)){
             	MModel.coef <- c(coef(model.m), log(model.m$scale))
             	scalesim.m <- TRUE
@@ -206,12 +213,6 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                 MModel.var.cov <- vcov(model.m)[(1:k),(1:k)]
             } else if(isSurvreg.m){
             	MModel.var.cov <- vcov(model.m)
-            	if(robustSE){
-            		warning("`robustSE' ignored for survival models; fit the model with `robust' option instead\n")
-            	}
-            	if(!is.null(cluster)){
-            		warning("`cluster' ignored for survival models; fit the model with 'cluster()' term in the formula\n")
-            	}
             } else {
                 if(robustSE){
                     MModel.var.cov <- vcovHC(model.m, ...)
@@ -222,15 +223,19 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                 }
             }
 
-            YModel.coef <- coef(model.y)
+            # Get mean and variance parameters for outcome simulations 
+            if(isSurvreg.y && is.null(survreg.distributions[[model.y$dist]]$scale)){
+            	YModel.coef <- c(coef(model.y), log(model.y$scale))
+            	scalesim.y <- TRUE  # indicates if survreg scale parameter is simulated
+            } else {
+	            YModel.coef <- coef(model.y)
+	            scalesim.y <- FALSE
+            }
             
             if(isRq.y){
                 YModel.var.cov <- summary(model.y, covariance=TRUE)$cov
             } else if(isSurvreg.y){
             	YModel.var.cov <- vcov(model.y)
-            	if(robustSE | !is.null(cluster)){
-            		cat("Using (cluster) robust standard errors as specified in model.y\n")
-            	}
             } else {
                 if(robustSE){
                     YModel.var.cov <- vcovHC(model.y, ...)
@@ -245,6 +250,13 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
             MModel <- mvrnorm(sims, mu=MModel.coef, Sigma=MModel.var.cov)
             YModel <- mvrnorm(sims, mu=YModel.coef, Sigma=YModel.var.cov)
             
+            if(robustSE && (isSurvreg.m | isSurvreg.y)){
+           		warning("`robustSE' ignored for survival models; fit the model with `robust' option instead\n")
+           	}
+           	if(!is.null(cluster) && (isSurvreg.m | isSurvreg.y)){
+           		warning("`cluster' ignored for survival models; fit the model with 'cluster()' term in the formula\n")
+           	}
+           	
             #####################################
             #  Mediator Predictions
             #####################################
@@ -473,6 +485,9 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                         } else {
                             stop("outcome model is in unsupported vglm family")
                         }
+                    } else if(scalesim.y){
+                        Pr1[,j] <- t(as.matrix(YModel[j,1:(ncol(YModel)-1)])) %*% t(ymat.t)
+                        Pr0[,j] <- t(as.matrix(YModel[j,1:(ncol(YModel)-1)])) %*% t(ymat.c)
                     } else {
                         Pr1[,j] <- t(as.matrix(YModel[j,])) %*% t(ymat.t)
                         Pr0[,j] <- t(as.matrix(YModel[j,])) %*% t(ymat.c)
@@ -483,12 +498,22 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                 if(isGlm.y){
                     Pr1 <- apply(Pr1, 2, model.y$family$linkinv)
                     Pr0 <- apply(Pr0, 2, model.y$family$linkinv)
+                } else if(isSurvreg.y){
+	       			dd <- survreg.distributions[[model.y$dist]]
+					if (is.null(dd$itrans)){
+						itrans <- function(x) x
+					} else {
+						itrans <- dd$itrans
+					}
+                	Pr1 <- apply(Pr1, 2, itrans)
+                	Pr0 <- apply(Pr0, 2, itrans)
                 }
+                
                 effects.tmp[,,e] <- Pr1 - Pr0
                 rm(Pr1, Pr0)
-            }
+            }            
+            rm(PredictM1, PredictM0, YModel, MModel)
             
-            rm(PredictM1, PredictM0, YModel, MModel) 
             delta.1 <- t(as.matrix(apply(effects.tmp[,,1], 2, weighted.mean, w=weights)))
             delta.0 <- t(as.matrix(apply(effects.tmp[,,2], 2, weighted.mean, w=weights)))
             zeta.1 <- t(as.matrix(apply(effects.tmp[,,3], 2, weighted.mean, w=weights)))
@@ -516,7 +541,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                 index <- sample(1:n, n, replace = TRUE)
                 
                 if(isSurvreg.m){
-                	if(ncol(b.surv$y) > 2){
+                	if(ncol(model.m$y) > 2){
                 		stop("unsupported censoring type")
                 	}
                 	mname <- names(m.data)[1]
@@ -540,7 +565,34 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                 	Call.M$data <- m.data[index,]
                 }
                 
-                Call.Y$data <- y.data[index,]
+                if(isSurvreg.y){
+                	if(ncol(model.y$y) > 2){
+                		stop("unsupported censoring type")
+                	}
+                	yname <- names(y.data)[1]
+                	if(substr(yname, 1, 4) != "Surv"){
+                		stop("refit the survival model with `Surv' used directly in model formula")
+                	}
+                	if(is.null(outcome)){
+                		stop("`outcome' must be supplied for survreg outcome with boot")
+                	}
+                	nc <- nchar(outcome)
+                	eventname <- substr(yname, 5 + nc + 3, nchar(yname) - 1)
+                	if(nchar(eventname) == 0){
+	                	y.data.tmp <- data.frame(y.data, 
+    	            							as.numeric(y.data[,1L][,1L]))
+            	    	names(y.data.tmp)[c(1L, ncol(y.data)+1)] <- c(yname, outcome)
+                	} else {
+	                	y.data.tmp <- data.frame(y.data, 
+    	            							as.numeric(y.data[,1L][,1L]), 
+        	        							as.numeric(model.y$y[,2]))
+            	    	names(y.data.tmp)[c(1L, ncol(y.data)+(1:2))] <- c(yname, outcome, eventname)
+                	}
+                	Call.Y$data <- y.data.tmp[index,]
+                } else {
+                	Call.Y$data <- y.data[index,]
+                }
+                
                 Call.M$weights <- m.data[index,"(weights)"]
                 Call.Y$weights  <- y.data[index,"(weights)"]
 
@@ -1148,9 +1200,14 @@ print.summary.mediate <- function(x, ...){
     	cat("(Inference Conditional on the Covariate Values Specified in `covariates')\n\n")
     }
     
-    printone <- x$INT == FALSE && (class(x$model.y)[1] %in% c("lm", "rq") ||
-        (inherits(x$model.y, "glm") && x$model.y$family$family == "gaussian"
-         && x$model.y$family$link == "identity"))
+    isLinear.y <- (	(class(x$model.y)[1] %in% c("lm", "rq")) ||
+        			(inherits(x$model.y, "glm") && 
+        				x$model.y$family$family == "gaussian" && 
+        				x$model.y$family$link == "identity") ||
+				    (inherits(x$model.y, "survreg") && 
+				       	x$model.y$dist == "gaussian")	)
+    
+    printone <- !x$INT && isLinear.y
     
     if (printone){
         # Print only one set of values if lmY/quanY/linear gamY without interaction
