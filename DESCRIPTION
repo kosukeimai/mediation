@@ -8,7 +8,7 @@ Author: Dustin Tingley <dtingley@gov.harvard.edu>,
         Kosuke Imai <kimai@princeton.edu>
 Maintainer: Dustin Tingley <dtingley@gov.harvard.edu>
 Depends: R (>= 2.7), MASS, Matrix, methods
-Suggests: mgcv, quantreg, VGAM, sandwich, SuppDists, arm
+Suggests: mgcv, quantreg, VGAM, sandwich, SuppDists, arm, survival
 Description: mediation is a publicly available R package that allows both parametric and nonparametric causal mediation analysis.  It implements the methods and suggestions in Imai, Keele, and Yamamoto (2010) and Imai, Keele, Tingley (2010).  In addition to the estimation of causal mediation effects, the software also allows researchers to conduct sensitivity analysis for certain parametric models.
 LazyLoad: yes
 LazyData: yes

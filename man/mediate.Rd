@@ -8,7 +8,7 @@
 
 mediate(model.m, model.y, sims = 1000, boot = FALSE, 
         treat = "treat.name", mediator = "med.name", 
-        covariates = NULL,
+        covariates = NULL, outcome = NULL,
         control = NULL, conf.level = .95, 
         control.value = 0, treat.value = 1, 
         long = TRUE, dropobs = FALSE,
@@ -17,16 +17,17 @@ mediate(model.m, model.y, sims = 1000, boot = FALSE,
 } 
 
 \arguments{ 
-\item{model.m}{ a fitted model object for mediator.  Can be of class 'lm', 'polr', 'bayespolr', 'glm', 'gam', or 'rq'.} 
-\item{model.y}{ a fitted model object for outcome.  Can be of class 'lm', 'polr', 'bayespolr', 'glm', 'gam', 'vglm', or 'rq'.} 
+\item{model.m}{ a fitted model object for mediator.  Can be of class 'lm', 'polr', 'bayespolr', 'glm', 'bayesglm', 'gam', 'rq', or 'survreg'.} 
+\item{model.y}{ a fitted model object for outcome.  Can be of class 'lm', 'polr', 'bayespolr', 'glm', 'bayesglm', 'gam', 'vglm', 'rq', or 'survreg'.} 
 \item{sims}{ number of Monte Carlo draws for nonparametric bootstrap or quasi-Bayesian approximation.} 
 \item{boot}{ a logical value. if 'FALSE' a quasi-Bayesian approximation is used for confidence intervals; if 'TRUE' nonparametric bootstrap will be used. Default is 'FALSE'.}
 \item{conf.level}{ level of the returned two-sided confidence intervals.  Default is to return
 the 2.5 and 97.5 percentiles of the simulated quantities.} 
-\item{treat}{ a character string indicating the name of treatment variable used in the models.  The treatment can be either binary (integer or a two-valued factor) or continuous (numeric).}
-\item{mediator}{ a character string indicating the name of mediator variable used in the models.}
+\item{treat}{ a character string indicating the name of the treatment variable used in the models.  The treatment can be either binary (integer or a two-valued factor) or continuous (numeric).}
+\item{mediator}{ a character string indicating the name of the mediator variable used in the models.}
 \item{covariates}{ a list or data frame containing values for a subset of the pre-treatment covariates in 'model.m' and 'model.y'. If provided, the function will return the estimates conditional on those covariate values.}
-\item{control}{ a character string indicating the name of control group indicator. Only relevant if 'model.y' is of class 'gam'. If provided, 'd0', 'z0' and 'n0' are allowed to differ from 'd1', 'z1' and 'n1', respectively.}
+\item{outcome}{ a character string indicating the name of the outcome variable in `model.y'. Only necessary if 'model.y' is of class 'survreg'; otherwise ignored.}
+\item{control}{ a character string indicating the name of the control group indicator. Only relevant if 'model.y' is of class 'gam'. If provided, 'd0', 'z0' and 'n0' are allowed to differ from 'd1', 'z1' and 'n1', respectively.}
 \item{control.value}{ value of the treatment variable used as the control condition. Default is 0.}
 \item{treat.value}{ value of the treatment variable used as the treatment condition. Default is 1.}
 \item{long}{ a logical value. If 'TRUE', the output will contain the entire sets of simulation draws of the the average causal mediation effects, direct effects, proportions mediated, and total effect. Default is 'TRUE'.}
@@ -44,15 +45,15 @@ where \eqn{t, t_1, t_0}{t, t1, t0} are particular values of the treatment \eqn{T
     \zeta(t) = E[Y(t1, M(t)) - Y(t0, M(t))],}
 which represents the expected difference in the potential outcome when the treatment is changed but the mediator is held constant at the value that would realize if the treatment equals \eqn{t}. The two quantities on average add up to the total effect of the treatment on the outcome, \eqn{\tau}. See the references for more details.
 
-When both the mediator model ('model.m') and outcome model ('model.y') are linear, the results will be identical to the usual LSEM method by Baron and Kenny (1986).  The function can, however, accommodate other data types including binary, ordered and count outcomes and mediators as well as censored outcomes.  Variables can also be modeled nonparametrically, semiparametrically, or using quantile regressions.
+When both the mediator model ('model.m') and outcome model ('model.y') are normal linear regressions, the results will be identical to the usual LSEM method by Baron and Kenny (1986).  The function can, however, accommodate other data types including binary, ordered and count outcomes and mediators as well as censored outcomes.  Variables can also be modeled nonparametrically, semiparametrically, or using quantile regressions.
 
 If it is desired that inference be made conditional on specific values of the pre-treatment covariates included in the model, the `covariates' argument can be used to set those values as a list or data frame. The list may contain either the entire set or any strict subset of the covariates in the model; in the latter case, the effects will be averaged over the other covariates. The `covariates' argument will be particularly useful when the models contain interactions between the covariates and the treatment and/or mediator (the so-called ``moderated mediation'').
 
 The prior weights in the mediator and outcome models are taken as sampling weights and the estimated effects will be weighted averages when non-NULL weights are used in fitting 'model.m' and 'model.y'. This will be useful when data does not come from a simple random sample, for example. 
 
-As of version 3.0, the mediator model can be of either 'lm', 'glm', 'polr', 'gam', or 'rq' class, corresponding respectively to the linear regression models, generalized linear models, ordered response models, generalized additive models, or quantile regression models. Version 3.1 further added support for 'bayespolr' model for ordered response models. For binary response models, the 'mediator' must be a numeric variable with values 0 or 1 as opposed to a factor. Quasi-likelihood-based inferences are not allowed for the mediator model because the functional form must be exactly specified for the estimation algorithm to work.  The 'binomial' family can only be used for binary response mediators and cannot be used for multiple-trial responses.  This is due to conflicts between how the latter type of models are implemented in \code{\link{glm}} and how 'mediate' is currently written.
+As of version 4.0, the mediator model can be of either 'lm', 'glm' (or `bayesglm'), 'polr' (or `bayespolr'), 'gam', 'rq', or `survreg' class, corresponding respectively to the linear regression models, generalized linear models, ordered response models, generalized additive models, quantile regression models, or parametric duration models. For binary response models, the 'mediator' must be a numeric variable with values 0 or 1 as opposed to a factor. Quasi-likelihood-based inferences are not allowed for the mediator model because the functional form must be exactly specified for the estimation algorithm to work.  The 'binomial' family can only be used for binary response mediators and cannot be used for multiple-trial responses.  This is due to conflicts between how the latter type of models are implemented in \code{\link{glm}} and how 'mediate' is currently written.
 
-For the outcome model, the censored regression model fitted via package \code{VGAM} (of class 'vglm' with 'family@vfamily' equal to "tobit") can be used in addition to the models listed above for the mediator.  The 'mediate' function is not compatible with censored regression models fitted via other packages.  When the quantile regression is used for the outcome model ('rq'), the estimated quantities are quantile causal mediation effects, quantile direct effects and etc., instead of the average effects.
+For the outcome model, the censored regression model fitted via package \code{VGAM} (of class 'vglm' with 'family@vfamily' equal to "tobit") can be used in addition to the models listed above for the mediator.  The 'mediate' function is not compatible with censored regression models fitted via other packages.  When the quantile regression is used for the outcome model ('rq'), the estimated quantities are quantile causal mediation effects, quantile direct effects and etc., instead of the average effects. If the outcome model is of class 'survreg', the name of the outcome variable must be explicitly supplied in the `outcome' argument. This is due to the fact that 'survreg' objects do not contain that information in an easily extractable form. It should also be noted that for \code{\link{survreg}} models, the \code{\link{Surv}} function must be directly used in the model formula in the call to the survreg function, and that censoring types requiring more than two arguments to Surv (e.g., interval censoring) are not currently supported by 'mediate'.
 
 The quasi-Bayesian approximation (King et al. 2000) cannot be used if 'model.m' is of class 'rq' or 'gam', or if 'model.y' is of class 'gam', 'polr' or 'bayespolr'. In these cases, either error is returned or nonparametric bootstrap is forced. Users should note that use of the nonparametric bootstrap often requires significant computing time, especially when 'sims' is set to a large value.
 
