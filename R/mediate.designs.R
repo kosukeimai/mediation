@@ -13,7 +13,7 @@ mediate.sed<-function(outcome,mediator,treatment,encouragement=NULL,SI=NULL) {
 
     if(SI) {
     out<-mediate.np()#this will be luke's function
-    out$design<-"sed.np.si"
+    out$design <- "sed.np.si"
     #class(out) <- "mediate.design"  Luke, please make the class of your function's input "mediate.design".
     } else {
     out<-mechanism.bounds(outcome,mediator,treatment,encouragement=NULL,design="SED")
@@ -480,9 +480,29 @@ print.summary.mediate.design <- function(x, ...){
         }
 
         #Luke we need your summary function here.
-
-
-
+		if(x$design=="np"){
+		clp <- 100 * x$conf.level
+    cat("\n NonParametric Causal Mediation Analysis for Discrete Mediators \n\n")
+    
+    if(x$boot==TRUE){
+        cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
+    } else {
+        cat("Large Sample Confidence Intervals\n\n")
+    }
+    
+    printone <- x$INT == FALSE 
+    
+    if (printone){
+        cat("Mediation Effect: ", format(x$d1, digits=4), clp, "% CI ", 
+                format(x$d1.ci, digits=4), "\n")
+        cat("Sample Size Used:", x$nobs,"\n\n")        
+    } else {
+        cat("Mediation Effect_0: ", format(x$d0, digits=4), clp, "% CI ", 
+                format(x$d0.ci, digits=4), "\n")
+        cat("Mediation Effect_1: ", format(x$d1, digits=4), clp, "% CI ", 
+                format(x$d1.ci, digits=4), "\n")
+        cat("Sample Size Used:", x$nobs,"\n\n") 	
+		}
 
     invisible(x)
 }

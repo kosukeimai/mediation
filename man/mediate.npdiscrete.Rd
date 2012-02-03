@@ -6,7 +6,7 @@
 } 
 \usage{
 
-mediate.npdiscrete(M, Y, T, INT=TRUE, boot=FALSE, sims=1000, conf.level = 0.95)
+mediate.npdiscrete(M, Y, T, boot=FALSE, sims=1000, conf.level = 0.95)
 
 } 
 
@@ -14,7 +14,6 @@ mediate.npdiscrete(M, Y, T, INT=TRUE, boot=FALSE, sims=1000, conf.level = 0.95)
 \item{M}{ The mediator variable, must be discrete.} 
 \item{Y}{ The outcome variable.} 
 \item{T}{ The treatment indicator, must be binary.} 
-\item{INT}{ a logical value. if 'FALSE' the mediation effect is not allowed to vary with treatment status.} 
 \item{boot}{ a logical value. if 'FALSE' a large sample Delta method approximation is used for confidence intervals; if 'TRUE' nonparametric bootstrap will be used. Default is 'FALSE'.}
 \item{sims}{ number of Monte Carlo draws for nonparametric bootstrap or quasi-Bayesian approximation.} 
 \item{conf.level}{ level of the returned two-sided confidence intervals.  Default is to return
@@ -31,7 +30,6 @@ The function \code{summary} (i.e., \code{summary.mediate.npdiscrete}) can be use
 \item{d0, d1}{point estimates for average causal mediation effects under the control and treatment conditions.}
 \item{d0.ci, d1.ci}{confidence intervals for average causal mediation effects. The confidence level is set at the value specified in 'conf.level'.}
 \item{boot}{logical, the 'boot' argument used.}
-\item{INT}{a logical value indicating whether the estimation allows the effects to differ between the treatment and control conditions.}
 \item{conf.level}{the confidence level used. }
 \item{nobs}{number of observations in the data.}
 }
@@ -45,7 +43,7 @@ Teppei Yamamoto, Princeton University, \email{tyamamot@princeton.edu},
 Luke Keele, Penn State University, \email{ljk20@psu.edu}, 
 Kosuke Imai, Princeton University, \email{kimai@princeton.edu} }
  
-\seealso{\code{\link{mediate}}, \code{\link{summary.mediate.npdiscrete}}}
+\seealso{\code{\link{mediate}}}
 
 \examples{ 
 # Examples with JOBS II Field Experiment
@@ -57,10 +55,7 @@ data(jobs)
 foo.1 <- mediate.npdiscrete(job_disc, depress2, treat)
 summary(foo.1)
 
-foo.2 <- mediate.npdiscrete(job_disc, depress2, treat, INT=FALSE)
+foo.2 <- mediate.npdiscrete(job_disc, depress2, treat, boot=TRUE)
 summary(foo.2)
-
-foo.3 <- mediate.npdiscrete(job_disc, depress2, treat, boot=TRUE)
-summary(foo.3)
 
 } 

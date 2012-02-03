@@ -1,5 +1,5 @@
 
-mediate.npdiscrete <- function(M, Y, T, INT=TRUE,boot = FALSE, sims = 1000, conf.level = .95){
+mediate.npdiscrete <- function(M, Y, T, boot = FALSE, sims = 1000, conf.level = .95){
 	
 	samp <- data.frame(na.omit(cbind(M,Y,T)))
 	m.cat <- sort(unique(samp$M))
@@ -114,42 +114,9 @@ var.delta_1 <- (1/n1) * sum(var.delta.1m) - (2/n0)* sum(mterm.d1) + var(samp$Y[s
         }
 
         out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci, INT=INT, conf.level=conf.level,nobs=n,boot=boot)
-	    class(out) <- "mediate.npdiscrete"
+	    class(out) <- "mediate.design"
         out
- }
-        
-print.mediate.npdiscrete <- function(x, ...){
-	print(unlist(x[1:11]))
-	invisible(x)
-	}
-
-summary.mediate.npdiscrete <- function(object, ...)
-    structure(object, class = c("summary.mediate.npdiscrete", class(object)))
-
-print.summary.mediate.npdiscrete <- function(x, ...){
-    clp <- 100 * x$conf.level
-    cat("\n NonParametric Causal Mediation Analysis for Discrete Mediators \n\n")
-    
-    if(x$boot==TRUE){
-        cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
-    } else {
-        cat("Large Sample Confidence Intervals\n\n")
     }
-    
-    printone <- x$INT == FALSE 
-    
-    if (printone){
-        cat("Mediation Effect: ", format(x$d1, digits=4), clp, "% CI ", 
-                format(x$d1.ci, digits=4), "\n")
-        cat("Sample Size Used:", x$nobs,"\n\n")        
-    } else {
-        cat("Mediation Effect_0: ", format(x$d0, digits=4), clp, "% CI ", 
-                format(x$d0.ci, digits=4), "\n")
-        cat("Mediation Effect_1: ", format(x$d1, digits=4), clp, "% CI ", 
-                format(x$d1.ci, digits=4), "\n")
-        cat("Sample Size Used:", x$nobs,"\n\n") 
-    } 
-    invisible(x)
-}
+
 
 
