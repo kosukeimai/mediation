@@ -34,6 +34,7 @@ The function \code{summary} (i.e., \code{summary.mediate.design} can be used to 
 \item{d0.ci, d1.ci}{confidence intervals for average causal mediation effects for the non-parametric estimates. The confidence level is set at the value specified in 'conf.level'.}
 \item{boot}{logical, the 'boot' argument used.}
 \item{conf.level}{the confidence level used. }
+\item{sims}{number of bootstrap simulations used for confidence interval calculation.}
 \item{nobs}{number of observations used.} }
 
 \references{
