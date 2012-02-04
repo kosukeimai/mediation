@@ -5,16 +5,14 @@
 #WRAPPER FUNCTIONS. we will write man files for each of these. This way we don't have to write more complicated man files functions like mechanism.bounds AND so it forces people to link the structure of their design to the function they use.
 
 #single experiment design
-mediate.sed<-function(outcome,mediator,treatment,encouragement=NULL,SI=NULL) {
+mediate.sed<-function(outcome,mediator,treatment,SI=FALSE, sims=1000, conf.level = 0.95) {
 
     if(is.null(SI)){
     stop("You must specify whether you would like to make the sequential ignorability assumption.")
     }
-
     if(SI) {
-    out<-mediate.np()#this will be luke's function
+    out<-mediate.np(outcome,mediator,treatment,sims=sims, conf.level = conf.level)
     out$design <- "sed.np.si"
-    #class(out) <- "mediate.design"  Luke, please make the class of your function's input "mediate.design".
     } else {
     out<-mechanism.bounds(outcome,mediator,treatment,encouragement=NULL,design="SED")
     out$design<-"sed.np.nosi"
@@ -480,8 +478,8 @@ print.summary.mediate.design <- function(x, ...){
         }
 
         #Luke we need your summary function here.
-		if(x$design=="np"){
-		clp <- 100 * x$conf.level
+        if(x$design=="np"){
+        clp <- 100 * x$conf.level
     cat("\n NonParametric Causal Mediation Analysis for Discrete Mediators \n\n")
     
     if(x$boot==TRUE){
@@ -501,8 +499,8 @@ print.summary.mediate.design <- function(x, ...){
                 format(x$d0.ci, digits=4), "\n")
         cat("Mediation Effect_1: ", format(x$d1, digits=4), clp, "% CI ", 
                 format(x$d1.ci, digits=4), "\n")
-        cat("Sample Size Used:", x$nobs,"\n\n") 	
-		}
+        cat("Sample Size Used:", x$nobs,"\n\n")     
+        }
 
     invisible(x)
 }
