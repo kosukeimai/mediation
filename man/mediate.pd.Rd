@@ -28,13 +28,14 @@ The function requires the outcome, mediator, treatment, and manipulation variabl
 
 \value{\code{mediate.pd} returns an object of class "\code{mediate.design}", a list that contains the components listed below.
 
-The function \code{summary} (i.e., \code{summary.mediate.design} can be used to obtain a table of the results.
+The function \code{summary} (i.e., \code{summary.mediate.design}) can be used to obtain a table of the results.
 
 \item{d0, d1}{lower/upper bounds for causal mediation effects under the control and treatment conditions for the single experiment design.}
 \item{manip}{indicator for whether unit received experimental manipulation of mediator.}
 \item{nobs}{number of observations used.}
 \item{conf.level}{confidence level used for two-sided confidence intervals.}
-\item{design}{"pd.nint" if no interaction assumed, "pd" if }
+\item{design}{"PD.NINT" if no interaction assumed, "PD" if interaction allowed.}
+}
 
 \references{
 Imai, K., Tingley, D. and Yamamoto, T. (2012) Experimental Designs for Identifying Causal Mechanisms. Journal of the Royal Statistical Society, Series A (Statistics in Society)"
