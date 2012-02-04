@@ -30,7 +30,7 @@ The function requires the treatment, mediator, and outcome variables to be binar
 
 The function \code{summary} (i.e., \code{summary.mediate.design} can be used to obtain a table of the results.
 
-\item{d0, d1}{lower/upper bounds for causal mediation effects under the control and treatment conditions for the single experiment design.} 
+\item{d0, d1}{point estimates or lower/upper bounds for causal mediation effects under the control and treatment conditions for the single experiment design.} 
 \item{d0.ci, d1.ci}{confidence intervals for average causal mediation effects for the non-parametric estimates. The confidence level is set at the value specified in 'conf.level'.}
 \item{boot}{logical, the 'boot' argument used.}
 \item{conf.level}{the confidence level used. }
