@@ -1,5 +1,5 @@
 
-mediate.npdiscrete <- function(M, Y, T, boot = FALSE, sims = 1000, conf.level = .95){
+mediate.npdiscrete <- function(Y,M,T, boot = FALSE, sims = 1000, conf.level = .95){
 	
 	samp <- data.frame(na.omit(cbind(M,Y,T)))
 	m.cat <- sort(unique(samp$M))
