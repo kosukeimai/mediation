@@ -1,8 +1,4 @@
 
-#source("C:/Users/dtingley/Documents/mediation/software/setupBoundsData.R")
-
-
-#WRAPPER FUNCTIONS. we will write man files for each of these. This way we don't have to write more complicated man files functions like mechanism.bounds AND so it forces people to link the structure of their design to the function they use.
 
 #single experiment design
 mediate.sed<-function(outcome,mediator,treatment,SI=FALSE, sims=1000, conf.level = 0.95) {
@@ -12,10 +8,10 @@ mediate.sed<-function(outcome,mediator,treatment,SI=FALSE, sims=1000, conf.level
     }
     if(SI) {
     out<-mediate.np(outcome,mediator,treatment,sims=sims, conf.level = conf.level)
-    out$design <- "sed.np.si"
+    out$design <- "SED.NP.SI"
     } else {
     out<-mechanism.bounds(outcome,mediator,treatment,encouragement=NULL,design="SED")
-    out$design<-"sed.np.nosi"
+    out$design<-"SED.NP.NOSI"
     }
     out
 }
@@ -23,12 +19,12 @@ mediate.sed<-function(outcome,mediator,treatment,SI=FALSE, sims=1000, conf.level
 
 
 #parallel design
-mediate.pd<-function(outcome,mediator,treatment,encouragement,NINT=TRUE,conf.level=.95) {
+mediate.pd<-function(outcome,mediator,treatment,manipulated,NINT=TRUE,conf.level=.95) {
 
     if(NINT) {
-    out<-boot.pd(outcome,mediator,treatment,encouragement,NINT,conf.level)
+    out<-boot.pd(outcome,mediator,treatment,manipulated,NINT,conf.level)
     } else {
-    out<-mechanism.bounds(outcome,mediator,treatment,encouragement,design="PD")
+    out<-mechanism.bounds(outcome,mediator,treatment,manipulated,design="PD")
     }
     out
 }
@@ -89,7 +85,7 @@ boot.pd<-function(outcome,mediator, treatment,encouragement,sims=100, conf.level
         high <- 1 - low
         acme.mu<-median(acme, na.rm=TRUE)
         acme.ci <- quantile(acme.mu, c(low,high), na.rm=TRUE)
-        out<-list(d=acme.mu, d.ci=acme.ci,d.sims=acme,conf.level=conf.level,sims=sims,design="pd.nint")
+        out<-list(d=acme.mu, d.ci=acme.ci,d.sims=acme,conf.level=conf.level,sims=sims,design="PD.NINT")
         out
 
     }
@@ -177,7 +173,7 @@ mediate.ced<-function(outcome=outcome,mediator1=mediator1,mediator2=mediator2,tr
         d.p.c.ci <- quantile(d.p.c, c(low,high), na.rm=TRUE)
         d.p.t.ci <- quantile(d.p.t, c(low,high), na.rm=TRUE)
 
-        out<-list(d0 = d.p.c.mu, d1 = d.p.t.mu, d0.ci = d.p.c.ci, d1.ci = d.p.t.ci, d0.sims=d.p.c, d1.sims=d.p.t, nobs=n,sims=sims,conf.level=conf.level,design="ced")
+        out<-list(d0 = d.p.c.mu, d1 = d.p.t.mu, d0.ci = d.p.c.ci, d1.ci = d.p.t.ci, d0.sims=d.p.c, d1.sims=d.p.t, nobs=n,sims=sims,conf.level=conf.level,design="CED")
 
         class(out) <- "mediate.design"
         out
@@ -433,9 +429,9 @@ print.summary.mediate.design <- function(x, ...){
     cat("Design / Treatment Condition / Lower and Upper Bounds \n\n")
 
         # Print values
-        if(x$design=="sed.np.nosi"|x$design=="PD"){
+        if(x$design=="SED.NP.NOSI"|x$design=="PD"){
 
-            if(x$design=="sed.np.nosi"){
+            if(x$design=="SED.NP.NOSI"){
             cat("\n Single Experiment Design, No SI Assumption, Bounds \n\n")
             }
             if(x$design=="PD"){
@@ -448,7 +444,7 @@ print.summary.mediate.design <- function(x, ...){
             cat("Sample Size Used:", x$nobs,"\n\n")
         }
 
-        if(x$design=="pd.nint"){
+        if(x$design=="PD.NINT"){
                 clp <- 100 * x$conf.level
                 cat("\n Parallel Design, No Interaction Assumed \n\n")
                 cat("Mediation Effect: ", format(x$d0, digits=4), clp, "% CI ",
@@ -466,7 +462,7 @@ print.summary.mediate.design <- function(x, ...){
             }
 
 
-        if(x$design=="ced"){
+        if(x$design=="CED"){
             clp <- 100 * x$conf.level
                 cat("\n Crossover Encouragment Design \n\n")
                 cat("Mediation Effect_0: ", format(x$d0, digits=4), clp, "% CI ",
@@ -477,8 +473,9 @@ print.summary.mediate.design <- function(x, ...){
                 cat("Sample Size Used:", x$nobs,"\n\n")
         }
 
+
         #Luke we need your summary function here.
-        if(x$design=="np"){
+        if(x$design=="SED.NP.SI"){
         clp <- 100 * x$conf.level
     cat("\n NonParametric Causal Mediation Analysis for Discrete Mediators \n\n")
     
