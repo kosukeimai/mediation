@@ -402,10 +402,10 @@ mechanism.bounds<-function(outcome,mediator,treatment,encouragement=NULL,design=
 
                 #function output
                 if(design=="SED"){
-                out<-list(d1 = S.t, d0 = S.c, manip=manip, design=design, nobs=nobs)
+                out<-list(d1 = S.t, d0 = S.c, manip=manip, design=design, nobs=nobs, sims=sims)
                 }
                 if(design=="PD"){
-                out<-list(d1 = P.t, d0 = P.c, manip=manip,design=design, nobs=nobs)
+                out<-list(d1 = P.t, d0 = P.c, manip=manip,design=design, nobs=nobs, sims=sims)
                 }
                 if(design=="PED") {
                 out<-list(d1=BE.t, d0=BE.c,  d1.p=BET.t, d0.p=BET.c, manip=manip, design=design, nobs=nobs)
