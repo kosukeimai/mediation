@@ -13,17 +13,17 @@ mediate.ced(outcome=outcome,mediator1=mediator1,mediator2=mediator2,treatment=tr
  \item{encouragement}{vector of the indicator of whether observation received manipulation .}
  \item{NINT}{logical for whether user is assuming no interaction between treatment and mediator. If TRUE then no interaction is assumed}
  \item{conf.level}{ level of the returned two-sided confidence intervals.  Default is to return
-    the 2.5 and 97.5 percentiles of the simulated quantities.} 
+    the 2.5 and 97.5 percentiles of the simulated quantities.}
 }
 
-\details{This function calculates causal mediation effects (CME) for the crossover encouragement design described in Imai, Tingley, Yamamoto JRSS-A. The design has two stages. In the first experiment the treatment is randomized and the mediator/outcome variables measured. In the second the treatment is set to value opposite of first period and a randomly selected group of units receives encouragement to take on the mediator observed value in period 1.  
+\details{This function calculates causal mediation effects (CME) for the crossover encouragement design described in Imai, Tingley, Yamamoto JRSS-A. The design has two stages. In the first experiment the treatment is randomized and the mediator/outcome variables measured. In the second the treatment is set to value opposite of first period and a randomly selected group of units receives encouragement to take on the mediator observed value in period 1.
 
 %Teppei, should we just refer people to the papers for the expressions. Doesn't seem too common for man files to have all the expressions.
 %The CME represents the expected difference in the potential outcome when the mediator took the value that would realize under the treatment condition as opposed to the control condition, while the treatment status itself is held constant. \deqn{\delta(t) \ = \ E\{Y(t, M(t_1)) - Y(t, M(t_0))\},}{%
 %    \delta(t) = E[Y(t, M(t1)) - Y(t, M(t0))],}
 %where \eqn{t, t_1, t_0}{t, t1, t0} are particular values of the treatment \eqn{T} such that \eqn{t_1 \neq t_0}{t1 != t0}, \eqn{M(t)} is the potential mediator, and \eqn{Y(t,m)} is the potential outcome variable.
 
-The function requires the outcome, both mediator, treatment, and manipulation variables to be binary (0/1). 
+The function requires the outcome, both mediator, treatment, and manipulation variables to be binary (0/1).
 }
 
 
@@ -31,7 +31,7 @@ The function requires the outcome, both mediator, treatment, and manipulation va
 
 The function \code{summary} (i.e., \code{summary.mediate.design}) can be used to obtain a table of the results.
 
-\item{d0, d1}{point estimates or lower/upper bounds for causal mediation effects under the control and treatment conditions.} 
+\item{d0, d1}{point estimates or lower/upper bounds for causal mediation effects under the control and treatment conditions.}
 \item{d0.ci, d1.ci}{confidence intervals for average causal mediation effects. The confidence level is set at the value specified in 'conf.level'.}
 \item{manip}{indicator for whether unit received experimental manipulation of mediator.}
 \item{nobs}{number of observations used.}
@@ -58,19 +58,17 @@ Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation Analy
 
 \examples{ # Examples with simulated data
 
-# **For illustration purposes a small number of simulations are used and a randomly generate data set.**
-
-#Create fake data
-D<-rep(seq(-1,1, by=1), 10)#encouragment condition under PED
-n<-length(D)
+#Crossover encouragement design
+#Randomly generated data set.
+n<-1000
 Y<-rbinom(n,1,.5)
 M1<-rbinom(n,1,.5)
 M2<-rbinom(n,1,.5)
 T<-rbinom(n,1,.5)
 V<-rbinom(n,1,.5)
 
-#################################################### # Example 1: Parallel Design Experiment#################################################### 
-pd.exp<-mediate.pd(Y,M1,T,D)
-summary(pd.exp)
+ced<-mediate.ced(Y,M1,M2,T,V,sims=100)
+summary(ced)
 
-} 
+
+}

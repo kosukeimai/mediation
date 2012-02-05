@@ -12,10 +12,10 @@ mediate.ced(outcome,mediator,treatment,manipulated,NINT=TRUE,conf.level=.95) {
  \item{manipulated}{vector of the indicator of whether observation received manipulation.}
  \item{NINT}{logical for whether user is assuming no interaction between treatment and mediator. If TRUE then no interaction is assumed}
  \item{conf.level}{ level of the returned two-sided confidence intervals.  Default is to return
-    the 2.5 and 97.5 percentiles of the simulated quantities.} 
+    the 2.5 and 97.5 percentiles of the simulated quantities.}
 }
 
-\details{This function calculates causal mediation effects (CME) for the parallel design described in Imai, Tingley, Yamamoto JRSS-A. In the design two experimental arms are used. In one the mediator is not manipulated and in the other the mediator is perfectly manipulated. 
+\details{This function calculates causal mediation effects (CME) for the parallel design described in Imai, Tingley, Yamamoto JRSS-A. In the design two experimental arms are used. In one the mediator is not manipulated and in the other the mediator is perfectly manipulated.
 
 %Teppei, should we just refer people to the papers for the expressions. Doesn't seem too common for man files to have all the expressions.
 %The CME represents the expected difference in the potential outcome when the mediator took the value that would realize under the treatment condition as opposed to the control condition, while the treatment status itself is held constant. \deqn{\delta(t) \ = \ E\{Y(t, M(t_1)) - Y(t, M(t_0))\},}{%
@@ -56,19 +56,11 @@ Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation Analy
 
 \examples{ # Examples with simulated data
 
-# **For illustration purposes a small number of simulations are used and a randomly generate data set.**
+#################################################### # Example 1: Parallel Design Experiment####################################################
 
-#Create fake data
-D<-rep(seq(-1,1, by=1), 10)#encouragment condition under PED
-n<-length(D)
-Y<-rbinom(n,1,.5)
-M1<-rbinom(n,1,.5)
-M2<-rbinom(n,1,.5)
-T<-rbinom(n,1,.5)
-V<-rbinom(n,1,.5)
+data(boundsdata)
+bound2<-mediate.pd(data$Y,data$M,data$T,data$D)
+summary(bound2)
 
-#################################################### # Example 1: Parallel Design Experiment#################################################### 
-pd.exp<-mediate.pd(Y,M1,T,D)
-summary(pd.exp)
 
-} 
+}

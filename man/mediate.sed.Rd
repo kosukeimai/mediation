@@ -1,7 +1,7 @@
 \name{mediate.sed} \alias{mediate.sed} \title{mediate.sed} \description{ 'mediate.sed' estimates causal mediation effects for the single experiment design. The two options are to use either the sequential ignorability (SI) assumption in which nonparametric estimates of the average causal mediation effect are produced, or, to relax the SI assumption and to calculate the bounds on the causal mediation effect. Assumptions for the bounds are discussed in Imai, Tingley, Yamamoto JRSS-A.
 } \usage{
 
-mediate.sed(outcome,mediator,treatment,SI=FALSE) 
+mediate.sed(outcome,mediator,treatment,SI=FALSE)
 
 }
 
@@ -11,9 +11,9 @@ mediate.sed(outcome,mediator,treatment,SI=FALSE)
  \item{treatment}{vector of the treatment variable. Must be binary (0/1).}
  \item{SI}{Logical indicator for whether sequential ignorability assumption is made.}
  \item{boot}{ a logical value. if 'FALSE' a large sample Delta method approximation is used for confidence intervals; if 'TRUE' nonparametric bootstrap will be used. Default is 'FALSE'.}
-\item{sims}{ number of Monte Carlo draws for nonparametric bootstrap or quasi-Bayesian approximation.} 
+\item{sims}{ number of Monte Carlo draws for nonparametric bootstrap or quasi-Bayesian approximation.}
 \item{conf.level}{ level of the returned two-sided confidence intervals.  Default is to return
-the 2.5 and 97.5 percentiles of the simulated quantities.} 
+the 2.5 and 97.5 percentiles of the simulated quantities.}
 }
 
 \details{This function calculates causal mediation effects (CME) for the single experiment design when the user wants either the non-parametric estimates based on the SI assumption or the bounds when the SI assumption is not made. The CME represents the expected difference in the potential outcome when the mediator took the value that would realize under the treatment condition as opposed to the control condition, while the treatment status itself is held constant. \deqn{\delta(t) \ = \ E\{Y(t, M(t_1)) - Y(t, M(t_0))\},}{%
@@ -21,7 +21,7 @@ the 2.5 and 97.5 percentiles of the simulated quantities.}
 where \eqn{t, t_1, t_0}{t, t1, t0} are particular values of the treatment \eqn{T} such that \eqn{t_1 \neq t_0}{t1 != t0}, \eqn{M(t)} is the potential mediator, and \eqn{Y(t,m)} is the potential outcome variable.
 
 The experimental design covered by the function the single experiment design where only the treatment is randomized.
-The function requires the treatment, mediator, and outcome variables to be binary (0/1). 
+The function requires the treatment, mediator, and outcome variables to be binary (0/1).
 
 }
 
@@ -30,7 +30,7 @@ The function requires the treatment, mediator, and outcome variables to be binar
 
 The function \code{summary} (i.e., \code{summary.mediate.design} can be used to obtain a table of the results.
 
-\item{d0, d1}{point estimates or lower/upper bounds for causal mediation effects under the control and treatment conditions for the single experiment design.} 
+\item{d0, d1}{point estimates or lower/upper bounds for causal mediation effects under the control and treatment conditions for the single experiment design.}
 \item{d0.ci, d1.ci}{confidence intervals for average causal mediation effects for the non-parametric estimates. The confidence level is set at the value specified in 'conf.level'.}
 \item{boot}{logical, the 'boot' argument used.}
 \item{conf.level}{the confidence level used. }
@@ -48,38 +48,31 @@ Imai, K., Keele, L. and Yamamoto, T. (2010) Identification, Inference, and Sensi
 
 Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation Analysis Using R" in Advances in Social Science Research Using R, ed. H. D. Vinod New York: Springer.}
 
-\author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu}, Teppei Yamamoto, MIT, \email{teppei@mit.edu}, }
+\author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu}, Luke Keele, PSU, \email{ljk20@psu.edu}, Teppei Yamamoto, MIT, \email{teppei@mit.edu}, }
 
 \seealso{\code{\link{mediate}}, \code{\link{medsens}}, \code{\link{plot.mediate}}, \code{\link{summary.mediate}}, \code{\link{mediations}} }
 
-\examples{ # Examples with simulated data
-
-# **For illustration purposes a small number of simulations are used and a randomly generate data set.**
-
-#Create fake data
-D<-rep(seq(-1,1, by=1), 10)#encouragment condition under PED
-n<-length(D)
-Y<-rbinom(n,1,.5)
-M1<-rbinom(n,1,.5)
-M2<-rbinom(n,1,.5)
-T<-rbinom(n,1,.5)
-V<-rbinom(n,1,.5)
-
-#################################################### # Example 1: Single Experiment with NO SI assumption####################################################
-single.exp<-mediate.sed(Y,M1,T)
-summary(single.exp)
+\examples{ #
 
 
-#################################################### # Example 1: Single Experiment with NO SI assumption####################################################
+#################################################### # Example 1: Bounds without SI assumption####################################################
+data(boundsdata)
+
+data.temp<-subset(boundsdata,boundsdata$D==0)#Only use data from no encouragement set.
+bound1<-mediate.sed(data.temp$Y,data.temp$M,data.temp$T,SI=FALSE)
+summary(bound1)
+
+
+#################################################### # Example 2: Nonparametric estimate of ACME under SI assumption####################################################
 # Example with JOBS II Field Experiment
 data(jobs)
 #Use the discrete version of the mediator.
 
-foo.1 <- mediate.npdiscrete(job_disc, depress2, treat, SI=TRUE)
+foo.1 <- mediate.sed(job_disc, depress2, treat, SI=TRUE)
 summary(foo.1)
 
-foo.2 <- mediate.npdiscrete(job_disc, depress2, treat, SI=TRUE, boot=TRUE)
+foo.2 <- mediate.sed(job_disc, depress2, treat, SI=TRUE, boot=TRUE)
 summary(foo.2)
 
 
-} 
+}
