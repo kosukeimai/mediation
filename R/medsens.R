@@ -21,26 +21,34 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
     ## Uppercase letters (e.g. T) = labels in the input matrix
     ## Uppercase letters + ".out" (e.g. T.out) = labels in the regression output
 
-    y.t.data <- model.frame(model.y)
-    Y <- colnames(y.t.data)[1]
-    if(is.factor(y.t.data[,treat])){
-        cat.c <- levels(y.t.data[,treat])[1]
-        cat.t <- levels(y.t.data[,treat])[2]
-        T.out <- paste(treat,cat.t, sep="")
+    y.data <- model.frame(model.y)
+    Y <- colnames(y.data)[1]
+    if(is.factor(y.data[,treat])){
+        t.levels <- levels(y.data[,treat])
+        if(length(t.levels) != 2){
+            stop("treatment with more than two categories currently not supported")
+        }
+        cat.c <- t.levels[1]
+        cat.t <- t.levels[2]
+        T.out <- paste(treat, cat.t, sep="")
     } else {
         cat.c <- NULL
         cat.t <- NULL
-        T.out <- paste(treat,cat.t, sep="")
+        T.out <- paste(treat, cat.t, sep="")
     }
 
-    if(is.factor(y.t.data[,mediator])){
-        cat.m0 <- levels(y.t.data[,mediator])[1]
-        cat.m1 <- levels(y.t.data[,mediator])[2]
-        M.out <- paste(mediator,cat.m1, sep="")
+    if(is.factor(y.data[,mediator])){
+        m.levels <- levels(y.data[,mediator])
+        if(length(m.levels) != 2){
+            stop("mediator with more than two categories currently not supported")
+        }
+        cat.m0 <- m.levels[1]
+        cat.m1 <- m.levels[2]
+        M.out <- paste(mediator, cat.m1, sep="")
     } else {
         cat.m0 <- NULL
         cat.m1 <- NULL
-        M.out <- paste(mediator,cat.m1, sep="")
+        M.out <- paste(mediator, cat.m1, sep="")
     }
 
     if(INT){
@@ -54,13 +62,13 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
     }
 
     ## Setting Up Sensitivity Parameters
-    rho <- seq(-1+rho.by, 1-rho.by, rho.by)
+    rho <- seq(-1 + rho.by, 1 - rho.by, rho.by)
     R2star.prod <- rho^2
     
     ## Extracting weights
-    weights <- model.weights(y.t.data)
+    weights <- model.weights(y.data)
     if(is.null(weights)){
-        weights <- rep(1,nrow(y.t.data))
+        weights <- rep(1, nrow(y.data))
     }
     
     ## Initializing Containers
@@ -146,95 +154,96 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
             colnames(v.cov) <- b.names
             v.m <- v.cov[1:m.k,1:m.k]
             v.y <- v.cov[(m.k+1):(m.k+y.k),(m.k+1):(m.k+y.k)]
+            m.coef.treat <- m.coefs[T.out, ]
+            y.coef.treat <- y.coefs[T.out, ]
+            y.coef.med <- y.coefs[M.out, ]
+            v.m.treat <- v.m[T.out, T.out]
+            v.y.treat <- v.y[T.out, T.out]
+            v.y.med <- v.y[M.out, M.out]
+            if(INT){
+                y.coef.TM <- y.coefs[TM.out, ]
+                v.y.TM <- v.y[TM.out, TM.out]
+            }
             
             if(INT && ("direct" %in% etype.vec)){
                 m.bar <- apply(model.matrix(model.m), 2, weighted.mean, w=weights)
-                m.covt.coefs <- -(match(c("(Intercept)", paste(T.out)),
-                                                    names(model.m$coefficients), NULL))
-                m.bar.covts <- -(match(c("(Intercept)", paste(T.out)),
-                                                    names(m.bar), NULL))
-                if(length(m.coefs[m.covt.coefs, ]) != 0){
-                    model.m.bar.z0 <- ( m.coefs["(Intercept)", ] +
-                                sum(t(m.coefs[m.covt.coefs, ]) %*% m.bar[m.bar.covts]) )
-                    v.model.m.bar.z0 <- ( v.m["(Intercept)","(Intercept)"] +
-                                sum(t(m.bar[m.bar.covts])%*%(v.m[m.covt.coefs, m.covt.coefs])%*%
-                                (m.bar[m.bar.covts])) )
-                    model.m.bar.z1 <- ( m.coefs["(Intercept)", ] + m.coefs[paste(T.out), ] +
-                                sum(m.coefs[m.covt.coefs, ] * m.bar[m.bar.covts]) )
-                    v.model.m.bar.z1 <- ( v.m["(Intercept)","(Intercept)"] + v.m[T.out,T.out] +
-                                sum(t(m.bar[m.bar.covts])%*%(v.m[m.covt.coefs, m.covt.coefs])%*%
-                                (m.bar[m.bar.covts])) + 2*v.m["(Intercept)",T.out] +
-                                2*sum(t(m.bar[m.bar.covts])%*%(v.m[T.out,][m.bar.covts])) +
-                                2*sum(t(m.bar[m.bar.covts])%*%v.m["(Intercept)",][m.bar.covts]) )
+                m.covts.ind <- -(match(c("(Intercept)", paste(T.out)), names(model.m$coefficients), NULL))
+                m.coef.covts <- m.coefs[m.covts.ind, ]
+                m.bar.covts <- m.bar[m.covts.ind]
+                m.intercept <- m.coefs["(Intercept)", ]
+                v.m.covts <- v.m[m.covts.ind, m.covts.ind]
+                v.m.intercept <- v.m["(Intercept)", "(Intercept)"]
+                v.m.int.treat <- v.m["(Intercept)", T.out]
+                
+                if(length(m.coef.covts) != 0){
+                    model.m.bar.z0 <- m.intercept + sum(crossprod(m.coef.covts, m.bar.covts))
+                    v.model.m.bar.z0 <- v.m.intercept + sum(crossprod(m.bar.covts, v.m.covts) %*% m.bar.covts)
+                    model.m.bar.z1 <- m.intercept + m.coef.treat + sum(m.coef.covts * m.bar.covts)
+                    v.m.treat.covts <- v.m[T.out, m.covts.ind]
+                    v.m.int.covts <- v.m["(Intercept)", m.covts.ind]
+                    v.model.m.bar.z1 <- ( v.m.intercept + v.m.treat +
+                                sum(crossprod(m.bar.covts, v.m.covts) %*% m.bar.covts) + 
+                                2 * ( v.m.int.treat + 
+                                    sum(crossprod(m.bar.covts, v.m.treat.covts)) +
+                                    sum(crossprod(m.bar.covts, v.m.int.covts)) ) )
                 } else {
-                    model.m.bar.z0 <- m.coefs["(Intercept)", ]
-                    v.model.m.bar.z0 <- v.m["(Intercept)","(Intercept)"]
-                    model.m.bar.z1 <- m.coefs["(Intercept)", ] + m.coefs[paste(T.out), ]
-                    v.model.m.bar.z1 <- ( v.m["(Intercept)","(Intercept)"] + v.m[T.out,T.out] +
-                                        2*v.m["(Intercept)",T.out] )
+                    model.m.bar.z0 <- m.intercept
+                    v.model.m.bar.z0 <- v.m.intercept
+                    model.m.bar.z1 <- m.intercept + m.coef.treat
+                    v.model.m.bar.z1 <- v.m.intercept + v.m.treat + 2 * v.m.int.treat
                 }
             }
 
             # Save Estimates
             if(INT){
                 if("indirect" %in% etype.vec){
-                    d0[i,] <- m.coefs[paste(T.out),]*y.coefs[paste(mediator),]
-                    d1[i,] <- m.coefs[paste(T.out),]*(y.coefs[paste(mediator),] +
-                                                            y.coefs[paste(TM.out),])
+                    d0[i,] <- m.coef.treat * y.coef.med
+                    d1[i,] <- m.coef.treat * (y.coef.med + y.coef.TM)
                 }
                 if("direct" %in% etype.vec){ # direct effects with interaction
-                    if(length(m.coefs[m.covt.coefs, ]) != 0){ # with covariates
-                        z0[i,] <- y.coefs[paste(T.out),] + y.coefs[paste(TM.out),] *
-                            (m.coefs[paste("(Intercept)"), ] +
-                            sum(t(m.coefs[m.covt.coefs, ]) %*% m.bar[m.bar.covts]))
-                        z1[i,] <- y.coefs[paste(T.out),] + y.coefs[paste(TM.out),] *
-                            (m.coefs[paste("(Intercept)"), ] + m.coefs[paste(T.out), ] +
-                            sum(t(m.coefs[m.covt.coefs, ]) %*% m.bar[m.bar.covts]))
+                    if(length(m.coef.covts) != 0){ # with covariates
+                        z0[i,] <- ( y.coef.treat + 
+                                     y.coef.TM * (m.intercept + sum(crossprod(m.coef.covts, m.bar.covts))) )
+                        z1[i,] <- ( y.coef.treat + 
+                                     y.coef.TM * (m.intercept + m.coef.treat +
+                                                  sum(crossprod(m.coef.covts, m.bar.covts))) )
                     } else { # no covariates
-                        z0[i,] <- y.coefs[paste(T.out),] + y.coefs[paste(TM.out),] *
-                            m.coefs[paste("(Intercept)"), ]
-                        z1[i,] <- y.coefs[paste(T.out),] + y.coefs[paste(TM.out),] *
-                            (m.coefs[paste("(Intercept)"), ] + m.coefs[paste(T.out), ])
+                        z0[i,] <- y.coef.treat + y.coef.TM * m.intercept
+                        z1[i,] <- y.coef.treat + y.coef.TM * (m.intercept + m.coef.treat)
                     }
                 }
             } else {
                 if("indirect" %in% etype.vec){
-                    d0[i,] <- d1[i,] <- m.coefs[paste(T.out),]*y.coefs[paste(mediator),]
+                    d0[i,] <- d1[i,] <- m.coef.treat * y.coef.med
                 }
                 if("direct" %in% etype.vec) {
-                    z0[i,] <- z1[i,] <- y.coefs[paste(T.out),]
+                    z0[i,] <- z1[i,] <- y.coef.treat
                 }
             }
 
             # Save Variance Estimates
             if(INT){
                 if("indirect" %in% etype.vec){
-                    d0.var[i,] <- y.coefs[paste(mediator),]^2 * v.m[T.out,T.out] +
-                        m.coefs[paste(T.out),]^2 * v.y[mediator,mediator]
-                    d1.var[i,] <- (y.coefs[paste(mediator),] +
-                        y.coefs[paste(TM.out),])^2*v.m[T.out,T.out] +
-                        m.coefs[paste(T.out),]^2*(v.y[mediator,mediator] +
-                        v.y[TM.out, TM.out] + 2*v.y[mediator, TM.out])
+                    d0.var[i,] <- y.coef.med^2 * v.m.treat + m.coef.treat^2 * v.y.med
+                    d1.var[i,] <- ( (y.coef.med + y.coef.TM)^2 * v.m.treat +
+                        m.coef.treat^2 * (v.y.med + v.y.TM + 2 * v.y[M.out, TM.out]) )
                 }
                 if("direct" %in% etype.vec){
-                    z0.var[i,] <- v.y[T.out, T.out] +
-                        model.m.bar.z0^2 * v.y[TM.out, TM.out] +
-                        y.coefs[paste(TM.out), ]^2 * v.model.m.bar.z0 +
-                        v.y[TM.out, TM.out] * v.model.m.bar.z0 + 2 *
-                        model.m.bar.z0 * v.y[T.out,TM.out]
-                    z1.var[i,] <- v.y[T.out, T.out] +
-                        model.m.bar.z1^2 * v.y[TM.out, TM.out] +
-                        y.coefs[paste(TM.out), ]^2 * v.model.m.bar.z1 +
-                        v.y[TM.out, TM.out] * v.model.m.bar.z1 + 2 *
-                        model.m.bar.z1 * v.y[T.out,TM.out]
+                    z0.var[i,] <- ( v.y.treat + model.m.bar.z0^2 * v.y.TM + 
+                                     y.coef.TM^2 * v.model.m.bar.z0 +
+                                     v.y.TM * v.model.m.bar.z0 + 
+                                     2 * model.m.bar.z0 * v.y[T.out, TM.out] )
+                    z1.var[i,] <- ( v.y.treat + model.m.bar.z1^2 * v.y.TM +
+                                     y.coef.TM^2 * v.model.m.bar.z1 +
+                                     v.y.TM * v.model.m.bar.z1 + 
+                                     2 * model.m.bar.z1 * v.y[T.out,TM.out] )
                 }
             } else {
                 if("indirect" %in% etype.vec){
-                    d0.var[i,] <- d1.var[i,] <- (m.coefs[paste(T.out),]^2*v.y[mediator,mediator]) +
-                            (y.coefs[paste(mediator),]^2*v.m[T.out,T.out])
+                    d0.var[i,] <- d1.var[i,] <- (m.coef.treat^2 * v.y.med) + (y.coef.med^2 * v.m.treat)
                 }
                 if("direct" %in% etype.vec){
-                    z0.var[i,] <- z1.var[i,] <- v.y[T.out, T.out]
+                    z0.var[i,] <- z1.var[i,] <- v.y.treat
                 }
             }
 
@@ -262,7 +271,7 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         # Save R2 tilde values
         r.sq.m <- summary(model.m)$r.squared
         r.sq.y <- summary(model.y)$r.squared
-        R2tilde.prod <- rho^2*(1-r.sq.m)*(1-r.sq.y)
+        R2tilde.prod <- rho^2 * (1 - r.sq.m) * (1 - r.sq.y)
 
         
     ## END OF CASE 1: Continuous Outcome + Continuous Mediator
@@ -275,7 +284,7 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         type <- "bm"
         
         ## Variable values (LABEL.value)
-        Y.value <- y.t.data[,1]
+        Y.value <- y.data[,1]
         y.k <- length(model.y$coef)
 
         # Step 1: Pre-loop computations
@@ -289,9 +298,9 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         m.mat <- m.mat.1 <- m.mat.0 <- model.matrix(model.m)
         m.mat.1[,T.out] <- 1 # M-model matrix with t=1
         m.mat.0[,T.out] <- 0 # M-model matrix with t=0
-        mu.sim <- m.mat %*% t(Mmodel.coef.sim) # E(M|T,X)
-        mu.1.sim <- m.mat.1 %*% t(Mmodel.coef.sim) # E(M|T=1,X)
-        mu.0.sim <- m.mat.0 %*% t(Mmodel.coef.sim) # E(M|T=0,X)
+        mu.sim <- tcrossprod(m.mat, Mmodel.coef.sim) # E(M|T,X)
+        mu.1.sim <- tcrossprod(m.mat.1, Mmodel.coef.sim) # E(M|T=1,X)
+        mu.0.sim <- tcrossprod(m.mat.0, Mmodel.coef.sim) # E(M|T=0,X)
 
         # Step 1-3: Define lambda function (inverse Mill's ratio)
         lambda <- function(mmodel, mcoef) {
@@ -323,18 +332,18 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
             adj <- lambda(model.m, Mmodel.coef.sim[k,]) * rho[i] # the adjustment term
             w <- 1 - rho[i]^2*lambda(model.m, Mmodel.coef.sim[k,]) * 
                 (lambda(model.m, Mmodel.coef.sim[k,]) + mu.sim[,k])
-            y.t.data.adj <- data.frame(y.t.data, w, adj, weights)
+            y.data.adj <- data.frame(y.data, w, adj, weights)
             model.y.adj <- update(model.y, as.formula(paste(". ~ . + adj")), 
-                                weights = w*weights, data = y.t.data.adj)
+                                weights = w*weights, data = y.data.adj)
             sigma.3 <- summary(model.y.adj)$sigma
 
             ## Step 2-2: Update the Y model via Iterative FGLS
             sigma.dif <- 1
             while(abs(sigma.dif) > eps){
                 Y.star <- Y.value - sigma.3 * adj
-                y.t.data.star <- data.frame(Y.star, y.t.data.adj)
+                y.data.star <- data.frame(Y.star, y.data.adj)
                 model.y.update <- update(model.y, as.formula(paste("Y.star ~ .")), 
-                                weights = w*weights, data = y.t.data.star)
+                                weights = w*weights, data = y.data.star)
                 sigma.3.temp <- summary(model.y.update)$sigma
                 sigma.dif <- sigma.3.temp - sigma.3
                 sigma.3 <- sigma.3.temp
@@ -426,7 +435,7 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         m.k <- length(model.m$coef)
         Mmodel.var.cov <- vcov(model.m)
         Mmodel.coef.sim <- mvrnorm(sims, mu=Mmodel.coef, Sigma=Mmodel.var.cov)
-        if(is.factor(y.t.data[,treat])){
+        if(is.factor(y.data[,treat])){
             beta2.sim <- Mmodel.coef.sim[,T.out]
         } else {
             beta2.sim <- Mmodel.coef.sim[,treat]
