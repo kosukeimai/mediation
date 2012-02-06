@@ -15,7 +15,8 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
     treat <- x$treat
     mediator <- x$mediator
     INT <- x$INT
-    low <- (1 - x$conf.level)/2; high <- 1 - low
+    low <- (1 - x$conf.level)/2
+    high <- 1 - low
 
     # Setting Variable labels
     ## Uppercase letters (e.g. T) = labels in the input matrix
@@ -30,12 +31,11 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         }
         cat.c <- t.levels[1]
         cat.t <- t.levels[2]
-        T.out <- paste(treat, cat.t, sep="")
     } else {
         cat.c <- NULL
         cat.t <- NULL
-        T.out <- paste(treat, cat.t, sep="")
     }
+    T.out <- paste(treat, cat.t, sep="")
 
     if(is.factor(y.data[,mediator])){
         m.levels <- levels(y.data[,mediator])
@@ -44,12 +44,11 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         }
         cat.m0 <- m.levels[1]
         cat.m1 <- m.levels[2]
-        M.out <- paste(mediator, cat.m1, sep="")
     } else {
         cat.m0 <- NULL
         cat.m1 <- NULL
-        M.out <- paste(mediator, cat.m1, sep="")
     }
+    M.out <- paste(mediator, cat.m1, sep="")
 
     if(INT){
         if(paste(treat,mediator,sep=":") %in% attr(model.y$terms,"term.labels")){ # T:M
@@ -414,7 +413,7 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         var.mstar <- var(fitted)
         r.sq.m <- var.mstar/(1+var.mstar)
         r.sq.y <- summary(model.y)$r.squared
-        R2tilde.prod <- rho^2*(1-r.sq.m)*(1-r.sq.y)
+        R2tilde.prod <- rho^2 * (1 - r.sq.m) * (1 - r.sq.y)
 
     ## END OF CASE 2: Continuous Outcome + Binary Mediator
     } else
@@ -432,15 +431,11 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         # Step 1: Obtain Model Parameters
         ## Step 1-1: Simulate M model parameters
         Mmodel.coef <- model.m$coef
-        m.k <- length(model.m$coef)
         Mmodel.var.cov <- vcov(model.m)
-        Mmodel.coef.sim <- mvrnorm(sims, mu=Mmodel.coef, Sigma=Mmodel.var.cov)
-        if(is.factor(y.data[,treat])){
-            beta2.sim <- Mmodel.coef.sim[,T.out]
-        } else {
-            beta2.sim <- Mmodel.coef.sim[,treat]
-        }
-
+        m.k <- length(Mmodel.coef)
+        Mmodel.coef.sim <- mvrnorm(sims, mu = Mmodel.coef, Sigma = Mmodel.var.cov)
+        beta2.sim <- Mmodel.coef.sim[, T.out]
+        
         sigma.2 <- summary(model.m)$sigma
         sig2.shape <- model.m$df/2
         sig2.invscale <- (model.m$df/2) * sigma.2^2
@@ -450,24 +445,23 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         Ymodel.coef <- model.y$coef
         Ymodel.var.cov <- vcov(model.y)
         y.k <- length(Ymodel.coef)
-        Ymodel.coef.sim <- mvrnorm(sims, mu=Ymodel.coef, Sigma=Ymodel.var.cov)
+        Ymodel.coef.sim <- mvrnorm(sims, mu = Ymodel.coef, Sigma = Ymodel.var.cov)
         colnames(Ymodel.coef.sim) <- names(Ymodel.coef)
-        gamma.tilde <- Ymodel.coef.sim[,M.out]
+        gamma.tilde <- Ymodel.coef.sim[, M.out]
 
         # Step 2: Compute ACME via the procedure in IKT
         ## Step 2-1: Estimate Error Correlation from inconsistent estimate of Y on M
-        rho12.sim <- (sigma.2.sim * gamma.tilde) / (1 + sqrt(sigma.2.sim^2*gamma.tilde^2))
+        rho12.sim <- (sigma.2.sim * gamma.tilde) / (1 + sqrt(sigma.2.sim^2 * gamma.tilde^2))
 
         ## Step 2-2: Calculate alpha_1, beta_1 and xi_1
-        YTmodel.coef.sim <- Ymodel.coef.sim[,!colnames(Ymodel.coef.sim)%in%M.out] * 
-            sqrt(1-rho12.sim^2) %x% t(rep(1,y.k-1)) + Mmodel.coef.sim * 
-            (rho12.sim/sigma.2.sim) %x% t(rep(1,y.k-1))
+        YTmodel.coef.sim <- ( Ymodel.coef.sim[, !colnames(Ymodel.coef.sim) %in% M.out] * 
+                              sqrt(1-rho12.sim^2) %x% t(rep(1,y.k-1)) + 
+                              Mmodel.coef.sim * (rho12.sim/sigma.2.sim) %x% t(rep(1, y.k-1)) )
 
         ## Step 2-3: Calculate Gamma
         ## Data matrices for the Y model less M
-        y.mat.1 <- model.matrix(model.y)[,!colnames(model.matrix(model.y))%in%M.out]
+        y.mat.1 <- y.mat.0 <- model.matrix(model.y)[, !colnames(model.matrix(model.y)) %in% M.out]
         y.mat.1[,T.out] <- 1
-        y.mat.0 <- model.matrix(model.y)[,!colnames(model.matrix(model.y))%in%M.out]
         y.mat.0[,T.out] <- 0
         
 
@@ -485,31 +479,33 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
 
         ## START OF RHO LOOP
         for(i in 1:length(rho)){
-            gamma.sim <- (-rho[i] + rho12.sim*sqrt((1-rho[i]^2)/(1-rho12.sim^2)))/sigma.2.sim
+            gamma.sim <- (-rho[i] + rho12.sim * sqrt((1 - rho[i]^2)/(1 - rho12.sim^2)))/sigma.2.sim
             for(k in 1:sims){
                 sigma.1star.sim[k] <- sqrt(gamma.sim[k]^2 * 
-                    sigma.2.sim[k]^2+2*gamma.sim[k]*rho[i]*sigma.2.sim[k]+1)
+                    sigma.2.sim[k]^2 + 2 * gamma.sim[k] * rho[i] * sigma.2.sim[k] + 1)
+                YTcoef.k <- YTmodel.coef.sim[k,]
                 if("indirect" %in% etype.vec){
-                    d0.sim[k] <- weighted.mean( pnorm(y.mat.0 %*% YTmodel.coef.sim[k,] +
-                        gamma.sim[k]*beta2.sim[k] / sigma.1star.sim[k]) - 
-                        pnorm(y.mat.0 %*% YTmodel.coef.sim[k,]), w = weights)
-                    d1.sim[k] <- weighted.mean( pnorm(y.mat.1 %*% YTmodel.coef.sim[k,]) - 
-                        pnorm(y.mat.1 %*% YTmodel.coef.sim[k,] -
-                        gamma.sim[k]*beta2.sim[k] / sigma.1star.sim[k]), w = weights )
-                    tau.sim[k] <- weighted.mean( pnorm(y.mat.1 %*% YTmodel.coef.sim[k,]) - 
-                        pnorm(y.mat.0 %*% YTmodel.coef.sim[k,]), w = weights )
+                    d0.sim[k] <- weighted.mean( pnorm(y.mat.0 %*% YTcoef.k +
+                                                 gamma.sim[k] * beta2.sim[k] / sigma.1star.sim[k]) - 
+                                                 pnorm(y.mat.0 %*% YTcoef.k), w = weights )
+                    d1.sim[k] <- weighted.mean( pnorm(y.mat.1 %*% YTcoef.k) - 
+                                                 pnorm(y.mat.1 %*% YTcoef.k -
+                                                 gamma.sim[k] * beta2.sim[k] / sigma.1star.sim[k]), 
+                                                 w = weights )
+                    tau.sim[k] <- weighted.mean( pnorm(y.mat.1 %*% YTcoef.k) - 
+                                                  pnorm(y.mat.0 %*% YTcoef.k), w = weights )
                     nu0.sim[k] <- d0.sim[k]/tau.sim[k]
                     nu1.sim[k] <- d1.sim[k]/tau.sim[k]
                 }
                 if("direct" %in% etype.vec){
-                    beta3.sim[k] <- sigma.1star.sim[k] * YTmodel.coef.sim[k,T.out] -
-                         beta2.sim[k]*gamma.sim[k]
-                    z0.sim[k] <- weighted.mean( pnorm(y.mat.0 %*% YTmodel.coef.sim[k,] +
-                        beta3.sim[k] / sigma.1star.sim[k]) -
-                        pnorm(y.mat.0 %*% YTmodel.coef.sim[k,]), w = weights )
-                    z1.sim[k] <- weighted.mean( pnorm(y.mat.1 %*% YTmodel.coef.sim[k,]) -
-                        pnorm(y.mat.1 %*% YTmodel.coef.sim[k,] - 
-                        beta3.sim[k] / sigma.1star.sim[k]), w = weights )
+                    beta3.sim[k] <- sigma.1star.sim[k] * YTcoef.k[T.out] -
+                                     beta2.sim[k] * gamma.sim[k]
+                    z0.sim[k] <- weighted.mean( pnorm(y.mat.0 %*% YTcoef.k +
+                                                 beta3.sim[k] / sigma.1star.sim[k]) -
+                                                 pnorm(y.mat.0 %*% YTcoef.k), w = weights )
+                    z1.sim[k] <- weighted.mean( pnorm(y.mat.1 %*% YTcoef.k) -
+                                                 pnorm(y.mat.1 %*% YTcoef.k - 
+                                                 beta3.sim[k] / sigma.1star.sim[k]), w = weights )
                 }
             }
 
@@ -552,8 +548,8 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         y.mat <- model.matrix(model.y)
         fitted <- y.mat %*% Ymodel.coef
         var.ystar <- var(fitted)
-        r.sq.y <- var.ystar/(1+var.ystar)
-        R2tilde.prod <- rho^2*(1-r.sq.m)*(1-r.sq.y)
+        r.sq.y <- var.ystar/(1 + var.ystar)
+        R2tilde.prod <- rho^2 * (1 - r.sq.m) * (1 - r.sq.y)
 
     ## END OF CASE 3: Binary Outcome + Continuous Mediator
     } else {
