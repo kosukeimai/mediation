@@ -563,37 +563,37 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
     
     if(INT || type=="bo"){
         if("indirect" %in% etype.vec){
-            ii <- which(abs(d0-0)==min(abs(d0-0)))
-            kk <- which(abs(d1-0)==min(abs(d1-0)))
+            ii <- which(abs(d0 - 0) == min(abs(d0 - 0)))
+            kk <- which(abs(d1 - 0) == min(abs(d1 - 0)))
             err.cr.1.d <- rho[ii]
             err.cr.2.d <- rho[kk]
             err.cr.d <- c(err.cr.1.d, err.cr.2.d)
         }
         if("direct" %in% etype.vec){
-            ii.z <- which(abs(z0-0)==min(abs(z0-0)))
-            kk.z <- which(abs(z1-0)==min(abs(z1-0)))
+            ii.z <- which(abs(z0 - 0) == min(abs(z0 - 0)))
+            kk.z <- which(abs(z1 - 0) == min(abs(z1 - 0)))
             err.cr.1.z <- rho[ii.z]
             err.cr.2.z <- rho[kk.z]
             err.cr.z <- c(err.cr.1.z, err.cr.2.z)
         }
     } else {
         if("indirect" %in% etype.vec){
-            ii <- which(abs(d0-0)==min(abs(d0-0)))
+            ii <- which(abs(d0 - 0) == min(abs(d0 - 0)))
             err.cr.d <- rho[ii]
         }
         if("direct" %in% etype.vec){
-            ii.z <- which(abs(z0-0)==min(abs(z0-0)))
+            ii.z <- which(abs(z0 - 0) == min(abs(z0 - 0)))
             err.cr.z <- rho[ii.z]
         }
     }
 
     if("indirect" %in% etype.vec){
         R2star.d.thresh <- err.cr.d^2
-        R2tilde.d.thresh <- err.cr.d^2*(1-r.sq.m)*(1-r.sq.y)
+        R2tilde.d.thresh <- err.cr.d^2 * (1 - r.sq.m) * (1 - r.sq.y)
     }
     if("direct" %in% etype.vec){
         R2star.z.thresh <- err.cr.z^2
-        R2tilde.z.thresh <- err.cr.z^2*(1-r.sq.m)*(1-r.sq.y)
+        R2tilde.z.thresh <- err.cr.z^2 * (1 - r.sq.m) * (1 - r.sq.y)
     }
         
     out <- list(
