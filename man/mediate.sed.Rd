@@ -16,13 +16,9 @@ mediate.sed(outcome,mediator,treatment,SI=FALSE)
 the 2.5 and 97.5 percentiles of the simulated quantities.}
 }
 
-\details{This function calculates causal mediation effects (CME) for the single experiment design when the user wants either the non-parametric estimates based on the SI assumption or the bounds when the SI assumption is not made. The CME represents the expected difference in the potential outcome when the mediator took the value that would realize under the treatment condition as opposed to the control condition, while the treatment status itself is held constant. \deqn{\delta(t) \ = \ E\{Y(t, M(t_1)) - Y(t, M(t_0))\},}{%
-    \delta(t) = E[Y(t, M(t1)) - Y(t, M(t0))],}
-where \eqn{t, t_1, t_0}{t, t1, t0} are particular values of the treatment \eqn{T} such that \eqn{t_1 \neq t_0}{t1 != t0}, \eqn{M(t)} is the potential mediator, and \eqn{Y(t,m)} is the potential outcome variable.
-
-The experimental design covered by the function the single experiment design where only the treatment is randomized.
+\details{This function calculates causal mediation effects (CME) for the single experiment design, where the treatment is randomized and the mediator/outcome variables measured.
+The user specifies whether they want the non-parametric point estimates based on the sequential ignorability (SI) assumption, or the bounds when the SI assumption is not made. 
 The function requires the treatment, mediator, and outcome variables to be binary (0/1).
-
 }
 
 
