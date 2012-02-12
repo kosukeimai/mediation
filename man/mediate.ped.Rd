@@ -12,12 +12,8 @@ mediate.ped(outcome,mediator,treatment,encouragement) {
  \item{encouragement}{vector of the indicator of whether observation received manipulation.}
 }
 
-\details{This function calculates causal mediation effects (CME) for the parallel encouragment design described in Imai, Tingley, Yamamoto JRSS-A. In the design two experimental arms are used. In one the mediator is not manipulated and in the other the mediator is encouraged in either a positive or negative direction.
-
-%Teppei, should we just refer people to the papers for the expressions. Doesn't seem too common for man files to have all the expressions.
-%The CME represents the expected difference in the potential outcome when the mediator took the value that would realize under the treatment condition as opposed to the control condition, while the treatment status itself is held constant. \deqn{\delta(t) \ = \ E\{Y(t, M(t_1)) - Y(t, M(t_0))\},}{%
-%    \delta(t) = E[Y(t, M(t1)) - Y(t, M(t0))],}
-%where \eqn{t, t_1, t_0}{t, t1, t0} are particular values of the treatment \eqn{T} such that \eqn{t_1 \neq t_0}{t1 != t0}, \eqn{M(t)} is the potential mediator, and \eqn{Y(t,m)} is the potential outcome variable.
+\details{This function calculates causal mediation effects (CME) for the parallel encouragment design described in Imai, Tingley, Yamamoto JRSS-A.
+In the design two experimental arms are used. In one the treatment is randomized and the mediator and outcome variables are measured. In the second design the treatment is randomized, and the other the mediator is encouraged either up, down, or no encouragement. The mediator and outcome variables are measured.
 
 The function requires the outcome, mediator, and treatment to be binary (0/1). The value of the manipulation indicator must be trichotomous (-1 (discouragement)/0 (no encouragement) /1 (encouragement)) in the parallel encouragement design.
 }

@@ -16,13 +16,9 @@ mediate.ced(outcome=outcome,mediator1=mediator1,mediator2=mediator2,treatment=tr
     the 2.5 and 97.5 percentiles of the simulated quantities.}
 }
 
-\details{This function calculates causal mediation effects (CME) for the crossover encouragement design described in Imai, Tingley, Yamamoto JRSS-A. The design has two stages. In the first experiment the treatment is randomized and the mediator/outcome variables measured. In the second the treatment is set to value opposite of first period and a randomly selected group of units receives encouragement to take on the mediator observed value in period 1.
-
-%Teppei, should we just refer people to the papers for the expressions. Doesn't seem too common for man files to have all the expressions.
-%The CME represents the expected difference in the potential outcome when the mediator took the value that would realize under the treatment condition as opposed to the control condition, while the treatment status itself is held constant. \deqn{\delta(t) \ = \ E\{Y(t, M(t_1)) - Y(t, M(t_0))\},}{%
-%    \delta(t) = E[Y(t, M(t1)) - Y(t, M(t0))],}
-%where \eqn{t, t_1, t_0}{t, t1, t0} are particular values of the treatment \eqn{T} such that \eqn{t_1 \neq t_0}{t1 != t0}, \eqn{M(t)} is the potential mediator, and \eqn{Y(t,m)} is the potential outcome variable.
-
+\details{This function calculates causal mediation effects (CME) for the crossover encouragement design described in Imai, Tingley, Yamamoto JRSS-A. 
+The design has two stages. In the first experiment the treatment is randomized and the mediator/outcome variables measured.
+In the second the treatment is set to value opposite of first period and a randomly selected group of units receives encouragement to take on the mediator observed value in period 1.
 The function requires the outcome, both mediator, treatment, and manipulation variables to be binary (0/1).
 }
 

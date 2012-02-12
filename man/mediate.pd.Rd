@@ -1,7 +1,7 @@
 \name{mediate.pd} \alias{mediate.pd} \title{Parallel Design Bounds} \description{ 'mediate.pd' estimates the bounds on causal mediation effects for the parallel design. If a treatment/mediator interaction is allowed then the bounds are calculated. If a treatment/mediator interaction is not allowed then the mediation effect is point identified in which case the point estimate and bootstrapped confidence intervals are estimated. See Imai, Tingley, and Yamamoto JRSS-A for additional details.
 } \usage{
 
-mediate.ced(outcome,mediator,treatment,manipulated,NINT=TRUE,conf.level=.95) {
+mediate.pd(outcome,mediator,treatment,manipulated,NINT=TRUE,conf.level=.95) {
 
 }
 
@@ -15,18 +15,14 @@ mediate.ced(outcome,mediator,treatment,manipulated,NINT=TRUE,conf.level=.95) {
     the 2.5 and 97.5 percentiles of the simulated quantities.}
 }
 
-\details{This function calculates causal mediation effects (CME) for the parallel design described in Imai, Tingley, Yamamoto JRSS-A. In the design two experimental arms are used. In one the mediator is not manipulated and in the other the mediator is perfectly manipulated.
-
-%Teppei, should we just refer people to the papers for the expressions. Doesn't seem too common for man files to have all the expressions.
-%The CME represents the expected difference in the potential outcome when the mediator took the value that would realize under the treatment condition as opposed to the control condition, while the treatment status itself is held constant. \deqn{\delta(t) \ = \ E\{Y(t, M(t_1)) - Y(t, M(t_0))\},}{%
-%    \delta(t) = E[Y(t, M(t1)) - Y(t, M(t0))],}
-%where \eqn{t, t_1, t_0}{t, t1, t0} are particular values of the treatment \eqn{T} such that \eqn{t_1 \neq t_0}{t1 != t0}, \eqn{M(t)} is the potential mediator, and \eqn{Y(t,m)} is the potential outcome variable.
+\details{This function calculates causal mediation effects (CME) for the parallel design described in Imai, Tingley, Yamamoto JRSS-A.
+In the design two experimental arms are used. In one the treatment is randomized and the mediator and outcome variables are measured. In the second design the treatment is randomized, and the other the mediator is perfectly manipulated and the mediator and outcome variables measured.
 
 The function requires the outcome, mediator, treatment, and manipulation variables to be binary (0/1). Users must specify whether or not to allow a treatment/mediator interaction.
 }
 
 
-\value{\code{mediate.ced} returns an object of class "\code{mediate.design}", a list that contains the components listed below.
+\value{\code{mediate.pd} returns an object of class "\code{mediate.design}", a list that contains the components listed below.
 
 The function \code{summary} (i.e., \code{summary.mediate.design}) can be used to obtain a table of the results.
 
