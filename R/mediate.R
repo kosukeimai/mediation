@@ -1189,7 +1189,7 @@ summary.mediate <- function(object, ...){
 
 print.summary.mediate <- function(x, ...){
     clp <- 100 * x$conf.level
-    cat("\n Causal Mediation Analysis \n\n")
+    cat("\nCausal Mediation Analysis \n\n")
     if(x$boot){
         cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
     } else {

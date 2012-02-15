@@ -4,7 +4,7 @@
 
 multimed <- function(outcome, med.main, med.alt, treat, covariates = NULL, 
 					 data, sims = 1000, R2.by = 0.01, conf.level = 0.95){
-					 	
+    
     varnames <- c(outcome, treat, med.main, med.alt, covariates)
     data <- na.omit(data[,varnames])
     
@@ -136,6 +136,44 @@ IMCI <- function(upper, lower, var.upper, var.lower,
     list(ci=ci, conf.level=conf.level)
 }
 
+## Summary
+summary.multimed <- function(object, ...){
+    structure(object, class = c("summary.multimed", class(object)))
+}
+
+print.summary.multimed <- function(x, ...){
+    cat("\n")
+    cat("Causal Mediation Analysis with Confounding by an Alternative Mechanism\n\n")
+    cat("Estimates under the Homogeneous Interaction Assumption:\n")
+    
+    cmat <- c(x$d1.lb[1], x$d0.lb[1], x$d.ave.lb[1], x$tau)
+    cmat <- cbind(cmat, rbind(x$d1.ci[,1], x$d0.ci[,1], x$d.ave.ci[,1], x$tau.ci))
+    colnames(cmat) <- c("Estimate", "CI lower", "CI upper")
+    rownames(cmat) <- c("ACME(treated)", "ACME(control)", "ACME(average)", "Total")
+    printCoefmat(cmat[,1:3], digits=3)
+    cat("\n")
+    
+    cat("Sensitivity Analysis: Values of the sensitivity parameters at which ACME first crosses zero:\n")
+    ind.d1.b <- sum(sign(x$d1.lb) * sign(x$d1.ub) > 0) + 1
+    ind.d1.c <- sum(sign(x$d1.ci[1,]) * sign(x$d1.ci[2,]) > 0) + 1
+    ind.d0.b <- sum(sign(x$d0.lb) * sign(x$d0.ub) > 0) + 1
+    ind.d0.c <- sum(sign(x$d0.ci[1,]) * sign(x$d0.ci[2,]) > 0) + 1
+    ind.d.ave.b <- sum(sign(x$d.ave.lb) * sign(x$d.ave.ub) > 0) + 1
+    ind.d.ave.c <- sum(sign(x$d.ave.ci[1,]) * sign(x$d.ave.ci[2,]) > 0) + 1
+    smat <- c(x$sigma[ind.d1.b], x$sigma[ind.d1.c], 
+               x$R2star[ind.d1.b], x$R2star[ind.d1.c], x$R2tilde[ind.d1.b], x$R2tilde[ind.d1.c])
+    smat <- rbind(smat, c(x$sigma[ind.d0.b], x$sigma[ind.d0.c], 
+               x$R2star[ind.d0.b], x$R2star[ind.d0.c], x$R2tilde[ind.d0.b], x$R2tilde[ind.d0.c]))
+    smat <- rbind(smat, c(x$sigma[ind.d.ave.b], x$sigma[ind.d.ave.c], 
+               x$R2star[ind.d.ave.b], x$R2star[ind.d.ave.c], x$R2tilde[ind.d.ave.b], x$R2tilde[ind.d.ave.c]))
+    colnames(smat) <- c("sigma(bounds)", "sigma(CI)", "R2s(bounds)", "R2s(CI)", "R2t(bounds)", "R2t(CI)")
+    rownames(smat) <- c("ACME(treated)", "ACME(control)", "ACME(average)")
+    printCoefmat(smat[,1:6], digits=3)
+    cat("\n")
+    
+    invisible(x)
+}
+
 
 ## Plot
 plot.multimed <- function(x, type = c("point", "sigma", "R2-residual", "R2-total"),
@@ -255,7 +293,7 @@ plot.multimed <- function(x, type = c("point", "sigma", "R2-residual", "R2-total
 			if(j == 1) xli <- range(x$sigma) else xli <- c(0,1)
 		} else xli <- xlim
 		if(is.null(ylim)){
-			yli <- c(min(ci.lo), max(ci.up))	
+			yli <- c(min(ci.lo), max(ci.up))
 		} else yli <- ylim
 		
 		spar <- switch(j, x$sigma, x$R2star, x$R2tilde)
@@ -269,6 +307,6 @@ plot.multimed <- function(x, type = c("point", "sigma", "R2-residual", "R2-total
 			lines(spar, eff.up[,i], lwd = lwd, col = col.eff)
 			abline(h = 0)
 			abline(h = eff.lo[1,i], lty = "dashed")
-		}		
+		}
 	}
-}												  	
+}
