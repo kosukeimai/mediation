@@ -199,12 +199,12 @@ boot.pd<-function(outcome,mediator, treatment,encouragement,sims=100, conf.level
                     index <- sample(1:n, n, replace = TRUE)
                     d<-data[index,]
 
-            d0.temp<-mean(d$Y[D$T==1 & d$D==0) - mean(d$Y[d$T==0 & d$D==0)
+            d0.temp<-mean(d$Y[D$T==1 & d$D==0]) - mean(d$Y[d$T==0 & d$D==0])
 
             weight.m1<-sum(d$M==1 & d$D==1 )/sum(d$D==1)
             weight.m0<-sum(d$M==0 & d$D==1 )/sum(d$D==1)
-            m1<-mean(d$Y[d$T==1 & d$M==1 & d$D==1) - mean(d$Y[d$T==0 & d$M==1 & d$D==1)
-            m0<-mean(d$Y[d$T==1 & d$M==0 & d$D==1) - mean(d$Y[d$T==0 & d$M==0 & d$D==1)
+            m1<-mean(d$Y[d$T==1 & d$M==1 & d$D==1]) - mean(d$Y[d$T==0 & d$M==1 & d$D==1])
+            m0<-mean(d$Y[d$T==1 & d$M==0 & d$D==1]) - mean(d$Y[d$T==0 & d$M==0 & d$D==1])
             acme[b]<-weight.m1*m1 + weight.m0*m0
             }
 
@@ -631,4 +631,5 @@ print.summary.mediate.design <- function(x, ...){
         }
 
     invisible(x)
+	}
 }

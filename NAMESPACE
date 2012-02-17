@@ -2,26 +2,28 @@ importFrom(MASS, mvrnorm, gamma.shape)
 importFrom(Matrix, Diagonal)
 importMethodsFrom(Matrix, kronecker)
 
-export(mediate, mediate.npdiscrete, summary.mediate, plot.mediate,
-       summary.mediate.order,summary.mediate.npdiscrete,plot.mediate.order,
+export(mediate, summary.mediate, plot.mediate,
+       summary.mediate.order, plot.mediate.order,
        medsens, summary.medsens, plot.medsens,
        mediations, summary.mediations, plot.mediations,
-       summary.mediations.order, plot.mediations.order)
+       summary.mediations.order, plot.mediations.order,
+       multimed, summary.multimed, plot.multimed)
 
 S3method(summary, mediate)
 S3method(summary, mediate.order)
 S3method(summary, medsens)
 S3method(summary, mediations)
 S3method(summary, mediations.order)
-S3method(summary, mediate.npdiscrete)
+S3method(summary, multimed)
 S3method(plot, mediate)
 S3method(plot, mediate.order)
 S3method(plot, medsens)
 S3method(plot, mediations)
 S3method(plot, mediations.order)
+S3method(plot, multimed)
 S3method(print, summary.mediate)
 S3method(print, summary.mediate.order)
-S3method(print, summary.mediate.npdiscrete)
 S3method(print, summary.medsens)
 S3method(print, summary.mediations)
 S3method(print, summary.mediations.order)
+S3method(print, summary.multimed)

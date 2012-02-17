@@ -1,7 +1,7 @@
 \name{mediate.ped} \alias{mediate.ped} \title{Parallel Encouragement Design Bounds} \description{ 'mediate.ped' estimates the bounds on causal mediation effects for the parallel encouragement design. See Imai, Tingley, and Yamamoto JRSS-A for additional details.
 } \usage{
 
-mediate.ped(outcome,mediator,treatment,encouragement) {
+mediate.ped(outcome,mediator,treatment,encouragement)
 
 }
 

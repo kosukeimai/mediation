@@ -1,7 +1,7 @@
 \name{mediate.pd} \alias{mediate.ced} \title{Crossover Encouragement Design Bounds} \description{ 'mediate.ced' estimates the bounds on causal mediation effects for the crossover encouragment design. See Imai, Tingley, and Yamamoto JRSS-A for additional details.
 } \usage{
 
-mediate.ced(outcome=outcome,mediator1=mediator1,mediator2=mediator2,treatment=treatment,encouragement=encouragement,sims=1000, conf.level=.95) {
+mediate.ced(outcome=outcome,mediator1=mediator1,mediator2=mediator2,treatment=treatment,encouragement=encouragement,sims=1000, conf.level=.95)
 
 }
 
@@ -46,7 +46,7 @@ Imai, K., Keele, L. and Tingley, D. (2010) A General Approach to Causal Mediatio
 
 Imai, K., Keele, L. and Yamamoto, T. (2010) Identification, Inference, and Sensitivity Analysis for Causal Mediation Effects, Statistical Science, Vol. 25, No. 1 (February), pp. 51-71.
 
-Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation Analysis Using R" in Advances in Social Science Research Using R, ed. H. D. Vinod New York: Springer.}
+Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) Causal Mediation Analysis Using R" in Advances in Social Science Research Using R, ed. H. D. Vinod New York: Springer.}
 
 \author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu}, Teppei Yamamoto, MIT, \email{teppei@mit.edu}, }
 

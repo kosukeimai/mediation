@@ -1,7 +1,7 @@
 \name{mediate.pd} \alias{mediate.pd} \title{Parallel Design Bounds} \description{ 'mediate.pd' estimates the bounds on causal mediation effects for the parallel design. If a treatment/mediator interaction is allowed then the bounds are calculated. If a treatment/mediator interaction is not allowed then the mediation effect is point identified in which case the point estimate and bootstrapped confidence intervals are estimated. See Imai, Tingley, and Yamamoto JRSS-A for additional details.
 } \usage{
 
-mediate.pd(outcome,mediator,treatment,manipulated,NINT=TRUE,conf.level=.95) {
+mediate.pd(outcome,mediator,treatment,manipulated,NINT=TRUE,conf.level=.95)
 
 }
 
