@@ -1,4 +1,4 @@
-importFrom(MASS, mvrnorm, gamma.shape)
+importFrom(MASS, mvrnorm, gamma.shape, lp)
 importFrom(Matrix, Diagonal)
 importMethodsFrom(Matrix, kronecker)
 
@@ -26,4 +26,4 @@ S3method(print, summary.mediate.order)
 S3method(print, summary.medsens)
 S3method(print, summary.mediations)
 S3method(print, summary.mediations.order)
-S3method(print, summary.multimed)
+S3method(print, summary.multimed) 
