@@ -1,6 +1,7 @@
 importFrom(MASS, mvrnorm, gamma.shape)
 importFrom(Matrix, Diagonal)
 importMethodsFrom(Matrix, kronecker)
+importFrom(lpSolve, lp)
 
 export(mediate, summary.mediate, plot.mediate,
        summary.mediate.order, plot.mediate.order,
