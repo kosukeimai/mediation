@@ -11,7 +11,7 @@ mediate.sed(outcome,mediator,treatment,SI=FALSE, sims=1000)
  \item{treatment}{vector of the treatment variable. Must be binary (0/1).}
  \item{SI}{Logical indicator for whether sequential ignorability assumption is made.}
  \item{boot}{ a logical value. if 'FALSE' a large sample Delta method approximation is used for confidence intervals; if 'TRUE' nonparametric bootstrap will be used. Default is 'FALSE'.}
-\item{sims}{ number of Monte Carlo draws for nonparametric bootstrap or quasi-Bayesian approximation.}
+\item{sims}{ number of Monte Carlo draws for nonparametric bootstrap.}
 \item{conf.level}{ level of the returned two-sided confidence intervals.  Default is to return
 the 2.5 and 97.5 percentiles of the simulated quantities.}
 }

@@ -8,13 +8,13 @@
 ####
 
 #single experiment design
-mediate.sed<-function(outcome,mediator,treatment,SI=FALSE, sims=1000, conf.level = 0.95) {
+mediate.sed<-function(outcome,mediator,treatment,SI=FALSE, sims=1000, conf.level = 0.95, boot=FALSE) {
 
     if(is.null(SI)){
     stop("You must specify whether you would like to make the sequential ignorability assumption.")
     }
     if(SI) {
-    out<-mediate.np(outcome,mediator,treatment,sims=sims, conf.level = conf.level)
+    out<-mediate.np(outcome,mediator,treatment,sims=sims, conf.level = conf.level, boot=boot)
     out$design <- "SED.NP.SI"
     } else {
     out<-mechanism.bounds(outcome,mediator,treatment,encouragement=NULL,design="SED")
@@ -26,7 +26,7 @@ mediate.sed<-function(outcome,mediator,treatment,SI=FALSE, sims=1000, conf.level
 
 
 #parallel design
-mediate.pd<-function(outcome,mediator,treatment,manipulated,NINT=TRUE,conf.level=.95,sims) {
+mediate.pd<-function(outcome,mediator,treatment,manipulated,NINT=TRUE,conf.level=.95,sims=1000) {
 
     if(NINT) {
     out<-boot.pd(outcome,mediator,treatment,manipulated,NINT,conf.level,sims)
@@ -49,7 +49,7 @@ mediate.ped<-function(outcome,mediator,treatment,encouragement) {
 ######
 
 #non parametric under SI assumption
-mediate.np <- function(Y,M,T, boot = FALSE, sims , conf.level = .95){
+mediate.np <- function(Y,M,T, conf.level = .95, sims , boot = FALSE){
 
     samp <- data.frame(na.omit(cbind(M,Y,T)))
     m.cat <- sort(unique(samp$M))

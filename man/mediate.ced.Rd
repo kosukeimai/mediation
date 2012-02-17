@@ -1,4 +1,4 @@
-\name{mediate.pd} \alias{mediate.ced} \title{Crossover Encouragement Design Bounds} \description{ 'mediate.ced' estimates the bounds on causal mediation effects for the crossover encouragment design. See Imai, Tingley, and Yamamoto JRSS-A for additional details.
+\name{mediate.ced} \alias{mediate.ced} \title{Crossover Encouragement Design Bounds} \description{ 'mediate.ced' estimates the bounds on causal mediation effects for the crossover encouragment design. See Imai, Tingley, and Yamamoto JRSS-A for additional details.
 } \usage{
 
 mediate.ced(outcome=outcome,mediator1=mediator1,mediator2=mediator2,treatment=treatment,encouragement=encouragement,sims=1000, conf.level=.95)
@@ -11,12 +11,12 @@ mediate.ced(outcome=outcome,mediator1=mediator1,mediator2=mediator2,treatment=tr
  \item{mediator2}{vector of experiment mediating variable in experiment 1}
  \item{treatment}{vector of the treatment variable}
  \item{encouragement}{vector of the indicator of whether observation received manipulation .}
- \item{NINT}{logical for whether user is assuming no interaction between treatment and mediator. If TRUE then no interaction is assumed}
+ \item{sims}{ number of Monte Carlo draws for nonparametric bootstrap.}
  \item{conf.level}{ level of the returned two-sided confidence intervals.  Default is to return
     the 2.5 and 97.5 percentiles of the simulated quantities.}
 }
 
-\details{This function calculates causal mediation effects (CME) for the crossover encouragement design described in Imai, Tingley, Yamamoto JRSS-A. 
+\details{This function calculates causal mediation effects (CME) for the crossover encouragement design described in Imai, Tingley, Yamamoto JRSS-A.
 The design has two stages. In the first experiment the treatment is randomized and the mediator/outcome variables measured.
 In the second the treatment is set to value opposite of first period and a randomly selected group of units receives encouragement to take on the mediator observed value in period 1.
 The function requires the outcome, both mediator, treatment, and manipulation variables to be binary (0/1).

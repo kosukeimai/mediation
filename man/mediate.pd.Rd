@@ -1,7 +1,7 @@
 \name{mediate.pd} \alias{mediate.pd} \title{Parallel Design Bounds} \description{ 'mediate.pd' estimates the bounds on causal mediation effects for the parallel design. If a treatment/mediator interaction is allowed then the bounds are calculated. If a treatment/mediator interaction is not allowed then the mediation effect is point identified in which case the point estimate and bootstrapped confidence intervals are estimated. See Imai, Tingley, and Yamamoto JRSS-A for additional details.
 } \usage{
 
-mediate.pd(outcome,mediator,treatment,manipulated,NINT=TRUE,conf.level=.95)
+mediate.pd(outcome,mediator,treatment,manipulated,NINT=TRUE,conf.level=.95,sims=1000)
 
 }
 
@@ -11,6 +11,7 @@ mediate.pd(outcome,mediator,treatment,manipulated,NINT=TRUE,conf.level=.95)
  \item{treatment}{vector of the treatment variable}
  \item{manipulated}{vector of the indicator of whether observation received manipulation.}
  \item{NINT}{logical for whether user is assuming no interaction between treatment and mediator. If TRUE then no interaction is assumed}
+  \item{sims}{ number of Monte Carlo draws for nonparametric bootstrap.}
  \item{conf.level}{ level of the returned two-sided confidence intervals.  Default is to return
     the 2.5 and 97.5 percentiles of the simulated quantities.}
 }
