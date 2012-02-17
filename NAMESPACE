@@ -1,4 +1,4 @@
-importFrom(MASS, mvrnorm, gamma.shape, lp)
+importFrom(MASS, mvrnorm, gamma.shape, lpSolve)
 importFrom(Matrix, Diagonal)
 importMethodsFrom(Matrix, kronecker)
 
