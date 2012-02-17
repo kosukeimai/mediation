@@ -299,7 +299,7 @@ plot.multimed <- function(x, type = c("point", "sigma", "R2-residual", "R2-total
 		spar <- switch(j, x$sigma, x$R2star, x$R2tilde)
 		
 		for(i in 1:ncol(eff.lo)){
-			plot(0, 0, type = "n", main = ma, xlab = xla, ylab = yla[[i]],
+			plot(0, 0, type = "n", main = ma, xlab = xla, ylab = yla[[i]][j],
 				 xlim = xli, ylim = yli, ...)
 			polygon(c(spar, rev(spar)), c(ci.lo[,i], rev(ci.up[,i])),
 				    border = FALSE, col = col.creg)
