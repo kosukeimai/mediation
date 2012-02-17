@@ -907,7 +907,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
             Call.Y <- model.y$call
             
             if(isSurvreg.m){
-            	if(ncol(b.surv$y) > 2){
+            	if(ncol(model.m$y) > 2){
                 	stop("unsupported censoring type")
                 }
                 mname <- names(m.data)[1]

@@ -1,7 +1,7 @@
 \name{jobs}
 \docType{data}
 \alias{jobs}
-\title{JOB II data}
+\title{JOBS II data}
 \description{
 Job Search Intervention Study (JOBS
 II). JOBS II is a randomized field experiment that investigates the efficacy of a job training
