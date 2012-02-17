@@ -27,3 +27,4 @@ The \code{framing} data contains 265 rows and 10 columns of data from a framing 
 	Brader, T., Valentino, N. and Suhay, E. (2008). What triggers public opposition to immigration? Anxiety, group cues, and immigration threat. American Journal of Political Science 52, 4, 959--978.
 	
 }
+\keyword{datasets}
