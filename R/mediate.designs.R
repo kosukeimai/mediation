@@ -49,7 +49,7 @@ mediate.ped<-function(outcome,mediator,treatment,encouragement) {
 ######
 
 #non parametric under SI assumption
-mediate.npdiscrete <- function(Y,M,T, boot = FALSE, sims , conf.level = .95){
+mediate.np <- function(Y,M,T, boot = FALSE, sims , conf.level = .95){
 
     samp <- data.frame(na.omit(cbind(M,Y,T)))
     m.cat <- sort(unique(samp$M))

@@ -1,7 +1,7 @@
 \name{mediate.sed} \alias{mediate.sed} \title{mediate.sed} \description{ 'mediate.sed' estimates causal mediation effects for the single experiment design. The two options are to use either the sequential ignorability (SI) assumption in which nonparametric estimates of the average causal mediation effect are produced, or, to relax the SI assumption and to calculate the bounds on the causal mediation effect. Assumptions for the bounds are discussed in Imai, Tingley, Yamamoto JRSS-A.
 } \usage{
 
-mediate.sed(outcome,mediator,treatment,SI=FALSE)
+mediate.sed(outcome,mediator,treatment,SI=FALSE, sims=1000)
 
 }
 
@@ -17,7 +17,7 @@ the 2.5 and 97.5 percentiles of the simulated quantities.}
 }
 
 \details{This function calculates causal mediation effects (CME) for the single experiment design, where the treatment is randomized and the mediator/outcome variables measured.
-The user specifies whether they want the non-parametric point estimates based on the sequential ignorability (SI) assumption, or the bounds when the SI assumption is not made. 
+The user specifies whether they want the non-parametric point estimates based on the sequential ignorability (SI) assumption, or the bounds when the SI assumption is not made.
 The function requires the treatment, mediator, and outcome variables to be binary (0/1).
 }
 
