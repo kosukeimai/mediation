@@ -33,7 +33,7 @@ for the plotting of an output from \code{mediate} can be passed through.
 
 
 \author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu},
-Teppei Yamamoto, Princeton University, \email{tyamamot@princeton.edu}.}
+Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}}
  
 \seealso{\code{\link{mediations}}, \code{\link{plot.mediate}}, \code{\link{plot}}.}
 

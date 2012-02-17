@@ -1,0 +1,77 @@
+\name{multimed} 
+\alias{multimed} 
+\title{Estimation and Sensitivity Analysis for Multiple Causal Mechanisms} 
+\description{ 
+'multimed' is used for causal mediation analysis when a post-treatment 
+mediator-outcome confounder, or an alternative mediator causally preceding 
+the mediator of interest, exists in the hypothesized causal mechanisms.
+It estimates the average causal mediation effects (indirect effects) under the
+homogeneous interaction assumption based on a varying-coefficient linear
+structural equation model. The function also performs sensitivity analysis
+with respect to the violation of the homogenous interaction assumption.
+} 
+
+\usage{
+
+multimed(outcome, med.main, med.alt, treat, covariates = NULL,
+         data, sims = 1000, R2.by = 0.01, conf.level = 0.95)
+
+}
+
+\arguments{
+\item{outcome}{ name of the outcome variable in 'data'.}
+\item{med.main}{ name of the mediator of interest.}
+\item{med.alt}{ name of the post-treatment confounder, i.e., the alternative mediator affecting both the main mediator and outcome.}
+\item{treat}{ name of the treatment variable in 'data'.}
+\item{covariates}{ vector of character strings representing the names of the pre-treatment covariates.}
+\item{data}{ a data frame containing all the above variables.}
+\item{sims}{ number of bootstrap samples used for the calculation of confidence intervals.}
+\item{R2.by}{ increment for the "R square tilde" parameter, i.e. the sensitivity parameter representing the proportion of residual outcome variance explained by heterogeneity in treatment-mediator interactions. Must be a numeric value between 0 and 1.}
+\item{conf.level}{ level to be used for confidence intervals.}
+}
+
+\details{This function implements the framework proposed by Imai and Yamamoto (2012) for the estimation and sensitivity analysis for multiple causal mechanisms. It estimates the average causal mediation effects with respect to the mediator of interest (`med.main'), i.e., the portion of the treatment effect on the outcome that is transmitted through that mediator. Unlike the "standard" causal mediation analysis implemented by \code{\link{mediate}} and \code{\link{medsens}}, this framework allows the existence of a post-treatment covariate that confounds the relationship between the main mediator and the outcome, or equivalently, an alternative mediator (`med.alt') that causally precedes the main mediator. 
+
+The estimation and sensitivity analysis are both based on a varying-coefficient linear structural equations model, which assumes additivity but allows for an arbitrary degree of heterogeneity in model coefficients across units and thus is substantially more flexible than a traditional SEM framework. For details see Imai and Yamamoto (2012).
+
+The function produces two sets of results. First, point estimates of the average causal mediation effects are calculated, along with their (percentile) bootstrap confidence intervals. These estimates are based on the "homogeneous interaction" assumption, or the assumption that the degree of treatment-mediator interaction is constant across all units. The estimated total treatment effect is also reported.
+
+Second, the bounds on the average causal mediation effects are also estimated and computed for various degrees of interaction heterogeneity (i.e., violation of the identification assumption), which are represented by the values of three alternative sensitivity parameters. These parameters are: (1) sigma, the standard deviation of the (varying) regression coefficient on the interaction term, (2) R square star, the proportion of the residual variance that would be explained by an additional term for interaction heterogeneity, and (3) R square tilde, the proportion of the total variance explained by such a term. The confidence region are also calculated, using the Imbens and Manski (2004) formula with bootstrap standard errors. Further details are given in the above reference.
+}
+
+\value{\code{multimed} returns an object of class "\code{multimed}", a list contains the following components. The object can be passed to the \code{summary} and \code{plot} method functions for a summary table and a graphical summary.
+
+\item{sigma}{ values of the sigma sensitivity parameter at which the bounds and confidence intervals are evaluated.}
+\item{R2tilde}{ values of the R square tilde parameter.}
+\item{R2star}{ values of the R square star parameter.}
+\item{d1.lb, d0.lb, d.ave.lb}{ lower bounds on the average causal mediation effects under treatment, control, and the simple average of the two, respectively, corresponding to the values of the sensitivity parameters listed above. Note that the first elements of these vectors equal the point estimates under the homogeneous interaction assumption.}
+\item{d1.ub, d0.ub, d.ave.ub}{ upper bounds on the average causal mediation effects.}
+\item{d1.ci, d0.ci, d.ave.ci}{ confidence intervals for the average causal mediation effects at different values of the sensitivity parameters.}
+\item{tau}{ point estimate of the total treatment effect.}
+\item{tau.ci}{ confidence interval for the total treatment effect.}
+}
+
+\references{
+
+Imai, K. and Yamamoto, T. (2012) Identification and Sensitivity Analysis for Multiple Causal Mechanisms: Revisiting Evidence from Framing Experiments, typescript.
+
+}
+
+\author{Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}}
+
+\seealso{\code{\link{plot.multimed}}}
+
+\examples{
+
+# Replicates Figure 3 of Imai and Yamamoto (2012)
+# Note: # of bootstrap samples set low for quick illustration
+
+data(framing)
+Xnames <- c("year", "age", "sex", "ethnic", "knowdum", "ondum", "pid", "ideology")
+res <- multimed("mfopinio", "speech", "impspe", "frame", Xnames,
+                data = framing, sims = 100, conf = 0.9)
+summary(res)
+plot(res, type = "point")
+plot(res, type = c("sigma", "R2-total"), tgroup = "average")
+
+}

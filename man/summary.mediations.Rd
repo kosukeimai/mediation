@@ -23,7 +23,7 @@ The 'summary.mediations' function produces a summary of results from multiple ca
 } 
 
 \author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu},
-Teppei Yamamoto, Princeton University, \email{tyamamot@princeton.edu}. }
+Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}}
  
 \seealso{\code{\link{mediations}}, \code{\link{summary.mediate}}, \code{\link{summary}}.}
 
