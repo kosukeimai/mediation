@@ -608,7 +608,6 @@ print.summary.mediate.design <- function(x, ...){
         }
 
 
-        #Luke we need your summary function here.
         if(x$design=="SED.NP.SI"){
         clp <- 100 * x$conf.level
     cat("\n NonParametric Causal Mediation Analysis for Discrete Mediators \n\n")
