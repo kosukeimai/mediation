@@ -215,8 +215,9 @@ boot.pd<-function(outcome,mediator, treatment,manipulated, sims=sims, conf.level
         low <- (1 - conf.level)/2
         high <- 1 - low
         acme.mu<-median(acme, na.rm=TRUE)
-        acme.ci <- quantile(acme.mu, c(low,high), na.rm=TRUE)
+        acme.ci <- quantile(acme, c(low,high), na.rm=TRUE)
         out<-list(d=acme.mu, d.ci=acme.ci,d.sims=acme,conf.level=conf.level,sims=sims,design="PD.NINT")
+        class(out) <- "mediate.design"
         out
 
     }
@@ -579,8 +580,8 @@ print.summary.mediate.design <- function(x, ...){
         if(x$design=="PD.NINT"){
                 clp <- 100 * x$conf.level
                 cat("\n Parallel Design, No Interaction Assumed \n\n")
-                cat("Mediation Effect: ", format(x$d0, digits=4), clp, "% CI ",
-                format(x$d0.ci, digits=4), "\n")
+                cat("Mediation Effect: ", format(x$d, digits=4), clp, "% CI ",
+                format(x$d.ci, digits=4), "\n")
         }
 
 

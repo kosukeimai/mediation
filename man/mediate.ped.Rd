@@ -52,5 +52,4 @@ Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation Analy
 #################################################### # Example 1: Parallel Encouragement Design ####################################################
 bound3<-mediate.ped(data$Yz,data$Mz,data$T,data$Z)
 summary(bound3)
-
 }
