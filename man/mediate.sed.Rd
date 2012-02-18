@@ -1,7 +1,7 @@
 \name{mediate.sed} \alias{mediate.sed} \title{mediate.sed} \description{ 'mediate.sed' estimates causal mediation effects for the single experiment design. The two options are to use either the sequential ignorability (SI) assumption in which nonparametric estimates of the average causal mediation effect are produced, or, to relax the SI assumption and to calculate the bounds on the causal mediation effect. Assumptions for the bounds are discussed in Imai, Tingley, Yamamoto JRSS-A.
 } \usage{
 
-mediate.sed(outcome,mediator,treatment,SI=FALSE, sims=1000)
+mediate.sed(outcome,mediator,treatment,SI=FALSE, sims=1000,conf.level=0.95,boot=FALSE)
 
 }
 
@@ -10,11 +10,11 @@ mediate.sed(outcome,mediator,treatment,SI=FALSE, sims=1000)
  \item{mediator}{vector of experiment mediating variable. Must be binary if SI assumption is not made. Must be discrete if SI assumption is made.}
  \item{treatment}{vector of the treatment variable. Must be binary (0/1).}
  \item{SI}{Logical indicator for whether sequential ignorability assumption is made.}
- \item{boot}{ a logical value. if 'FALSE' a large sample Delta method approximation is used for confidence intervals; if 'TRUE' nonparametric bootstrap will be used. Default is 'FALSE'.}
 \item{sims}{ number of Monte Carlo draws for nonparametric bootstrap.}
 \item{conf.level}{ level of the returned two-sided confidence intervals.  Default is to return
 the 2.5 and 97.5 percentiles of the simulated quantities.}
-}
+ \item{boot}{ a logical value. if 'FALSE' a large sample Delta method approximation is used for confidence intervals; if 'TRUE' nonparametric bootstrap will be used. Default is 'FALSE'.}
+     }
 
 \details{This function calculates causal mediation effects (CME) for the single experiment design, where the treatment is randomized and the mediator/outcome variables measured.
 The user specifies whether they want the non-parametric point estimates based on the sequential ignorability (SI) assumption, or the bounds when the SI assumption is not made.

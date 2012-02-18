@@ -14,7 +14,7 @@ mediate.sed<-function(outcome,mediator,treatment,SI=FALSE, sims=1000, conf.level
     stop("You must specify whether you would like to make the sequential ignorability assumption.")
     }
     if(SI) {
-    out<-mediate.np(outcome,mediator,treatment,sims=sims, conf.level = conf.level, boot=boot)
+    out<-mediate.np(outcome,mediator,treatment,sims , conf.level , boot )
     out$design <- "SED.NP.SI"
     } else {
     out<-mechanism.bounds(outcome,mediator,treatment,encouragement=NULL,design="SED")
@@ -26,10 +26,10 @@ mediate.sed<-function(outcome,mediator,treatment,SI=FALSE, sims=1000, conf.level
 
 
 #parallel design
-mediate.pd<-function(outcome,mediator,treatment,manipulated,NINT=TRUE,conf.level=.95,sims=1000) {
+mediate.pd<-function(outcome,mediator,treatment,manipulated,NINT=TRUE,sims=1000,conf.level=.95) {
 
     if(NINT) {
-    out<-boot.pd(outcome,mediator,treatment,manipulated,NINT,conf.level,sims)
+    out<-boot.pd(outcome,mediator,treatment,manipulated,sims,conf.level)
     } else {
     out<-mechanism.bounds(outcome,mediator,treatment,manipulated,design="PD")
     }
@@ -49,7 +49,7 @@ mediate.ped<-function(outcome,mediator,treatment,encouragement) {
 ######
 
 #non parametric under SI assumption
-mediate.np <- function(Y,M,T, conf.level = .95, sims , boot = FALSE){
+mediate.np <- function(Y,M,T, sims, conf.level , boot ){
 
     samp <- data.frame(na.omit(cbind(M,Y,T)))
     m.cat <- sort(unique(samp$M))
@@ -171,12 +171,12 @@ var.delta_1 <- (1/n1) * sum(var.delta.1m) - (2/n0)* sum(mterm.d1) + var(samp$Y[s
 
 
 #parallel design under no interaction assumption
-boot.pd<-function(outcome,mediator, treatment,encouragement,sims, conf.level=.95) {
+boot.pd<-function(outcome,mediator, treatment,manipulated, sims=sims, conf.level=conf.level) {
 
     n.o <- length(outcome)
     n.t <- length(treatment)
     n.m <- length(mediator)
-    n.z<-length(encouragement)
+    n.z<-length(manipulated)
 
     if(n.o != n.t | n.t != n.m |n.m !=n.z){
         stop("Error: Number of observations not the same in treatment, outcome, mediator, and encouragement data")
@@ -184,11 +184,11 @@ boot.pd<-function(outcome,mediator, treatment,encouragement,sims, conf.level=.95
     n<-n.o
 
     orig.length<-length(outcome)
-    data<-matrix(,nrow=length(outcome),ncol=3)
+    data<-matrix(,nrow=length(outcome),ncol=4)
     data[,1]<-outcome
     data[,2]<-treatment
     data[,3]<-mediator
-    data[,4]<-encouragement
+    data[,4]<-manipulated
     data<-as.data.frame(data)
     names(data)<-c("Y","T","M","D")
     data<-na.omit(data)
@@ -200,7 +200,7 @@ boot.pd<-function(outcome,mediator, treatment,encouragement,sims, conf.level=.95
                     index <- sample(1:n, n, replace = TRUE)
                     d<-data[index,]
 
-            d0.temp<-mean(d$Y[D$T==1 & d$D==0]) - mean(d$Y[d$T==0 & d$D==0])
+            d0.temp<-mean(d$Y[d$T==1 & d$D==0]) - mean(d$Y[d$T==0 & d$D==0])
 
             weight.m1<-sum(d$M==1 & d$D==1 )/sum(d$D==1)
             weight.m0<-sum(d$M==0 & d$D==1 )/sum(d$D==1)
