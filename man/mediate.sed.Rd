@@ -52,10 +52,9 @@ Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation Analy
 
 
 #################################################### # Example 1: Bounds without SI assumption####################################################
-data(boundsdata)
+data(boundsdataSED)
 
-data.temp<-subset(boundsdata,boundsdata$D==0)#Only use data from no encouragement set.
-bound1<-mediate.sed(data.temp$Y,data.temp$M,data.temp$T,SI=FALSE)
+bound1<-mediate.sed(boundsdataSED$Y,boundsdataSED$M,boundsdataSED$T,SI=FALSE)
 summary(bound1)
 
 

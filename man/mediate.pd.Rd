@@ -56,11 +56,11 @@ Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation Analy
 #################################################### # Example 1: Parallel Design Experiment####################################################
 
 data(boundsdata)
-bound2<-mediate.pd(data$Y,data$M,data$T,data$D,NINT=TRUE,sims=5,conf.level=.95)
+bound2<-mediate.pd(boundsdata$Y,boundsdata$M,boundsdata$T,boundsdata$D,NINT=TRUE,sims=5,conf.level=.95)
 summary(bound2)
 
 
-bound2.1<-mediate.pd(data$Y,data$M,data$T,data$D,NINT=FALSE)
+bound2.1<-mediate.pd(boundsdata$Y,boundsdata$M,boundsdata$T,boundsdata$D,NINT=FALSE)
 summary(bound2.1)
 
 }
