@@ -45,11 +45,9 @@ Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation Analy
 
 \seealso{\code{\link{mediate}}, \code{\link{medsens}}, \code{\link{plot.mediate}}, \code{\link{summary.mediate}}, \code{\link{mediations}} }
 
-\examples{ # Examples with simulated data
-
-
-
+\examples{
 #################################################### # Example 1: Parallel Encouragement Design ####################################################
+data(boundsdata)
 bound3<-mediate.ped(data$Yz,data$Mz,data$T,data$Z)
 summary(bound3)
 }
