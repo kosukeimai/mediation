@@ -8,7 +8,9 @@ export(mediate, summary.mediate, plot.mediate,
        medsens, summary.medsens, plot.medsens,
        mediations, summary.mediations, plot.mediations,
        summary.mediations.order, plot.mediations.order,
-       multimed, summary.multimed, plot.multimed)
+       multimed, summary.multimed, plot.multimed,
+       mediate.sed, mediate.pd, mediate.ped, mediate.ced,
+       summary.mediate.design)
 
 S3method(summary, mediate)
 S3method(summary, mediate.order)
@@ -16,6 +18,7 @@ S3method(summary, medsens)
 S3method(summary, mediations)
 S3method(summary, mediations.order)
 S3method(summary, multimed)
+S3method(summary, mediate.design)
 S3method(plot, mediate)
 S3method(plot, mediate.order)
 S3method(plot, medsens)
@@ -27,4 +30,5 @@ S3method(print, summary.mediate.order)
 S3method(print, summary.medsens)
 S3method(print, summary.mediations)
 S3method(print, summary.mediations.order)
-S3method(print, summary.multimed) 
+S3method(print, summary.multimed)
+S3method(print, summary.mediate.design)

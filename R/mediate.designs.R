@@ -557,6 +557,7 @@ summary.mediate.design <- function(object, ...){
 
 
 
+
 print.summary.mediate.design <- function(x, ...){
     cat("\n Bounds for Causal Mediation Effects \n\n")
     cat("Design / Treatment Condition / Lower and Upper Bounds \n\n")
