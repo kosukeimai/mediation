@@ -1,73 +1,80 @@
-\name{mediate.sed} \alias{mediate.sed} \title{mediate.sed} \description{ 'mediate.sed' estimates causal mediation effects for the single experiment design. The two options are to use either the sequential ignorability (SI) assumption in which nonparametric estimates of the average causal mediation effect are produced, or, to relax the SI assumption and to calculate the bounds on the causal mediation effect. Assumptions for the bounds are discussed in Imai, Tingley, Yamamoto JRSS-A.
-} \usage{
+\name{mediate.sed} 
+\alias{mediate.sed} 
+\title{Estimating Average Causal Mediation Effects under the Single Experiment Design} 
 
-mediate.sed(outcome,mediator,treatment,SI=FALSE, sims=1000,conf.level=0.95,boot=FALSE)
+\description{ 'mediate.sed' estimates average causal mediation effects for the single experiment design. The two options are to use either the sequential ignorability (SI) assumption in which nonparametric estimates of the average causal mediation effect are produced, or, to relax the SI assumption and to calculate the nonparametric bounds on the average causal mediation effect. 
+} 
+
+\usage{
+
+mediate.sed(outcome, mediator, treat, data,
+            SI = FALSE, sims = 1000, conf.level = 0.95, boot = FALSE)
 
 }
 
 \arguments{
- \item{outcome}{vector of experiment outcome variable. Must be binary (0/1) if SI is not made.}
- \item{mediator}{vector of experiment mediating variable. Must be binary if SI assumption is not made. Must be discrete if SI assumption is made.}
- \item{treatment}{vector of the treatment variable. Must be binary (0/1).}
- \item{SI}{Logical indicator for whether sequential ignorability assumption is made.}
-\item{sims}{ number of Monte Carlo draws for nonparametric bootstrap.}
-\item{conf.level}{ level of the returned two-sided confidence intervals.  Default is to return
-the 2.5 and 97.5 percentiles of the simulated quantities.}
- \item{boot}{ a logical value. if 'FALSE' a large sample Delta method approximation is used for confidence intervals; if 'TRUE' nonparametric bootstrap will be used. Default is 'FALSE'.}
+ \item{outcome}{ name of the outcome variable in 'data'. The variable must be binary (factor or numeric 0/1) if 'SI' is FALSE.}
+ \item{mediator}{ name of the mediator in 'data'. The variable must be binary (factor or numeric 0/1) if 'SI' is FALSE and discrete if TRUE.}
+ \item{treat}{ name of the treatment variable in 'data'. Must be binary (factor or numeric 0/1).}
+\item{data}{ a data frame containing all the above variables.}
+ \item{SI}{ whether the sequential ignorability assumption is made.}
+\item{sims}{ number of bootstrap simulations. Only relevant when 'SI' is TRUE.}
+\item{conf.level}{ level of the returned two-sided confidence intervals. Only relevant when 'SI' is TRUE.}
+ \item{boot}{ a logical value. if 'FALSE' a large sample Delta method approximation is used for confidence intervals; if 'TRUE' nonparametric bootstrap will be used. Default is 'FALSE'. Only relevant if 'SI' is TRUE.}
      }
 
-\details{This function calculates causal mediation effects (CME) for the single experiment design, where the treatment is randomized and the mediator/outcome variables measured.
-The user specifies whether they want the non-parametric point estimates based on the sequential ignorability (SI) assumption, or the bounds when the SI assumption is not made.
-The function requires the treatment, mediator, and outcome variables to be binary (0/1).
+\details{
+This function calculates average causal mediation effects (ACME) for the single experiment design, where the treatment is randomized and the mediator/outcome variables are measured. The user specifies whether they want non-parametric point estimates based on the sequential ignorability (SI) assumption, or nonparametric bounds without the SI assumption.
 }
 
 
-\value{\code{mediate.sed} returns an object of class "\code{mediate.design}", a list that contains the components listed below.
+\value{
+\code{mediate.sed} returns an object of class "\code{mediate.design}", a list that contains the components listed below.
 
-The function \code{summary} (i.e., \code{summary.mediate.design} can be used to obtain a table of the results.
+The \code{summary} function can be used to obtain a table of the results.
 
-\item{d0, d1}{point estimates or lower/upper bounds for causal mediation effects under the control and treatment conditions for the single experiment design.}
-\item{d0.ci, d1.ci}{confidence intervals for average causal mediation effects for the non-parametric estimates. The confidence level is set at the value specified in 'conf.level'.}
+\item{d0, d1}{point estimates or lower/upper bounds for causal mediation effects under the control and treatment conditions, respectively.}
+\item{d0.ci, d1.ci}{confidence intervals for average causal mediation effects for the nonparametric estimates. The confidence level is set at the value specified in 'conf.level'. The value exists only when 'SI' is TRUE.}
 \item{boot}{logical, the 'boot' argument used.}
 \item{conf.level}{the confidence level used. }
 \item{sims}{number of bootstrap simulations used for confidence interval calculation.}
-\item{nobs}{number of observations used.} }
+\item{nobs}{number of observations used.} 
+}
 
 \references{
 Imai, K., Tingley, D. and Yamamoto, T. (2012) Experimental Designs for Identifying Causal Mechanisms. Journal of the Royal Statistical Society, Series A (Statistics in Society)"
 
 Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2011). Unpacking the Black Box of Causality: Learning about Causal Mechanisms from Experimental and Observational Studies, American Political Science Review, Vol. 105, No. 4 (November), pp. 765-789.
 
-Imai, K., Keele, L. and Tingley, D. (2010) A General Approach to Causal Mediation Analysis, Psychological Methods, Vol. 15, No. 4 (December), pp. 309-334.
-
 Imai, K., Keele, L. and Yamamoto, T. (2010) Identification, Inference, and Sensitivity Analysis for Causal Mediation Effects, Statistical Science, Vol. 25, No. 1 (February), pp. 51-71.
 
 Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation Analysis Using R" in Advances in Social Science Research Using R, ed. H. D. Vinod New York: Springer.}
 
-\author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu}, Luke Keele, PSU, \email{ljk20@psu.edu}, Teppei Yamamoto, MIT, \email{teppei@mit.edu}, }
+\author{
+Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu}, 
+Luke Keele, Pennsylvania State University, \email{ljk20@psu.edu},
+Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}}
 
-\seealso{\code{\link{mediate}}, \code{\link{medsens}}, \code{\link{plot.mediate}}, \code{\link{summary.mediate}}, \code{\link{mediations}} }
+\seealso{\code{\link{mediate}}, \code{\link{summary.mediate.design}}}
 
-\examples{ #
+\examples{
 
+# Example 1: Bounds without SI assumption
 
-#################################################### # Example 1: Bounds without SI assumption####################################################
 data(boundsdataSED)
 
-bound1<-mediate.sed(boundsdataSED$Y,boundsdataSED$M,boundsdataSED$T,SI=FALSE)
+bound1 <- mediate.sed("out", "med", "ttt", designSED, SI=FALSE)
 summary(bound1)
 
-
-#################################################### # Example 2: Nonparametric estimate of ACME under SI assumption####################################################
+# Example 2: Nonparametric estimate of ACME under SI assumption
 # Example with JOBS II Field Experiment
-data(jobs)
-#Use the discrete version of the mediator.
 
-foo.1 <- mediate.sed(job_disc, depress2, treat, SI=TRUE)
+data(jobs)
+
+foo.1 <- mediate.sed("depress2", "job_disc", "treat", jobs, SI=TRUE)
 summary(foo.1)
 
-foo.2 <- mediate.sed(job_disc, depress2, treat, SI=TRUE, boot=TRUE)
+foo.2 <- mediate.sed("depress2", "job_disc", "treat", jobs, SI=TRUE, boot=TRUE)
 summary(foo.2)
-
 
 }

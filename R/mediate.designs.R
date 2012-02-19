@@ -1,55 +1,150 @@
-
-#mediate.designs functions
-
-
-
-####
-#Wrapper Functions
-####
+## User interface functions
 
 #single experiment design
-mediate.sed<-function(outcome,mediator,treatment,SI=FALSE, sims=1000, conf.level = 0.95, boot=FALSE) {
-
-    if(is.null(SI)){
-    stop("You must specify whether you would like to make the sequential ignorability assumption.")
-    }
+mediate.sed <- function(outcome, mediator, treat, data,
+                        SI = FALSE, sims = 1000, conf.level = 0.95, boot = FALSE) {
+                        
+    varnames <- c(outcome, mediator, treat)
+    data <- na.omit(data[,varnames])
+    data <- sapply(data, as.numeric)
+    
     if(SI) {
-    out<-mediate.np(outcome,mediator,treatment,sims , conf.level , boot )
-    out$design <- "SED.NP.SI"
+        out <- mediate.np(data[,outcome], data[,mediator], data[,treat], 
+                           sims, conf.level, boot)
+        out$design <- "SED.NP.SI"
     } else {
-    out<-mechanism.bounds(outcome,mediator,treatment,encouragement=NULL,design="SED")
-    out$design<-"SED.NP.NOSI"
+        out <- mechanism.bounds(data[,outcome], data[,mediator], data[,treat],
+                                encouragement = NULL, design = "SED")
+        out$design <- "SED.NP.NOSI"
     }
     out
 }
 
 
-
 #parallel design
-mediate.pd<-function(outcome,mediator,treatment,manipulated,NINT=TRUE,sims=1000,conf.level=.95) {
-
+mediate.pd <- function(outcome, mediator, treat, manipulated, data,
+                        NINT = TRUE, sims = 1000, conf.level = 0.95) {
+    
+    varnames <- c(outcome, mediator, treat, manipulated)
+    data <- na.omit(data[,varnames])
+    data <- sapply(data, as.numeric)
+    
     if(NINT) {
-    out<-boot.pd(outcome,mediator,treatment,manipulated,sims,conf.level)
+       out <- boot.pd(data[,outcome], data[,mediator], data[,treat],
+                       data[,manipulated], sims, conf.level)
     } else {
-    out<-mechanism.bounds(outcome,mediator,treatment,manipulated,design="PD")
+       out <- mechanism.bounds(data[,outcome], data[,mediator], data[,treat], 
+                        data[,manipulated], design = "PD")
     }
     out
 }
 
 
 #parallel encouragement design
-mediate.ped<-function(outcome,mediator,treatment,encouragement) {
-    out<-mechanism.bounds(outcome,mediator,treatment,encouragement,design="PED")
+mediate.ped <- function(outcome, mediator, treat, encourage, data) {
+    
+    varnames <- c(outcome, mediator, treat, encourage)
+    data <- na.omit(data[,varnames])
+    data <- sapply(data, as.numeric)
+    
+    out <- mechanism.bounds(data[,outcome], data[,mediator], data[,treat], 
+                             data[,encourage], design = "PED")
     out
 }
 
 
-######
-#WORKHORSE FUNCTIONS
-######
+#crossover encouragement design
+mediate.ced <- function(outcome, med.1, med.2, treat, encourage, data,
+                        sims = 1000, conf.level = .95){
+    
+    varnames <- c(outcome, treat, med.1, med.2, encourage)
+    data <- na.omit(data[,varnames])
+    data <- sapply(data, as.numeric)
+    data <- as.data.frame(data)
+    
+    names(data) <- c("Y2","T","M1","M2","V")
+    n <- nrow(data)
+    
+    # Storage
+        d.p.c <- d.p.t <- matrix(NA, sims, 1)
+        
+    # Bootstrap function.
+    for(b in 1:sims){
+        index <- sample(1:n, n, replace = TRUE)
+        d <- data[index,]
 
-#non parametric under SI assumption
-mediate.np <- function(Y,M,T, sims, conf.level , boot ){
+        #Atmv
+        A111=sum(d$M1==1 & d$T==1 & d$M2==1 & d$V==1)/sum(d$T==1 & d$M2==1 & d$V==1)
+        A011=sum(d$M1==1 & d$T==0 & d$M2==1 & d$V==1)/sum(d$T==0 & d$M2==1 & d$V==1)
+        A101=sum(d$M1==1 & d$T==1 & d$M2==0 & d$V==1)/sum(d$T==1 & d$M2==0 & d$V==1)
+        A001=sum(d$M1==1 & d$T==0 & d$M2==0 & d$V==1)/sum(d$T==0 & d$M2==0 & d$V==1)
+
+        A110=sum(d$M1==1 & d$T==1 & d$M2==1 & d$V==0)/sum(d$T==1 & d$M2==1 & d$V==0)
+        A010=sum(d$M1==1 & d$T==0 & d$M2==1 & d$V==0)/sum(d$T==0 & d$M2==1 & d$V==0)
+        A100=sum(d$M1==1 & d$T==1 & d$M2==0 & d$V==0)/sum(d$T==1 & d$M2==0 & d$V==0)
+        A000=sum(d$M1==1 & d$T==0 & d$M2==0 & d$V==0)/sum(d$T==0 & d$M2==0 & d$V==0)
+
+        #Gtm1vm2
+        G1111=mean(d$Y2[d$T==1 & d$M1==1 & d$V==1 & d$M2==1])
+        G0111=mean(d$Y2[d$T==0 & d$M1==1 & d$V==1 & d$M2==1])
+        G1011=mean(d$Y2[d$T==1 & d$M1==0 & d$V==1 & d$M2==1])
+        G0011=mean(d$Y2[d$T==0 & d$M1==0 & d$V==1 & d$M2==1])
+
+        G1101=mean(d$Y2[d$T==1 & d$M1==1 & d$V==0 & d$M2==1])
+        G0101=mean(d$Y2[d$T==0 & d$M1==1 & d$V==0 & d$M2==1])
+        G1001=mean(d$Y2[d$T==1 & d$M1==0 & d$V==0 & d$M2==1])
+        G0001=mean(d$Y2[d$T==0 & d$M1==0 & d$V==0 & d$M2==1])
+
+        G1110=mean(d$Y2[d$T==1 & d$M1==1 & d$V==1 & d$M2==0])
+        G0110=mean(d$Y2[d$T==0 & d$M1==1 & d$V==1 & d$M2==0])
+        G1010=mean(d$Y2[d$T==1 & d$M1==0 & d$V==1 & d$M2==0])
+        G0010=mean(d$Y2[d$T==0 & d$M1==0 & d$V==1 & d$M2==0])
+
+        G1100=mean(d$Y2[d$T==1 & d$M1==1 & d$V==0 & d$M2==0])
+        G0100=mean(d$Y2[d$T==0 & d$M1==1 & d$V==0 & d$M2==0])
+        G1000=mean(d$Y2[d$T==1 & d$M1==0 & d$V==0 & d$M2==0])
+        G0000=mean(d$Y2[d$T==0 & d$M1==0 & d$V==0 & d$M2==0])
+
+        temp11<-sum(d$T==1 & d$M1==1)/sum(d$T==1|d$T==0)
+        temp01<-sum(d$T==0 & d$M1==1)/sum(d$T==1|d$T==0)
+        temp10<-sum(d$T==1 & d$M1==0)/sum(d$T==1|d$T==0)
+        temp00<-sum(d$T==0 & d$M1==0)/sum(d$T==1|d$T==0)
+
+
+        PH1<-((A111-A110)*temp11)/((A111-A110)*temp11+(1-2*A101)*temp10)
+        PH0<-((A011-A010)*temp01)/((A011-A010)*temp01+(1-2*A001)*temp00)
+
+        d.p.c[b] <- (PH1/(A111-A110)) * (G1111+G1110-G1100-G1110*A111-G1101*A110) + 
+                        ((1-PH1)/(A100-A101)) * (G1010-G1001-G1000+G1000*A100+G1011*A101)
+        d.p.t[b] <- (PH0/(A010-A011)) * (G0111+G0110-G0100-G0110*A011-G0101*A010) + 
+                        ((1-PH0)/(A001-A000)) * (G0010-G0001-G0000+G0000*A000+G0011*A001)
+
+    }#bootstraploop
+
+    d.p.c[d.p.c==-Inf] <- NA
+    d.p.t[d.p.t==-Inf] <- NA
+    d.p.c[d.p.c==Inf] <- NA
+    d.p.t[d.p.t==Inf] <- NA
+
+    low <- (1 - conf.level)/2
+    high <- 1 - low
+
+    d.p.c.mu<-median(d.p.c, na.rm=TRUE)
+    d.p.t.mu<-median(d.p.t, na.rm=TRUE)
+    d.p.c.ci <- quantile(d.p.c, c(low,high), na.rm=TRUE)
+    d.p.t.ci <- quantile(d.p.t, c(low,high), na.rm=TRUE)
+
+    out<-list(d0 = d.p.c.mu, d1 = d.p.t.mu, d0.ci = d.p.c.ci, d1.ci = d.p.t.ci, d0.sims=d.p.c, d1.sims=d.p.t, nobs=n,sims=sims,conf.level=conf.level,design="CED")
+
+    class(out) <- "mediate.design"
+    out
+}
+
+
+## Internal functions
+
+#nonparametric under SI assumption
+mediate.np <- function(Y, M, T, sims, conf.level, boot ){
 
     samp <- data.frame(na.omit(cbind(M,Y,T)))
     m.cat <- sort(unique(samp$M))
@@ -57,131 +152,141 @@ mediate.np <- function(Y,M,T, sims, conf.level , boot ){
     n1 <- sum(samp$T)
     n0 <- sum(1-samp$T)
     t <- (1 - conf.level)/2
-##########################################################
-# Point Estimates
-##########################################################
+    
+    if(boot){
+        idx <- seq(1,n,1)
+        # A Storage Matrix
+        d0.bs <- matrix(NA,sims,1)
+        d1.bs <- matrix(NA,sims,1)
+        # Now Let's do the Resampling
+        for(b in 1:sims){
+        # First take a resample
+            resample <- sample(idx,n,replace=TRUE)
+            samp.star <- samp[resample,]
 
-if(boot==FALSE){
-#Indirect Effects
-    delta_0m <- matrix(NA, length(m.cat), 1)
-    for(i in 1:length(m.cat)){
-        delta_0m[i] <- (sum(samp$T[samp$M==m.cat[i]]) * sum(samp$Y[samp$M==m.cat[i] & samp$T==0]))/(n1*(sum((1 - samp$T[samp$M==m.cat[i]]))))
+            delta_0m <- matrix(NA, length(m.cat), 1)
+            for(i in 1:length(m.cat)){
+                delta_0m[i] <- (sum(samp.star$T[samp.star$M==m.cat[i]]) * 
+                                sum(samp.star$Y[samp.star$M==m.cat[i] & samp.star$T==0])) / 
+                                (n1*(sum((1 - samp.star$T[samp.star$M==m.cat[i]]))))
+            }
+
+            d0.bs[b,] <- sum(delta_0m) - mean(samp.star$Y[samp.star$T==0])
+
+            delta_1m <- matrix(NA, length(m.cat), 1)
+
+            for(i in 1:length(m.cat)){
+                delta_1m[i] <- (sum((1 - samp.star$T[samp.star$M==m.cat[i]])) * 
+                                sum(samp.star$Y[samp.star$M==m.cat[i] & samp.star$T==1])) / 
+                                (n0*(sum(samp.star$T[samp.star$M==m.cat[i]])))
+            }
+            
+            d1.bs[b,] <- mean(samp.star$Y[samp.star$T==1]) - sum(delta_1m)
         }
 
-    d0 <- sum(delta_0m) - mean(samp$Y[samp$T==0])
-    delta_1m <- matrix(NA, length(m.cat), 1)
-
-    for(i in 1:length(m.cat)){
-        delta_1m[i] <-  (sum((1 - samp$T[samp$M==m.cat[i]])) * sum(samp$Y[samp$M==m.cat[i] & samp$T==1]))/(n0*(sum(samp$T[samp$M==m.cat[i]])))
-        }
-
-   d1 <- mean(samp$Y[samp$T==1]) - sum(delta_1m)
-  } else {
-    idx <- seq(1,n,1)
-    #A Storage Matrix
-    d0.bs <- matrix(NA,sims,1)
-    d1.bs <- matrix(NA,sims,1)
-    #Now Let's do the Resampling
-    for(b in 1:sims){
-    #First take a resample
-    resample <- sample(idx,n,replace=TRUE)
-    samp.star <- samp[resample,]
-
-        delta_0m <- matrix(NA, length(m.cat), 1)
-    for(i in 1:length(m.cat)){
-        delta_0m[i] <- (sum(samp.star$T[samp.star$M==m.cat[i]]) * sum(samp.star$Y[samp.star$M==m.cat[i] & samp.star$T==0]))/(n1*(sum((1 - samp.star$T[samp.star$M==m.cat[i]]))))
-        }
-
-        d0.bs[b,] <- sum(delta_0m) - mean(samp.star$Y[samp.star$T==0])
-
-        delta_1m <- matrix(NA, length(m.cat), 1)
-
-    for(i in 1:length(m.cat)){
-        delta_1m[i] <-  (sum((1 - samp.star$T[samp.star$M==m.cat[i]])) * sum(samp.star$Y[samp.star$M==m.cat[i] & samp.star$T==1]))/(n0*(sum(samp.star$T[samp.star$M==m.cat[i]])))
-        }
-        d1.bs[b,] <- mean(samp.star$Y[samp.star$T==1]) - sum(delta_1m)
-  }
-}
-
-##########################################################
-# Variance Estimates
-##########################################################
-
-pr.t.1 <- sum(samp$T)/n
-pr.t.0 <- sum(1-samp$T)/n
-
-lambda.1m <- matrix(NA, length(m.cat), 1)
-lambda.0m <- matrix(NA, length(m.cat), 1)
-for(i in 1:length(m.cat)){
-lambda.1m[i] <- (sum(length(samp$M[samp$M==m.cat[i] & samp$T==1])))/n /pr.t.1
-lambda.0m[i] <- (sum(length(samp$M[samp$M==m.cat[i] & samp$T==0])))/n /pr.t.0
-}
-
-mu.1m <- matrix(NA, length(m.cat), 1)
-mu.0m <- matrix(NA, length(m.cat), 1)
-
-for(i in 1:length(m.cat)){
-    mu.1m[i] <- mean(samp$Y[samp$M==m.cat[i] & samp$T==1])
-    mu.0m[i] <- mean(samp$Y[samp$M==m.cat[i] & samp$T==0])
-    }
-
-# Variance of Delta_0
-    var.delta.0m <- matrix(NA, length(m.cat), 1)
-    for(i in 1:length(m.cat)){
-        var.delta.0m[i] <-  lambda.1m[i]*(((lambda.1m[i]/lambda.0m[i]) - 2) * var(samp$Y[samp$M==m.cat[i] & samp$T==0]) + ((n0*(1-lambda.1m[i])*mu.0m[i]^2)/n1))
-        }
-
-    m.leng <- length(m.cat)
-    mterm.d0 <- c()
-    for(i in 1:m.leng-1){
-        mterm.d0 <- c(mterm.d0, lambda.1m[i] * lambda.1m[(i+1):m.leng] * mu.0m[i] * mu.0m[(i+1):m.leng])
-        }
-var.delta_0 <- (1/n0) * sum(var.delta.0m) - (2/n1) * sum(mterm.d0) + var(samp$Y[samp$T == 0])/n0
-
-# Variance of Delta_1
-    var.delta.1m <- matrix(NA, length(m.cat), 1)
-
-    for(i in 1:length(m.cat)){
-        var.delta.1m[i] <-  lambda.0m[i]*(((lambda.0m[i]/lambda.1m[i]) - 2) * var(samp$Y[samp$M==m.cat[i] & samp$T==1]) + ((n1*(1-lambda.0m[i])*mu.1m[i]^2)/n0))
-        }
-
-    mterm.d1 <- c()
-    for(i in 1:m.leng-1){
-        mterm.d1 <- c(mterm.d1, lambda.0m[i] * lambda.0m[(i+1):m.leng] * mu.1m[i] * mu.1m[(i+1):m.leng])
-        }
-var.delta_1 <- (1/n1) * sum(var.delta.1m) - (2/n0)* sum(mterm.d1) + var(samp$Y[samp$T == 1])/n1
-
-        if(boot==FALSE){
-        d0.ci <- c(d0 - (-qnorm(t)*sqrt(var.delta_0)), d0 + (-qnorm(t)*sqrt(var.delta_0)))
-        d1.ci <- c(d1 - (-qnorm(t)*sqrt(var.delta_1)), d1 + (-qnorm(t)*sqrt(var.delta_1)))
-        } else {
         d0 <- mean(d0.bs, na.rm=TRUE)
         d1 <- mean(d1.bs, na.rm=TRUE)
         low <- (1 - conf.level)/2
         high <- 1 - low
         d0.ci <- quantile(d0.bs,c(low,high), na.rm=TRUE)
         d1.ci <- quantile(d1.bs,c(low,high), na.rm=TRUE)
+
+    } else {
+
+        delta_0m <- matrix(NA, length(m.cat), 1)
+        for(i in 1:length(m.cat)){
+            delta_0m[i] <- (sum(samp$T[samp$M==m.cat[i]]) * 
+                                sum(samp$Y[samp$M==m.cat[i] & samp$T==0])) / 
+                                (n1*(sum((1 - samp$T[samp$M==m.cat[i]]))))
         }
 
-        out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci, conf.level=conf.level,nobs=n,boot=boot)
-        class(out) <- "mediate.design"
-        out
+        d0 <- sum(delta_0m) - mean(samp$Y[samp$T==0])
+        delta_1m <- matrix(NA, length(m.cat), 1)
+
+        for(i in 1:length(m.cat)){
+            delta_1m[i] <- (sum((1 - samp$T[samp$M==m.cat[i]])) * 
+                                sum(samp$Y[samp$M==m.cat[i] & samp$T==1])) /
+                                (n0*(sum(samp$T[samp$M==m.cat[i]])))
+        }
+
+        d1 <- mean(samp$Y[samp$T==1]) - sum(delta_1m)
+
+        pr.t.1 <- sum(samp$T)/n
+        pr.t.0 <- sum(1-samp$T)/n
+
+        lambda.1m <- matrix(NA, length(m.cat), 1)
+        lambda.0m <- matrix(NA, length(m.cat), 1)
+        for(i in 1:length(m.cat)){
+            lambda.1m[i] <- (sum(length(samp$M[samp$M==m.cat[i] & samp$T==1])))/n /pr.t.1
+            lambda.0m[i] <- (sum(length(samp$M[samp$M==m.cat[i] & samp$T==0])))/n /pr.t.0
+        }
+
+        mu.1m <- matrix(NA, length(m.cat), 1)
+        mu.0m <- matrix(NA, length(m.cat), 1)
+
+        for(i in 1:length(m.cat)){
+            mu.1m[i] <- mean(samp$Y[samp$M==m.cat[i] & samp$T==1])
+            mu.0m[i] <- mean(samp$Y[samp$M==m.cat[i] & samp$T==0])
+        }
+
+        # Variance of Delta_0
+        var.delta.0m <- matrix(NA, length(m.cat), 1)
+        for(i in 1:length(m.cat)){
+            var.delta.0m[i] <-  lambda.1m[i]*(((lambda.1m[i]/lambda.0m[i]) - 2) * 
+                                var(samp$Y[samp$M==m.cat[i] & samp$T==0]) + 
+                                ((n0*(1-lambda.1m[i])*mu.0m[i]^2)/n1))
+        }
+
+        m.leng <- length(m.cat)
+        mterm.d0 <- c()
+        for(i in 1:m.leng-1){
+            mterm.d0 <- c(mterm.d0, lambda.1m[i] * lambda.1m[(i+1):m.leng] * 
+                            mu.0m[i] * mu.0m[(i+1):m.leng])
+        }
+        var.delta_0 <- (1/n0) * sum(var.delta.0m) - (2/n1) * sum(mterm.d0) + 
+                        var(samp$Y[samp$T == 0])/n0
+
+        # Variance of Delta_1
+        var.delta.1m <- matrix(NA, length(m.cat), 1)
+
+        for(i in 1:length(m.cat)){
+            var.delta.1m[i] <-  lambda.0m[i]*(((lambda.0m[i]/lambda.1m[i]) - 2) * 
+                                var(samp$Y[samp$M==m.cat[i] & samp$T==1]) + 
+                                ((n1*(1-lambda.0m[i])*mu.1m[i]^2)/n0))
+        }
+
+        mterm.d1 <- c()
+        for(i in 1:m.leng-1){
+            mterm.d1 <- c(mterm.d1, lambda.0m[i] * lambda.0m[(i+1):m.leng] * 
+                            mu.1m[i] * mu.1m[(i+1):m.leng])
+        }
+        var.delta_1 <- (1/n1) * sum(var.delta.1m) - (2/n0)* sum(mterm.d1) + 
+                        var(samp$Y[samp$T == 1])/n1
+
+        d0.ci <- c(d0 - (-qnorm(t)*sqrt(var.delta_0)), d0 + (-qnorm(t)*sqrt(var.delta_0)))
+        d1.ci <- c(d1 - (-qnorm(t)*sqrt(var.delta_1)), d1 + (-qnorm(t)*sqrt(var.delta_1)))
     }
 
+    out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci, 
+                conf.level=conf.level, nobs=n, boot=boot)
+    class(out) <- "mediate.design"
+    out
+}
 
 
 #parallel design under no interaction assumption
-boot.pd<-function(outcome,mediator, treatment,manipulated, sims=sims, conf.level=conf.level) {
+boot.pd <- function(outcome, mediator, treatment, manipulated, 
+                    sims=sims, conf.level=conf.level) {
 
     n.o <- length(outcome)
     n.t <- length(treatment)
     n.m <- length(mediator)
-    n.z<-length(manipulated)
+    n.z <- length(manipulated)
 
     if(n.o != n.t | n.t != n.m |n.m !=n.z){
         stop("Error: Number of observations not the same in treatment, outcome, mediator, and encouragement data")
     }
-    n<-n.o
+    n <- n.o
 
     orig.length<-length(outcome)
     data<-matrix(,nrow=length(outcome),ncol=4)
@@ -216,115 +321,21 @@ boot.pd<-function(outcome,mediator, treatment,manipulated, sims=sims, conf.level
         high <- 1 - low
         acme.mu<-median(acme, na.rm=TRUE)
         acme.ci <- quantile(acme, c(low,high), na.rm=TRUE)
-        out<-list(d=acme.mu, d.ci=acme.ci,d.sims=acme,conf.level=conf.level,sims=sims,design="PD.NINT")
+        out <- list(d = acme.mu,  d.ci = acme.ci, d.sims = acme, 
+                    conf.level = conf.level, sims = sims, design = "PD.NINT")
         class(out) <- "mediate.design"
         out
 
     }
-
-#Crossover encouragement design
-
-mediate.ced<-function(outcome=outcome,mediator1=mediator1,mediator2=mediator2,treatment=treatment,encouragement=encouragement,sims=1000, conf.level=.95) {
-
-        data<-matrix(,nrow=length(outcome),ncol=5)
-
-        data[,1]<-outcome
-        data[,2]<-treatment
-        data[,3]<-mediator1
-        data[,4]<-mediator2
-        data[,5]<-encouragement
-        data<-as.data.frame(data)
-        names(data)<-c("Y2","T","M1","M2","V")
-        d<-data
-        d<-na.omit(d)
-        n <- length(d$Y2)
-
-        # Storage
-            d.p.c<-d.p.t <- matrix(NA, sims, 1)
-        # Bootstrap function.
-        for(b in 1:sims){
-            index <- sample(1:n, n, replace = TRUE)
-            d<-data[index,]
-
-                #Atmv
-                A111=sum(d$M1==1 & d$T==1 & d$M2==1 & d$V==1)/sum(d$T==1 & d$M2==1 & d$V==1)
-                A011=sum(d$M1==1 & d$T==0 & d$M2==1 & d$V==1)/sum(d$T==0 & d$M2==1 & d$V==1)
-                A101=sum(d$M1==1 & d$T==1 & d$M2==0 & d$V==1)/sum(d$T==1 & d$M2==0 & d$V==1)
-                A001=sum(d$M1==1 & d$T==0 & d$M2==0 & d$V==1)/sum(d$T==0 & d$M2==0 & d$V==1)
-
-                A110=sum(d$M1==1 & d$T==1 & d$M2==1 & d$V==0)/sum(d$T==1 & d$M2==1 & d$V==0)
-                A010=sum(d$M1==1 & d$T==0 & d$M2==1 & d$V==0)/sum(d$T==0 & d$M2==1 & d$V==0)
-                A100=sum(d$M1==1 & d$T==1 & d$M2==0 & d$V==0)/sum(d$T==1 & d$M2==0 & d$V==0)
-                A000=sum(d$M1==1 & d$T==0 & d$M2==0 & d$V==0)/sum(d$T==0 & d$M2==0 & d$V==0)
-
-                #Gtm1vm2
-                G1111=mean(d$Y2[d$T==1 & d$M1==1 & d$V==1 & d$M2==1])
-                G0111=mean(d$Y2[d$T==0 & d$M1==1 & d$V==1 & d$M2==1])
-                G1011=mean(d$Y2[d$T==1 & d$M1==0 & d$V==1 & d$M2==1])
-                G0011=mean(d$Y2[d$T==0 & d$M1==0 & d$V==1 & d$M2==1])
-
-                G1101=mean(d$Y2[d$T==1 & d$M1==1 & d$V==0 & d$M2==1])
-                G0101=mean(d$Y2[d$T==0 & d$M1==1 & d$V==0 & d$M2==1])
-                G1001=mean(d$Y2[d$T==1 & d$M1==0 & d$V==0 & d$M2==1])
-                G0001=mean(d$Y2[d$T==0 & d$M1==0 & d$V==0 & d$M2==1])
-
-                G1110=mean(d$Y2[d$T==1 & d$M1==1 & d$V==1 & d$M2==0])
-                G0110=mean(d$Y2[d$T==0 & d$M1==1 & d$V==1 & d$M2==0])
-                G1010=mean(d$Y2[d$T==1 & d$M1==0 & d$V==1 & d$M2==0])
-                G0010=mean(d$Y2[d$T==0 & d$M1==0 & d$V==1 & d$M2==0])
-
-                G1100=mean(d$Y2[d$T==1 & d$M1==1 & d$V==0 & d$M2==0])
-                G0100=mean(d$Y2[d$T==0 & d$M1==1 & d$V==0 & d$M2==0])
-                G1000=mean(d$Y2[d$T==1 & d$M1==0 & d$V==0 & d$M2==0])
-                G0000=mean(d$Y2[d$T==0 & d$M1==0 & d$V==0 & d$M2==0])
-
-                temp11<-sum(d$T==1 & d$M1==1)/sum(d$T==1|d$T==0)
-                temp01<-sum(d$T==0 & d$M1==1)/sum(d$T==1|d$T==0)
-                temp10<-sum(d$T==1 & d$M1==0)/sum(d$T==1|d$T==0)
-                temp00<-sum(d$T==0 & d$M1==0)/sum(d$T==1|d$T==0)
-
-
-                PH1<-((A111-A110)*temp11)/((A111-A110)*temp11+(1-2*A101)*temp10)
-                PH0<-((A011-A010)*temp01)/((A011-A010)*temp01+(1-2*A001)*temp00)
-
-                d.p.c[b]<-(PH1/(A111-A110))*(G1111+G1110-G1100-G1110*A111-G1101*A110)+((1-PH1)/(A100-A101))*(G1010-G1001-G1000+G1000*A100+G1011*A101)
-                d.p.t[b]<-(PH0/(A010-A011))*(G0111+G0110-G0100-G0110*A011-G0101*A010)+((1-PH0)/(A001-A000))*(G0010-G0001-G0000+G0000*A000+G0011*A001)
-
-        }#bootstraploop
-
-        d.p.c[d.p.c==-Inf]<-NA
-        d.p.t[d.p.t==-Inf]<-NA
-        d.p.c[d.p.c==Inf]<-NA
-        d.p.t[d.p.t==Inf]<-NA
-
-        low <- (1 - conf.level)/2
-        high <- 1 - low
-
-        d.p.c.mu<-median(d.p.c, na.rm=TRUE)
-        d.p.t.mu<-median(d.p.t, na.rm=TRUE)
-        d.p.c.ci <- quantile(d.p.c, c(low,high), na.rm=TRUE)
-        d.p.t.ci <- quantile(d.p.t, c(low,high), na.rm=TRUE)
-
-        out<-list(d0 = d.p.c.mu, d1 = d.p.t.mu, d0.ci = d.p.c.ci, d1.ci = d.p.t.ci, d0.sims=d.p.c, d1.sims=d.p.t, nobs=n,sims=sims,conf.level=conf.level,design="CED")
-
-        class(out) <- "mediate.design"
-        out
-    }
-
-
 
 
 
 #Bounds Function for parallel, parallel encouragement, and single experiment designs
-mechanism.bounds<-function(outcome,mediator,treatment,encouragement=NULL,design=NULL) {
+mechanism.bounds <- function(outcome, mediator, treatment, encouragement) {
 
     n.o <- length(outcome)
     n.t <- length(treatment)
     n.m <- length(mediator)
-
-    if(is.null(design)){
-        stop("Error: Design not indicated.")
-    }
 
     if(design=="SED") {
         if(n.o != n.t | n.t != n.m){
@@ -551,10 +562,11 @@ mechanism.bounds<-function(outcome,mediator,treatment,encouragement=NULL,design=
 
 
 
+## Summary methods
+
 summary.mediate.design <- function(object, ...){
     structure(object, class = c("summary.mediate.design", class(object)))
 }
-
 
 
 
@@ -618,19 +630,19 @@ print.summary.mediate.design <- function(x, ...){
         cat("Large Sample Confidence Intervals\n\n")
     }
 
-    printone <- x$INT == FALSE
+#    printone <- x$!x$INT
 
-    if (printone){
-        cat("Mediation Effect: ", format(x$d1, digits=4), clp, "% CI ",
-                format(x$d1.ci, digits=4), "\n")
-        cat("Sample Size Used:", x$nobs,"\n\n")
-    } else {
+#    if (printone){
+#        cat("Mediation Effect: ", format(x$d1, digits=4), clp, "% CI ",
+#                format(x$d1.ci, digits=4), "\n")
+#        cat("Sample Size Used:", x$nobs,"\n\n")
+#    } else {
         cat("Mediation Effect_0: ", format(x$d0, digits=4), clp, "% CI ",
                 format(x$d0.ci, digits=4), "\n")
         cat("Mediation Effect_1: ", format(x$d1, digits=4), clp, "% CI ",
                 format(x$d1.ci, digits=4), "\n")
         cat("Sample Size Used:", x$nobs,"\n\n")
-        }
+#        }
 
     invisible(x)
 	}

@@ -1,7 +1,13 @@
-\name{mediate.pd} \alias{mediate.pd} \title{Parallel Design Bounds} \description{ 'mediate.pd' estimates the bounds on causal mediation effects for the parallel design. If a treatment/mediator interaction is allowed then the bounds are calculated. If a treatment/mediator interaction is not allowed then the mediation effect is point identified in which case the point estimate and bootstrapped confidence intervals are estimated. See Imai, Tingley, and Yamamoto JRSS-A for additional details.
-} \usage{
+\name{mediate.pd} 
+\alias{mediate.pd} 
+\title{Parallel Design Bounds} 
+\description{ 'mediate.pd' estimates the bounds on causal mediation effects for the parallel design. If a treatment/mediator interaction is allowed then the bounds are calculated. If a treatment/mediator interaction is not allowed then the mediation effect is point identified in which case the point estimate and bootstrapped confidence intervals are estimated. See Imai, Tingley, and Yamamoto JRSS-A for additional details.
+} 
 
-mediate.pd(outcome,mediator,treatment,manipulated,NINT=TRUE,sims=1000,conf.level=.95)
+\usage{
+
+mediate.pd(outcome, mediator, treat, manipulated, data,
+           NINT = TRUE, sims = 1000, conf.level = 0.95)
 
 }
 
@@ -9,7 +15,7 @@ mediate.pd(outcome,mediator,treatment,manipulated,NINT=TRUE,sims=1000,conf.level
  \item{outcome}{vector of experiment outcome variable}
  \item{mediator}{vector of experiment mediating variable}
  \item{treatment}{vector of the treatment variable}
- \item{manipulated}{vector of the indicator of whether observation received manipulation.}
+ \item{manipulated}{vector of the indicator of whether observation received mediator manipulation.}
  \item{NINT}{logical for whether user is assuming no interaction between treatment and mediator. If TRUE then no interaction is assumed}
   \item{sims}{ number of Monte Carlo draws for nonparametric bootstrap.}
  \item{conf.level}{ level of the returned two-sided confidence intervals.  Default is to return
