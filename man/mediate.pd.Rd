@@ -1,6 +1,6 @@
 \name{mediate.pd} 
 \alias{mediate.pd} 
-\title{Parallel Design Bounds} 
+\title{Estimating Average Causal Mediation Effects under the Parallel Design} 
 \description{ 'mediate.pd' estimates the bounds on causal mediation effects for the parallel design. If a treatment/mediator interaction is allowed then the bounds are calculated. If a treatment/mediator interaction is not allowed then the mediation effect is point identified in which case the point estimate and bootstrapped confidence intervals are estimated. See Imai, Tingley, and Yamamoto JRSS-A for additional details.
 } 
 
@@ -12,14 +12,16 @@ mediate.pd(outcome, mediator, treat, manipulated, data,
 }
 
 \arguments{
- \item{outcome}{vector of experiment outcome variable}
- \item{mediator}{vector of experiment mediating variable}
- \item{treatment}{vector of the treatment variable}
- \item{manipulated}{vector of the indicator of whether observation received mediator manipulation.}
- \item{NINT}{logical for whether user is assuming no interaction between treatment and mediator. If TRUE then no interaction is assumed}
-  \item{sims}{ number of Monte Carlo draws for nonparametric bootstrap.}
- \item{conf.level}{ level of the returned two-sided confidence intervals.  Default is to return
-    the 2.5 and 97.5 percentiles of the simulated quantities.}
+
+\item{outcome}{ name of the outcome variable in 'data'.}
+\item{mediator}{ name of the mediator in 'data'. The variable must be binary (factor or numeric 0/1).}
+\item{treat}{ name of the treatment variable in 'data'. Must be binary (factor or numeric 0/1).}
+\item{manipulated}{ name of the binary design indicator in 'data', indicating whether observation received mediator manipulation.}
+\item{data}{ a data frame containing all the above variables.}
+\item{NINT}{ whether the no interaction assumption is made.}
+\item{sims}{ number of bootstrap simulations. Only relevant when 'NINT' is TRUE.}
+\item{conf.level}{ level of the returned two-sided confidence intervals. Only relevant when 'NINT' is TRUE.}
+
 }
 
 \details{This function calculates causal mediation effects (CME) for the parallel design described in Imai, Tingley, Yamamoto JRSS-A.
@@ -57,16 +59,15 @@ Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation Analy
 
 \seealso{\code{\link{mediate}}, \code{\link{medsens}}, \code{\link{plot.mediate}}, \code{\link{summary.mediate}}, \code{\link{mediations}} }
 
-\examples{ # Examples with simulated data
-
-#################################################### # Example 1: Parallel Design Experiment####################################################
+\examples{
 
 data(boundsdata)
-bound2<-mediate.pd(boundsdata$Y,boundsdata$M,boundsdata$T,boundsdata$D,NINT=TRUE,sims=5,conf.level=.95)
+
+bound2 <- mediate.pd("out", "med", "ttt", "manip", boundsdata, 
+                  NINT = TRUE, sims = 100, conf.level=.95)
 summary(bound2)
 
-
-bound2.1<-mediate.pd(boundsdata$Y,boundsdata$M,boundsdata$T,boundsdata$D,NINT=FALSE)
+bound2.1 <- mediate.pd("out", "med", "ttt", "manip", boundsdata, NINT = FALSE)
 summary(bound2.1)
 
 }

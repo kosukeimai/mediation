@@ -1,5 +1,5 @@
 \name{boundsdata}
-\docType{boundsdata}
+\docType{data}
 \alias{boundsdata}
 \title{Data for bounds examples}
 \description{

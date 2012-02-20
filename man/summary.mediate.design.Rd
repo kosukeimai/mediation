@@ -15,8 +15,8 @@ Function to report results from design based mediation analysis. Reported catego
 }
 
 \arguments{
-\item{object}{ output from mediate design function (such as mediate.sed).}
-\item{x}{ output from summary.mediate.design function.}
+\item{object}{ object of class \code{mediate.design}, typically output from a function for design-based mediation analysis (such as \code{\link{mediate.sed}}).}
+\item{x}{ output from the summary function.}
 \item{...}{ additional arguments affecting the summary produced.}
 }
 

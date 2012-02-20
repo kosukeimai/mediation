@@ -56,9 +56,9 @@ Imai, K. and Yamamoto, T. (2012) Identification and Sensitivity Analysis for Mul
 # Note: # of bootstrap samples set low for quick illustration
 
 data(framing)
-Xnames <- c("ppage", "ppeducat", "ppgender", "ppincimp")
-res <- multimed("immigr", "emo", "p_harm", "tone_eth", Xnames, 
-			    data = framing, sims = 100)
+Xnames <- c("age", "educ", "gender", "income")
+res <- multimed("immigr", "emo", "p_harm", "treat", Xnames, 
+               data = framing, sims = 100)
 summary(res)
 plot(res, type = "point")
 plot(res, type = c("sigma", "R2-total"), tgroup = "average")

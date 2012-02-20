@@ -1,15 +1,25 @@
-\name{mediate.ped} \alias{mediate.ped} \title{Parallel Encouragement Design Bounds} \description{ 'mediate.ped' estimates the bounds on causal mediation effects for the parallel encouragement design. See Imai, Tingley, and Yamamoto JRSS-A for additional details.
-} \usage{
+\name{mediate.ped} 
+\alias{mediate.ped} 
+\title{Computing Bounds on Average Causal Mediation Effects under the Parallel Encouragement Design} 
 
-mediate.ped(outcome,mediator,treatment,encouragement)
+\description{
+'mediate.ped' computes the nonparametric bounds on average causal mediation effects for the parallel encouragement design. See Imai, Tingley, and Yamamoto JRSS-A for additional details.
+} 
+
+\usage{
+
+mediate.ped(outcome, mediator, treat, encourage, data)
 
 }
 
 \arguments{
- \item{outcome}{vector of experiment outcome variable}
- \item{mediator}{vector of experiment mediating variable}
- \item{treatment}{vector of the treatment variable}
- \item{encouragement}{vector of the indicator of whether observation received manipulation.}
+
+\item{outcome}{ name of the outcome variable in 'data'.}
+\item{mediator}{ name of the mediator in 'data'. The variable must be binary (factor or numeric 0/1).}
+\item{treat}{ name of the treatment variable in 'data'. Must be binary (factor or numeric 0/1).}
+\item{encourage}{ name of the encouragement variable in 'data'. The variable must be a numeric vector taking on either -1, 0, or 1.}
+\item{data}{ a data frame containing all the above variables.}
+
 }
 
 \details{This function calculates causal mediation effects (CME) for the parallel encouragment design described in Imai, Tingley, Yamamoto JRSS-A.
@@ -46,8 +56,11 @@ Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation Analy
 \seealso{\code{\link{mediate}}, \code{\link{medsens}}, \code{\link{plot.mediate}}, \code{\link{summary.mediate}}, \code{\link{mediations}} }
 
 \examples{
-#################################################### # Example 1: Parallel Encouragement Design ####################################################
+
 data(boundsdata)
-bound3<-mediate.ped(boundsdata$Yz,boundsdata$Mz,boundsdata$T,boundsdata$Z)
+
+bound3 <- mediate.ped("out.enc", "med.enc", "ttt", "enc", boundsdata)
 summary(bound3)
+
 }
+

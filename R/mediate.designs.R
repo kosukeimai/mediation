@@ -5,7 +5,11 @@ mediate.sed <- function(outcome, mediator, treat, data,
                         SI = FALSE, sims = 1000, conf.level = 0.95, boot = FALSE) {
                         
     varnames <- c(outcome, mediator, treat)
-    data <- na.omit(data[,varnames])
+    data <- data[,varnames]
+    if(sum(is.na(data))){
+        warning("NA's in data. Observations with missing data removed.")
+        data <- na.omit(data)
+    }
     data <- sapply(data, as.numeric)
     
     if(SI) {
@@ -14,7 +18,7 @@ mediate.sed <- function(outcome, mediator, treat, data,
         out$design <- "SED.NP.SI"
     } else {
         out <- mechanism.bounds(data[,outcome], data[,mediator], data[,treat],
-                                encouragement = NULL, design = "SED")
+                                NULL, design = "SED")
         out$design <- "SED.NP.NOSI"
     }
     out
@@ -26,7 +30,11 @@ mediate.pd <- function(outcome, mediator, treat, manipulated, data,
                         NINT = TRUE, sims = 1000, conf.level = 0.95) {
     
     varnames <- c(outcome, mediator, treat, manipulated)
-    data <- na.omit(data[,varnames])
+    data <- data[,varnames]
+    if(sum(is.na(data))){
+        warning("NA's in data. Observations with missing data removed.")
+        data <- na.omit(data)
+    }
     data <- sapply(data, as.numeric)
     
     if(NINT) {
@@ -34,7 +42,7 @@ mediate.pd <- function(outcome, mediator, treat, manipulated, data,
                        data[,manipulated], sims, conf.level)
     } else {
        out <- mechanism.bounds(data[,outcome], data[,mediator], data[,treat], 
-                        data[,manipulated], design = "PD")
+                              data[,manipulated], design = "PD")
     }
     out
 }
@@ -44,7 +52,11 @@ mediate.pd <- function(outcome, mediator, treat, manipulated, data,
 mediate.ped <- function(outcome, mediator, treat, encourage, data) {
     
     varnames <- c(outcome, mediator, treat, encourage)
-    data <- na.omit(data[,varnames])
+    data <- data[,varnames]
+    if(sum(is.na(data))){
+        warning("NA's in data. Observations with missing data removed.")
+        data <- na.omit(data)
+    }
     data <- sapply(data, as.numeric)
     
     out <- mechanism.bounds(data[,outcome], data[,mediator], data[,treat], 
@@ -58,7 +70,11 @@ mediate.ced <- function(outcome, med.1, med.2, treat, encourage, data,
                         sims = 1000, conf.level = .95){
     
     varnames <- c(outcome, treat, med.1, med.2, encourage)
-    data <- na.omit(data[,varnames])
+    data <- data[,varnames]
+    if(sum(is.na(data))){
+        warning("NA's in data. Observations with missing data removed.")
+        data <- na.omit(data)
+    }
     data <- sapply(data, as.numeric)
     data <- as.data.frame(data)
     
@@ -74,45 +90,44 @@ mediate.ced <- function(outcome, med.1, med.2, treat, encourage, data,
         d <- data[index,]
 
         #Atmv
-        A111=sum(d$M1==1 & d$T==1 & d$M2==1 & d$V==1)/sum(d$T==1 & d$M2==1 & d$V==1)
-        A011=sum(d$M1==1 & d$T==0 & d$M2==1 & d$V==1)/sum(d$T==0 & d$M2==1 & d$V==1)
-        A101=sum(d$M1==1 & d$T==1 & d$M2==0 & d$V==1)/sum(d$T==1 & d$M2==0 & d$V==1)
-        A001=sum(d$M1==1 & d$T==0 & d$M2==0 & d$V==1)/sum(d$T==0 & d$M2==0 & d$V==1)
+        A111 <- sum(d$M1==1 & d$T==1 & d$M2==1 & d$V==1)/sum(d$T==1 & d$M2==1 & d$V==1)
+        A011 <- sum(d$M1==1 & d$T==0 & d$M2==1 & d$V==1)/sum(d$T==0 & d$M2==1 & d$V==1)
+        A101 <- sum(d$M1==1 & d$T==1 & d$M2==0 & d$V==1)/sum(d$T==1 & d$M2==0 & d$V==1)
+        A001 <- sum(d$M1==1 & d$T==0 & d$M2==0 & d$V==1)/sum(d$T==0 & d$M2==0 & d$V==1)
 
-        A110=sum(d$M1==1 & d$T==1 & d$M2==1 & d$V==0)/sum(d$T==1 & d$M2==1 & d$V==0)
-        A010=sum(d$M1==1 & d$T==0 & d$M2==1 & d$V==0)/sum(d$T==0 & d$M2==1 & d$V==0)
-        A100=sum(d$M1==1 & d$T==1 & d$M2==0 & d$V==0)/sum(d$T==1 & d$M2==0 & d$V==0)
-        A000=sum(d$M1==1 & d$T==0 & d$M2==0 & d$V==0)/sum(d$T==0 & d$M2==0 & d$V==0)
+        A110 <- sum(d$M1==1 & d$T==1 & d$M2==1 & d$V==0)/sum(d$T==1 & d$M2==1 & d$V==0)
+        A010 <- sum(d$M1==1 & d$T==0 & d$M2==1 & d$V==0)/sum(d$T==0 & d$M2==1 & d$V==0)
+        A100 <- sum(d$M1==1 & d$T==1 & d$M2==0 & d$V==0)/sum(d$T==1 & d$M2==0 & d$V==0)
+        A000 <- sum(d$M1==1 & d$T==0 & d$M2==0 & d$V==0)/sum(d$T==0 & d$M2==0 & d$V==0)
 
         #Gtm1vm2
-        G1111=mean(d$Y2[d$T==1 & d$M1==1 & d$V==1 & d$M2==1])
-        G0111=mean(d$Y2[d$T==0 & d$M1==1 & d$V==1 & d$M2==1])
-        G1011=mean(d$Y2[d$T==1 & d$M1==0 & d$V==1 & d$M2==1])
-        G0011=mean(d$Y2[d$T==0 & d$M1==0 & d$V==1 & d$M2==1])
+        G1111 <- mean(d$Y2[d$T==1 & d$M1==1 & d$V==1 & d$M2==1])
+        G0111 <- mean(d$Y2[d$T==0 & d$M1==1 & d$V==1 & d$M2==1])
+        G1011 <- mean(d$Y2[d$T==1 & d$M1==0 & d$V==1 & d$M2==1])
+        G0011 <- mean(d$Y2[d$T==0 & d$M1==0 & d$V==1 & d$M2==1])
 
-        G1101=mean(d$Y2[d$T==1 & d$M1==1 & d$V==0 & d$M2==1])
-        G0101=mean(d$Y2[d$T==0 & d$M1==1 & d$V==0 & d$M2==1])
-        G1001=mean(d$Y2[d$T==1 & d$M1==0 & d$V==0 & d$M2==1])
-        G0001=mean(d$Y2[d$T==0 & d$M1==0 & d$V==0 & d$M2==1])
+        G1101 <- mean(d$Y2[d$T==1 & d$M1==1 & d$V==0 & d$M2==1])
+        G0101 <- mean(d$Y2[d$T==0 & d$M1==1 & d$V==0 & d$M2==1])
+        G1001 <- mean(d$Y2[d$T==1 & d$M1==0 & d$V==0 & d$M2==1])
+        G0001 <- mean(d$Y2[d$T==0 & d$M1==0 & d$V==0 & d$M2==1])
 
-        G1110=mean(d$Y2[d$T==1 & d$M1==1 & d$V==1 & d$M2==0])
-        G0110=mean(d$Y2[d$T==0 & d$M1==1 & d$V==1 & d$M2==0])
-        G1010=mean(d$Y2[d$T==1 & d$M1==0 & d$V==1 & d$M2==0])
-        G0010=mean(d$Y2[d$T==0 & d$M1==0 & d$V==1 & d$M2==0])
+        G1110 <- mean(d$Y2[d$T==1 & d$M1==1 & d$V==1 & d$M2==0])
+        G0110 <- mean(d$Y2[d$T==0 & d$M1==1 & d$V==1 & d$M2==0])
+        G1010 <- mean(d$Y2[d$T==1 & d$M1==0 & d$V==1 & d$M2==0])
+        G0010 <- mean(d$Y2[d$T==0 & d$M1==0 & d$V==1 & d$M2==0])
 
-        G1100=mean(d$Y2[d$T==1 & d$M1==1 & d$V==0 & d$M2==0])
-        G0100=mean(d$Y2[d$T==0 & d$M1==1 & d$V==0 & d$M2==0])
-        G1000=mean(d$Y2[d$T==1 & d$M1==0 & d$V==0 & d$M2==0])
-        G0000=mean(d$Y2[d$T==0 & d$M1==0 & d$V==0 & d$M2==0])
+        G1100 <- mean(d$Y2[d$T==1 & d$M1==1 & d$V==0 & d$M2==0])
+        G0100 <- mean(d$Y2[d$T==0 & d$M1==1 & d$V==0 & d$M2==0])
+        G1000 <- mean(d$Y2[d$T==1 & d$M1==0 & d$V==0 & d$M2==0])
+        G0000 <- mean(d$Y2[d$T==0 & d$M1==0 & d$V==0 & d$M2==0])
 
-        temp11<-sum(d$T==1 & d$M1==1)/sum(d$T==1|d$T==0)
-        temp01<-sum(d$T==0 & d$M1==1)/sum(d$T==1|d$T==0)
-        temp10<-sum(d$T==1 & d$M1==0)/sum(d$T==1|d$T==0)
-        temp00<-sum(d$T==0 & d$M1==0)/sum(d$T==1|d$T==0)
+        temp11 <- sum(d$T==1 & d$M1==1)/sum(d$T==1|d$T==0)
+        temp01 <- sum(d$T==0 & d$M1==1)/sum(d$T==1|d$T==0)
+        temp10 <- sum(d$T==1 & d$M1==0)/sum(d$T==1|d$T==0)
+        temp00 <- sum(d$T==0 & d$M1==0)/sum(d$T==1|d$T==0)
 
-
-        PH1<-((A111-A110)*temp11)/((A111-A110)*temp11+(1-2*A101)*temp10)
-        PH0<-((A011-A010)*temp01)/((A011-A010)*temp01+(1-2*A001)*temp00)
+        PH1 <- (A111-A110)*temp11 / ((A111-A110)*temp11 + (1-2*A101)*temp10)
+        PH0 <- (A011-A010)*temp01 / ((A011-A010)*temp01 + (1-2*A001)*temp00)
 
         d.p.c[b] <- (PH1/(A111-A110)) * (G1111+G1110-G1100-G1110*A111-G1101*A110) + 
                         ((1-PH1)/(A100-A101)) * (G1010-G1001-G1000+G1000*A100+G1011*A101)
@@ -129,12 +144,14 @@ mediate.ced <- function(outcome, med.1, med.2, treat, encourage, data,
     low <- (1 - conf.level)/2
     high <- 1 - low
 
-    d.p.c.mu<-median(d.p.c, na.rm=TRUE)
-    d.p.t.mu<-median(d.p.t, na.rm=TRUE)
+    d.p.c.mu <- median(d.p.c, na.rm=TRUE)
+    d.p.t.mu <- median(d.p.t, na.rm=TRUE)
     d.p.c.ci <- quantile(d.p.c, c(low,high), na.rm=TRUE)
     d.p.t.ci <- quantile(d.p.t, c(low,high), na.rm=TRUE)
 
-    out<-list(d0 = d.p.c.mu, d1 = d.p.t.mu, d0.ci = d.p.c.ci, d1.ci = d.p.t.ci, d0.sims=d.p.c, d1.sims=d.p.t, nobs=n,sims=sims,conf.level=conf.level,design="CED")
+    out <- list(d0 = d.p.c.mu, d1 = d.p.t.mu, d0.ci = d.p.c.ci, d1.ci = d.p.t.ci, 
+                d0.sims = d.p.c, d1.sims = d.p.t, 
+                nobs = n, sims = sims, conf.level = conf.level, design = "CED")
 
     class(out) <- "mediate.design"
     out
@@ -144,8 +161,7 @@ mediate.ced <- function(outcome, med.1, med.2, treat, encourage, data,
 ## Internal functions
 
 #nonparametric under SI assumption
-mediate.np <- function(Y, M, T, sims, conf.level, boot ){
-
+mediate.np <- function(Y, M, T, sims, conf.level, boot){
     samp <- data.frame(na.omit(cbind(M,Y,T)))
     m.cat <- sort(unique(samp$M))
     n <- length(samp$Y)
@@ -160,7 +176,6 @@ mediate.np <- function(Y, M, T, sims, conf.level, boot ){
         d1.bs <- matrix(NA,sims,1)
         # Now Let's do the Resampling
         for(b in 1:sims){
-        # First take a resample
             resample <- sample(idx,n,replace=TRUE)
             samp.star <- samp[resample,]
 
@@ -170,20 +185,16 @@ mediate.np <- function(Y, M, T, sims, conf.level, boot ){
                                 sum(samp.star$Y[samp.star$M==m.cat[i] & samp.star$T==0])) / 
                                 (n1*(sum((1 - samp.star$T[samp.star$M==m.cat[i]]))))
             }
-
             d0.bs[b,] <- sum(delta_0m) - mean(samp.star$Y[samp.star$T==0])
-
             delta_1m <- matrix(NA, length(m.cat), 1)
-
             for(i in 1:length(m.cat)){
                 delta_1m[i] <- (sum((1 - samp.star$T[samp.star$M==m.cat[i]])) * 
-                                sum(samp.star$Y[samp.star$M==m.cat[i] & samp.star$T==1])) / 
-                                (n0*(sum(samp.star$T[samp.star$M==m.cat[i]])))
+                            sum(samp.star$Y[samp.star$M==m.cat[i] & samp.star$T==1])) / 
+                            (n0*(sum(samp.star$T[samp.star$M==m.cat[i]])))
             }
-            
             d1.bs[b,] <- mean(samp.star$Y[samp.star$T==1]) - sum(delta_1m)
         }
-
+        
         d0 <- mean(d0.bs, na.rm=TRUE)
         d1 <- mean(d1.bs, na.rm=TRUE)
         low <- (1 - conf.level)/2
@@ -194,6 +205,7 @@ mediate.np <- function(Y, M, T, sims, conf.level, boot ){
     } else {
 
         delta_0m <- matrix(NA, length(m.cat), 1)
+        
         for(i in 1:length(m.cat)){
             delta_0m[i] <- (sum(samp$T[samp$M==m.cat[i]]) * 
                                 sum(samp$Y[samp$M==m.cat[i] & samp$T==0])) / 
@@ -271,290 +283,269 @@ mediate.np <- function(Y, M, T, sims, conf.level, boot ){
                 conf.level=conf.level, nobs=n, boot=boot)
     class(out) <- "mediate.design"
     out
+    
 }
 
 
 #parallel design under no interaction assumption
 boot.pd <- function(outcome, mediator, treatment, manipulated, 
-                    sims=sims, conf.level=conf.level) {
+                    sims, conf.level) {
+#    n.o <- length(outcome)
+#    n.t <- length(treatment)
+#    n.m <- length(mediator)
+#    n.z <- length(manipulated)
 
-    n.o <- length(outcome)
-    n.t <- length(treatment)
-    n.m <- length(mediator)
-    n.z <- length(manipulated)
-
-    if(n.o != n.t | n.t != n.m |n.m !=n.z){
-        stop("Error: Number of observations not the same in treatment, outcome, mediator, and encouragement data")
+#    if(n.o != n.t | n.t != n.m |n.m !=n.z){
+#        stop("Error: Number of observations not the same in treatment, outcome, mediator, and encouragement data")
+#    }
+    
+    n <- length(outcome)
+    data <- matrix(, nrow = n, ncol = 4)
+    data[,1] <- outcome
+    data[,2] <- treatment
+    data[,3] <- mediator
+    data[,4] <- manipulated
+    data <- as.data.frame(data)
+    names(data) <- c("Y","T","M","D")
+    
+    acme <- matrix(NA, sims, 1)
+    for(b in 1:sims){  # bootstrap
+        index <- sample(1:n, n, replace = TRUE)
+        d <- data[index,]
+        d0.temp <- mean(d$Y[d$T==1 & d$D==0]) - mean(d$Y[d$T==0 & d$D==0])
+        weight.m1 <- sum(d$M==1 & d$D==1 )/sum(d$D==1)
+        weight.m0 <- sum(d$M==0 & d$D==1 )/sum(d$D==1)
+        m1 <- mean(d$Y[d$T==1 & d$M==1 & d$D==1]) - mean(d$Y[d$T==0 & d$M==1 & d$D==1])
+        m0 <- mean(d$Y[d$T==1 & d$M==0 & d$D==1]) - mean(d$Y[d$T==0 & d$M==0 & d$D==1])
+        acme[b] <- weight.m1*m1 + weight.m0*m0
     }
-    n <- n.o
 
-    orig.length<-length(outcome)
-    data<-matrix(,nrow=length(outcome),ncol=4)
-    data[,1]<-outcome
-    data[,2]<-treatment
-    data[,3]<-mediator
-    data[,4]<-manipulated
-    data<-as.data.frame(data)
-    names(data)<-c("Y","T","M","D")
-    data<-na.omit(data)
-    n.obs<-nrow(data)
+    acme[acme==-Inf] <- NA
+    acme[acme==Inf] <- NA
 
-    acme<- matrix(NA, sims, 1)
-        # Bootstrap function.
-                for(b in 1:sims){
-                    index <- sample(1:n, n, replace = TRUE)
-                    d<-data[index,]
+    low <- (1 - conf.level)/2
+    high <- 1 - low
+    acme.mu <- median(acme, na.rm=TRUE)
+    acme.ci <- quantile(acme, c(low,high), na.rm=TRUE)
+    out <- list(d = acme.mu,  d.ci = acme.ci, d.sims = acme, nobs = n,
+                conf.level = conf.level, sims = sims, design = "PD.NINT")
+    class(out) <- "mediate.design"
+    out
 
-            d0.temp<-mean(d$Y[d$T==1 & d$D==0]) - mean(d$Y[d$T==0 & d$D==0])
-
-            weight.m1<-sum(d$M==1 & d$D==1 )/sum(d$D==1)
-            weight.m0<-sum(d$M==0 & d$D==1 )/sum(d$D==1)
-            m1<-mean(d$Y[d$T==1 & d$M==1 & d$D==1]) - mean(d$Y[d$T==0 & d$M==1 & d$D==1])
-            m0<-mean(d$Y[d$T==1 & d$M==0 & d$D==1]) - mean(d$Y[d$T==0 & d$M==0 & d$D==1])
-            acme[b]<-weight.m1*m1 + weight.m0*m0
-            }
-
-        acme[acme==-Inf]<-NA
-        acme[acme==Inf]<-NA
-
-        low <- (1 - conf.level)/2
-        high <- 1 - low
-        acme.mu<-median(acme, na.rm=TRUE)
-        acme.ci <- quantile(acme, c(low,high), na.rm=TRUE)
-        out <- list(d = acme.mu,  d.ci = acme.ci, d.sims = acme, 
-                    conf.level = conf.level, sims = sims, design = "PD.NINT")
-        class(out) <- "mediate.design"
-        out
-
-    }
+}
 
 
 
 #Bounds Function for parallel, parallel encouragement, and single experiment designs
-mechanism.bounds <- function(outcome, mediator, treatment, encouragement) {
+mechanism.bounds <- function(outcome, mediator, treatment, DorZ, design) {
 
-    n.o <- length(outcome)
-    n.t <- length(treatment)
-    n.m <- length(mediator)
+#    n.o <- length(outcome)
+#    n.t <- length(treatment)
+#    n.m <- length(mediator)
 
+#    if(design=="SED" && (n.o != n.t | n.t != n.m)){
+#        stop("Error: Number of non-missing observations not the same in treatment, outcome, and mediator data")
+#    }
+
+#    if(design=="PED"|design=="PD") {
+#        n.z <- length(DorZ)
+#        if(n.o != n.t | n.t != n.m |n.m !=n.z){
+#            stop("Error: Number of observations not the same in treatment, outcome, and mediator data")
+#        }
+#        if(is.null(DorZ)){
+#            stop("Error: Design with mediator manipulation chosen but no indicator for manipulation status chosen.")
+#        }
+#    }
+
+#    orig.length <- length(outcome)
+    d <- matrix(, nrow=length(outcome), ncol=3)
+
+    d[,1] <- outcome
+    d[,2] <- treatment
+    d[,3] <- mediator
+    d <- as.data.frame(d)
+    names(d) <- c("Y","T","M")
+    nobs <- nrow(d)
+    
+    ## "DorZ" indicates the variable that assigns manipulation direction. 
+    ## Z in the JRSSA paper. This is left to null for the single experiment design.
+    
+#    if(!is.null(DorZ)){
+#        d$Z <- d$D <- DorZ
+#        d <- na.omit(d)
+#        nobs <- nrow(d)
+#        if(nobs < orig.length) {
+#            warning("NA's in data. Observations with missing data removed.")
+#            }
+#    }
+    
+    # Single Experiment
     if(design=="SED") {
-        if(n.o != n.t | n.t != n.m){
-            stop("Error: Number of non-missing observations not the same in treatment, outcome, and mediator data")
+        d$Z <- 0
+#        d <- na.omit(d)
+#        nobs <- nrow(d)
+#        if(nobs < orig.length) {
+#            warning("NA's in data. Observations with missing data removed.")
+#        }
+        P111 <- sum(d$Y==1 & d$M==1 & d$Z==0 & d$T==1)/sum(d$T==1 & d$Z==0)
+        P101 <- sum(d$Y==1 & d$M==0 & d$Z==0 & d$T==1)/sum(d$T==1 & d$Z==0)
+        P001 <- sum(d$Y==0 & d$M==0 & d$Z==0 & d$T==1)/sum(d$T==1 & d$Z==0)
+        P011 <- sum(d$Y==0 & d$M==1 & d$Z==0 & d$T==1)/sum(d$T==1 & d$Z==0)
+
+        P110 <- sum(d$Y==1 & d$M==1 & d$Z==0 & d$T==0)/sum(d$T==0 & d$Z==0)
+        P100 <- sum(d$Y==1 & d$M==0 & d$Z==0 & d$T==0)/sum(d$T==0 & d$Z==0)
+        P000 <- sum(d$Y==0 & d$M==0 & d$Z==0 & d$T==0)/sum(d$T==0 & d$Z==0)
+        P010 <- sum(d$Y==0 & d$M==1 & d$Z==0 & d$T==0)/sum(d$T==0 & d$Z==0)
+        
+        l.delta.t <- max(-P001-P011, -P000-P001-P100, -P011-P010-P110)
+        u.delta.t <- min(P101+P111, P000+P100+P101, P010+P110+P111)
+        l.delta.c <- max(-P100-P110, -P001-P101-P100, -P011-P111-P110)
+        u.delta.c <- min(P000+P010, P011+P111+P010, P000+P001+P101)
+        S.t <- cbind(l.delta.t,u.delta.t)
+        S.c <- cbind(l.delta.c,u.delta.c)
+        
+    # Parallel
+    } else if(design=="PD") {
+        ## D indicates if there was manipulation
+        d$D <- DorZ
+        Z111 <- sum(d$Y==1 & d$T==1 & d$M==1 & d$D==1)/sum(d$T==1 & d$M==1 & d$D==1)
+        Z011 <- sum(d$Y==0 & d$T==1 & d$M==1 & d$D==1)/sum(d$T==1 & d$M==1 & d$D==1)
+        Z001 <- sum(d$Y==0 & d$T==1 & d$M==0 & d$D==1)/sum(d$T==1 & d$M==0 & d$D==1)
+        Z110 <- sum(d$Y==1 & d$T==0 & d$M==1 & d$D==1)/sum(d$T==0 & d$M==1 & d$D==1)
+        Z010 <- sum(d$Y==0 & d$T==0 & d$M==1 & d$D==1)/sum(d$T==0 & d$M==1 & d$D==1)
+        Z000 <- sum(d$Y==0 & d$T==0 & d$M==0 & d$D==1)/sum(d$T==0 & d$M==0 & d$D==1)
+        Z101 <- sum(d$Y==1 & d$T==1 & d$M==0 & d$D==1)/sum(d$T==1 & d$M==0 & d$D==1)
+        Z100 <- sum(d$Y==1 & d$T==0 & d$M==0 & d$D==1)/sum(d$T==0 & d$M==0 & d$D==1)
+
+        P111 <- sum(d$Y==1 & d$M==1 & d$T==1 & d$D==0)/sum(d$T==1 & d$D==0)
+        P101 <- sum(d$Y==1 & d$M==0 & d$T==1 & d$D==0)/sum(d$T==1 & d$D==0)
+        P001 <- sum(d$Y==0 & d$M==0 & d$T==1 & d$D==0)/sum(d$T==1 & d$D==0)
+        P011 <- sum(d$Y==0 & d$M==1 & d$T==1 & d$D==0)/sum(d$T==1 & d$D==0)
+        P110 <- sum(d$Y==1 & d$M==1 & d$T==0 & d$D==0)/sum(d$T==0 & d$D==0)
+        P100 <- sum(d$Y==1 & d$M==0 & d$T==0 & d$D==0)/sum(d$T==0 & d$D==0)
+        P000 <- sum(d$Y==0 & d$M==0 & d$T==0 & d$D==0)/sum(d$T==0 & d$D==0)
+        P010 <- sum(d$Y==0 & d$M==1 & d$T==0 & d$D==0)/sum(d$T==0 & d$D==0)
+
+        P.l.delta.t <- max(-P001-P011, -P011-P010-P110-P001+Z001, -P000-P001-P100-P011+Z011, -P001-P011+Z001-Z111, -P001+P101-Z101, -P011+P111-Z111)
+        P.u.delta.t <- min(P101+P111, P010+P110+P101+P111-Z101, P000+P100+P101+P111-Z111, P101+P111+Z001-Z111, P111-P011+Z011, P101-P001+Z001)
+        P.l.delta.c <- max(-P100-P110, -P011-P111-P110-P100+Z000, -P001-P101-P100-P110+Z110,-P100-P110+Z100-Z010, -P110+P010-Z010, -P100+P000-Z100)
+        P.u.delta.c <- min(P000+P010, P011+P111+P010+P000-Z100, P000+P001+P101+P010-Z010, P000+P010+Z100-Z010, P010-P110+Z110, P000-P100+Z100)
+        P.t <- cbind(P.l.delta.t,P.u.delta.t)
+        P.c <- cbind(P.l.delta.c,P.u.delta.c)
+
+    #Parallel Encouragement
+    } else if(design=="PED") {
+        d$Z <- DorZ
+        dP000 <- sum(d$Y==0 & d$M==0 & d$T==0 & d$Z==-1)/sum(d$T==0 & d$Z==-1)
+        dP001 <- sum(d$Y==0 & d$M==0 & d$T==1 & d$Z==-1)/sum(d$T==1 & d$Z==-1)
+        dP010 <- sum(d$Y==0 & d$M==1 & d$T==0 & d$Z==-1)/sum(d$T==0 & d$Z==-1)
+        dP011 <- sum(d$Y==0 & d$M==1 & d$T==1 & d$Z==-1)/sum(d$T==1 & d$Z==-1)
+        dP100 <- sum(d$Y==1 & d$M==0 & d$T==0 & d$Z==-1)/sum(d$T==0 & d$Z==-1)
+        dP101 <- sum(d$Y==1 & d$M==0 & d$T==1 & d$Z==-1)/sum(d$T==1 & d$Z==-1)
+        dP110 <- sum(d$Y==1 & d$M==1 & d$T==0 & d$Z==-1)/sum(d$T==0 & d$Z==-1)
+        dP111 <- sum(d$Y==1 & d$M==1 & d$T==1 & d$Z==-1)/sum(d$T==1 & d$Z==-1)
+
+        tP000 <- sum(d$Y==0 & d$M==0 & d$T==0 & d$Z==0)/sum(d$T==0 & d$Z==0)
+        tP001 <- sum(d$Y==0 & d$M==0 & d$T==1 & d$Z==0)/sum(d$T==1 & d$Z==0)
+        tP010 <- sum(d$Y==0 & d$M==1 & d$T==0 & d$Z==0)/sum(d$T==0 & d$Z==0)
+        tP011 <- sum(d$Y==0 & d$M==1 & d$T==1 & d$Z==0)/sum(d$T==1 & d$Z==0)
+        tP100 <- sum(d$Y==1 & d$M==0 & d$T==0 & d$Z==0)/sum(d$T==0 & d$Z==0)
+        tP101 <- sum(d$Y==1 & d$M==0 & d$T==1 & d$Z==0)/sum(d$T==1 & d$Z==0)
+        tP110 <- sum(d$Y==1 & d$M==1 & d$T==0 & d$Z==0)/sum(d$T==0 & d$Z==0)
+        tP111 <- sum(d$Y==1 & d$M==1 & d$T==1 & d$Z==0)/sum(d$T==1 & d$Z==0)
+
+        sP000 <- sum(d$Y==0 & d$M==0 & d$T==0 & d$Z==1)/sum(d$T==0 & d$Z==1)
+        sP001 <- sum(d$Y==0 & d$M==0 & d$T==1 & d$Z==1)/sum(d$T==1 & d$Z==1)
+        sP010 <- sum(d$Y==0 & d$M==1 & d$T==0 & d$Z==1)/sum(d$T==0 & d$Z==1)
+        sP011 <- sum(d$Y==0 & d$M==1 & d$T==1 & d$Z==1)/sum(d$T==1 & d$Z==1)
+        sP100 <- sum(d$Y==1 & d$M==0 & d$T==0 & d$Z==1)/sum(d$T==0 & d$Z==1)
+        sP101 <- sum(d$Y==1 & d$M==0 & d$T==1 & d$Z==1)/sum(d$T==1 & d$Z==1)
+        sP110 <- sum(d$Y==1 & d$M==1 & d$T==0 & d$Z==1)/sum(d$T==0 & d$Z==1)
+        sP111 <- sum(d$Y==1 & d$M==1 & d$T==1 & d$Z==1)/sum(d$T==1 & d$Z==1)
+
+
+        P0 <- c(dP000,dP010,dP100,dP110,tP000,tP010,tP100,tP110,sP000,sP010,sP100,sP110)
+        P1 <- c(dP001,dP011,dP101,dP111,tP001,tP011,tP101,tP111,sP001,sP011,sP101,sP111)
+        Q0 <- c(dP010+dP110,tP010+tP110,sP010+sP110)
+        Q1 <- c(dP011+dP111,tP011+tP111,sP011+sP111)
+
+        #Linear programming functions
+        bounds.bidir.cmpl <- function(P,Q,dir){
+            f.obj <- c(rep(0,16), 0,0,1,0, 0,0,1,0, 0,-1,0,0, 0,-1,0,0,
+                    0,0,-1,0, 0,0,-1,0, 0,1,0,0, 0,1,0,0, rep(0,16))
+            f.con <- matrix(c(
+                    rep(c(1,1,1,0),8), rep(0,32), #dP00t
+                    rep(c(rep(c(0,0,0,1),4), rep(0,16)),2), #dP01t
+                    rep(0,32), rep(c(1,1,1,0),8), #dP10t
+                    rep(c(rep(0,16), rep(c(0,0,0,1),4)),2), #dP11t
+                    rep(c(1,1,0,0),8), rep(0,32), #tP00t
+                    rep(c(rep(c(0,0,1,1),4), rep(0,16)),2), #tP01t
+                    rep(0,32), rep(c(1,1,0,0),8), #tP10t
+                    rep(c(rep(0,16), rep(c(0,0,1,1),4)),2), #tP11t
+                    rep(c(1,0,0,0),8), rep(0,32), #sP00t
+                    rep(c(rep(c(0,1,1,1),4), rep(0,16)),2), #sP01t
+                    rep(0,32), rep(c(1,0,0,0),8), #sP10t
+                    rep(c(rep(0,16), rep(c(0,1,1,1),4)),2), #sP11t
+                    rep(c(rep(0,12), rep(1,4)),4), #dQ
+                    rep(c(rep(0,8), rep(1,8)),4), #tQ
+                    rep(c(rep(0,4), rep(1,12)),4), #sQ
+                    rep(1,64) #sum=1
+                    ), nrow=16, byrow=T)
+            f.dir <- rep("=", 16)
+            f.rhs <- c(P,Q,1)
+            r <- lp(dir, f.obj, f.con, f.dir, f.rhs)
+            r$objval
         }
+        
+        bounds.bidir.popl <- function(P,Q,dir){
+            f.obj <- c(rep(0,16), 0,0,1,1, 0,0,1,1, -1,-1,0,0, -1,-1,0,0,
+                    0,0,-1,-1, 0,0,-1,-1, 1,1,0,0, 1,1,0,0, rep(0,16))
+            f.con <- matrix(c(
+                    rep(c(1,1,1,0),8), rep(0,32), #dP00t
+                    rep(c(rep(c(0,0,0,1),4), rep(0,16)),2), #dP01t
+                    rep(0,32), rep(c(1,1,1,0),8), #dP10t
+                    rep(c(rep(0,16), rep(c(0,0,0,1),4)),2), #dP11t
+                    rep(c(1,1,0,0),8), rep(0,32), #tP00t
+                    rep(c(rep(c(0,0,1,1),4), rep(0,16)),2), #tP01t
+                    rep(0,32), rep(c(1,1,0,0),8), #tP10t
+                    rep(c(rep(0,16), rep(c(0,0,1,1),4)),2), #tP11t
+                    rep(c(1,0,0,0),8), rep(0,32), #sP00t
+                    rep(c(rep(c(0,1,1,1),4), rep(0,16)),2), #sP01t
+                    rep(0,32), rep(c(1,0,0,0),8), #sP10t
+                    rep(c(rep(0,16), rep(c(0,1,1,1),4)),2), #sP11t
+                    rep(c(rep(0,12), rep(1,4)),4), #dQ
+                    rep(c(rep(0,8), rep(1,8)),4), #tQ
+                    rep(c(rep(0,4), rep(1,12)),4), #sQ
+                    rep(1,64) #sum=1
+                    ), nrow=16, byrow=T)
+            f.dir <- rep("=", 16)
+            f.rhs <- c(P,Q,1)
+            r <- lp(dir, f.obj, f.con, f.dir, f.rhs)
+            r$objval
+        }
+        
+        BE.t <- c(bounds.bidir.popl(P1, Q0, "min"), bounds.bidir.popl(P1, Q0, "max"))
+        BE.c <- c(-bounds.bidir.popl(P0 ,Q1, "max"), -bounds.bidir.popl(P0, Q1, "min"))
+        num.BET.t.lo <- bounds.bidir.cmpl(P1, Q0, "min")
+        num.BET.t.up <- bounds.bidir.cmpl(P1, Q0, "max")
+        num.BET.c.lo <- -bounds.bidir.cmpl(P0, Q1, "max")
+        num.BET.c.up <- -bounds.bidir.cmpl(P0, Q1, "min")
+        denom.BET.t <- P1[1] + P1[3] - P1[9] - P1[11]
+        denom.BET.c <- P0[1] + P0[3] - P0[9] - P0[11]
+        BET.t <- c(num.BET.t.lo/denom.BET.t, num.BET.t.up/denom.BET.t)
+        BET.c <- c(num.BET.c.lo/denom.BET.c, num.BET.c.up/denom.BET.c)
+    
+    }#end computation section
+
+    # Output
+    if(design=="SED"){
+        out <- list(d1 = S.t, d0 = S.c, design=design, nobs=nobs)
+    } else if(design=="PD"){
+        out <- list(d1 = P.t, d0 = P.c, design=design, nobs=nobs)
+    } else if(design=="PED") {
+        out <- list(d1=BE.t, d0=BE.c,  d1.p=BET.t, d0.p=BET.c, design=design, nobs=nobs)
     }
-
-    if(design=="PED"|design=="PD") {
-        n.z<-length(encouragement)
-        if(n.o != n.t | n.t != n.m |n.m !=n.z){
-            stop("Error: Number of observations not the same in treatment, outcome, and mediator data")
-        }
-        if(is.null(encouragement)){
-            stop("Error: Design with mediator manipulation chosen but no indicator for manipulation status chosen.")
-        }
-    }
-
-
-    orig.length<-length(outcome)
-    d<-matrix(,nrow=length(outcome),ncol=3)
-
-    d[,1]<-outcome
-    d[,2]<-treatment
-    d[,3]<-mediator
-    d<-as.data.frame(d)
-    names(d)<-c("Y","T","M")
-    #encouragement indicates the variable that assigns manipulation direction. Z in the JRSSA paper. This is left to null for the single experiment design.
-    manip<-!is.null(encouragement)
-
-
-        #type of design used
-        design<-design
-
-            if(manip){
-                d$Z<-d$D<-encouragement
-                d<-na.omit(d)
-                nobs<-nrow(d)
-                if(nobs<orig.length) {
-                    warning("NA's in data. Observations with missing data removed.")
-                    }
-                }
-
-                #Single Experiment Design
-                if(design=="SED") {
-                d$Z<-0
-                d<-na.omit(d)
-                nobs<-nrow(d)
-                if(nobs<orig.length) {
-                    warning("NA's in data. Observations with missing data removed.")
-                }
-                P111<-sum(d$Y==1 & d$M==1 & d$Z==0 & d$T==1)/sum(d$T==1 & d$Z==0)
-                P101<-sum(d$Y==1 & d$M==0 & d$Z==0 & d$T==1)/sum(d$T==1 & d$Z==0)
-                P001<-sum(d$Y==0 & d$M==0 & d$Z==0 & d$T==1)/sum(d$T==1 & d$Z==0)
-                P011<-sum(d$Y==0 & d$M==1 & d$Z==0 & d$T==1)/sum(d$T==1 & d$Z==0)
-
-                P110<-sum(d$Y==1 & d$M==1 & d$Z==0 & d$T==0)/sum(d$T==0 & d$Z==0)
-                P100<-sum(d$Y==1 & d$M==0 & d$Z==0 & d$T==0)/sum(d$T==0 & d$Z==0)
-                P000<-sum(d$Y==0 & d$M==0 & d$Z==0 & d$T==0)/sum(d$T==0 & d$Z==0)
-                P010<-sum(d$Y==0 & d$M==1 & d$Z==0 & d$T==0)/sum(d$T==0 & d$Z==0)
-                #Calculate Bounds Expressions
-                #Single Experiment
-                l.delta.t <- max(-P001-P011, -P000-P001-P100, -P011-P010-P110)
-                u.delta.t <- min(P101+P111, P000+P100+P101, P010+P110+P111)
-                l.delta.c <- max(-P100-P110, -P001-P101-P100, -P011-P111-P110)
-                u.delta.c <- min(P000+P010, P011+P111+P010, P000+P001+P101)
-                S.t <- cbind(l.delta.t,u.delta.t)
-                S.c <- cbind(l.delta.c,u.delta.c)
-                }
-
-
-            #Parallel Design
-            if(design=="PD") {
-                #D indicates if there was manipulation
-                #Calculate Quantities necessary for computation of bounds
-                Z111 <- sum(d$Y==1 & d$T==1 & d$M==1 & d$D==1)/sum(d$T==1 & d$M==1 & d$D==1)
-                Z011 <- sum(d$Y==0 & d$T==1 & d$M==1 & d$D==1)/sum(d$T==1 & d$M==1 & d$D==1)
-                Z001 <- sum(d$Y==0 & d$T==1 & d$M==0 & d$D==1)/sum(d$T==1 & d$M==0 & d$D==1)
-                Z110 <- sum(d$Y==1 & d$T==0 & d$M==1 & d$D==1)/sum(d$T==0 & d$M==1 & d$D==1)
-                Z010 <- sum(d$Y==0 & d$T==0 & d$M==1 & d$D==1)/sum(d$T==0 & d$M==1 & d$D==1)
-                Z000 <- sum(d$Y==0 & d$T==0 & d$M==0 & d$D==1)/sum(d$T==0 & d$M==0 & d$D==1)
-                Z101 <- sum(d$Y==1 & d$T==1 & d$M==0 & d$D==1)/sum(d$T==1 & d$M==0 & d$D==1)
-                Z100 <- sum(d$Y==1 & d$T==0 & d$M==0 & d$D==1)/sum(d$T==0 & d$M==0 & d$D==1)
-
-                P111 <- sum(d$Y==1 & d$M==1 & d$T==1 & d$D==0)/sum(d$T==1 & d$D==0)
-                P101 <- sum(d$Y==1 & d$M==0 & d$T==1 & d$D==0)/sum(d$T==1 & d$D==0)
-                P001 <- sum(d$Y==0 & d$M==0 & d$T==1 & d$D==0)/sum(d$T==1 & d$D==0)
-                P011 <- sum(d$Y==0 & d$M==1 & d$T==1 & d$D==0)/sum(d$T==1 & d$D==0)
-                P110 <- sum(d$Y==1 & d$M==1 & d$T==0 & d$D==0)/sum(d$T==0 & d$D==0)
-                P100 <- sum(d$Y==1 & d$M==0 & d$T==0 & d$D==0)/sum(d$T==0 & d$D==0)
-                P000 <- sum(d$Y==0 & d$M==0 & d$T==0 & d$D==0)/sum(d$T==0 & d$D==0)
-                P010 <- sum(d$Y==0 & d$M==1 & d$T==0 & d$D==0)/sum(d$T==0 & d$D==0)
-
-                #Parallel Design
-                P.l.delta.t <- max(-P001-P011, -P011-P010-P110-P001+Z001, -P000-P001-P100-P011+Z011, -P001-P011+Z001-Z111, -P001+P101-Z101, -P011+P111-Z111)
-                P.u.delta.t <- min(P101+P111, P010+P110+P101+P111-Z101, P000+P100+P101+P111-Z111, P101+P111+Z001-Z111, P111-P011+Z011, P101-P001+Z001)
-                P.l.delta.c <- max(-P100-P110, -P011-P111-P110-P100+Z000, -P001-P101-P100-P110+Z110,-P100-P110+Z100-Z010, -P110+P010-Z010, -P100+P000-Z100)
-                P.u.delta.c <- min(P000+P010, P011+P111+P010+P000-Z100, P000+P001+P101+P010-Z010, P000+P010+Z100-Z010, P010-P110+Z110, P000-P100+Z100)
-                P.t <- cbind(P.l.delta.t,P.u.delta.t)
-                P.c <- cbind(P.l.delta.c,P.u.delta.c)
-            }
-
-
-            #Parallel Encouragement design
-            if(design=="PED") {
-                    #Calculate Quantities necessary for computation of bounds
-                    dP000 <- sum(d$Y==0 & d$M==0 & d$T==0 & d$Z==-1)/sum(d$T==0 & d$Z==-1)
-                    dP001 <- sum(d$Y==0 & d$M==0 & d$T==1 & d$Z==-1)/sum(d$T==1 & d$Z==-1)
-                    dP010 <- sum(d$Y==0 & d$M==1 & d$T==0 & d$Z==-1)/sum(d$T==0 & d$Z==-1)
-                    dP011 <- sum(d$Y==0 & d$M==1 & d$T==1 & d$Z==-1)/sum(d$T==1 & d$Z==-1)
-                    dP100 <- sum(d$Y==1 & d$M==0 & d$T==0 & d$Z==-1)/sum(d$T==0 & d$Z==-1)
-                    dP101 <- sum(d$Y==1 & d$M==0 & d$T==1 & d$Z==-1)/sum(d$T==1 & d$Z==-1)
-                    dP110 <- sum(d$Y==1 & d$M==1 & d$T==0 & d$Z==-1)/sum(d$T==0 & d$Z==-1)
-                    dP111 <- sum(d$Y==1 & d$M==1 & d$T==1 & d$Z==-1)/sum(d$T==1 & d$Z==-1)
-
-                   tP000 <- sum(d$Y==0 & d$M==0 & d$T==0 & d$Z==0)/sum(d$T==0 & d$Z==0)
-                   tP001 <- sum(d$Y==0 & d$M==0 & d$T==1 & d$Z==0)/sum(d$T==1 & d$Z==0)
-                   tP010 <- sum(d$Y==0 & d$M==1 & d$T==0 & d$Z==0)/sum(d$T==0 & d$Z==0)
-                   tP011 <- sum(d$Y==0 & d$M==1 & d$T==1 & d$Z==0)/sum(d$T==1 & d$Z==0)
-                   tP100 <- sum(d$Y==1 & d$M==0 & d$T==0 & d$Z==0)/sum(d$T==0 & d$Z==0)
-                   tP101 <- sum(d$Y==1 & d$M==0 & d$T==1 & d$Z==0)/sum(d$T==1 & d$Z==0)
-                   tP110 <- sum(d$Y==1 & d$M==1 & d$T==0 & d$Z==0)/sum(d$T==0 & d$Z==0)
-                   tP111 <- sum(d$Y==1 & d$M==1 & d$T==1 & d$Z==0)/sum(d$T==1 & d$Z==0)
-
-                   sP000 <- sum(d$Y==0 & d$M==0 & d$T==0 & d$Z==1)/sum(d$T==0 & d$Z==1)
-                   sP001 <- sum(d$Y==0 & d$M==0 & d$T==1 & d$Z==1)/sum(d$T==1 & d$Z==1)
-                   sP010 <- sum(d$Y==0 & d$M==1 & d$T==0 & d$Z==1)/sum(d$T==0 & d$Z==1)
-                   sP011 <- sum(d$Y==0 & d$M==1 & d$T==1 & d$Z==1)/sum(d$T==1 & d$Z==1)
-                   sP100 <- sum(d$Y==1 & d$M==0 & d$T==0 & d$Z==1)/sum(d$T==0 & d$Z==1)
-                   sP101 <- sum(d$Y==1 & d$M==0 & d$T==1 & d$Z==1)/sum(d$T==1 & d$Z==1)
-                   sP110 <- sum(d$Y==1 & d$M==1 & d$T==0 & d$Z==1)/sum(d$T==0 & d$Z==1)
-                   sP111 <- sum(d$Y==1 & d$M==1 & d$T==1 & d$Z==1)/sum(d$T==1 & d$Z==1)
-
-
-                    P0 <- c(dP000,dP010,dP100,dP110,tP000,tP010,tP100,tP110,sP000,sP010,sP100,sP110)
-                    P1 <- c(dP001,dP011,dP101,dP111,tP001,tP011,tP101,tP111,sP001,sP011,sP101,sP111)
-                    Q0 <- c(dP010+dP110,tP010+tP110,sP010+sP110)
-                    Q1 <- c(dP011+dP111,tP011+tP111,sP011+sP111)
-
-
-                #Linear programming functions for PED
-                bounds.bidir.cmpl <- function(P,Q,dir){
-                    f.obj <- c(rep(0,16), 0,0,1,0, 0,0,1,0, 0,-1,0,0, 0,-1,0,0,
-                            0,0,-1,0, 0,0,-1,0, 0,1,0,0, 0,1,0,0, rep(0,16))
-                    f.con <- matrix(c(
-                            rep(c(1,1,1,0),8), rep(0,32), #dP00t
-                            rep(c(rep(c(0,0,0,1),4), rep(0,16)),2), #dP01t
-                            rep(0,32), rep(c(1,1,1,0),8), #dP10t
-                            rep(c(rep(0,16), rep(c(0,0,0,1),4)),2), #dP11t
-                            rep(c(1,1,0,0),8), rep(0,32), #tP00t
-                            rep(c(rep(c(0,0,1,1),4), rep(0,16)),2), #tP01t
-                            rep(0,32), rep(c(1,1,0,0),8), #tP10t
-                            rep(c(rep(0,16), rep(c(0,0,1,1),4)),2), #tP11t
-                            rep(c(1,0,0,0),8), rep(0,32), #sP00t
-                            rep(c(rep(c(0,1,1,1),4), rep(0,16)),2), #sP01t
-                            rep(0,32), rep(c(1,0,0,0),8), #sP10t
-                            rep(c(rep(0,16), rep(c(0,1,1,1),4)),2), #sP11t
-                            rep(c(rep(0,12), rep(1,4)),4), #dQ
-                            rep(c(rep(0,8), rep(1,8)),4), #tQ
-                            rep(c(rep(0,4), rep(1,12)),4), #sQ
-                            rep(1,64) #sum=1
-                            ), nrow=16, byrow=T)
-                    f.dir <- rep("=", 16)
-                    f.rhs <- c(P,Q,1)
-                    r <- lp(dir, f.obj, f.con, f.dir, f.rhs)
-                    r$objval
-                }
-
-                bounds.bidir.popl <- function(P,Q,dir){
-                    f.obj <- c(rep(0,16), 0,0,1,1, 0,0,1,1, -1,-1,0,0, -1,-1,0,0,
-                            0,0,-1,-1, 0,0,-1,-1, 1,1,0,0, 1,1,0,0, rep(0,16))
-                    f.con <- matrix(c(
-                            rep(c(1,1,1,0),8), rep(0,32), #dP00t
-                            rep(c(rep(c(0,0,0,1),4), rep(0,16)),2), #dP01t
-                            rep(0,32), rep(c(1,1,1,0),8), #dP10t
-                            rep(c(rep(0,16), rep(c(0,0,0,1),4)),2), #dP11t
-                            rep(c(1,1,0,0),8), rep(0,32), #tP00t
-                            rep(c(rep(c(0,0,1,1),4), rep(0,16)),2), #tP01t
-                            rep(0,32), rep(c(1,1,0,0),8), #tP10t
-                            rep(c(rep(0,16), rep(c(0,0,1,1),4)),2), #tP11t
-                            rep(c(1,0,0,0),8), rep(0,32), #sP00t
-                            rep(c(rep(c(0,1,1,1),4), rep(0,16)),2), #sP01t
-                            rep(0,32), rep(c(1,0,0,0),8), #sP10t
-                            rep(c(rep(0,16), rep(c(0,1,1,1),4)),2), #sP11t
-                            rep(c(rep(0,12), rep(1,4)),4), #dQ
-                            rep(c(rep(0,8), rep(1,8)),4), #tQ
-                            rep(c(rep(0,4), rep(1,12)),4), #sQ
-                            rep(1,64) #sum=1
-                            ), nrow=16, byrow=T)
-                    f.dir <- rep("=", 16)
-                    f.rhs <- c(P,Q,1)
-                    r <- lp(dir, f.obj, f.con, f.dir, f.rhs)
-                    r$objval
-                }
-
-                BE.t <- c(bounds.bidir.popl(P1, Q0, "min"), bounds.bidir.popl(P1, Q0, "max"))
-                BE.c <- c(-bounds.bidir.popl(P0 ,Q1, "max"), -bounds.bidir.popl(P0, Q1, "min"))
-                num.BET.t.lo <- bounds.bidir.cmpl(P1, Q0, "min")
-                num.BET.t.up <- bounds.bidir.cmpl(P1, Q0, "max")
-                num.BET.c.lo <- -bounds.bidir.cmpl(P0, Q1, "max")
-                num.BET.c.up <- -bounds.bidir.cmpl(P0, Q1, "min")
-                denom.BET.t <- P1[1] + P1[3] - P1[9] - P1[11]
-                denom.BET.c <- P0[1] + P0[3] - P0[9] - P0[11]
-                BET.t <- c(num.BET.t.lo/denom.BET.t, num.BET.t.up/denom.BET.t)
-                BET.c <- c(num.BET.c.lo/denom.BET.c, num.BET.c.up/denom.BET.c)
-
-            }#end computation section
-
-                #function output
-                if(design=="SED"){
-                out<-list(d1 = S.t, d0 = S.c, manip=manip, design=design, nobs=nobs)
-                }
-                if(design=="PD"){
-                out<-list(d1 = P.t, d0 = P.c, manip=manip,design=design, nobs=nobs)
-                }
-                if(design=="PED") {
-                out<-list(d1=BE.t, d0=BE.c,  d1.p=BET.t, d0.p=BET.c, manip=manip, design=design, nobs=nobs)
-                }
-
-
+    
     rm(d)
     class(out) <- "mediate.design"
     out
@@ -571,65 +562,57 @@ summary.mediate.design <- function(object, ...){
 
 
 print.summary.mediate.design <- function(x, ...){
-    cat("\n Bounds for Causal Mediation Effects \n\n")
-    cat("Design / Treatment Condition / Lower and Upper Bounds \n\n")
+    cat("\n")
+    cat("Design-Based Causal Mediation Analysis\n\n")
 
-        # Print values
-        if(x$design=="SED.NP.NOSI"|x$design=="PD"){
-
-            if(x$design=="SED.NP.NOSI"){
-            cat("\n Single Experiment Design, No SI Assumption, Bounds \n\n")
-            }
-            if(x$design=="PD"){
-            cat("\n Parallel Design, Interaction Allowed, Bounds \n\n")
-            }
-
-            cat("Mediation Effect_0", format(x$d0, digits=4), "\n")
-            cat("Mediation Effect_1", format(x$d1, digits=4), "\n")
-                cat("\n\n")
-            cat("Sample Size Used:", x$nobs,"\n\n")
+    # Print values
+    if(x$design=="SED.NP.NOSI" | x$design=="PD"){
+        if(x$design=="SED.NP.NOSI"){
+            cat("Single Experiment Design (without Sequential Ignorability) \n\n")
         }
-
-        if(x$design=="PD.NINT"){
-                clp <- 100 * x$conf.level
-                cat("\n Parallel Design, No Interaction Assumed \n\n")
-                cat("Mediation Effect: ", format(x$d, digits=4), clp, "% CI ",
-                format(x$d.ci, digits=4), "\n")
+        if(x$design=="PD"){
+            cat("Parallel Design (Interaction Allowed) \n\n")
         }
-
-
-        if(x$design=="PED"){
-            cat("Parallel Encouragment Design, Treatment, Population ", format(x$d1, digits=4), "\n")
-            cat("Parallel Encouragment Design, Treatment, Complier ", format(x$d1.p, digits=4), "\n")
-            cat("Parallel Encouragment Design, Control, Population ", format(x$d0, digits=4), "\n")
-            cat("Parallel Encouragment Design, Control, Complier ", format(x$d0.p, digits=4), "\n")
-            cat("\n\n")
-            cat("Sample Size Used:", x$nobs,"\n\n")
-            }
-
-
-        if(x$design=="CED"){
+        cat("                      Lower   Upper \n")
+        cat("Mediation Effect_0: ", format(x$d0, digits=4), "\n")
+        cat("Mediation Effect_1: ", format(x$d1, digits=4), "\n")
+        cat("Sample Size Used:   ", x$nobs,"\n\n")
+    
+    } else if(x$design=="PD.NINT"){
             clp <- 100 * x$conf.level
-                cat("\n Crossover Encouragment Design \n\n")
-                cat("Mediation Effect_0: ", format(x$d0, digits=4), clp, "% CI ",
-                format(x$d0.ci, digits=4), "\n")
-                cat("Mediation Effect_1: ", format(x$d1, digits=4), clp, "% CI ",
-                format(x$d1.ci, digits=4), "\n")
-                cat("\n\n")
-                cat("Sample Size Used:", x$nobs,"\n\n")
-        }
-
-
-        if(x$design=="SED.NP.SI"){
+            cat("Parallel Design (with No Interaction Assumption) \n\n")
+            cat("Mediation Effect: ", format(x$d, digits=4), clp, "% CI ",
+                format(x$d.ci, digits=4), "\n")
+            cat("Sample Size Used: ", x$nobs,"\n\n")
+            
+    } else if(x$design=="PED"){
+        cat("Parallel Encouragement Design\n\n")
+        cat("                      Lower   Upper \n")
+        cat("Population ACME_0: ", format(x$d0, digits=4), "\n")
+        cat("Complier ACME_0    ", format(x$d0.p, digits=4), "\n")
+        cat("Population ACME_1: ", format(x$d1, digits=4), "\n")
+        cat("Complier ACME_1:   ", format(x$d1.p, digits=4), "\n")
+        cat("Sample Size Used:  ", x$nobs,"\n\n")
+        
+    } else if(x$design=="CED"){
         clp <- 100 * x$conf.level
-    cat("\n NonParametric Causal Mediation Analysis for Discrete Mediators \n\n")
-
-    if(x$boot==TRUE){
-        cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
-    } else {
-        cat("Large Sample Confidence Intervals\n\n")
-    }
-
+        cat("Crossover Encouragement Design \n\n")
+        cat("Pliable ACME_0:   ", format(x$d0, digits=4), clp, "% CI ",
+            format(x$d0.ci, digits=4), "\n")
+        cat("Pliable ACME_1:   ", format(x$d1, digits=4), clp, "% CI ",
+            format(x$d1.ci, digits=4), "\n")
+        cat("Sample Size Used: ", x$nobs,"\n\n")
+        
+    } else if(x$design=="SED.NP.SI"){
+        clp <- 100 * x$conf.level
+        cat("Single Experiment Design with Sequential Ignorability \n\n")
+        
+        if(x$boot==TRUE){
+            cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
+        } else {
+            cat("Confidence Intervals Based on Asymptotic Variance\n\n")
+        }
+        
 #    printone <- x$!x$INT
 
 #    if (printone){
@@ -641,9 +624,11 @@ print.summary.mediate.design <- function(x, ...){
                 format(x$d0.ci, digits=4), "\n")
         cat("Mediation Effect_1: ", format(x$d1, digits=4), clp, "% CI ",
                 format(x$d1.ci, digits=4), "\n")
-        cat("Sample Size Used:", x$nobs,"\n\n")
+        cat("Sample Size Used:   ", x$nobs,"\n\n")
 #        }
-
+    }
+    
     invisible(x)
-	}
 }
+
+

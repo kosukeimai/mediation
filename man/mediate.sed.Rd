@@ -13,15 +13,17 @@ mediate.sed(outcome, mediator, treat, data,
 }
 
 \arguments{
- \item{outcome}{ name of the outcome variable in 'data'. The variable must be binary (factor or numeric 0/1) if 'SI' is FALSE.}
- \item{mediator}{ name of the mediator in 'data'. The variable must be binary (factor or numeric 0/1) if 'SI' is FALSE and discrete if TRUE.}
- \item{treat}{ name of the treatment variable in 'data'. Must be binary (factor or numeric 0/1).}
+
+\item{outcome}{ name of the outcome variable in 'data'. The variable must be binary (factor or numeric 0/1) if 'SI' is FALSE.}
+\item{mediator}{ name of the mediator in 'data'. The variable must be binary (factor or numeric 0/1) if 'SI' is FALSE and discrete if TRUE.}
+\item{treat}{ name of the treatment variable in 'data'. Must be binary (factor or numeric 0/1).}
 \item{data}{ a data frame containing all the above variables.}
- \item{SI}{ whether the sequential ignorability assumption is made.}
+\item{SI}{ whether the sequential ignorability assumption is made.}
 \item{sims}{ number of bootstrap simulations. Only relevant when 'SI' is TRUE.}
 \item{conf.level}{ level of the returned two-sided confidence intervals. Only relevant when 'SI' is TRUE.}
- \item{boot}{ a logical value. if 'FALSE' a large sample Delta method approximation is used for confidence intervals; if 'TRUE' nonparametric bootstrap will be used. Default is 'FALSE'. Only relevant if 'SI' is TRUE.}
-     }
+\item{boot}{ a logical value. if 'FALSE' a large sample Delta method approximation is used for confidence intervals; if 'TRUE' nonparametric bootstrap will be used. Default is 'FALSE'. Only relevant if 'SI' is TRUE.}
+
+}
 
 \details{
 This function calculates average causal mediation effects (ACME) for the single experiment design, where the treatment is randomized and the mediator/outcome variables are measured. The user specifies whether they want non-parametric point estimates based on the sequential ignorability (SI) assumption, or nonparametric bounds without the SI assumption.
@@ -61,9 +63,10 @@ Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}}
 
 # Example 1: Bounds without SI assumption
 
-data(boundsdataSED)
+data(boundsdata)
 
-bound1 <- mediate.sed("out", "med", "ttt", designSED, SI=FALSE)
+data.SED <- subset(boundsdata, manip == 0)
+bound1 <- mediate.sed("out", "med", "ttt", data.SED, SI=FALSE)
 summary(bound1)
 
 # Example 2: Nonparametric estimate of ACME under SI assumption
