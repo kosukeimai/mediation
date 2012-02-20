@@ -41,6 +41,8 @@ The \code{summary} function can be used to obtain a table of the results.
 \item{conf.level}{the confidence level used. }
 \item{sims}{number of bootstrap simulations used for confidence interval calculation.}
 \item{nobs}{number of observations used.} 
+\item{design}{ indicates the design. Equals either "SED.NP.SI" or "SED.NP.NOSI".}
+
 }
 
 \references{

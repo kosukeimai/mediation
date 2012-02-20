@@ -10,14 +10,14 @@ The \code{framing} data contains 265 rows and 10 columns of data from a framing 
 
 	\describe{
 	\item{immigr}{ a four-point scale measuring subjects' attitudes toward increased immigration.}
-	\item{english}{ }
-	\item{cong_mesg}{ }
-	\item{anti_info}{ }
+	\item{english}{ a four-point scale indicating whether subjects favor or oppose a low making English the official language of the U.S.}
+	\item{cong_mesg}{ whether subjects requested sending an anti-immigration message to Congress on their behalf.}
+	\item{anti_info}{ whether subjects wanted to receive information from anti-immigration organizations.}
 	\item{tone}{ 1st treatment; whether the news story is framed positively or negatively.}
 	\item{eth}{ 2nd treatment; whether the news story features a Latino or European immigrant.}
 	\item{treat}{ product of the two treatment variables. In the original study the authors only find this cell to be significant.}
-	\item{emo}{ measure of subjects' anxiety during the experiment. A numeric scale ranging between 3 and 12.}
-	\item{anx}{ }
+	\item{emo}{ measure of subjects' negative feeling during the experiment. A numeric scale ranging between 3 and 12.}
+	\item{anx}{ a four-point scale measuring subjects' anxiety about increased immigration.}
 	\item{p_harm}{ subjects' perceived harm caused by increased immigration. A numeric scale between 2 and 8.}
 	\item{age}{ subjects' age.}
 	\item{educ}{ subjects' highest educational attainments.}

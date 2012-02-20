@@ -25,41 +25,42 @@ mediate.ced(outcome, med.1, med.2, treat, encourage, data,
 
 }
 
-\details{This function calculates causal mediation effects (CME) for the crossover encouragement design described in Imai, Tingley, Yamamoto JRSS-A.
-The design has two stages. In the first experiment the treatment is randomized and the mediator/outcome variables measured.
-In the second the treatment is set to value opposite of first period and a randomly selected group of units receives encouragement to take on the mediator observed value in period 1.
-The function requires the outcome, both mediator, treatment, and manipulation variables to be binary (0/1).
+\details{
+This function estimates the average indirect effects for the pliable units under the crossover encouragement design. The design has two stages. In the first stage the treatment is randomized and the mediator and outcome variables are measured. In the second the treatment is set to the value opposite of first period and a randomly selected group of units receives encouragement to take on the mediator opposite to the values observed in the first stage.  See Imai, Tingley and Yamamoto (2012) for a full description.
+
+The confidence intervals are calculated via the nonparametric bootstrap.
 }
 
 
-\value{\code{mediate.ced} returns an object of class "\code{mediate.design}", a list that contains the components listed below.
+\value{
+\code{mediate.ced} returns an object of class "\code{mediate.design}", a list that contains the components listed below.
 
-The function \code{summary} (i.e., \code{summary.mediate.design}) can be used to obtain a table of the results.
+The \code{summary} function can be used to obtain a table of the results.
 
-\item{d0, d1}{point estimates or lower/upper bounds for causal mediation effects under the control and treatment conditions.}
-\item{d0.ci, d1.ci}{confidence intervals for average causal mediation effects. The confidence level is set at the value specified in 'conf.level'.}
-\item{manip}{indicator for whether unit received experimental manipulation of mediator.}
-\item{nobs}{number of observations used.}
-\item{conf.level}{confidence level used for two-sided confidence intervals.}
-\item{sims}{number of bootstrap simulations used for confidence interval calculation.}
-\item{design}{"CED"}
+\item{d0, d1}{point estimates of the average indirect effects under the control and treatment conditions.}
+\item{d0.ci, d1.ci}{confidence intervals for the effects. The confidence level is set at the value specified in 'conf.level'.}
+\item{conf.level}{ confidence level used.}
+\item{sims}{ number of bootstrap simulations.}
+\item{nobs}{ number of observations used.}
+\item{design}{ indicates the design. Always equals "CED".}
 
 }
 
 \references{
+
 Imai, K., Tingley, D. and Yamamoto, T. (2012) Experimental Designs for Identifying Causal Mechanisms. Journal of the Royal Statistical Society, Series A (Statistics in Society)"
 
 Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2011). Unpacking the Black Box of Causality: Learning about Causal Mechanisms from Experimental and Observational Studies, American Political Science Review, Vol. 105, No. 4 (November), pp. 765-789.
-
-Imai, K., Keele, L. and Tingley, D. (2010) A General Approach to Causal Mediation Analysis, Psychological Methods, Vol. 15, No. 4 (December), pp. 309-334.
 
 Imai, K., Keele, L. and Yamamoto, T. (2010) Identification, Inference, and Sensitivity Analysis for Causal Mediation Effects, Statistical Science, Vol. 25, No. 1 (February), pp. 51-71.
 
 Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) Causal Mediation Analysis Using R" in Advances in Social Science Research Using R, ed. H. D. Vinod New York: Springer.}
 
-\author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu}, Teppei Yamamoto, MIT, \email{teppei@mit.edu}, }
+\author{
+Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu}, 
+Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}}
 
-\seealso{\code{\link{mediate}}, \code{\link{medsens}}, \code{\link{plot.mediate}}, \code{\link{summary.mediate}}, \code{\link{mediations}} }
+\seealso{\code{\link{mediate}}, \code{\link{summary.mediate.design}}}
 
 \examples{ 
 

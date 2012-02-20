@@ -150,7 +150,6 @@ mediate.ced <- function(outcome, med.1, med.2, treat, encourage, data,
     d.p.t.ci <- quantile(d.p.t, c(low,high), na.rm=TRUE)
 
     out <- list(d0 = d.p.c.mu, d1 = d.p.t.mu, d0.ci = d.p.c.ci, d1.ci = d.p.t.ci, 
-                d0.sims = d.p.c, d1.sims = d.p.t, 
                 nobs = n, sims = sims, conf.level = conf.level, design = "CED")
 
     class(out) <- "mediate.design"
@@ -327,8 +326,8 @@ boot.pd <- function(outcome, mediator, treatment, manipulated,
     high <- 1 - low
     acme.mu <- median(acme, na.rm=TRUE)
     acme.ci <- quantile(acme, c(low,high), na.rm=TRUE)
-    out <- list(d = acme.mu,  d.ci = acme.ci, d.sims = acme, nobs = n,
-                conf.level = conf.level, sims = sims, design = "PD.NINT")
+    out <- list(d0 = acme.mu, d1 = acme.mu, d0.ci = acme.ci, d1.ci = acme.ci,
+                nobs = n, conf.level = conf.level, sims = sims, design = "PD.NINT")
     class(out) <- "mediate.design"
     out
 
@@ -581,8 +580,8 @@ print.summary.mediate.design <- function(x, ...){
     } else if(x$design=="PD.NINT"){
             clp <- 100 * x$conf.level
             cat("Parallel Design (with No Interaction Assumption) \n\n")
-            cat("Mediation Effect: ", format(x$d, digits=4), clp, "% CI ",
-                format(x$d.ci, digits=4), "\n")
+            cat("Mediation Effect: ", format(x$d0, digits=4), clp, "% CI ",
+                format(x$d0.ci, digits=4), "\n")
             cat("Sample Size Used: ", x$nobs,"\n\n")
             
     } else if(x$design=="PED"){

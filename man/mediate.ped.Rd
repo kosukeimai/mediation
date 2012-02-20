@@ -3,7 +3,7 @@
 \title{Computing Bounds on Average Causal Mediation Effects under the Parallel Encouragement Design} 
 
 \description{
-'mediate.ped' computes the nonparametric bounds on average causal mediation effects for the parallel encouragement design. See Imai, Tingley, and Yamamoto JRSS-A for additional details.
+'mediate.ped' computes the nonparametric bounds on the average causal mediation effects for the parallel encouragement design.
 } 
 
 \usage{
@@ -22,22 +22,22 @@ mediate.ped(outcome, mediator, treat, encourage, data)
 
 }
 
-\details{This function calculates causal mediation effects (CME) for the parallel encouragment design described in Imai, Tingley, Yamamoto JRSS-A.
-In the design two experimental arms are used. In one the treatment is randomized and the mediator and outcome variables are measured. In the second design the treatment is randomized, and the other the mediator is encouraged either up, down, or no encouragement. The mediator and outcome variables are measured.
+\details{
+This function calculates average causal mediation effects (ACME) for the parallel encouragment design.
+In the design two experimental arms are used. In one the treatment is randomized and the mediator and outcome variables are measured. In the second arm the treatment is randomized, the mediator is randomly encouraged either up or down, and the outcome variable is measured.
 
-The function requires the outcome, mediator, and treatment to be binary (0/1). The value of the manipulation indicator must be trichotomous (-1 (discouragement)/0 (no encouragement) /1 (encouragement)) in the parallel encouragement design.
+Two type of causal quantities are analyzed: the population ACME and the complier ACME. The latter refers to the subpopulation of the units for whom the encouragement has its intended effect, and the width of its bounds are tighter than that of the population ACME. See Imai, Tingley and Yamamoto (2012) for details.
 }
 
 
-\value{\code{mediate.ped} returns an object of class "\code{mediate.design}", a list that contains the components listed below.
+\value{\code{mediate.pd} returns an object of class "\code{mediate.design}", a list that contains the components listed below.
 
 The function \code{summary} (i.e., \code{summary.mediate.design}) can be used to obtain a table of the results.
 
-\item{BE.c, BE.t}{lower/upper bounds for population causal mediation effects under the control and treatment conditions for the parallel encouragement experiment design.}
-\item{BET.c, BET.t}{lower/upper bounds for complier causal mediation effects under the control and treatment conditions for the parallel encouragement experiment design.}
-\item{manip}{indicator for encouragement status of mediator.}
-\item{nobs}{number of observations used.}
-\item{design}{"PED"}
+\item{d0, d1}{ estimated nonparametric sharp bounds for the population ACME under the control and treatment conditions.}
+\item{d0.p, d1.p}{ estimated nonparametric sharp bounds for the complier ACME under the control and treatment conditions.}
+\item{nobs}{ number of observations used.}
+\item{design}{ indicates the design. Always equals "PED".}
 }
 
 \references{

@@ -1,14 +1,39 @@
 \name{boundsdata}
 \docType{data}
 \alias{boundsdata}
-\title{Data for bounds examples}
+\title{Example Data for the Design Functions}
 \description{
-A subsample of the data used in Imai, Tingley, Yamamoto, JRSS-A.
+A random subsample of the simulated data used in Imai, Tingley, Yamamoto (2012). The data contains 1000 rows and 8 rows with no missing values.
 }
-\usage{data}
-\format{A data matrix containing no missing values and is provided only for illustrative purposes.}
-\source{Replication data for Imai, Tingley, Yamamoto, JRSS-A.}
-\references{
+\usage{boundsdata}
+
+\format{A data frame containing the following variables, which are interpreted as results from a hypothetical randomized trial. See the source for a full description.
+
+    \describe{
+    \item{out}{ the binary outcome variable under the parallel design.}
+    \item{out.enc}{ the binary outcome variable under the parallel encouragement design.}
+    \item{med}{ the binary mediator under the parallel design.}
+    \item{med.enc}{ the binary mediator under the parallel encouragement design.}
+    \item{ttt}{ the binary treatment variable.}
+    \item{manip}{ the design indicator, or the variable indicating whether the mediator is manipulated under the parallel design.}
+    \item{enc}{ the trichotomous encouragement variable under the parallel encouragement design. Equals 0 if subject received no encouragement; 1 if encouraged for the mediator value of 1; and -1 if encouraged for the mediator value of 0.}
+    }
+
+}
+
+\details{
+    Conditioning on 'manip' = 0 will simulate a randomized trial under the single experiment design, where 'out' and 'med' equal observed outcome and mediator values, respectively.
+    
+    Unconditionally, using 'out', 'med', 'ttt' and 'manip' will simulate an experiment under the parallel design.
+    
+    The 'out.enc' and 'med.enc' variables represent the outcome and mediator values observed when subjects received the encouragement indicated in 'enc'. Therefore, using 'out.enc', 'med.enc', 'ttt' and 'enc' will simulate an experiment under the parallel encouragement design.
+    
+    Note that all the observed responses are generated from an underlying distribution of potential outcomes and mediators (not shown in this dataset) satisfying the assumptions described in Imai, Tingley and Yamamoto (2012). The full simulation code is available as a companion replication archive for the article.
+}
+
+\source{
+
 Imai, K., Tingley, D. and Yamamoto, T. (2012) Experimental Designs for Identifying Causal Mechanisms. Journal of the Royal Statistical Society, Series A (Statistics in Society)
+
 }
 \keyword{datasets}

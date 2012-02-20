@@ -4,6 +4,7 @@
 \description{ 
 'mediate' is used to estimate various quantities for causal mediation analysis, including average causal mediation effects (indirect effect), average direct effects, proportions mediated, and total effect.
 } 
+
 \usage{
 
 mediate(model.m, model.y, sims = 1000, boot = FALSE, 
@@ -38,11 +39,11 @@ the 2.5 and 97.5 percentiles of the simulated quantities.}
 }
 
 \details{This is the workhorse function for estimating causal mediation effects for a variety of data types. The average causal mediation effect (ACME) represents the expected difference in the potential outcome when the mediator took the value that would realize under the treatment condition as opposed to the control condition, while the treatment status itself is held constant. That is,
-\deqn{\delta(t) \ = \ E\{Y(t, M(t_1)) - Y(t, M(t_0))\},}{%
-    \delta(t) = E[Y(t, M(t1)) - Y(t, M(t0))],}
+\deqn{\delta(t) \ = \ E\{Y(t, M(t_1)) - Y(t, M(t_0))\},}
+      {d(t) = E[Y(t, M(t1)) - Y(t, M(t0))],}
 where \eqn{t, t_1, t_0}{t, t1, t0} are particular values of the treatment \eqn{T} such that \eqn{t_1 \neq t_0}{t1 != t0}, \eqn{M(t)} is the potential mediator, and \eqn{Y(t,m)} is the potential outcome variable. The average direct effect (ADE) is defined similarly as,
-\deqn{\zeta(t) \ = \ E\{Y(t_1, M(t)) - Y(t_0, M(t))\},}{%
-    \zeta(t) = E[Y(t1, M(t)) - Y(t0, M(t))],}
+\deqn{\zeta(t) \ = \ E\{Y(t_1, M(t)) - Y(t_0, M(t))\},}
+      {z(t) = E[Y(t1, M(t)) - Y(t0, M(t))],}
 which represents the expected difference in the potential outcome when the treatment is changed but the mediator is held constant at the value that would realize if the treatment equals \eqn{t}. The two quantities on average add up to the total effect of the treatment on the outcome, \eqn{\tau}. See the references for more details.
 
 When both the mediator model ('model.m') and outcome model ('model.y') are normal linear regressions, the results will be identical to the usual LSEM method by Baron and Kenny (1986).  The function can, however, accommodate other data types including binary, ordered and count outcomes and mediators as well as censored outcomes.  Variables can also be modeled nonparametrically, semiparametrically, or using quantile regressions.
