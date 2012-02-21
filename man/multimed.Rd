@@ -55,7 +55,7 @@ Note that rows with missing values will be omitted from the calculation of the r
 
 \references{
 
-Imai, K. and Yamamoto, T. (2012) Identification and Sensitivity Analysis for Multiple Causal Mechanisms: Revisiting Evidence from Framing Experiments, typescript.
+Imai, K. and Yamamoto, T. (2012) Identification and Sensitivity Analysis for Multiple Causal Mechanisms: Revisiting Evidence from Framing Experiments, Unpublished manuscript.
 
 }
 

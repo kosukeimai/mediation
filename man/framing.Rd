@@ -10,7 +10,7 @@ The \code{framing} data contains 265 rows and 10 columns of data from a framing 
 
 	\describe{
 	\item{immigr}{ a four-point scale measuring subjects' attitudes toward increased immigration.}
-	\item{english}{ a four-point scale indicating whether subjects favor or oppose a low making English the official language of the U.S.}
+	\item{english}{ a four-point scale indicating whether subjects favor or oppose a law making English the official language of the U.S.}
 	\item{cong_mesg}{ whether subjects requested sending an anti-immigration message to Congress on their behalf.}
 	\item{anti_info}{ whether subjects wanted to receive information from anti-immigration organizations.}
 	\item{tone}{ 1st treatment; whether the news story is framed positively or negatively.}

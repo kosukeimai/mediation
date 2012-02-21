@@ -25,7 +25,7 @@ mediations(datasets, treatment, mediators, outcome,
 \item{UpperY}{ a numeric value indicating the upper bound for the tobit outcome model. See \code{tobit}.}
 \item{interaction}{ a logical value indicating whether the treatment and mediator variables should be interacted. This will apply to applications of \code{\link{mediate}} to all the treatment/mediator/outcome combinations.}
 \item{conf.level}{ confidence level used in each application of the \code{\link{mediate}} function.}
-\item{sims}{ an integer indicating the desired number of simulations to run \code{\link{mediate}} for. This will apply to all applications of 'mediate' to all the treatment/mediator/outcome combinations.}
+\item{sims}{ an integer indicating the desired number of simulations for inference. This will apply to all applications of 'mediate' to all the treatment/mediator/outcome combinations.}
 \item{boot}{ a logical value, indicating whether or not nonparametric bootstrap should be used in each \code{\link{mediate}} application.}
 \item{weights}{a single valued vector of a character string indicating a weight variable to be used in all model fitting.}
 \item{...}{ other arguments passed to \code{\link{mediate}}, such as 'robustSE', 'dropobs', etc.}
@@ -54,7 +54,8 @@ Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}}
 # Hypothetical example
 
 datasets <- list(T1 = T1, T2 = T2)
-    # List of data frames corresponding to the two different treatment variables "T1vsCont" and "T2vsCont". 
+    # List of data frames corresponding to the two different treatment variables 
+    #"T1vsCont" and "T2vsCont". 
     # Each data set has its respective treatment variable.
     
 mediators <- c("M1", "M2") 
@@ -64,7 +65,8 @@ outcome <- c("Ycont1","Ycont2")
     # Vector of outcome variable names, again all included in each data frame.
     
 treatment <- c("T1vsCont", "T2vsCont")
-    # Vector of treatment variables names; must begin with identical strings with dataset names in 'datasets'.
+    # Vector of treatment variables names; must begin with identical strings with dataset 
+    # names in 'datasets'.
     
 covariates <- c("X1 + X2")
     # Set of covariates (in each data set), entered using the standard model formula format.
@@ -72,7 +74,8 @@ covariates <- c("X1 + X2")
 x <- mediations(datasets, treatment, mediators, outcome, covariates,
     families=c("gaussian","gaussian"), interaction=FALSE, 
     conf.level=.90, sims=50) 
-    # Runs 'mediate' iteratively for each variable combinations, with 'lm' on both mediator and outcome model.
+    # Runs 'mediate' iteratively for each variable combinations, with 'lm' on both mediator 
+    # and outcome model.
 
 summary(x)  # tabular summary of results for all model combinations
 plot(x)  # graphical summary of results for all model combinations at once

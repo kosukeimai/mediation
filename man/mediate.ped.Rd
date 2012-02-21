@@ -23,10 +23,10 @@ mediate.ped(outcome, mediator, treat, encourage, data)
 }
 
 \details{
-This function calculates average causal mediation effects (ACME) for the parallel encouragment design.
+This function calculates average causal mediation effects (ACME) for the parallel encouragement design.
 In the design two experimental arms are used. In one the treatment is randomized and the mediator and outcome variables are measured. In the second arm the treatment is randomized, the mediator is randomly encouraged either up or down, and the outcome variable is measured.
 
-Two type of causal quantities are analyzed: the population ACME and the complier ACME. The latter refers to the subpopulation of the units for whom the encouragement has its intended effect, and the width of its bounds are tighter than that of the population ACME. See Imai, Tingley and Yamamoto (2012) for details.
+Two type of causal quantities are estimated: the population ACME and the complier ACME. The latter refers to the subpopulation of the units for whom the encouragement has its intended effect, and the width of its bounds are tighter than that of the population ACME. See Imai, Tingley and Yamamoto (2012) for details.
 }
 
 

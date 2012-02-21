@@ -26,9 +26,7 @@ mediate.ced(outcome, med.1, med.2, treat, encourage, data,
 }
 
 \details{
-This function estimates the average indirect effects for the pliable units under the crossover encouragement design. The design has two stages. In the first stage the treatment is randomized and the mediator and outcome variables are measured. In the second the treatment is set to the value opposite of first period and a randomly selected group of units receives encouragement to take on the mediator opposite to the values observed in the first stage.  See Imai, Tingley and Yamamoto (2012) for a full description.
-
-The confidence intervals are calculated via the nonparametric bootstrap.
+This function estimates the average indirect effects for the pliable units under the crossover encouragement design. The design has two stages. In the first stage the treatment is randomized and the mediator and outcome variables are measured. In the second the treatment is set to the value opposite of first period and a randomly selected group of units receives encouragement to take on the mediator opposite to the values observed in the first stage.  See Imai, Tingley and Yamamoto (2012) for a full description. The confidence intervals are calculated via the nonparametric bootstrap.
 }
 
 
