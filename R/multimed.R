@@ -40,9 +40,12 @@ multimed <- function(outcome, med.main, med.alt, treat, covariates = NULL,
     ACME.1.lo <- ACME.0.lo <- ACME.1.up <- ACME.0.up <- 
     ACME.ave.lo <- ACME.ave.up <- matrix(NA, nrow=length(sigma), ncol=sims)
     tau <- rep(NA, length = sims)
-    for(b in 1:sims){
+    for(b in 1:(sims+1)){
         # Resample
         data.b <- data[sample(1:nrow(data), nrow(data), repl=TRUE),]
+        if(b == sims + 1){
+        	data.b <- data
+        }
 
         # Fit models
         model.y <- lm(f.y, data=data.b)
@@ -54,9 +57,6 @@ multimed <- function(outcome, med.main, med.alt, treat, covariates = NULL,
         kappa <- coef(model.y)[paste(treat, med.main, sep=":")]
         xi3 <- coef(model.y)[med.alt]
         mu3 <- coef(model.y)[paste(treat, med.alt, sep=":")]
-
-        # Total effect
-        tau[b] <- coef(model.ytot)[treat]
 
         # E(M|T=t)
         mf.m1 <- mf.m0 <- mf.m <- model.frame(model.m)
@@ -78,14 +78,25 @@ multimed <- function(outcome, med.main, med.alt, treat, covariates = NULL,
 
         ## Bounds
         # ACME
-        ACME.1.lo[,b] <- tau[b] - beta3 - kappa*EM.0 - sigma*sqrt(VM.0) - (xi3 + mu3)*EW.1 + xi3*EW.0
-        ACME.0.lo[,b] <- tau[b] - beta3 - kappa*EM.1 - sigma*sqrt(VM.1) - (xi3 + mu3)*EW.1 + xi3*EW.0
-        ACME.1.up[,b] <- tau[b] - beta3 - kappa*EM.0 + sigma*sqrt(VM.0) - (xi3 + mu3)*EW.1 + xi3*EW.0
-        ACME.0.up[,b] <- tau[b] - beta3 - kappa*EM.1 + sigma*sqrt(VM.1) - (xi3 + mu3)*EW.1 + xi3*EW.0
-        
-        P <- mean(data.b[,treat])
-        ACME.ave.lo[,b] <- P * ACME.1.lo[,b] + (1-P) * ACME.0.lo[,b]
-        ACME.ave.up[,b] <- P * ACME.1.up[,b] + (1-P) * ACME.0.up[,b]
+        if(b == sims + 1){
+        	tau.o <- coef(model.ytot)[treat]
+	        ACME.1.lo.o <- tau.o - beta3 - kappa*EM.0 - sigma*sqrt(VM.0) - (xi3 + mu3)*EW.1 + xi3*EW.0
+    	    ACME.0.lo.o <- tau.o - beta3 - kappa*EM.1 - sigma*sqrt(VM.1) - (xi3 + mu3)*EW.1 + xi3*EW.0
+        	ACME.1.up.o <- tau.o - beta3 - kappa*EM.0 + sigma*sqrt(VM.0) - (xi3 + mu3)*EW.1 + xi3*EW.0
+        	ACME.0.up.o <- tau.o - beta3 - kappa*EM.1 + sigma*sqrt(VM.1) - (xi3 + mu3)*EW.1 + xi3*EW.0
+   	        P <- mean(data.b[,treat])
+    	    ACME.ave.lo.o <- P * ACME.1.lo.o + (1-P) * ACME.0.lo.o
+        	ACME.ave.up.o <- P * ACME.1.up.o + (1-P) * ACME.0.up.o
+        } else {
+    	    tau[b] <- coef(model.ytot)[treat]
+	        ACME.1.lo[,b] <- tau[b] - beta3 - kappa*EM.0 - sigma*sqrt(VM.0) - (xi3 + mu3)*EW.1 + xi3*EW.0
+    	    ACME.0.lo[,b] <- tau[b] - beta3 - kappa*EM.1 - sigma*sqrt(VM.1) - (xi3 + mu3)*EW.1 + xi3*EW.0
+        	ACME.1.up[,b] <- tau[b] - beta3 - kappa*EM.0 + sigma*sqrt(VM.0) - (xi3 + mu3)*EW.1 + xi3*EW.0
+        	ACME.0.up[,b] <- tau[b] - beta3 - kappa*EM.1 + sigma*sqrt(VM.1) - (xi3 + mu3)*EW.1 + xi3*EW.0
+	        P <- mean(data.b[,treat])
+    	    ACME.ave.lo[,b] <- P * ACME.1.lo[,b] + (1-P) * ACME.0.lo[,b]
+        	ACME.ave.up[,b] <- P * ACME.1.up[,b] + (1-P) * ACME.0.up[,b]
+        }
     }
 
     ACME.ave.lo.var <- apply(ACME.ave.lo, 1, var)
@@ -94,29 +105,21 @@ multimed <- function(outcome, med.main, med.alt, treat, covariates = NULL,
     ACME.ave.up.var <- apply(ACME.ave.up, 1, var)
     ACME.1.up.var <- apply(ACME.1.up, 1, var)
     ACME.0.up.var <- apply(ACME.0.up, 1, var)
-    
-    ACME.ave.lo <- apply(ACME.ave.lo, 1, median)
-    ACME.1.lo <- apply(ACME.1.lo, 1, median)
-    ACME.0.lo <- apply(ACME.0.lo, 1, median)
-    ACME.ave.up <- apply(ACME.ave.up, 1, median)
-    ACME.1.up <- apply(ACME.1.up, 1, median)
-    ACME.0.up <- apply(ACME.0.up, 1, median)
 
     ACME.ave.CI <- ACME.1.CI <- ACME.0.CI <- matrix(NA, nrow=2, ncol=length(sigma))
     for(i in 1:length(sigma)){
-        ACME.ave.CI[,i] <- IMCI(ACME.ave.up[i], ACME.ave.lo[i], 
+        ACME.ave.CI[,i] <- IMCI(ACME.ave.up.o[i], ACME.ave.lo.o[i], 
                                 ACME.ave.up.var[i], ACME.ave.lo.var[i], conf = conf.level)$ci
-        ACME.1.CI[,i] <- IMCI(ACME.1.up[i], ACME.1.lo[i], 
+        ACME.1.CI[,i] <- IMCI(ACME.1.up.o[i], ACME.1.lo.o[i], 
                               ACME.1.up.var[i], ACME.1.lo.var[i], conf = conf.level)$ci
-        ACME.0.CI[,i] <- IMCI(ACME.0.up[i], ACME.0.lo[i], 
+        ACME.0.CI[,i] <- IMCI(ACME.0.up.o[i], ACME.0.lo.o[i], 
                               ACME.0.up.var[i], ACME.0.lo.var[i], conf = conf.level)$ci
     }
     tau.CI <- quantile(tau, probs = c((1-conf.level)/2, (1+conf.level)/2), na.rm = TRUE)
-    tau <- median(tau, na.rm = TRUE)
-    out <- list(sigma = sigma, R2tilde = R2.t, R2star = R2.s, tau = tau, tau.ci = tau.CI,
+    out <- list(sigma = sigma, R2tilde = R2.t, R2star = R2.s, tau = tau.o, tau.ci = tau.CI,
          d1.ci = ACME.1.CI, d0.ci = ACME.0.CI, d.ave.ci = ACME.ave.CI,
-         d1.lb = ACME.1.lo, d0.lb = ACME.0.lo, d.ave.lb = ACME.ave.lo,
-         d1.ub = ACME.1.up, d0.ub = ACME.0.up, d.ave.ub = ACME.ave.up)
+         d1.lb = ACME.1.lo.o, d0.lb = ACME.0.lo.o, d.ave.lb = ACME.ave.lo.o,
+         d1.ub = ACME.1.up.o, d0.ub = ACME.0.up.o, d.ave.ub = ACME.ave.up.o)
     class(out) <- "multimed"
     out
 }

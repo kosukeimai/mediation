@@ -520,7 +520,23 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
             zeta.0 <- t(as.matrix(apply(effects.tmp[,,4], 2, weighted.mean, w=weights)))
             rm(effects.tmp)
             tau <- (zeta.1 + delta.0 + zeta.0 + delta.1)/2
+	        nu.0 <- delta.0/tau
+    	    nu.1 <- delta.1/tau
+    	    delta.avg <- (delta.1 + delta.0)/2
+    	    zeta.avg <- (zeta.1 + zeta.0)/2
+    	    nu.avg <- (nu.1 + nu.0)/2
             
+	        d0 <- mean(delta.0)
+    	    d1 <- mean(delta.1)
+	        z1 <- mean(zeta.1)
+	        z0 <- mean(zeta.0)
+	        tau.coef <- mean(tau)
+	        n0 <- median(nu.0)
+    	    n1 <- median(nu.1)
+    	    d.avg <- (d0 + d1)/2
+    	    z.avg <- (z0 + z1)/2
+    	    n.avg <- (n0 + n1)/2
+        
         ########################################################################
         ## Case I-2: Nonparametric Bootstrap
         ########################################################################
@@ -537,8 +553,12 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
             tau <- matrix(NA, sims, 1)
             
             # Bootstrap loop begins
-            for(b in 1:sims){
+            for(b in 1:(sims+1)){
                 index <- sample(1:n, n, replace = TRUE)
+                
+                if(b == sims+1){  # in the final run, use the original data
+                	index <- 1:n
+                }
                 
                 if(isSurvreg.m){
                 	if(ncol(model.m$y) > 2){
@@ -793,45 +813,50 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                 }
                 
                 # Compute all QoIs
-                delta.1[b] <- weighted.mean(effects.tmp[,1], weights)
-                delta.0[b] <- weighted.mean(effects.tmp[,2], weights)
-                zeta.1[b] <- weighted.mean(effects.tmp[,3], weights)
-                zeta.0[b] <- weighted.mean(effects.tmp[,4], weights)
-                tau[b] <- (zeta.1[b] + zeta.0[b] + delta.0[b] + delta.1[b])/2
-                
+                if(b == sims+1){
+	                d1 <- weighted.mean(effects.tmp[,1], weights)
+    	            d0 <- weighted.mean(effects.tmp[,2], weights)
+        	        z1 <- weighted.mean(effects.tmp[,3], weights)
+            	    z0 <- weighted.mean(effects.tmp[,4], weights)
+                } else { 
+	                delta.1[b] <- weighted.mean(effects.tmp[,1], weights)
+    	            delta.0[b] <- weighted.mean(effects.tmp[,2], weights)
+        	        zeta.1[b] <- weighted.mean(effects.tmp[,3], weights)
+            	    zeta.0[b] <- weighted.mean(effects.tmp[,4], weights)
+                }
             }  # bootstrap loop ends
+            
+            tau.coef <- (d1 + d0 + z1 + z0)/2
+            n0 <- d0/tau.coef
+            n1 <- d1/tau.coef
+            d.avg <- (d1 + d0)/2
+            z.avg <- (z1 + z0)/2
+            n.avg <- (n0 + n1)/2
+            
+            tau <- (delta.1 + delta.0 + zeta.1 + zeta.0)/2
+            nu.0 <- delta.0/tau
+            nu.1 <- delta.1/tau
+            delta.avg <- (delta.0 + delta.1)/2
+            zeta.avg <- (zeta.0 + zeta.1)/2
+            nu.avg <- (nu.0 + nu.1)/2
+            
         }  # nonpara boot branch ends
         
         ########################################################################
         ## Compute Outputs and Put Them Together
         ########################################################################
-        d0 <- mean(delta.0)
-        d1 <- mean(delta.1)
+
         low <- (1 - conf.level)/2
         high <- 1 - low
         d0.ci <- quantile(delta.0,c(low,high), na.rm=TRUE)
         d1.ci <- quantile(delta.1,c(low,high), na.rm=TRUE)
-        tau.coef <- mean(tau)
         tau.ci <- quantile(tau,c(low,high), na.rm=TRUE)
-        z1 <- mean(zeta.1)
         z1.ci <- quantile(zeta.1,c(low,high), na.rm=TRUE)
-        z0 <- mean(zeta.0)
         z0.ci <- quantile(zeta.0,c(low,high), na.rm=TRUE)
-        nu.0 <- delta.0/tau
-        n0 <- median(nu.0)
         n0.ci <- quantile(nu.0, c(low,high), na.rm=TRUE)
-        nu.1 <- delta.1/tau
-        n1 <- median(nu.1)
-        n1.ci <- quantile(nu.1, c(low,high), na.rm=TRUE)
-        
-        delta.avg <- (delta.0 + delta.1)/2
-        zeta.avg <- (zeta.0 + zeta.1)/2
-        d.avg <- mean(delta.avg)
-        z.avg <- mean(zeta.avg)
+        n1.ci <- quantile(nu.1, c(low,high), na.rm=TRUE)        
         d.avg.ci <- quantile(delta.avg, c(low,high), na.rm=TRUE)
         z.avg.ci <- quantile(zeta.avg, c(low,high), na.rm=TRUE)
-        nu.avg <- delta.avg/tau
-        n.avg <- median(nu.avg)
         n.avg.ci <- quantile(nu.avg, c(low,high), na.rm=TRUE)
         
         # Detect whether models include T-M interaction
@@ -898,11 +923,14 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         tau <- matrix(NA, sims, n.ycat)
         
         # Bootstrap loop begins
-        for(b in 1:sims){
+        for(b in 1:(sims+1)){
             
             # Resampling Step
-            # Pull off data.star.
             index <- sample(1:n, n, replace = TRUE)
+			if(b == sims + 1){  # use original data for the last iteration
+				index <- 1:n
+			}
+			
             Call.M <- model.m$call
             Call.Y <- model.y$call
             
@@ -1125,29 +1153,33 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
             }
             
             # Compute all QoIs
-            delta.1[b,] <- apply(effects.tmp[,,1], 2, weighted.mean, w=weights)
-            delta.0[b,] <- apply(effects.tmp[,,2], 2, weighted.mean, w=weights)
-            zeta.1[b,] <- apply(effects.tmp[,,3], 2, weighted.mean, w=weights)
-            zeta.0[b,] <- apply(effects.tmp[,,4], 2, weighted.mean, w=weights)
-            tau[b,] <- (zeta.1[b,] + zeta.0[b,] + delta.0[b,] + delta.1[b,])/2
+            if(b == sims+1){
+	            d1 <- apply(effects.tmp[,,1], 2, weighted.mean, w=weights)
+    	        d0 <- apply(effects.tmp[,,2], 2, weighted.mean, w=weights)
+        	    z1 <- apply(effects.tmp[,,3], 2, weighted.mean, w=weights)
+            	z0 <- apply(effects.tmp[,,4], 2, weighted.mean, w=weights)
+            } else {
+	            delta.1[b,] <- apply(effects.tmp[,,1], 2, weighted.mean, w=weights)
+    	        delta.0[b,] <- apply(effects.tmp[,,2], 2, weighted.mean, w=weights)
+        	    zeta.1[b,] <- apply(effects.tmp[,,3], 2, weighted.mean, w=weights)
+            	zeta.0[b,] <- apply(effects.tmp[,,4], 2, weighted.mean, w=weights)
+            }
             
         }  # Bootstrap loop ends
-            
+        
+        tau.coef <- (d1 + d0 + z1 + z0)/2
+  		tau <- (zeta.1 + zeta.0 + delta.0 + delta.1)/2
+
         ########################################################################
         ## Compute Outputs and Put Them Together
         ########################################################################
-        d0 <- apply(delta.0, 2, mean)
-        d1 <- apply(delta.1, 2, mean)
         low <- (1 - conf.level)/2
         high <- 1 - low
         d0.ci <- apply(delta.0, 2, quantile, c(low,high))
         d1.ci <- apply(delta.1, 2, quantile, c(low,high))
-        tau.coef <- apply(tau, 2, mean)
         tau.ci <- apply(tau, 2, quantile, c(low,high))
-        z1 <- apply(zeta.1, 2, mean)
-        z1.ci <- apply(zeta.1,2, quantile, c(low,high))
-        z0 <- apply(zeta.0,2, mean)
-        z0.ci <- apply(zeta.0,2, quantile, c(low,high))
+        z1.ci <- apply(zeta.1, 2, quantile, c(low,high))
+        z0.ci <- apply(zeta.0, 2, quantile, c(low,high))
         
         # Detect whether models include T-M interaction
         INT <- paste(treat,mediator,sep=":") %in% attr(model.y$terms,"term.labels") | 

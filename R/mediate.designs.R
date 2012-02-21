@@ -85,8 +85,11 @@ mediate.ced <- function(outcome, med.1, med.2, treat, encourage, data,
         d.p.c <- d.p.t <- matrix(NA, sims, 1)
         
     # Bootstrap function.
-    for(b in 1:sims){
+    for(b in 1:(sims+1)){
         index <- sample(1:n, n, replace = TRUE)
+        if(b == sims + 1){
+        	index <- 1:n
+        }
         d <- data[index,]
 
         #Atmv
@@ -128,12 +131,18 @@ mediate.ced <- function(outcome, med.1, med.2, treat, encourage, data,
 
         PH1 <- (A111-A110)*temp11 / ((A111-A110)*temp11 + (1-2*A101)*temp10)
         PH0 <- (A011-A010)*temp01 / ((A011-A010)*temp01 + (1-2*A001)*temp00)
-
-        d.p.c[b] <- (PH1/(A111-A110)) * (G1111+G1110-G1100-G1110*A111-G1101*A110) + 
+		
+		if(b == sims + 1){
+        	d.p.c.mu <- (PH1/(A111-A110)) * (G1111+G1110-G1100-G1110*A111-G1101*A110) + 
                         ((1-PH1)/(A100-A101)) * (G1010-G1001-G1000+G1000*A100+G1011*A101)
-        d.p.t[b] <- (PH0/(A010-A011)) * (G0111+G0110-G0100-G0110*A011-G0101*A010) + 
+        	d.p.t.mu <- (PH0/(A010-A011)) * (G0111+G0110-G0100-G0110*A011-G0101*A010) + 
                         ((1-PH0)/(A001-A000)) * (G0010-G0001-G0000+G0000*A000+G0011*A001)
-
+		} else {
+        	d.p.c[b] <- (PH1/(A111-A110)) * (G1111+G1110-G1100-G1110*A111-G1101*A110) + 
+                        ((1-PH1)/(A100-A101)) * (G1010-G1001-G1000+G1000*A100+G1011*A101)
+        	d.p.t[b] <- (PH0/(A010-A011)) * (G0111+G0110-G0100-G0110*A011-G0101*A010) + 
+                        ((1-PH0)/(A001-A000)) * (G0010-G0001-G0000+G0000*A000+G0011*A001)
+		}
     }#bootstraploop
 
     d.p.c[d.p.c==-Inf] <- NA
@@ -144,8 +153,6 @@ mediate.ced <- function(outcome, med.1, med.2, treat, encourage, data,
     low <- (1 - conf.level)/2
     high <- 1 - low
 
-    d.p.c.mu <- median(d.p.c, na.rm=TRUE)
-    d.p.t.mu <- median(d.p.t, na.rm=TRUE)
     d.p.c.ci <- quantile(d.p.c, c(low,high), na.rm=TRUE)
     d.p.t.ci <- quantile(d.p.t, c(low,high), na.rm=TRUE)
 
@@ -174,28 +181,31 @@ mediate.np <- function(Y, M, T, sims, conf.level, boot){
         d0.bs <- matrix(NA,sims,1)
         d1.bs <- matrix(NA,sims,1)
         # Now Let's do the Resampling
-        for(b in 1:sims){
+        for(b in 1:(sims+1)){
             resample <- sample(idx,n,replace=TRUE)
+            if(b == sims + 1){
+            	resample <- 1:n
+            }
             samp.star <- samp[resample,]
 
-            delta_0m <- matrix(NA, length(m.cat), 1)
+            delta_0m <- delta_1m <- matrix(NA, length(m.cat), 1)
             for(i in 1:length(m.cat)){
                 delta_0m[i] <- (sum(samp.star$T[samp.star$M==m.cat[i]]) * 
                                 sum(samp.star$Y[samp.star$M==m.cat[i] & samp.star$T==0])) / 
                                 (n1*(sum((1 - samp.star$T[samp.star$M==m.cat[i]]))))
-            }
-            d0.bs[b,] <- sum(delta_0m) - mean(samp.star$Y[samp.star$T==0])
-            delta_1m <- matrix(NA, length(m.cat), 1)
-            for(i in 1:length(m.cat)){
                 delta_1m[i] <- (sum((1 - samp.star$T[samp.star$M==m.cat[i]])) * 
                             sum(samp.star$Y[samp.star$M==m.cat[i] & samp.star$T==1])) / 
                             (n0*(sum(samp.star$T[samp.star$M==m.cat[i]])))
             }
-            d1.bs[b,] <- mean(samp.star$Y[samp.star$T==1]) - sum(delta_1m)
+            if(b == sims + 1){
+	            d0 <- sum(delta_0m) - mean(samp.star$Y[samp.star$T==0])
+    	        d1 <- mean(samp.star$Y[samp.star$T==1]) - sum(delta_1m)
+            } else {
+	            d0.bs[b,] <- sum(delta_0m) - mean(samp.star$Y[samp.star$T==0])
+    	        d1.bs[b,] <- mean(samp.star$Y[samp.star$T==1]) - sum(delta_1m)
+            }
         }
         
-        d0 <- mean(d0.bs, na.rm=TRUE)
-        d1 <- mean(d1.bs, na.rm=TRUE)
         low <- (1 - conf.level)/2
         high <- 1 - low
         d0.ci <- quantile(d0.bs,c(low,high), na.rm=TRUE)
@@ -203,38 +213,30 @@ mediate.np <- function(Y, M, T, sims, conf.level, boot){
 
     } else {
 
-        delta_0m <- matrix(NA, length(m.cat), 1)
+        delta_0m <- delta_1m <- matrix(NA, length(m.cat), 1)
         
         for(i in 1:length(m.cat)){
             delta_0m[i] <- (sum(samp$T[samp$M==m.cat[i]]) * 
                                 sum(samp$Y[samp$M==m.cat[i] & samp$T==0])) / 
                                 (n1*(sum((1 - samp$T[samp$M==m.cat[i]]))))
-        }
-
-        d0 <- sum(delta_0m) - mean(samp$Y[samp$T==0])
-        delta_1m <- matrix(NA, length(m.cat), 1)
-
-        for(i in 1:length(m.cat)){
             delta_1m[i] <- (sum((1 - samp$T[samp$M==m.cat[i]])) * 
                                 sum(samp$Y[samp$M==m.cat[i] & samp$T==1])) /
                                 (n0*(sum(samp$T[samp$M==m.cat[i]])))
         }
 
+        d0 <- sum(delta_0m) - mean(samp$Y[samp$T==0])
         d1 <- mean(samp$Y[samp$T==1]) - sum(delta_1m)
 
         pr.t.1 <- sum(samp$T)/n
         pr.t.0 <- sum(1-samp$T)/n
 
-        lambda.1m <- matrix(NA, length(m.cat), 1)
-        lambda.0m <- matrix(NA, length(m.cat), 1)
+        lambda.1m <- lambda.0m <- matrix(NA, length(m.cat), 1)
         for(i in 1:length(m.cat)){
             lambda.1m[i] <- (sum(length(samp$M[samp$M==m.cat[i] & samp$T==1])))/n /pr.t.1
             lambda.0m[i] <- (sum(length(samp$M[samp$M==m.cat[i] & samp$T==0])))/n /pr.t.0
         }
 
-        mu.1m <- matrix(NA, length(m.cat), 1)
-        mu.0m <- matrix(NA, length(m.cat), 1)
-
+        mu.1m <- mu.0m <- matrix(NA, length(m.cat), 1)
         for(i in 1:length(m.cat)){
             mu.1m[i] <- mean(samp$Y[samp$M==m.cat[i] & samp$T==1])
             mu.0m[i] <- mean(samp$Y[samp$M==m.cat[i] & samp$T==0])
@@ -259,7 +261,6 @@ mediate.np <- function(Y, M, T, sims, conf.level, boot){
 
         # Variance of Delta_1
         var.delta.1m <- matrix(NA, length(m.cat), 1)
-
         for(i in 1:length(m.cat)){
             var.delta.1m[i] <-  lambda.0m[i]*(((lambda.0m[i]/lambda.1m[i]) - 2) * 
                                 var(samp$Y[samp$M==m.cat[i] & samp$T==1]) + 
@@ -308,15 +309,22 @@ boot.pd <- function(outcome, mediator, treatment, manipulated,
     names(data) <- c("Y","T","M","D")
     
     acme <- matrix(NA, sims, 1)
-    for(b in 1:sims){  # bootstrap
+    for(b in 1:(sims+1)){  # bootstrap
         index <- sample(1:n, n, replace = TRUE)
+        if(b == sims + 1){
+        	index <- 1:n
+        }
         d <- data[index,]
         d0.temp <- mean(d$Y[d$T==1 & d$D==0]) - mean(d$Y[d$T==0 & d$D==0])
         weight.m1 <- sum(d$M==1 & d$D==1 )/sum(d$D==1)
         weight.m0 <- sum(d$M==0 & d$D==1 )/sum(d$D==1)
         m1 <- mean(d$Y[d$T==1 & d$M==1 & d$D==1]) - mean(d$Y[d$T==0 & d$M==1 & d$D==1])
         m0 <- mean(d$Y[d$T==1 & d$M==0 & d$D==1]) - mean(d$Y[d$T==0 & d$M==0 & d$D==1])
-        acme[b] <- weight.m1*m1 + weight.m0*m0
+        if(b == sims + 1){
+	        acme.mu <- weight.m1*m1 + weight.m0*m0
+        } else {
+	        acme[b] <- weight.m1*m1 + weight.m0*m0
+    	}
     }
 
     acme[acme==-Inf] <- NA
@@ -324,7 +332,6 @@ boot.pd <- function(outcome, mediator, treatment, manipulated,
 
     low <- (1 - conf.level)/2
     high <- 1 - low
-    acme.mu <- median(acme, na.rm=TRUE)
     acme.ci <- quantile(acme, c(low,high), na.rm=TRUE)
     out <- list(d0 = acme.mu, d1 = acme.mu, d0.ci = acme.ci, d1.ci = acme.ci,
                 nobs = n, conf.level = conf.level, sims = sims, design = "PD.NINT")
