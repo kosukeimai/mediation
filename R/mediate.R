@@ -1273,38 +1273,37 @@ print.summary.mediate <- function(x, ...){
     
     if (printone){
         # Print only one set of values if lmY/quanY/linear gamY without interaction
-        cat("Mediation Effect: ", format(x$d1, digits=4), clp, "% CI ", 
-                format(x$d1.ci, digits=4), "p-value:", format(x$d0.p, digits=4),"\n")
-        cat("Direct Effect: ", format(x$z0, digits=4), clp, "% CI ", 
-                format(x$z0.ci, digits=4), "p-value:", format(x$z0.p, digits=4), "\n")
-        cat("Total Effect: ", format(x$tau.coef, digits=4), clp, "% CI ", 
-                format(x$tau.ci, digits=4), "p-value:", format(x$tau.p, digits=4), "\n")
-        cat("Proportion of Total Effect via Mediation: ", format(x$n0, digits=4), 
-                clp, "% CI ", format(x$n0.ci, digits=4),"\n\n")
-        cat("Sample Size Used:", x$nobs,"\n\n")        
+        smat <- c(x$d1, x$d1.ci, x$d1.p)
+        smat <- rbind(smat, c(x$z0, x$z0.ci, x$z0.p))
+        smat <- rbind(smat, c(x$tau.coef, x$tau.ci, x$tau.p))
+        smat <- rbind(smat, c(x$n0, x$n0.ci, x$n0.p))
+        rownames(smat) <- c("Mediation Effect", "Direct Effect",
+        					"Total Effect", "Proportion via Mediation")       
     } else {
-        cat("Mediation Effect_0: ", format(x$d0, digits=4), clp, "% CI ", 
-                format(x$d0.ci, digits=4), "p-value:", format(x$d0.p, digits=4), "\n")
-        cat("Mediation Effect_1: ", format(x$d1, digits=4), clp, "% CI ", 
-                format(x$d1.ci, digits=4), "p-value:", format(x$d1.p, digits=4),"\n")
-        cat("Direct Effect_0: ", format(x$z0, digits=4), clp, "% CI ", 
-                format(x$z0.ci, digits=4), "p-value:", format(x$z0.p, digits=4),"\n")
-        cat("Direct Effect_1: ", format(x$z1, digits=4), clp, "% CI ", 
-                format(x$z1.ci, digits=4), "p-value:", format(x$z1.p, digits=4),"\n")
-        cat("Total Effect: ", format(x$tau.coef, digits=4), clp, "% CI ", 
-                format(x$tau.ci, digits=4), "p-value:", format(x$tau.p, digits=4), "\n")
-        cat("Proportion of Total Effect via Mediation_0: ", format(x$n0, digits=4), 
-                clp, "% CI ", format(x$n0.ci, digits=4),"p-value:", format(x$n0.p, digits=4), "\n")
-        cat("Proportion of Total Effect via Mediation_1: ", format(x$n1, digits=4), 
-                clp, "% CI ", format(x$n1.ci, digits=4), "p-value:", format(x$n1.p, digits=4), "\n\n")
-        cat("Mediation Effect (Average): ", format(x$d.avg, digits=4), clp, "% CI ", 
-                format(x$d.avg.ci, digits=4), "p-value:", format(x$d.avg.p, digits=4), "\n")
-        cat("Direct Effect (Average): ", format(x$z.avg, digits=4), clp, "% CI ", 
-                format(x$z.avg.ci, digits=4), "p-value:", format(x$z.avg.p, digits=4), "\n")
-        cat("Proportion of Total Effect via Mediation (Average): ", format(x$n.avg, digits=4), 
-                clp, "% CI ", format(x$n.avg.ci, digits=4), "p-value:", format(x$n.avg.p, digits=4), "\n\n")
-        cat("Sample Size Used:", x$nobs,"\n\n") 
-    } 
+        smat <- c(x$d0, x$d0.ci, x$d0.p)
+        smat <- rbind(smat, c(x$d1, x$d1.ci, x$d1.p))
+        smat <- rbind(smat, c(x$z0, x$z0.ci, x$z0.p))
+        smat <- rbind(smat, c(x$z1, x$z1.ci, x$z1.p))
+        smat <- rbind(smat, c(x$tau.coef, x$tau.ci, x$tau.p))
+        smat <- rbind(smat, c(x$n0, x$n0.ci, x$n0.p))
+        smat <- rbind(smat, c(x$n1, x$n1.ci, x$n1.p))
+        smat <- rbind(smat, c(x$d.avg, x$d.avg.ci, x$d.avg.p))
+        smat <- rbind(smat, c(x$z.avg, x$z.avg.ci, x$z.avg.p))
+        smat <- rbind(smat, c(x$n.avg, x$n.avg.ci, x$n.avg.p))
+        rownames(smat) <- c("Mediation Effect_0", "Mediation Effect_1",
+        					"Direct Effect_0", "Direct Effect_0",
+        					"Total Effect",
+        					"Proportion via Mediation_1",
+        					"Proportion via Mediation_0",
+        					"Mediation Effect (Ave.)",
+        					"Direct Effect (Ave.)",
+        					"Proportion via Mediation (Ave.)")
+    }
+    colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""), 
+    					paste(clp, "% CI Upper", sep=""), "p-value")
+    printCoefmat(smat, digits=3)
+    cat("\n")
+    cat("Sample Size Used:", x$nobs,"\n\n") 
     invisible(x)
 }
 
@@ -1332,20 +1331,20 @@ print.summary.mediate.order <- function(x, ...){
     }
     
     # Label Tables
-    rownames(tab.d0)[1] <- "Mediation Effect_0: "
-    rownames(tab.d0)[4] <- "p-value: "
+    rownames(tab.d0)[1] <- "Mediation Effect_0 "
+    rownames(tab.d0)[4] <- "p-value "
     colnames(tab.d0) <- out.names
-    rownames(tab.d1)[1] <- "Mediation Effect_1: "
-    rownames(tab.d1)[4] <- "p-value: "
+    rownames(tab.d1)[1] <- "Mediation Effect_1 "
+    rownames(tab.d1)[4] <- "p-value "
     colnames(tab.d1) <- out.names
-    rownames(tab.z0)[1] <- "Direct Effect_0: "
-    rownames(tab.z0)[4] <- "p-value: "
+    rownames(tab.z0)[1] <- "Direct Effect_0    "
+    rownames(tab.z0)[4] <- "p-value "
     colnames(tab.z0) <- out.names
-    rownames(tab.z1)[1] <- "Direct Effect_1: "
-    rownames(tab.z1)[4] <- "p-value: "
+    rownames(tab.z1)[1] <- "Direct Effect_1    "
+    rownames(tab.z1)[4] <- "p-value "
     colnames(tab.z1) <- out.names
-    rownames(tab.tau)[1] <- "Total Effect: "
-    rownames(tab.tau)[4] <- "p-value: "
+    rownames(tab.tau)[1] <- "Total Effect      "
+    rownames(tab.tau)[4] <- "p-value "
     colnames(tab.tau) <- out.names
     
     cat("\n Causal Mediation Analysis \n\n")
@@ -1353,15 +1352,15 @@ print.summary.mediate.order <- function(x, ...){
     if(!is.null(x$covariates)){
     	cat("(Inference Conditional on the Covariate Values Specified in `covariates')\n\n")
     }
-    print(tab.d0, digits=4)
+    print(tab.d0, digits=3)
     cat("\n")
-    print(tab.d1, digits=4)
+    print(tab.d1, digits=3)
     cat("\n")
-    print(tab.z0, digits=4)
+    print(tab.z0, digits=3)
     cat("\n")
-    print(tab.z1, digits=4)
+    print(tab.z1, digits=3)
     cat("\n")
-    print(tab.tau, digits=4)
+    print(tab.tau, digits=3)
     cat("\n\n")
     cat("Sample Size Used:", x$nobs,"\n\n") 
     invisible(x)
