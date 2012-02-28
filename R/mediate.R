@@ -848,16 +848,28 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
 
         low <- (1 - conf.level)/2
         high <- 1 - low
-        d0.ci <- quantile(delta.0,c(low,high), na.rm=TRUE)
-        d1.ci <- quantile(delta.1,c(low,high), na.rm=TRUE)
-        tau.ci <- quantile(tau,c(low,high), na.rm=TRUE)
-        z1.ci <- quantile(zeta.1,c(low,high), na.rm=TRUE)
-        z0.ci <- quantile(zeta.0,c(low,high), na.rm=TRUE)
+        d0.ci <- quantile(delta.0, c(low,high), na.rm=TRUE)
+        d1.ci <- quantile(delta.1, c(low,high), na.rm=TRUE)
+        tau.ci <- quantile(tau, c(low,high), na.rm=TRUE)
+        z1.ci <- quantile(zeta.1, c(low,high), na.rm=TRUE)
+        z0.ci <- quantile(zeta.0, c(low,high), na.rm=TRUE)
         n0.ci <- quantile(nu.0, c(low,high), na.rm=TRUE)
         n1.ci <- quantile(nu.1, c(low,high), na.rm=TRUE)        
         d.avg.ci <- quantile(delta.avg, c(low,high), na.rm=TRUE)
         z.avg.ci <- quantile(zeta.avg, c(low,high), na.rm=TRUE)
         n.avg.ci <- quantile(nu.avg, c(low,high), na.rm=TRUE)
+        
+        # p-values
+        d0.p <- 2 * sum(sign(delta.0) != sign(d0))/sims
+        d1.p <- 2 * sum(sign(delta.1) != sign(d1))/sims
+        d.avg.p <- 2 * sum(sign(delta.avg) != sign(d.avg))/sims
+        z0.p <- 2 * sum(sign(zeta.0) != sign(z0))/sims
+        z1.p <- 2 * sum(sign(zeta.1) != sign(z1))/sims
+        z.avg.p <- 2 * sum(sign(zeta.avg) != sign(z.avg))/sims
+        n0.p <- 2 * sum(sign(nu.0) != sign(n0))/sims
+        n1.p <- 2 * sum(sign(nu.1) != sign(n1))/sims
+        n.avg.p <- 2 * sum(sign(nu.avg) != sign(n.avg))/sims
+        tau.p <- 2 * sum(sign(tau) != sign(tau.coef))/sims
         
         # Detect whether models include T-M interaction
         INT <- paste(treat,mediator,sep=":") %in% attr(terms(model.y),"term.labels") | 
@@ -868,16 +880,19 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         
         if(long) {
             out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
+            			d0.p=d0.p, d1.p=d1.p,
                         d0.sims=delta.0, d1.sims=delta.1,
                         z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci, 
+            			z0.p=z0.p, z1.p=z1.p,
                         z0.sims=zeta.0, z1.sims=zeta.1, 
                         n0=n0, n1=n1, n0.ci=n0.ci, n1.ci=n1.ci,
+            			n0.p=n0.p, n1.p=n1.p,
                         n0.sims=nu.0, n1.sims=nu.1,
-                        tau.coef=tau.coef, tau.ci=tau.ci, 
+                        tau.coef=tau.coef, tau.ci=tau.ci, tau.p=tau.p,
                         tau.sims=tau,
-                        d.avg=d.avg, d.avg.ci=d.avg.ci, d.avg.sims=delta.avg,
-                        z.avg=z.avg, z.avg.ci=z.avg.ci, z.avg.sims=zeta.avg,
-                        n.avg=n.avg, n.avg.ci=n.avg.ci, n.avg.sims=nu.avg,
+                        d.avg=d.avg, d.avg.p=d.avg.p, d.avg.ci=d.avg.ci, d.avg.sims=delta.avg,
+                        z.avg=z.avg, z.avg.p=z.avg.p, z.avg.ci=z.avg.ci, z.avg.sims=zeta.avg,
+                        n.avg=n.avg, n.avg.p=n.avg.p, n.avg.ci=n.avg.ci, n.avg.sims=nu.avg,
                         boot=boot, treat=treat, mediator=mediator,
                         covariates=covariates, 
                         INT=INT, conf.level=conf.level,
@@ -886,12 +901,15 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                         nobs=n)
         } else {
             out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
+            			d0.p=d0.p, d1.p=d1.p,
                         z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci, 
+            			z0.p=d0.p, z1.p=d1.p,
                         n0=n0, n1=n1, n0.ci=n0.ci, n1.ci=n1.ci,
-                        tau.coef=tau.coef, tau.ci=tau.ci, 
-                        d.avg=d.avg, d.avg.ci=d.avg.ci,
-                        z.avg=z.avg, z.avg.ci=z.avg.ci,
-                        n.avg=n.avg, n.avg.ci=n.avg.ci,
+            			n0.p=d0.p, n1.p=d1.p,
+                        tau.coef=tau.coef, tau.ci=tau.ci, tau.p=tau.p, 
+                        d.avg=d.avg, d.avg.p=d.avg.p, d.avg.ci=d.avg.ci,
+                        z.avg=z.avg, z.avg.p=z.avg.p, z.avg.ci=z.avg.ci,
+                        n.avg=n.avg, n.avg.p=n.avg.p, n.avg.ci=n.avg.ci,
                         boot=boot, treat=treat, mediator=mediator,
                         covariates=covariates,
                         INT=INT, conf.level=conf.level,
@@ -1181,15 +1199,25 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         z1.ci <- apply(zeta.1, 2, quantile, c(low,high))
         z0.ci <- apply(zeta.0, 2, quantile, c(low,high))
         
+        # p-values
+        d0.p <- 2 * sum(sign(delta.0) != sign(d0))/sims
+        d1.p <- 2 * sum(sign(delta.1) != sign(d1))/sims
+        z0.p <- 2 * sum(sign(zeta.0) != sign(z0))/sims
+        z1.p <- 2 * sum(sign(zeta.1) != sign(z1))/sims
+        tau.p <- 2 * sum(sign(tau) != sign(tau.coef))/sims
+        
+        
         # Detect whether models include T-M interaction
         INT <- paste(treat,mediator,sep=":") %in% attr(model.y$terms,"term.labels") | 
              paste(mediator,treat,sep=":") %in% attr(model.y$terms,"term.labels") 
         
         if(long) {
             out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
+            			d0.p=d0.p, d1.p=d1.p,
                         d0.sims=delta.0, d1.sims=delta.1,
-                        tau.coef=tau.coef, tau.ci=tau.ci, 
+                        tau.coef=tau.coef, tau.ci=tau.ci, tau.p=tau.p, 
                         z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci, 
+            			z0.p=z0.p, z1.p=z1.p,
                         z1.sims=zeta.1, z0.sims=zeta.0, tau.sims=tau,
                         boot=boot, treat=treat, mediator=mediator,
                         covariates=covariates,
@@ -1198,8 +1226,10 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                         control.value=control.value, treat.value=treat.value, nobs=n)
         } else {
             out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
-                        tau.coef=tau.coef, tau.ci=tau.ci, 
+            			d0.p=d0.p, d1.p=d1.p,
+                        tau.coef=tau.coef, tau.ci=tau.ci, tau.p=tau.p, 
                         z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci,  
+            			z0.p=z0.p, z1.p=z1.p,
                         boot=boot, treat=treat, mediator=mediator,
                         covariates=covariates, 
                         INT=INT, conf.level=conf.level,
