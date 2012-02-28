@@ -1347,7 +1347,8 @@ print.summary.mediate.order <- function(x, ...){
     rownames(tab.tau)[4] <- "p-value "
     colnames(tab.tau) <- out.names
     
-    cat("\n Causal Mediation Analysis \n\n")
+    cat("\n")
+    cat("Causal Mediation Analysis \n\n")
     cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
     if(!is.null(x$covariates)){
     	cat("(Inference Conditional on the Covariate Values Specified in `covariates')\n\n")
