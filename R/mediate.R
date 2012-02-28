@@ -860,16 +860,16 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         n.avg.ci <- quantile(nu.avg, c(low,high), na.rm=TRUE)
         
         # p-values
-        d0.p <- 2 * sum(sign(delta.0) != sign(d0))/sims
-        d1.p <- 2 * sum(sign(delta.1) != sign(d1))/sims
-        d.avg.p <- 2 * sum(sign(delta.avg) != sign(d.avg))/sims
-        z0.p <- 2 * sum(sign(zeta.0) != sign(z0))/sims
-        z1.p <- 2 * sum(sign(zeta.1) != sign(z1))/sims
-        z.avg.p <- 2 * sum(sign(zeta.avg) != sign(z.avg))/sims
-        n0.p <- 2 * sum(sign(nu.0) != sign(n0))/sims
-        n1.p <- 2 * sum(sign(nu.1) != sign(n1))/sims
-        n.avg.p <- 2 * sum(sign(nu.avg) != sign(n.avg))/sims
-        tau.p <- 2 * sum(sign(tau) != sign(tau.coef))/sims
+        d0.p <- 2 * sum(sign(delta.0) != sign(median(delta.0)))/sims
+        d1.p <- 2 * sum(sign(delta.1) != sign(median(delta.1)))/sims
+        d.avg.p <- 2 * sum(sign(delta.avg) != sign(median(delta.avg)))/sims
+        z0.p <- 2 * sum(sign(zeta.0) != sign(median(zeta.0)))/sims
+        z1.p <- 2 * sum(sign(zeta.1) != sign(median(zeta.1)))/sims
+        z.avg.p <- 2 * sum(sign(zeta.avg) != sign(median(zeta.avg)))/sims
+        n0.p <- 2 * sum(sign(nu.0) != sign(median(nu.0)))/sims
+        n1.p <- 2 * sum(sign(nu.1) != sign(median(nu.1)))/sims
+        n.avg.p <- 2 * sum(sign(nu.avg) != sign(median(nu.avg)))/sims
+        tau.p <- 2 * sum(sign(tau) != sign(median(tau)))/sims
         
         # Detect whether models include T-M interaction
         INT <- paste(treat,mediator,sep=":") %in% attr(terms(model.y),"term.labels") | 
@@ -903,9 +903,9 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
             out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
             			d0.p=d0.p, d1.p=d1.p,
                         z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci, 
-            			z0.p=d0.p, z1.p=d1.p,
+            			z0.p=z0.p, z1.p=z1.p,
                         n0=n0, n1=n1, n0.ci=n0.ci, n1.ci=n1.ci,
-            			n0.p=d0.p, n1.p=d1.p,
+            			n0.p=n0.p, n1.p=n1.p,
                         tau.coef=tau.coef, tau.ci=tau.ci, tau.p=tau.p, 
                         d.avg=d.avg, d.avg.p=d.avg.p, d.avg.ci=d.avg.ci,
                         z.avg=z.avg, z.avg.p=z.avg.p, z.avg.ci=z.avg.ci,
@@ -1200,13 +1200,11 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         z0.ci <- apply(zeta.0, 2, quantile, c(low,high))
         
         # p-values
-        d0.p <- 2 * sum(sign(delta.0) != sign(d0))/sims
-        d1.p <- 2 * sum(sign(delta.1) != sign(d1))/sims
-        z0.p <- 2 * sum(sign(zeta.0) != sign(z0))/sims
-        z1.p <- 2 * sum(sign(zeta.1) != sign(z1))/sims
-        tau.p <- 2 * sum(sign(tau) != sign(tau.coef))/sims
-        
-       
+        d0.p <- 2 * apply(delta.0, 2, function(x) sum(sign(x) != sign(median(x)))/sims)
+        d1.p <- 2 * apply(delta.1, 2, function(x) sum(sign(x) != sign(median(x)))/sims)
+        z0.p <- 2 * apply(zeta.0, 2, function(x) sum(sign(x) != sign(median(x)))/sims)
+        z1.p <- 2 * apply(zeta.1, 2, function(x) sum(sign(x) != sign(median(x)))/sims)
+        tau.p <- 2 * apply(tau, 2, function(x) sum(sign(x) != sign(median(x)))/sims)
         
         # Detect whether models include T-M interaction
         INT <- paste(treat,mediator,sep=":") %in% attr(model.y$terms,"term.labels") | 
