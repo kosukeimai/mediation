@@ -1,75 +1,5 @@
 ## User interface functions
 
-#Value checker functions
-sed.check<-function(data) {
-    log<-matrix(NA,nrow=3, ncol=1)
-    temp<-sapply(as.data.frame(data), function(x) sort(unique(x)))
-    log[1,1][sum(temp[,1]==c(0,1))==2]<-1
-    log[2,1][sum(temp[,2]==c(0,1))==2]<-1
-    log[3,1][sum(temp[,3]==c(0,1))==2]<-1
-    if(sum(log)==3) {
-    pass<-TRUE
-    } else {
-    pass<-FALSE
-    }
-pass
-}
-
-pd.check<-function(data) {
-    log<-matrix(NA,nrow=4, ncol=1)
-    temp<-sapply(as.data.frame(data), function(x) sort(unique(x)))
-    log[1,1][sum(temp[,1]==c(0,1))==2]<-1
-    log[2,1][sum(temp[,2]==c(0,1))==2]<-1
-    log[3,1][sum(temp[,3]==c(0,1))==2]<-1
-    log[4,1][sum(temp[,4]==c(0,1))==2]<-1
-    if(sum(log)==4) {
-    pass<-TRUE
-    } else {
-    pass<-FALSE
-    }
-pass
-}
-
-
-ped.check<-function(data) {
-    log<-matrix(NA,nrow=4, ncol=1)
-    temp<-sapply(as.data.frame(data), function(x) sort(unique(x)))
-    #print(temp)
-    #print(is.data.frame(temp))
-    #temp<-as.data.frame(temp)
-    #print(sum(temp[,1]==c(0,1)))
-    log[1,1][sum(temp[,1]==c(0,1))==2]<-1
-    log[2,1][sum(temp[,2]==c(0,1))==2]<-1
-    log[3,1][sum(temp[,3]==c(0,1))==2]<-1
-    log[4,1][sum(temp[,4]==c(-1,0,1))==3]<-1
-    if(sum(log)==4) {
-    pass<-TRUE
-    } else {
-    pass<-FALSE
-    }
-pass
-}
-
-
-#Value checker functions
-ced.check<-function(data) {
-    log<-matrix(NA,nrow=5, ncol=1)
-    temp<-sapply(as.data.frame(data), function(x) sort(unique(x)))
-    log[1,1][sum(temp[,1]==c(0,1))==2]<-1
-    log[2,1][sum(temp[,2]==c(0,1))==2]<-1
-    log[3,1][sum(temp[,3]==c(0,1))==2]<-1
-    log[4,1][sum(temp[,4]==c(0,1))==2]<-1
-    log[5,1][sum(temp[,5]==c(0,1))==2]<-1
-    if(sum(log)==5) {
-    pass<-TRUE
-    } else {
-    pass<-FALSE
-    }
-pass
-}
-
-
-
 #single experiment design
 mediate.sed <- function(outcome, mediator, treat, data,
                         SI = FALSE, sims = 1000, conf.level = 0.95, boot = FALSE) {
@@ -86,11 +16,11 @@ mediate.sed <- function(outcome, mediator, treat, data,
         out <- mediate.np(data[,outcome], data[,mediator], data[,treat],
                            sims, conf.level, boot)
         out$design <- "SED.NP.SI"
-    } else {
-
-        check<-sed.check(data)
-        if(!check) {
-        stop("All values must be binary.")
+    } else {	
+    		
+		check <- apply(data, 2, function(x) identical(sort(unique(x)), c(0,1)))
+        if(sum(check) != ncol(data)) {
+	        stop("All values must be either 0 or 1.")
         }
 
         out <- mechanism.bounds(data[,outcome], data[,mediator], data[,treat],
@@ -112,10 +42,10 @@ mediate.pd <- function(outcome, mediator, treat, manipulated, data,
         data <- na.omit(data)
     }
     data <- sapply(data, function(x) as.numeric(as.character(x)))
-
-    check<-pd.check(data)
-    if(!check) {
-        stop("All values must be binary.")
+    		
+	check <- apply(data, 2, function(x) identical(sort(unique(x)), c(0,1)))
+    if(sum(check) != ncol(data)) {
+        stop("All values must be either 0 or 1.")
     }
 
     if(NINT) {
@@ -139,10 +69,13 @@ mediate.ped <- function(outcome, mediator, treat, encourage, data) {
         data <- na.omit(data)
     }
     data <- sapply(data, function(x) as.numeric(as.character(x)))
-    check<-ped.check(data)
-    if(!check) {
-        stop("All values must be binary except for encouragement variable which is -1, 0, 1.")
+    		
+	check.1 <- apply(data[,1:3], 2, function(x) identical(sort(unique(x)), c(0,1)))
+	check.2 <- identical(sort(unique(data[,4])), c(-1,0,1))
+    if(sum(check.1, check.2) != ncol(data)) {
+        stop("All values must be either 0 or 1 (or -1 for encouragement).")
     }
+
     out <- mechanism.bounds(data[,outcome], data[,mediator], data[,treat],
                              data[,encourage], design = "PED")
     out
@@ -161,17 +94,14 @@ mediate.ced <- function(outcome, med.1, med.2, treat, encourage, data,
     }
     data <- sapply(data, function(x) as.numeric(as.character(x)))
     data <- as.data.frame(data)
-
-    check<-ced.check(data)
-    if(!check) {
-        stop("All values must be binary.")
+    		
+	check <- apply(data, 2, function(x) identical(sort(unique(x)), c(0,1)))
+    if(sum(check) != ncol(data)) {
+        stop("All values must be either 0 or 1.")
     }
-
 
     names(data) <- c("Y2","T","M1","M2","V")
     n <- nrow(data)
-
-
 
     # Storage
         d.p.c <- d.p.t <- matrix(NA, sims, 1)
