@@ -3,7 +3,7 @@
 #single experiment design
 mediate.sed <- function(outcome, mediator, treat, data,
                         SI = FALSE, sims = 1000, conf.level = 0.95, boot = FALSE) {
-                        
+
     varnames <- c(outcome, mediator, treat)
     data <- data[,varnames]
     if(sum(is.na(data))){
@@ -11,12 +11,16 @@ mediate.sed <- function(outcome, mediator, treat, data,
         data <- na.omit(data)
     }
     data <- sapply(data, as.numeric)
-    
+
     if(SI) {
-        out <- mediate.np(data[,outcome], data[,mediator], data[,treat], 
+        out <- mediate.np(data[,outcome], data[,mediator], data[,treat],
                            sims, conf.level, boot)
         out$design <- "SED.NP.SI"
     } else {
+
+        if(max(data)>1 | min(data)<0) {
+        stop("All values must be binary.")
+        }
         out <- mechanism.bounds(data[,outcome], data[,mediator], data[,treat],
                                 NULL, design = "SED")
         out$design <- "SED.NP.NOSI"
@@ -28,7 +32,7 @@ mediate.sed <- function(outcome, mediator, treat, data,
 #parallel design
 mediate.pd <- function(outcome, mediator, treat, manipulated, data,
                         NINT = TRUE, sims = 1000, conf.level = 0.95) {
-    
+
     varnames <- c(outcome, mediator, treat, manipulated)
     data <- data[,varnames]
     if(sum(is.na(data))){
@@ -36,12 +40,12 @@ mediate.pd <- function(outcome, mediator, treat, manipulated, data,
         data <- na.omit(data)
     }
     data <- sapply(data, as.numeric)
-    
+
     if(NINT) {
        out <- boot.pd(data[,outcome], data[,mediator], data[,treat],
                        data[,manipulated], sims, conf.level)
     } else {
-       out <- mechanism.bounds(data[,outcome], data[,mediator], data[,treat], 
+       out <- mechanism.bounds(data[,outcome], data[,mediator], data[,treat],
                               data[,manipulated], design = "PD")
     }
     out
@@ -50,7 +54,7 @@ mediate.pd <- function(outcome, mediator, treat, manipulated, data,
 
 #parallel encouragement design
 mediate.ped <- function(outcome, mediator, treat, encourage, data) {
-    
+
     varnames <- c(outcome, mediator, treat, encourage)
     data <- data[,varnames]
     if(sum(is.na(data))){
@@ -58,8 +62,8 @@ mediate.ped <- function(outcome, mediator, treat, encourage, data) {
         data <- na.omit(data)
     }
     data <- sapply(data, as.numeric)
-    
-    out <- mechanism.bounds(data[,outcome], data[,mediator], data[,treat], 
+
+    out <- mechanism.bounds(data[,outcome], data[,mediator], data[,treat],
                              data[,encourage], design = "PED")
     out
 }
@@ -68,7 +72,7 @@ mediate.ped <- function(outcome, mediator, treat, encourage, data) {
 #crossover encouragement design
 mediate.ced <- function(outcome, med.1, med.2, treat, encourage, data,
                         sims = 1000, conf.level = .95){
-    
+
     varnames <- c(outcome, treat, med.1, med.2, encourage)
     data <- data[,varnames]
     if(sum(is.na(data))){
@@ -77,13 +81,13 @@ mediate.ced <- function(outcome, med.1, med.2, treat, encourage, data,
     }
     data <- sapply(data, as.numeric)
     data <- as.data.frame(data)
-    
+
     names(data) <- c("Y2","T","M1","M2","V")
     n <- nrow(data)
-    
+
     # Storage
         d.p.c <- d.p.t <- matrix(NA, sims, 1)
-        
+
     # Bootstrap function.
     for(b in 1:(sims+1)){
         index <- sample(1:n, n, replace = TRUE)
@@ -133,14 +137,14 @@ mediate.ced <- function(outcome, med.1, med.2, treat, encourage, data,
         PH0 <- (A011-A010)*temp01 / ((A011-A010)*temp01 + (1-2*A001)*temp00)
 		
 		if(b == sims + 1){
-        	d.p.c.mu <- (PH1/(A111-A110)) * (G1111+G1110-G1100-G1110*A111-G1101*A110) + 
+        	d.p.c.mu <- (PH1/(A111-A110)) * (G1111+G1110-G1100-G1110*A111-G1101*A110) +
                         ((1-PH1)/(A100-A101)) * (G1010-G1001-G1000+G1000*A100+G1011*A101)
-        	d.p.t.mu <- (PH0/(A010-A011)) * (G0111+G0110-G0100-G0110*A011-G0101*A010) + 
+        	d.p.t.mu <- (PH0/(A010-A011)) * (G0111+G0110-G0100-G0110*A011-G0101*A010) +
                         ((1-PH0)/(A001-A000)) * (G0010-G0001-G0000+G0000*A000+G0011*A001)
 		} else {
-        	d.p.c[b] <- (PH1/(A111-A110)) * (G1111+G1110-G1100-G1110*A111-G1101*A110) + 
+        	d.p.c[b] <- (PH1/(A111-A110)) * (G1111+G1110-G1100-G1110*A111-G1101*A110) +
                         ((1-PH1)/(A100-A101)) * (G1010-G1001-G1000+G1000*A100+G1011*A101)
-        	d.p.t[b] <- (PH0/(A010-A011)) * (G0111+G0110-G0100-G0110*A011-G0101*A010) + 
+        	d.p.t[b] <- (PH0/(A010-A011)) * (G0111+G0110-G0100-G0110*A011-G0101*A010) +
                         ((1-PH0)/(A001-A000)) * (G0010-G0001-G0000+G0000*A000+G0011*A001)
 		}
     }#bootstraploop
@@ -156,7 +160,7 @@ mediate.ced <- function(outcome, med.1, med.2, treat, encourage, data,
     d.p.c.ci <- quantile(d.p.c, c(low,high), na.rm=TRUE)
     d.p.t.ci <- quantile(d.p.t, c(low,high), na.rm=TRUE)
 
-    out <- list(d0 = d.p.c.mu, d1 = d.p.t.mu, d0.ci = d.p.c.ci, d1.ci = d.p.t.ci, 
+    out <- list(d0 = d.p.c.mu, d1 = d.p.t.mu, d0.ci = d.p.c.ci, d1.ci = d.p.t.ci,
                 nobs = n, sims = sims, conf.level = conf.level, design = "CED")
 
     class(out) <- "mediate.design"
@@ -174,7 +178,7 @@ mediate.np <- function(Y, M, T, sims, conf.level, boot){
     n1 <- sum(samp$T)
     n0 <- sum(1-samp$T)
     t <- (1 - conf.level)/2
-    
+
     if(boot){
         idx <- seq(1,n,1)
         # A Storage Matrix
@@ -190,11 +194,11 @@ mediate.np <- function(Y, M, T, sims, conf.level, boot){
 
             delta_0m <- delta_1m <- matrix(NA, length(m.cat), 1)
             for(i in 1:length(m.cat)){
-                delta_0m[i] <- (sum(samp.star$T[samp.star$M==m.cat[i]]) * 
-                                sum(samp.star$Y[samp.star$M==m.cat[i] & samp.star$T==0])) / 
+                delta_0m[i] <- (sum(samp.star$T[samp.star$M==m.cat[i]]) *
+                                sum(samp.star$Y[samp.star$M==m.cat[i] & samp.star$T==0])) /
                                 (n1*(sum((1 - samp.star$T[samp.star$M==m.cat[i]]))))
-                delta_1m[i] <- (sum((1 - samp.star$T[samp.star$M==m.cat[i]])) * 
-                            sum(samp.star$Y[samp.star$M==m.cat[i] & samp.star$T==1])) / 
+                delta_1m[i] <- (sum((1 - samp.star$T[samp.star$M==m.cat[i]])) *
+                            sum(samp.star$Y[samp.star$M==m.cat[i] & samp.star$T==1])) /
                             (n0*(sum(samp.star$T[samp.star$M==m.cat[i]])))
             }
             if(b == sims + 1){
@@ -205,7 +209,7 @@ mediate.np <- function(Y, M, T, sims, conf.level, boot){
     	        d1.bs[b,] <- mean(samp.star$Y[samp.star$T==1]) - sum(delta_1m)
             }
         }
-        
+
         low <- (1 - conf.level)/2
         high <- 1 - low
         d0.ci <- quantile(d0.bs,c(low,high), na.rm=TRUE)
@@ -214,12 +218,12 @@ mediate.np <- function(Y, M, T, sims, conf.level, boot){
     } else {
 
         delta_0m <- delta_1m <- matrix(NA, length(m.cat), 1)
-        
+
         for(i in 1:length(m.cat)){
-            delta_0m[i] <- (sum(samp$T[samp$M==m.cat[i]]) * 
-                                sum(samp$Y[samp$M==m.cat[i] & samp$T==0])) / 
+            delta_0m[i] <- (sum(samp$T[samp$M==m.cat[i]]) *
+                                sum(samp$Y[samp$M==m.cat[i] & samp$T==0])) /
                                 (n1*(sum((1 - samp$T[samp$M==m.cat[i]]))))
-            delta_1m[i] <- (sum((1 - samp$T[samp$M==m.cat[i]])) * 
+            delta_1m[i] <- (sum((1 - samp$T[samp$M==m.cat[i]])) *
                                 sum(samp$Y[samp$M==m.cat[i] & samp$T==1])) /
                                 (n0*(sum(samp$T[samp$M==m.cat[i]])))
         }
@@ -245,50 +249,50 @@ mediate.np <- function(Y, M, T, sims, conf.level, boot){
         # Variance of Delta_0
         var.delta.0m <- matrix(NA, length(m.cat), 1)
         for(i in 1:length(m.cat)){
-            var.delta.0m[i] <-  lambda.1m[i]*(((lambda.1m[i]/lambda.0m[i]) - 2) * 
-                                var(samp$Y[samp$M==m.cat[i] & samp$T==0]) + 
+            var.delta.0m[i] <-  lambda.1m[i]*(((lambda.1m[i]/lambda.0m[i]) - 2) *
+                                var(samp$Y[samp$M==m.cat[i] & samp$T==0]) +
                                 ((n0*(1-lambda.1m[i])*mu.0m[i]^2)/n1))
         }
 
         m.leng <- length(m.cat)
         mterm.d0 <- c()
         for(i in 1:m.leng-1){
-            mterm.d0 <- c(mterm.d0, lambda.1m[i] * lambda.1m[(i+1):m.leng] * 
+            mterm.d0 <- c(mterm.d0, lambda.1m[i] * lambda.1m[(i+1):m.leng] *
                             mu.0m[i] * mu.0m[(i+1):m.leng])
         }
-        var.delta_0 <- (1/n0) * sum(var.delta.0m) - (2/n1) * sum(mterm.d0) + 
+        var.delta_0 <- (1/n0) * sum(var.delta.0m) - (2/n1) * sum(mterm.d0) +
                         var(samp$Y[samp$T == 0])/n0
 
         # Variance of Delta_1
         var.delta.1m <- matrix(NA, length(m.cat), 1)
         for(i in 1:length(m.cat)){
-            var.delta.1m[i] <-  lambda.0m[i]*(((lambda.0m[i]/lambda.1m[i]) - 2) * 
-                                var(samp$Y[samp$M==m.cat[i] & samp$T==1]) + 
+            var.delta.1m[i] <-  lambda.0m[i]*(((lambda.0m[i]/lambda.1m[i]) - 2) *
+                                var(samp$Y[samp$M==m.cat[i] & samp$T==1]) +
                                 ((n1*(1-lambda.0m[i])*mu.1m[i]^2)/n0))
         }
 
         mterm.d1 <- c()
         for(i in 1:m.leng-1){
-            mterm.d1 <- c(mterm.d1, lambda.0m[i] * lambda.0m[(i+1):m.leng] * 
+            mterm.d1 <- c(mterm.d1, lambda.0m[i] * lambda.0m[(i+1):m.leng] *
                             mu.1m[i] * mu.1m[(i+1):m.leng])
         }
-        var.delta_1 <- (1/n1) * sum(var.delta.1m) - (2/n0)* sum(mterm.d1) + 
+        var.delta_1 <- (1/n1) * sum(var.delta.1m) - (2/n0)* sum(mterm.d1) +
                         var(samp$Y[samp$T == 1])/n1
 
         d0.ci <- c(d0 - (-qnorm(t)*sqrt(var.delta_0)), d0 + (-qnorm(t)*sqrt(var.delta_0)))
         d1.ci <- c(d1 - (-qnorm(t)*sqrt(var.delta_1)), d1 + (-qnorm(t)*sqrt(var.delta_1)))
     }
 
-    out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci, 
+    out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
                 conf.level=conf.level, nobs=n, boot=boot)
     class(out) <- "mediate.design"
     out
-    
+
 }
 
 
 #parallel design under no interaction assumption
-boot.pd <- function(outcome, mediator, treatment, manipulated, 
+boot.pd <- function(outcome, mediator, treatment, manipulated,
                     sims, conf.level) {
 #    n.o <- length(outcome)
 #    n.t <- length(treatment)
@@ -298,7 +302,7 @@ boot.pd <- function(outcome, mediator, treatment, manipulated,
 #    if(n.o != n.t | n.t != n.m |n.m !=n.z){
 #        stop("Error: Number of observations not the same in treatment, outcome, mediator, and encouragement data")
 #    }
-    
+
     n <- length(outcome)
     data <- matrix(, nrow = n, ncol = 4)
     data[,1] <- outcome
@@ -307,7 +311,7 @@ boot.pd <- function(outcome, mediator, treatment, manipulated,
     data[,4] <- manipulated
     data <- as.data.frame(data)
     names(data) <- c("Y","T","M","D")
-    
+
     acme <- matrix(NA, sims, 1)
     for(b in 1:(sims+1)){  # bootstrap
         index <- sample(1:n, n, replace = TRUE)
@@ -372,10 +376,10 @@ mechanism.bounds <- function(outcome, mediator, treatment, DorZ, design) {
     d <- as.data.frame(d)
     names(d) <- c("Y","T","M")
     nobs <- nrow(d)
-    
-    ## "DorZ" indicates the variable that assigns manipulation direction. 
+
+    ## "DorZ" indicates the variable that assigns manipulation direction.
     ## Z in the JRSSA paper. This is left to null for the single experiment design.
-    
+
 #    if(!is.null(DorZ)){
 #        d$Z <- d$D <- DorZ
 #        d <- na.omit(d)
@@ -384,7 +388,7 @@ mechanism.bounds <- function(outcome, mediator, treatment, DorZ, design) {
 #            warning("NA's in data. Observations with missing data removed.")
 #            }
 #    }
-    
+
     # Single Experiment
     if(design=="SED") {
         d$Z <- 0
@@ -402,14 +406,14 @@ mechanism.bounds <- function(outcome, mediator, treatment, DorZ, design) {
         P100 <- sum(d$Y==1 & d$M==0 & d$Z==0 & d$T==0)/sum(d$T==0 & d$Z==0)
         P000 <- sum(d$Y==0 & d$M==0 & d$Z==0 & d$T==0)/sum(d$T==0 & d$Z==0)
         P010 <- sum(d$Y==0 & d$M==1 & d$Z==0 & d$T==0)/sum(d$T==0 & d$Z==0)
-        
+
         l.delta.t <- max(-P001-P011, -P000-P001-P100, -P011-P010-P110)
         u.delta.t <- min(P101+P111, P000+P100+P101, P010+P110+P111)
         l.delta.c <- max(-P100-P110, -P001-P101-P100, -P011-P111-P110)
         u.delta.c <- min(P000+P010, P011+P111+P010, P000+P001+P101)
         S.t <- cbind(l.delta.t,u.delta.t)
         S.c <- cbind(l.delta.c,u.delta.c)
-        
+
     # Parallel
     } else if(design=="PD") {
         ## D indicates if there was manipulation
@@ -502,7 +506,7 @@ mechanism.bounds <- function(outcome, mediator, treatment, DorZ, design) {
             r <- lp(dir, f.obj, f.con, f.dir, f.rhs)
             r$objval
         }
-        
+
         bounds.bidir.popl <- function(P,Q,dir){
             f.obj <- c(rep(0,16), 0,0,1,1, 0,0,1,1, -1,-1,0,0, -1,-1,0,0,
                     0,0,-1,-1, 0,0,-1,-1, 1,1,0,0, 1,1,0,0, rep(0,16))
@@ -529,7 +533,7 @@ mechanism.bounds <- function(outcome, mediator, treatment, DorZ, design) {
             r <- lp(dir, f.obj, f.con, f.dir, f.rhs)
             r$objval
         }
-        
+
         BE.t <- c(bounds.bidir.popl(P1, Q0, "min"), bounds.bidir.popl(P1, Q0, "max"))
         BE.c <- c(-bounds.bidir.popl(P0 ,Q1, "max"), -bounds.bidir.popl(P0, Q1, "min"))
         num.BET.t.lo <- bounds.bidir.cmpl(P1, Q0, "min")
@@ -540,7 +544,7 @@ mechanism.bounds <- function(outcome, mediator, treatment, DorZ, design) {
         denom.BET.c <- P0[1] + P0[3] - P0[9] - P0[11]
         BET.t <- c(num.BET.t.lo/denom.BET.t, num.BET.t.up/denom.BET.t)
         BET.c <- c(num.BET.c.lo/denom.BET.c, num.BET.c.up/denom.BET.c)
-    
+
     }#end computation section
 
     # Output
@@ -551,7 +555,7 @@ mechanism.bounds <- function(outcome, mediator, treatment, DorZ, design) {
     } else if(design=="PED") {
         out <- list(d1=BE.t, d0=BE.c,  d1.p=BET.t, d0.p=BET.c, design=design, nobs=nobs)
     }
-    
+
     rm(d)
     class(out) <- "mediate.design"
     out
@@ -583,14 +587,14 @@ print.summary.mediate.design <- function(x, ...){
         cat("Mediation Effect_0: ", format(x$d0, digits=4), "\n")
         cat("Mediation Effect_1: ", format(x$d1, digits=4), "\n")
         cat("Sample Size Used:   ", x$nobs,"\n\n")
-    
+
     } else if(x$design=="PD.NINT"){
             clp <- 100 * x$conf.level
             cat("Parallel Design (with No Interaction Assumption) \n\n")
             cat("Mediation Effect: ", format(x$d0, digits=4), clp, "% CI ",
                 format(x$d0.ci, digits=4), "\n")
             cat("Sample Size Used: ", x$nobs,"\n\n")
-            
+
     } else if(x$design=="PED"){
         cat("Parallel Encouragement Design\n\n")
         cat("                      Lower   Upper \n")
@@ -599,7 +603,7 @@ print.summary.mediate.design <- function(x, ...){
         cat("Population ACME_1: ", format(x$d1, digits=4), "\n")
         cat("Complier ACME_1:   ", format(x$d1.p, digits=4), "\n")
         cat("Sample Size Used:  ", x$nobs,"\n\n")
-        
+
     } else if(x$design=="CED"){
         clp <- 100 * x$conf.level
         cat("Crossover Encouragement Design \n\n")
@@ -608,17 +612,17 @@ print.summary.mediate.design <- function(x, ...){
         cat("Pliable ACME_1:   ", format(x$d1, digits=4), clp, "% CI ",
             format(x$d1.ci, digits=4), "\n")
         cat("Sample Size Used: ", x$nobs,"\n\n")
-        
+
     } else if(x$design=="SED.NP.SI"){
         clp <- 100 * x$conf.level
         cat("Single Experiment Design with Sequential Ignorability \n\n")
-        
+
         if(x$boot==TRUE){
             cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
         } else {
             cat("Confidence Intervals Based on Asymptotic Variance\n\n")
         }
-        
+
 #    printone <- x$!x$INT
 
 #    if (printone){
@@ -633,8 +637,6 @@ print.summary.mediate.design <- function(x, ...){
         cat("Sample Size Used:   ", x$nobs,"\n\n")
 #        }
     }
-    
+
     invisible(x)
 }
-
-
