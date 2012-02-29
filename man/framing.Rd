@@ -15,6 +15,7 @@ The \code{framing} data contains 265 rows and 10 columns of data from a framing 
 	\item{anti_info}{ whether subjects wanted to receive information from anti-immigration organizations.}
 	\item{tone}{ 1st treatment; whether the news story is framed positively or negatively.}
 	\item{eth}{ 2nd treatment; whether the news story features a Latino or European immigrant.}
+	\item{cond}{four level measure recording joint treatment status of tone and eth.}
 	\item{treat}{ product of the two treatment variables. In the original study the authors only find this cell to be significant.}
 	\item{emo}{ measure of subjects' negative feeling during the experiment. A numeric scale ranging between 3 and 12.}
 	\item{anx}{ a four-point scale measuring subjects' anxiety about increased immigration.}

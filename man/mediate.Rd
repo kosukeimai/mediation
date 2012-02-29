@@ -70,18 +70,23 @@ The function \code{summary} (i.e., \code{summary.mediate} or \code{summary.media
 
 \item{d0, d1}{point estimates for average causal mediation effects under the control and treatment conditions.}
 \item{d0.ci, d1.ci}{confidence intervals for average causal mediation effects. The confidence level is set at the value specified in 'conf.level'.}
+\item{d0.p, d1.p}{two-sided p-values for average causal mediation effects.}
 \item{d0.sims, d1.sims}{vectors of length 'sims' containing simulation draws of average causal mediation effects.}
 \item{z0, z1}{point estimates for average direct effect under the control and treatment conditions.}
 \item{z0.ci, z1.ci}{confidence intervals for average direct effects.}
+\item{z0.p, z1.p}{two-sided p-values for average causal direct effects.}
 \item{z0.sims, z1.sims}{vectors of length 'sims' containing simulation draws of average direct effects.}
 \item{n0, n1}{the "proportions mediated", or the size of the average causal mediation effects relative to the total effect.}
 \item{n0.ci, n1.ci}{confidence intervals for the proportions mediated.}
+\item{n0.p, n1.p}{two-sided p-values for proportions mediated.}
 \item{n0.sims, n1.sims}{vectors of length 'sims' containing simulation draws of the proportions mediated.}
 \item{tau.coef}{point estimate for total effect.}
 \item{tau.ci}{confidence interval for total effect.}
+\item{tau.p}{two-sided p-values for total effect.}
 \item{tau.sims}{a vector of length 'sims' containing simulation draws of the total effect.}
 \item{d.avg, z.avg, n.avg}{simple averages of d0 and d1, z0 and z1, n0 and n1, respectively, which users may want to use as summary values when those quantities differ.}
 \item{d.avg.ci, z.avg.ci, n.avg.ci}{confidence intervals for the above.}
+\item{d.avg.p, z.avg.p, n.avg.p}{two-sided p-values for the above.}
 \item{d.avg.sims, z.avg.sims, n.avg.sims}{vectors of length 'sims' containing simulation draws of d.avg, z.avg and n.avg, respectively.}
 \item{boot}{logical, the 'boot' argument used.}
 \item{treat}{a character string indicating the name of the 'treat' variable used.}
