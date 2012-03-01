@@ -20,7 +20,7 @@ mediate.sed <- function(outcome, mediator, treat, data,
     		
 		check <- apply(data, 2, function(x) identical(sort(unique(x)), c(0,1)))
         if(sum(check) != ncol(data)) {
-	        stop("All values must be either 0 or 1.")
+	        stop("Invalid values in variables.")
         }
 
         out <- mechanism.bounds(data[,outcome], data[,mediator], data[,treat],
@@ -42,10 +42,10 @@ mediate.pd <- function(outcome, mediator, treat, manipulated, data,
         data <- na.omit(data)
     }
     data <- sapply(data, function(x) as.numeric(as.character(x)))
-    		
-	check <- apply(data, 2, function(x) identical(sort(unique(x)), c(0,1)))
+    
+    check <- apply(data, 2, function(x) identical(sort(unique(x)), c(0,1)))
     if(sum(check) != ncol(data)) {
-        stop("All values must be either 0 or 1.")
+        stop("Invalid values in variables.")
     }
 
     if(NINT) {
@@ -73,7 +73,7 @@ mediate.ped <- function(outcome, mediator, treat, encourage, data) {
 	check.1 <- apply(data[,1:3], 2, function(x) identical(sort(unique(x)), c(0,1)))
 	check.2 <- identical(sort(unique(data[,4])), c(-1,0,1))
     if(sum(check.1, check.2) != ncol(data)) {
-        stop("All values must be either 0 or 1 (or -1 for encouragement).")
+        stop("Invalid values in variables.")
     }
 
     out <- mechanism.bounds(data[,outcome], data[,mediator], data[,treat],
@@ -97,7 +97,7 @@ mediate.ced <- function(outcome, med.1, med.2, treat, encourage, data,
     		
 	check <- apply(data, 2, function(x) identical(sort(unique(x)), c(0,1)))
     if(sum(check) != ncol(data)) {
-        stop("All values must be either 0 or 1.")
+        stop("Invalid values in variables.")
     }
 
     names(data) <- c("Y2","T","M1","M2","V")
@@ -213,6 +213,7 @@ mediate.np <- function(Y, M, T, sims, conf.level, boot){
             delta_0m <- delta_1m <- matrix(NA, length(m.cat), 1)
             for(i in 1:length(m.cat)){
                 delta_0m[i] <- (sum(samp.star$T[samp.star$M==m.cat[i]]) *
+
                                 sum(samp.star$Y[samp.star$M==m.cat[i] & samp.star$T==0])) /
                                 (n1*(sum((1 - samp.star$T[samp.star$M==m.cat[i]]))))
                 delta_1m[i] <- (sum((1 - samp.star$T[samp.star$M==m.cat[i]])) *
