@@ -1268,7 +1268,7 @@ print.summary.mediate <- function(x, ...){
         				x$model.y$family$family == "gaussian" && 
         				x$model.y$family$link == "identity") ||
 				    (inherits(x$model.y, "survreg") && 
-				       	x$model.y$dist == "gaussian")	)
+				       	x$model.y$dist == "gaussian") )
     
     printone <- !x$INT && isLinear.y
     

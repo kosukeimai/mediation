@@ -2,7 +2,7 @@
 \alias{medsens} 
 \title{Sensitivity Analysis for Causal Mediation Effects} 
 \description{ 
-'medsens' is used to perform sensitivity analysis on the average causal mediation effects and direct effects for violations of the sequential ignorability assumption.  The function takes output from '\code{mediate}' and calculates the true average causal mediation effects and direct effects for different values of the sensitivity parameter representing the degree of the sequantial ignorability violation.
+'medsens' is used to perform sensitivity analysis on the average causal mediation effects and direct effects for violations of the sequential ignorability assumption.  The function takes output from '\code{mediate}' and calculates the true average causal mediation effects and direct effects for different values of the sensitivity parameter representing the degree of the sequential ignorability violation.
 } 
 \usage{
 
@@ -19,7 +19,7 @@ medsens(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps),
 \item{effect.type}{ a character string indicating which effect(s) to be analyzed.  Default is "indirect".}
 } 
 
-\details{This is the workhorse function for sensitivity analyses for average causal mediation effects. The sensitivity analysis can be used to assess the robustness of the findings from \code{mediate} to the violation of sequantial ignorability, the crucial identification assumption necessary for the estimates to be valid. The analysis proceeds by quantifying the degree of sequantial ignorability violation as the correlation between the error terms of the mediator and outcome models, and then calculating the true values of the average causal mediation effect for given values of this sensitivity parameter, rho. The original findings are deemed sensitive if the true effects are found to vary widely as function of rho.
+\details{This is the workhorse function for sensitivity analyses for average causal mediation effects. The sensitivity analysis can be used to assess the robustness of the findings from \code{mediate} to the violation of sequential ignorability, the crucial identification assumption necessary for the estimates to be valid. The analysis proceeds by quantifying the degree of sequential ignorability violation as the correlation between the error terms of the mediator and outcome models, and then calculating the true values of the average causal mediation effect for given values of this sensitivity parameter, rho. The original findings are deemed sensitive if the true effects are found to vary widely as function of rho.
 
 The sensitivity analysis is only implemented for the following three model combinations: linear mediator and outcome models (both of class 'lm'), binary probit mediator (fitted via 'glm' with family "binomial" and link "probit") and linear outcome models, and linear mediator and binary probit outcome models.  An error is returned if the 'mediate' object in 'x' is based on other model combinations.  As of version 3.0, the sensitivity analysis can also be conducted with respect to the average direct effect by setting 'effect.type' to "direct" (or "both" if results for the average causal mediation effect are also desired).
 
