@@ -16,8 +16,7 @@ mediate.sed <- function(outcome, mediator, treat, data,
         out <- mediate.np(data[,outcome], data[,mediator], data[,treat],
                            sims, conf.level, boot)
         out$design <- "SED.NP.SI"
-    } else {	
-    		
+    } else {
 		check <- apply(data, 2, function(x) identical(sort(unique(x)), c(0,1)))
         if(sum(check) != ncol(data)) {
 	        stop("Invalid values in variables.")
