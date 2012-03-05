@@ -84,8 +84,6 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     y.data <- model.frame(model.y)  # Call.Y$data
     
     # Numbers of observations and categories
-#    n.m <- length(m.data[,1])
-#    n.y <- length(y.data[,1])
     n.m <- nrow(m.data)
     n.y <- nrow(y.data)
     if(n.m != n.y){
@@ -247,6 +245,9 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
             }
             
             # Draw model coefficients from normal
+            if(sum(is.na(MModel.coef), is.na(YModel.coef)) > 0){
+            	stop("NA in model coefficients; rerun models with nonsingular design matrix")
+            }
             MModel <- mvrnorm(sims, mu=MModel.coef, Sigma=MModel.var.cov)
             YModel <- mvrnorm(sims, mu=YModel.coef, Sigma=YModel.var.cov)
             
