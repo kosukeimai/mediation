@@ -50,7 +50,7 @@ mediations <- function(datasets, treatment, mediators, outcome,
                         result1 <- rq(f1, data=dataarg, tau=tau.m)
                     }
                 } else if(families[1] == "oprobit") {
-                    result1 <- polr(f1, method = "probit", weights=weight, data=dataarg)
+                    result1 <- polr(f1, method = "probit", weights=weight, data=dataarg, Hess=TRUE)
                 } else if (families[1] == "gaussian") {
                     result1 <- glm(f1, family="gaussian", weights=weight, data=dataarg)
                 } else {
@@ -69,9 +69,9 @@ mediations <- function(datasets, treatment, mediators, outcome,
                     }
                 } else if(families[2] == "tobit") {
                     result2 <- vglm(f2, tobit(Lower=LowerY,Upper=UpperY), weights=weight,
-                                    data=dataarg)
+                                    data=dataarg, model=TRUE)
                 } else if(families[2]== "oprobit"){
-                    result2 <- polr(f2, method = "probit", weights=weight, data=dataarg)
+                    result2 <- polr(f2, method = "probit", weights=weight, data=dataarg, Hess=TRUE)
                 } else if(families[2]== "gaussian"){
                     result2 <- glm(f2, family="gaussian", weights=weight, data=dataarg)
                 } else {
