@@ -198,10 +198,8 @@ mediate.np <- function(Y, M, T, sims, conf.level, boot){
 
     if(boot){
         idx <- seq(1,n,1)
-        # A Storage Matrix
         d0.bs <- matrix(NA,sims,1)
         d1.bs <- matrix(NA,sims,1)
-        # Now Let's do the Resampling
         for(b in 1:(sims+1)){
             resample <- sample(idx,n,replace=TRUE)
             if(b == sims + 1){
@@ -312,15 +310,6 @@ mediate.np <- function(Y, M, T, sims, conf.level, boot){
 #parallel design under no interaction assumption
 boot.pd <- function(outcome, mediator, treatment, manipulated,
                     sims, conf.level) {
-#    n.o <- length(outcome)
-#    n.t <- length(treatment)
-#    n.m <- length(mediator)
-#    n.z <- length(manipulated)
-
-#    if(n.o != n.t | n.t != n.m |n.m !=n.z){
-#        stop("Error: Number of observations not the same in treatment, outcome, mediator, and encouragement data")
-#    }
-
     n <- length(outcome)
     data <- matrix(, nrow = n, ncol = 4)
     data[,1] <- outcome
@@ -366,26 +355,6 @@ boot.pd <- function(outcome, mediator, treatment, manipulated,
 
 #Bounds Function for parallel, parallel encouragement, and single experiment designs
 mechanism.bounds <- function(outcome, mediator, treatment, DorZ, design) {
-
-#    n.o <- length(outcome)
-#    n.t <- length(treatment)
-#    n.m <- length(mediator)
-
-#    if(design=="SED" && (n.o != n.t | n.t != n.m)){
-#        stop("Error: Number of non-missing observations not the same in treatment, outcome, and mediator data")
-#    }
-
-#    if(design=="PED"|design=="PD") {
-#        n.z <- length(DorZ)
-#        if(n.o != n.t | n.t != n.m |n.m !=n.z){
-#            stop("Error: Number of observations not the same in treatment, outcome, and mediator data")
-#        }
-#        if(is.null(DorZ)){
-#            stop("Error: Design with mediator manipulation chosen but no indicator for manipulation status chosen.")
-#        }
-#    }
-
-#    orig.length <- length(outcome)
     d <- matrix(, nrow=length(outcome), ncol=3)
 
     d[,1] <- outcome
@@ -398,23 +367,9 @@ mechanism.bounds <- function(outcome, mediator, treatment, DorZ, design) {
     ## "DorZ" indicates the variable that assigns manipulation direction.
     ## Z in the JRSSA paper. This is left to null for the single experiment design.
 
-#    if(!is.null(DorZ)){
-#        d$Z <- d$D <- DorZ
-#        d <- na.omit(d)
-#        nobs <- nrow(d)
-#        if(nobs < orig.length) {
-#            warning("NA's in data. Observations with missing data removed.")
-#            }
-#    }
-
     # Single Experiment
     if(design=="SED") {
         d$Z <- 0
-#        d <- na.omit(d)
-#        nobs <- nrow(d)
-#        if(nobs < orig.length) {
-#            warning("NA's in data. Observations with missing data removed.")
-#        }
         P111 <- sum(d$Y==1 & d$M==1 & d$Z==0 & d$T==1)/sum(d$T==1 & d$Z==0)
         P101 <- sum(d$Y==1 & d$M==0 & d$Z==0 & d$T==1)/sum(d$T==1 & d$Z==0)
         P001 <- sum(d$Y==0 & d$M==0 & d$Z==0 & d$T==1)/sum(d$T==1 & d$Z==0)
@@ -641,19 +596,11 @@ print.summary.mediate.design <- function(x, ...){
             cat("Confidence Intervals Based on Asymptotic Variance\n\n")
         }
 
-#    printone <- x$!x$INT
-
-#    if (printone){
-#        cat("Mediation Effect: ", format(x$d1, digits=4), clp, "% CI ",
-#                format(x$d1.ci, digits=4), "\n")
-#        cat("Sample Size Used:", x$nobs,"\n\n")
-#    } else {
         cat("Mediation Effect_0: ", format(x$d0, digits=4), clp, "% CI ",
                 format(x$d0.ci, digits=4), "\n")
         cat("Mediation Effect_1: ", format(x$d1, digits=4), clp, "% CI ",
                 format(x$d1.ci, digits=4), "\n")
         cat("Sample Size Used:   ", x$nobs,"\n\n")
-#        }
     }
 
     invisible(x)

@@ -16,12 +16,12 @@ measured; a continuous measure of depressive symptoms based on the Hopkins Sympt
 and a binary variable, representing whether the respondent had become employed.
 }
 \usage{data}
-\format{A data matrix containing no missing values and hence is provided only for illustrative purposes and not for inference about program efficacy.
+\format{A data matrix with 899 rows and 16 columns, containing no missing values. The data are provided only for illustrative purposes and not for inference about program efficacy, for which the original data source should be consulted.
 
 \describe{
 	\item{econ_hard}{Level of economic hardship pre-treatment with values from 1 to 5.}
 	\item{depress1}{Measure of depressive symptoms pre-treatment.}
-	\item{sex}{indicator variable for sex. 1 = female}
+	\item{sex}{Indicator variable for sex. 1 = female}
 	\item{age}{Age in years.}
 	\item{occp}{Factor with seven categories for various occupations.}
 	\item{marital}{Factor with five categories for marital status.}
@@ -38,10 +38,6 @@ and a binary variable, representing whether the respondent had become employed.
 	}
 
 }
-
-
-
-
 
 \source{The complete JOBS II data is available from the data archives at www.icpsr.umich.edu/}
 \references{

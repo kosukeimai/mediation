@@ -3,7 +3,7 @@
 \alias{boundsdata}
 \title{Example Data for the Design Functions}
 \description{
-A random subsample of the simulated data used in Imai, Tingley, Yamamoto (2012). The data contains 1000 rows and 8 columns with no missing values.
+A random subsample of the simulated data used in Imai, Tingley, Yamamoto (2012). The data contains 1000 rows and 7 columns with no missing values.
 }
 \usage{boundsdata}
 

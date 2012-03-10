@@ -3,7 +3,7 @@
 \alias{framing}
 \title{Brader, Valentino and Suhay (2008) Framing Experiment Data}
 \description{
-The \code{framing} data contains 265 rows and 10 columns of data from a framing experiment conducted by Brader, Valentino and Suhay (2008). 
+The \code{framing} data contains 265 rows and 15 columns of data from a framing experiment conducted by Brader, Valentino and Suhay (2008). 
 }
 \usage{framing}
 \format{A data frame containing the following variables:
