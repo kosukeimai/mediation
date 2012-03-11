@@ -1,4 +1,4 @@
-citHeader("To cite package 'mediation' in publications please use:")
+citHeader("To cite package 'mediation' in publications please use the following. Other publications related to the package are also listed below.")
 
 ## R >= 2.8.0 passes package metadata to citation().
 if(!exists("meta") || is.null(meta)) meta <- packageDescription("mediation")
