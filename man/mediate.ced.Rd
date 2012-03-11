@@ -62,8 +62,6 @@ Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}.}
 
 \examples{ 
 
-## Not run:
-
 ## A typical data frame (DD below) would include:
 ##
 ##   Outcome variable (Y)
@@ -77,7 +75,5 @@ Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}.}
 
 \dontrun{ced <- mediate.ced("Y", "M1", "M2", "T", "V", DD, sims = 100)}
 \dontrun{summary(ced)}
-
-## End(Not run)
 
 }
