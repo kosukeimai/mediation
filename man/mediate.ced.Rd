@@ -55,24 +55,29 @@ Imai, K., Keele, L. and Yamamoto, T. (2010) Identification, Inference, and Sensi
 Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) Causal Mediation Analysis Using R" in Advances in Social Science Research Using R, ed. H. D. Vinod New York: Springer.}
 
 \author{
-Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu}, 
-Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}}
+Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu};
+Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}.}
 
 \seealso{\code{\link{mediate}}, \code{\link{summary.mediate.design}}}
 
 \examples{ 
 
-# Generate fake data
-n <- 1000
-Y <- rbinom(n,1,.5)
-M1 <- rbinom(n,1,.5)
-M2 <- rbinom(n,1,.5)
-T <- rbinom(n,1,.5)
-V <- rbinom(n,1,.5)
-DD <- as.data.frame(cbind(Y, M1, M2, T, V))
+## Not run:
 
-# Apply the function
+## A typical data frame (DD below) would include:
+##
+##   Outcome variable (Y)
+##   Mediator in the first experiment (natural response to T; M1)
+##   Mediator in the second experiment (given 1-T but encouraged to equal M1; M2)
+##   Treatment in the first experiment (T)
+##   Encouragement in the second experiment (V)
+##   
+##   All variables are binary. Note that the treatment for the second experiment
+##   is not needed because it equals 1-T by design.
+
 ced <- mediate.ced("Y", "M1", "M2", "T", "V", DD, sims = 100)
 summary(ced)
+
+## End(Not run)
 
 }

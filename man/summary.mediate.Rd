@@ -23,8 +23,6 @@ Function to report results from mediation analysis. Reported categories are medi
 }
 
 \references{
-Imai, K., Tingley, D. and Yamamoto, T. (2012) Experimental Designs for Identifying Causal Mechanisms. Journal of the Royal Statistical Society, Series A (Statistics in Society)
-
 Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2011). Unpacking the Black Box of Causality: Learning about Causal Mechanisms from Experimental and Observational Studies, American Political Science Review, Vol. 105, No. 4 (November), pp. 765-789.
 
 Imai, K., Keele, L. and Tingley, D. (2010) A General Approach to Causal Mediation Analysis, Psychological Methods, Vol. 15, No. 4 (December), pp. 309-334.
@@ -33,10 +31,10 @@ Imai, K., Keele, L. and Yamamoto, T. (2010) Identification, Inference, and Sensi
 
 Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation Analysis Using R" in Advances in Social Science Research Using R, ed. H. D. Vinod New York: Springer.}
 
-\author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu},
-Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu},
-Luke Keele, Penn State University, \email{ljk20@psu.edu},
-Kosuke Imai, Princeton University, \email{kimai@princeton.edu} }
+\author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu};
+Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu};
+Luke Keele, Penn State University, \email{ljk20@psu.edu};
+Kosuke Imai, Princeton University, \email{kimai@princeton.edu}. }
 
 \seealso{\code{\link{mediate}}, \code{\link{plot.mediate}}, \code{\link{summary}}.}
 

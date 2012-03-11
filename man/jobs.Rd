@@ -19,22 +19,22 @@ and a binary variable, representing whether the respondent had become employed.
 \format{A data matrix with 899 rows and 16 columns, containing no missing values. The data are provided only for illustrative purposes and not for inference about program efficacy, for which the original data source should be consulted.
 
 \describe{
-	\item{econ_hard}{Level of economic hardship pre-treatment with values from 1 to 5.}
-	\item{depress1}{Measure of depressive symptoms pre-treatment.}
-	\item{sex}{Indicator variable for sex. 1 = female}
-	\item{age}{Age in years.}
-	\item{occp}{Factor with seven categories for various occupations.}
-	\item{marital}{Factor with five categories for marital status.}
-	\item{nonwhite}{Indicator variable for race. 1 = nonwhite.}
-	\item{educ}{Factor with five categories for educational attainment.}
-	\item{income}{Factor with five categories for level of income.}
-	\item{job_seek}{A continuous scale measuring the level of job-search self-efficacy with values from 1 to 5.  The mediator variable.}
-	\item{depress2}{Measure of depressive symptoms post-treatment.}
-	\item{work1}{Indicator variable for employment. 1 = employed.}
-	\item{job_dich}{The job_seek measure recoded into two categories of high and low. 1 = high job search self-efficacy.}
-	\item{job_disc}{The job_seek measure recoded into four categories from lowest to highest.}
-	\item{treat}{Indicator variable for whether participant was randomly selected for the JOBS II training program. 1 = participation.}
-	\item{control}{Indicator variable for whether participant was randomly selected to not participate in the JOBS II training program. 1 = non-participation.}
+	\item{econ_hard:}{ Level of economic hardship pre-treatment with values from 1 to 5.}
+	\item{depress1:}{ Measure of depressive symptoms pre-treatment.}
+	\item{sex:}{ Indicator variable for sex. 1 = female}
+	\item{age:}{ Age in years.}
+	\item{occp:}{ Factor with seven categories for various occupations.}
+	\item{marital:}{ Factor with five categories for marital status.}
+	\item{nonwhite:}{ Indicator variable for race. 1 = nonwhite.}
+	\item{educ:}{ Factor with five categories for educational attainment.}
+	\item{income:}{ Factor with five categories for level of income.}
+	\item{job_seek:}{ A continuous scale measuring the level of job-search self-efficacy with values from 1 to 5. The mediator variable.}
+	\item{depress2:}{ Measure of depressive symptoms post-treatment.}
+	\item{work1:}{ Indicator variable for employment. 1 = employed.}
+	\item{job_dich:}{ The job_seek measure recoded into two categories of high and low. 1 = high job search self-efficacy.}
+	\item{job_disc:}{ The job_seek measure recoded into four categories from lowest to highest.}
+	\item{treat:}{ Indicator variable for whether participant was randomly selected for the JOBS II training program. 1 = participation.}
+	\item{control:}{ Indicator variable for whether participant was randomly selected to not participate in the JOBS II training program. 1 = non-participation.}
 	}
 
 }

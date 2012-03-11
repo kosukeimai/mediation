@@ -44,8 +44,8 @@ There are several limitations to the code. First, it works only with a subset of
 
 \value{ An object of class "mediations" (or "mediations.order" if the outcome model is ordered probit), a list of "mediate" ("mediate.order") objects produced by applications of \code{\link{mediate}} for the specified treatment/mediator/outcome combinations.  The elements are named based on the names of the outcome, treatment, and mediator variables, each separated by a "." (see example below). } 
 
-\author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu},
-Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}}
+\author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu};
+Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}.}
  
 \seealso{\code{\link{mediate}}, \code{\link{summary.mediations}}, \code{\link{plot.mediations}}, \code{rq}, \code{tobit}.}
 

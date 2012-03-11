@@ -28,7 +28,7 @@ Imai, K. and Yamamoto, T. (2012) Identification and Sensitivity Analysis for Mul
 
 }
 
-\author{Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}}
+\author{Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}.}
 
 \seealso{\code{\link{multimed}}, \code{\link{plot.multimed}}}
 

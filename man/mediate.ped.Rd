@@ -51,7 +51,9 @@ Imai, K., Keele, L. and Yamamoto, T. (2010) Identification, Inference, and Sensi
 
 Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation Analysis Using R" in Advances in Social Science Research Using R, ed. H. D. Vinod New York: Springer.}
 
-\author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu}, Teppei Yamamoto, MIT, \email{teppei@mit.edu} }
+\author{
+Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu};
+Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}.}
 
 \seealso{\code{\link{mediate}}, \code{\link{medsens}}, \code{\link{plot.mediate}}, \code{\link{summary.mediate}}, \code{\link{mediations}} }
 

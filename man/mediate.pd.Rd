@@ -57,8 +57,8 @@ Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) Causal Mediation Analys
 
 
 \author{
-Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu}, 
-Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}}
+Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu};
+Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}.}
 
 \seealso{\code{\link{mediate}}, \code{\link{summary.mediate.design}}}
 

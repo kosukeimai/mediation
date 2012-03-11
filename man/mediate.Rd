@@ -39,11 +39,11 @@ the 2.5 and 97.5 percentiles of the simulated quantities.}
 }
 
 \details{This is the workhorse function for estimating causal mediation effects for a variety of data types. The average causal mediation effect (ACME) represents the expected difference in the potential outcome when the mediator took the value that would realize under the treatment condition as opposed to the control condition, while the treatment status itself is held constant. That is,
-\deqn{\delta(t) \ = \ E\{Y(t, M(t_1)) - Y(t, M(t_0))\},}
-      {d(t) = E[Y(t, M(t1)) - Y(t, M(t0))],}
+\deqn{\delta(t) \ = \ E\{Y(t, M(t_1)) - Y(t, M(t_0))\},}{%
+      \delta(t) = E[Y(t, M(t1)) - Y(t, M(t0))],}
 where \eqn{t, t_1, t_0}{t, t1, t0} are particular values of the treatment \eqn{T} such that \eqn{t_1 \neq t_0}{t1 != t0}, \eqn{M(t)} is the potential mediator, and \eqn{Y(t,m)} is the potential outcome variable. The average direct effect (ADE) is defined similarly as,
-\deqn{\zeta(t) \ = \ E\{Y(t_1, M(t)) - Y(t_0, M(t))\},}
-      {z(t) = E[Y(t1, M(t)) - Y(t0, M(t))],}
+\deqn{\zeta(t) \ = \ E\{Y(t_1, M(t)) - Y(t_0, M(t))\},}{%
+      \zeta(t) = E[Y(t1, M(t)) - Y(t0, M(t))],}
 which represents the expected difference in the potential outcome when the treatment is changed but the mediator is held constant at the value that would realize if the treatment equals \eqn{t}. The two quantities on average add up to the total effect of the treatment on the outcome, \eqn{\tau}. See the references for more details.
 
 When both the mediator model ('model.m') and outcome model ('model.y') are normal linear regressions, the results will be identical to the usual LSEM method by Baron and Kenny (1986).  The function can, however, accommodate other data types including binary, ordered and count outcomes and mediators as well as censored outcomes.  Variables can also be modeled nonparametrically, semiparametrically, or using quantile regression.
@@ -100,16 +100,20 @@ The function \code{summary} (i.e., \code{summary.mediate} or \code{summary.media
 \item{nobs}{number of observations in the model frame for 'model.m' and 'model.y'. May differ from the numbers in the original models input to 'mediate' if 'dropobs' was 'TRUE'.}
 }
 
-\references{Imai, K., Keele, L. and Tingley, D. (2010) A General Approach to Causal Mediation Analysis, Psychological Methods, Vol. 15, No. 4 (December), pp. 309-334.
+\references{
+
+Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2011). Unpacking the Black Box of Causality: Learning about Causal Mechanisms from Experimental and Observational Studies, American Political Science Review, Vol. 105, No. 4 (November), pp. 765-789.
+
+Imai, K., Keele, L. and Tingley, D. (2010) A General Approach to Causal Mediation Analysis, Psychological Methods, Vol. 15, No. 4 (December), pp. 309-334.
 
 Imai, K., Keele, L. and Yamamoto, T. (2010) Identification, Inference, and Sensitivity Analysis for Causal Mediation Effects, Statistical Science, Vol. 25, No. 1 (February), pp. 51-71.
 
 Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation Analysis Using R" in Advances in Social Science Research Using R, ed. H. D. Vinod New York: Springer.} 
 
-\author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu}, 
-Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}, 
-Luke Keele, Penn State University, \email{ljk20@psu.edu}, 
-Kosuke Imai, Princeton University, \email{kimai@princeton.edu} }
+\author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu}; 
+Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}; 
+Luke Keele, Penn State University, \email{ljk20@psu.edu}; 
+Kosuke Imai, Princeton University, \email{kimai@princeton.edu}. }
  
 \seealso{\code{\link{medsens}}, \code{\link{plot.mediate}}, \code{\link{summary.mediate}}, \code{\link{mediations}}, \code{vcovHC} }
 

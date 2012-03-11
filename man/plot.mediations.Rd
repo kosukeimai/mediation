@@ -12,7 +12,7 @@ Function to plot results from multiple causal mediation analyses conducted via t
 \usage{ 
 
 \method{plot}{mediations}(x, which = names(x),
-            ask = prod(par("mfcol")) < length(which) && dev.interactive(), ...)
+        ask = prod(par("mfcol")) < length(which) && dev.interactive(), ...)
 }
 
 
@@ -32,8 +32,8 @@ for the plotting of an output from \code{mediate} can be passed through.
 }
 
 
-\author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu},
-Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}}
+\author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu};
+Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}.}
  
 \seealso{\code{\link{mediations}}, \code{\link{plot.mediate}}, \code{\link{plot}}.}
 

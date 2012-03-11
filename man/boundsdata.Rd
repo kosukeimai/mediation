@@ -10,13 +10,13 @@ A random subsample of the simulated data used in Imai, Tingley, Yamamoto (2012).
 \format{A data frame containing the following variables, which are interpreted as results from a hypothetical randomized trial. See the source for a full description.
 
     \describe{
-    \item{out}{ the binary outcome variable under the parallel design.}
-    \item{out.enc}{ the binary outcome variable under the parallel encouragement design.}
-    \item{med}{ the binary mediator under the parallel design.}
-    \item{med.enc}{ the binary mediator under the parallel encouragement design.}
-    \item{ttt}{ the binary treatment variable.}
-    \item{manip}{ the design indicator, or the variable indicating whether the mediator is manipulated under the parallel design.}
-    \item{enc}{ the trichotomous encouragement variable under the parallel encouragement design. Equals 0 if subject received no encouragement; 1 if encouraged for the mediator value of 1; and -1 if encouraged for the mediator value of 0.}
+    \item{out:}{ The binary outcome variable under the parallel design.}
+    \item{out.enc:}{ The binary outcome variable under the parallel encouragement design.}
+    \item{med:}{ The binary mediator under the parallel design.}
+    \item{med.enc:}{ The binary mediator under the parallel encouragement design.}
+    \item{ttt:}{ The binary treatment variable.}
+    \item{manip:}{ The design indicator, or the variable indicating whether the mediator is manipulated under the parallel design.}
+    \item{enc:}{ The trichotomous encouragement variable under the parallel encouragement design. Equals 0 if subject received no encouragement; 1 if encouraged for the mediator value of 1; and -1 if encouraged for the mediator value of 0.}
     }
 
 }
