@@ -189,7 +189,8 @@ mediate.ced <- function(outcome, med.1, med.2, treat, encourage, data,
 
 #nonparametric under SI assumption
 mediate.np <- function(Y, M, T, sims, conf.level, boot){
-    samp <- data.frame(na.omit(cbind(M,Y,T)))
+#    samp <- data.frame(na.omit(cbind(M,Y,T)))
+    samp <- data.frame(Y=Y, M=M, T=T)
     m.cat <- sort(unique(samp$M))
     n <- length(samp$Y)
     n1 <- sum(samp$T)
