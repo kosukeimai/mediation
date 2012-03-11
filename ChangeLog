@@ -7,4 +7,5 @@ version      date  description
 3.1.1    09/18/11  Bug in medsens weights fixed; damaged PDFs fixed
 3.1.2    09/19/11  Fixed wrong plots in the vignette
 3.1.3	 11/21/11  Import inconsistency with Matrix fixed
+4.0      03/XX/12  Design and multimed functions added, along with other new features
 

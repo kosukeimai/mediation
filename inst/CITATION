@@ -5,6 +5,23 @@ if(!exists("meta") || is.null(meta)) meta <- packageDescription("mediation")
 year <- sub("-.*", "", meta$Date)
 note <- sprintf("R package version %s", meta$Version)
 
+citEntry(entry = "Manual",
+         title = "mediation: R Package for Causal Mediation Analysis",
+         author = personList(as.person("Dustin Tingley"),
+                             as.person("Teppei Yamamoto"),
+                             as.person("Luke Keele"),
+                             as.person("Kosuke Imai")),
+         year = year,
+         note = note,
+         url = "http://CRAN.R-project.org/package=mediation",
+
+         textVersion =
+         paste("Dustin Tingley, Teppei Yamamoto, Luke Keele and Kosuke Imai",
+           sprintf("(%s).", year),	 
+               "mediation: R Package for Causal Mediation Analysis.",
+         paste(note, ".", sep = ""),
+               "URL http://CRAN.R-project.org/package=mediation")
+)
 
 citEntry(entry = "Article",
   title        = "Identification, Inference, and Sensitivity Analysis for Causal Mediation Effects",
@@ -42,6 +59,39 @@ citEntry(entry = "Article",
         "Psychological Methods, 15(4), 309-334.")
 )
 
+citEntry(entry = "Article",
+  title        = "Unpacking the Black Box of Causality: Learning about Causal Mechanisms from Experimental and Observational Studies",
+  author       = personList(as.person("Kosuke Imai"),
+                            as.person("Luke Keele"),
+                            as.person("Dustin Tingley"),
+                            as.person("Teppei Yamamoto")),
+  journal      = "American Political Science Review",
+  year         = "2011",
+  volume       = "105",
+  number       = "4",
+  pages        = "765--789",
+  url          = "http://imai.princeton.edu/research/mediationP.html",
+
+  textVersion  =
+  paste("Kosuke Imai, Luke Keele, Dustin Tingley and Teppei Yamamoto (2011).",
+        "Unpacking the Black Box of Causality: Learning about Causal Mechanisms from Experimental and Observational Studies.",
+        "American Political Science Review, 105(4), 765-789.")
+)
+
+citEntry(entry = "Unpublished",
+  title        = "Identification and Sensitivity Analysis for Multiple Causal Mechanisms: Revisiting Evidence from Framing Experiments",
+  author       = personList(as.person("Kosuke Imai"),
+                            as.person("Teppei Yamamoto")),
+  year         = "2012",
+  note         = "Unpublished manuscript",
+  url          = "http://imai.princeton.edu/research/medsens.html",
+
+  textVersion  =
+  paste("Kosuke Imai and Teppei Yamamoto (2012).",
+        "Identification and Sensitivity Analysis for Multiple Causal Mechanisms: Revisiting Evidence from Framing Experiments.",
+        "Unpublished manuscript.")
+)
+
 citEntry(entry = "InCollection",
   title        = "Causal Mediation Analysis Using R",
   author       = personList(as.person("Kosuke Imai"),
@@ -60,25 +110,6 @@ citEntry(entry = "InCollection",
         "In Advances in Social Science Research Using R, ed. H. D. Vinod,",
         "New York: Springer.")
 )
-
-citEntry(entry = "Manual",
-         title = "mediation: R Package for Causal Mediation Analysis",
-         author = personList(as.person("Dustin Tingley"),
-                             as.person("Teppei Yamamoto"),
-                             as.person("Luke Keele"),
-                             as.person("Kosuke Imai")),
-         year = year,
-         note = note,
-         url = "http://CRAN.R-project.org/package=mediation",
-
-         textVersion =
-         paste("Dustin Tingley, Teppei Yamamot, Luke Keele and Kosuke Imai",
-           sprintf("(%s).", year),	 
-               "mediation: R Package for Causal Mediation Analysis.",
-         paste(note, ".", sep = ""),
-               "URL http://CRAN.R-project.org/package=mediation")
-)
-
 
 
 
