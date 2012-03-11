@@ -75,8 +75,8 @@ Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}.}
 ##   All variables are binary. Note that the treatment for the second experiment
 ##   is not needed because it equals 1-T by design.
 
-ced <- mediate.ced("Y", "M1", "M2", "T", "V", DD, sims = 100)
-summary(ced)
+\dontrun{ced <- mediate.ced("Y", "M1", "M2", "T", "V", DD, sims = 100)}
+\dontrun{summary(ced)}
 
 ## End(Not run)
 
