@@ -102,8 +102,9 @@ pdfstartview=FitH, breaklinks=true, urlbordercolor={0 1 0}, citebordercolor={0 0
 {\title{\bf \tit\thanks{This paper is an updated version of the tutorial
     for package {\bf mediation} which was previously published in an edited
     volume: \citet{imai:etal:10}.
-    The description is based on version 3.1 of {\bf mediation} and included as
-    the package's vignette.
+    The description is based on {\bf version 3.1} of {\bf mediation} and included as
+    the package's vignette. A new tutorial including the features added in version
+    4.0 or later is currently in preparation and will be added as soon as it is ready.
     Financial support from the National Science Foundation
     (SES-0752050) is acknowledged.}}
 
