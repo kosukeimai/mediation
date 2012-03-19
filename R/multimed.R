@@ -42,7 +42,7 @@ multimed <- function(outcome, med.main, med.alt, treat, covariates = NULL,
     tau <- rep(NA, length = sims)
     for(b in 1:(sims+1)){
         # Resample
-        data.b <- data[sample(1:nrow(data), nrow(data), repl=TRUE),]
+        data.b <- data[sample(1:nrow(data), nrow(data), replace=TRUE),]
         if(b == sims + 1){
         	data.b <- data
         }
@@ -109,11 +109,11 @@ multimed <- function(outcome, med.main, med.alt, treat, covariates = NULL,
     ACME.ave.CI <- ACME.1.CI <- ACME.0.CI <- matrix(NA, nrow=2, ncol=length(sigma))
     for(i in 1:length(sigma)){
         ACME.ave.CI[,i] <- IMCI(ACME.ave.up.o[i], ACME.ave.lo.o[i], 
-                                ACME.ave.up.var[i], ACME.ave.lo.var[i], conf = conf.level)$ci
+                                ACME.ave.up.var[i], ACME.ave.lo.var[i], conf.level = conf.level)$ci
         ACME.1.CI[,i] <- IMCI(ACME.1.up.o[i], ACME.1.lo.o[i], 
-                              ACME.1.up.var[i], ACME.1.lo.var[i], conf = conf.level)$ci
+                              ACME.1.up.var[i], ACME.1.lo.var[i], conf.level = conf.level)$ci
         ACME.0.CI[,i] <- IMCI(ACME.0.up.o[i], ACME.0.lo.o[i], 
-                              ACME.0.up.var[i], ACME.0.lo.var[i], conf = conf.level)$ci
+                              ACME.0.up.var[i], ACME.0.lo.var[i], conf.level = conf.level)$ci
     }
     tau.CI <- quantile(tau, probs = c((1-conf.level)/2, (1+conf.level)/2), na.rm = TRUE)
     out <- list(sigma = sigma, R2tilde = R2.t, R2star = R2.s, tau = tau.o, tau.ci = tau.CI,
