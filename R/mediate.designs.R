@@ -114,15 +114,15 @@ mediate.ced <- function(outcome, med.1, med.2, treat, encourage, data,
         d <- data[index,]
 
         #Atmv
-        A111 <- sum(d$M1==1 & d$T==1 & d$M2==1 & d$V==1)/sum(d$T==1 & d$M2==1 & d$V==1)
-        A011 <- sum(d$M1==1 & d$T==0 & d$M2==1 & d$V==1)/sum(d$T==0 & d$M2==1 & d$V==1)
-        A101 <- sum(d$M1==1 & d$T==1 & d$M2==0 & d$V==1)/sum(d$T==1 & d$M2==0 & d$V==1)
-        A001 <- sum(d$M1==1 & d$T==0 & d$M2==0 & d$V==1)/sum(d$T==0 & d$M2==0 & d$V==1)
+        A111 <- sum(d$M2==1 & d$T==1 & d$M1==1 & d$V==1)/sum(d$T==1 & d$M1==1 & d$V==1)
+        A011 <- sum(d$M2==1 & d$T==0 & d$M1==1 & d$V==1)/sum(d$T==0 & d$M1==1 & d$V==1)
+        A101 <- sum(d$M2==1 & d$T==1 & d$M1==0 & d$V==1)/sum(d$T==1 & d$M1==0 & d$V==1)
+        A001 <- sum(d$M2==1 & d$T==0 & d$M1==0 & d$V==1)/sum(d$T==0 & d$M1==0 & d$V==1)
 
-        A110 <- sum(d$M1==1 & d$T==1 & d$M2==1 & d$V==0)/sum(d$T==1 & d$M2==1 & d$V==0)
-        A010 <- sum(d$M1==1 & d$T==0 & d$M2==1 & d$V==0)/sum(d$T==0 & d$M2==1 & d$V==0)
-        A100 <- sum(d$M1==1 & d$T==1 & d$M2==0 & d$V==0)/sum(d$T==1 & d$M2==0 & d$V==0)
-        A000 <- sum(d$M1==1 & d$T==0 & d$M2==0 & d$V==0)/sum(d$T==0 & d$M2==0 & d$V==0)
+        A110 <- sum(d$M2==1 & d$T==1 & d$M1==1 & d$V==0)/sum(d$T==1 & d$M1==1 & d$V==0)
+        A010 <- sum(d$M2==1 & d$T==0 & d$M1==1 & d$V==0)/sum(d$T==0 & d$M1==1 & d$V==0)
+        A100 <- sum(d$M2==1 & d$T==1 & d$M1==0 & d$V==0)/sum(d$T==1 & d$M1==0 & d$V==0)
+        A000 <- sum(d$M2==1 & d$T==0 & d$M1==0 & d$V==0)/sum(d$T==0 & d$M1==0 & d$V==0)
 
         #Gtm1vm2
         G1111 <- mean(d$Y2[d$T==1 & d$M1==1 & d$V==1 & d$M2==1])
@@ -145,10 +145,10 @@ mediate.ced <- function(outcome, med.1, med.2, treat, encourage, data,
         G1000 <- mean(d$Y2[d$T==1 & d$M1==0 & d$V==0 & d$M2==0])
         G0000 <- mean(d$Y2[d$T==0 & d$M1==0 & d$V==0 & d$M2==0])
 
-        temp11 <- sum(d$T==1 & d$M1==1)/sum(d$T==1|d$T==0)
-        temp01 <- sum(d$T==0 & d$M1==1)/sum(d$T==1|d$T==0)
-        temp10 <- sum(d$T==1 & d$M1==0)/sum(d$T==1|d$T==0)
-        temp00 <- sum(d$T==0 & d$M1==0)/sum(d$T==1|d$T==0)
+        temp11 <- sum(d$T==1 & d$M1==1)/n
+        temp01 <- sum(d$T==0 & d$M1==1)/n
+        temp10 <- sum(d$T==1 & d$M1==0)/n
+        temp00 <- sum(d$T==0 & d$M1==0)/n
 
         PH1 <- (A111-A110)*temp11 / ((A111-A110)*temp11 + (1-2*A101)*temp10)
         PH0 <- (A011-A010)*temp01 / ((A011-A010)*temp01 + (1-2*A001)*temp00)
