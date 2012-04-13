@@ -14,10 +14,10 @@ mediate.ced(outcome, med.1, med.2, treat, encourage, data,
 
 \arguments{
 
-\item{outcome}{ name of the outcome variable in 'data'. The variable must be binary (factor or numeric 0/1).}
+\item{outcome}{ variable name in 'data' containing the outcome values observed in the second experiment. The variable must be binary (factor or numeric 0/1).}
 \item{med.1}{ variable name in 'data' containing the mediator values observed in the first experiment. The variable must be binary (factor or numeric 0/1).}
 \item{med.2}{ variable name in 'data' containing the mediator values observed in the second experiment.}
-\item{treat}{ name of the treatment variable in 'data'. Must be binary (factor or numeric 0/1).}
+\item{treat}{ variable name in 'data' containing the treatment values in the second experiment. Must be binary (factor or numeric 0/1).}
 \item{encourage}{ name of the encouragement indicator in 'data'. Must be binary (factor or numeric 0/1).}
 \item{data}{ a data frame containing all the above variables.}
 \item{sims}{ number of bootstrap simulations.}

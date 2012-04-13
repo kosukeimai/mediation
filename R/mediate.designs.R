@@ -165,6 +165,10 @@ mediate.ced <- function(outcome, med.1, med.2, treat, encourage, data,
                         ((1-PH0)/(A001-A000)) * (G0010-G0001-G0000+G0000*A000+G0011*A001)
 		}
     }#bootstraploop
+    
+    if(is.nan(d.p.c.mu) | is.nan(d.p.t.mu)){
+    	warning("NaN produced; distribution of observed variables may be too sparse")
+    }
 
     d.p.c[d.p.c==-Inf] <- NA
     d.p.t[d.p.t==-Inf] <- NA
