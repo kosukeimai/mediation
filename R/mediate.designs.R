@@ -165,17 +165,17 @@ mediate.ced <- function(outcome, med.1, med.2, treat, encourage, data,
         G1000 <- mean(d$Y2[d$T==1 & d$M1==0 & d$M2==0 & d$V==0])
         G0000 <- mean(d$Y2[d$T==0 & d$M1==0 & d$M2==0 & d$V==0])
 
-        temp11 <- sum(d$T==1 & d$M1==1)/n
-        temp01 <- sum(d$T==0 & d$M1==1)/n
-        temp10 <- sum(d$T==1 & d$M1==0)/n
-        temp00 <- sum(d$T==0 & d$M1==0)/n
+#        temp11 <- sum(d$T==1 & d$M1==1)/n
+#        temp01 <- sum(d$T==0 & d$M1==1)/n
+#        temp10 <- sum(d$T==1 & d$M1==0)/n
+#        temp00 <- sum(d$T==0 & d$M1==0)/n
         
         Q <- sum(d$T==1 & d$M1==1)/sum(d$T==1)
         B1 <- Q/((A100 - A101)*(1-Q) + (A111 - A110)*Q)
         B0 <- (1-Q)/((A100 - A101)*(1-Q) + (A111 - A110)*Q)
 
-        PH1 <- (A111-A110)*temp11 / ((A111-A110)*temp11 + (1-2*A101)*temp10)
-        PH0 <- (A011-A010)*temp01 / ((A011-A010)*temp01 + (1-2*A001)*temp00)
+#        PH1 <- (A111-A110)*temp11 / ((A111-A110)*temp11 + (1-2*A101)*temp10)
+#        PH0 <- (A011-A010)*temp01 / ((A011-A010)*temp01 + (1-2*A001)*temp00)
 		
 		if(b == sims + 1){
 #        	d.p.c.mu <- (PH1/(A111-A110)) * (G1111+G1110-G1100-G1110*A111-G1101*A110) +
