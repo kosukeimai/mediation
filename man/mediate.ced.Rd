@@ -17,7 +17,7 @@ mediate.ced(outcome, med.1, med.2, treat, encourage, data,
 \item{outcome}{ variable name in 'data' containing the outcome values observed in the second experiment. The variable must be binary (factor or numeric 0/1).}
 \item{med.1}{ variable name in 'data' containing the mediator values observed in the first experiment. The variable must be binary (factor or numeric 0/1).}
 \item{med.2}{ variable name in 'data' containing the mediator values observed in the second experiment.}
-\item{treat}{ variable name in 'data' containing the treatment values in the second experiment. Must be binary (factor or numeric 0/1).}
+\item{treat}{ variable name in 'data' containing the treatment values in the first experiment. Must be binary (factor or numeric 0/1).}
 \item{encourage}{ name of the encouragement indicator in 'data'. Must be binary (factor or numeric 0/1).}
 \item{data}{ a data frame containing all the above variables.}
 \item{sims}{ number of bootstrap simulations.}
@@ -27,6 +27,8 @@ mediate.ced(outcome, med.1, med.2, treat, encourage, data,
 
 \details{
 This function estimates the average indirect effects for the pliable units under the crossover encouragement design. The design has two stages. In the first stage the treatment is randomized and the mediator and outcome variables are measured. In the second the treatment is set to the value opposite of first period and a randomly selected group of units receives encouragement to take on the mediator opposite to the values observed in the first stage.  See Imai, Tingley and Yamamoto (2012) for a full description. The confidence intervals are calculated via the nonparametric bootstrap.
+
+Note that \code{outcome} should be the observed responses in the \emph{second} stage whereas \code{treat} should be the values in the \emph{first} stage.
 }
 
 
