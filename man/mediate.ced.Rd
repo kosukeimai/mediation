@@ -66,7 +66,7 @@ Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}.}
 
 data(CEDdata)
 
-res <- mediate.ced("Y2", "M1", "M2", "T1", "V", CEDdata, sims = 100)
-summary(ced)
+res <- mediate.ced("Y2", "M1", "M2", "T1", "Z", CEDdata, sims = 100)
+summary(res)
 
 }
