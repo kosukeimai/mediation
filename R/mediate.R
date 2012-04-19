@@ -1292,10 +1292,10 @@ print.summary.mediate <- function(x, ...){
         smat <- rbind(smat, c(x$z.avg, x$z.avg.ci, x$z.avg.p))
         smat <- rbind(smat, c(x$n.avg, x$n.avg.ci, x$n.avg.p))
         rownames(smat) <- c("Mediation Effect_0", "Mediation Effect_1",
-        					"Direct Effect_0", "Direct Effect_0",
+        					"Direct Effect_0", "Direct Effect_1",
         					"Total Effect",
-        					"Proportion via Mediation_1",
         					"Proportion via Mediation_0",
+        					"Proportion via Mediation_1",
         					"Mediation Effect (Ave.)",
         					"Direct Effect (Ave.)",
         					"Proportion via Mediation (Ave.)")
