@@ -64,18 +64,9 @@ Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}.}
 
 \examples{ 
 
-## A typical data frame (DD below) would include:
-##
-##   Outcome variable (Y)
-##   Mediator in the first experiment (natural response to T; M1)
-##   Mediator in the second experiment (given 1-T but encouraged to equal M1; M2)
-##   Treatment in the first experiment (T)
-##   Encouragement in the second experiment (V)
-##   
-##   All variables are binary. Note that the treatment for the second experiment
-##   is not needed because it equals 1-T by design.
+data(CEDdata)
 
-\dontrun{ced <- mediate.ced("Y", "M1", "M2", "T", "V", DD, sims = 100)}
-\dontrun{summary(ced)}
+res <- mediate.ced("Y2", "M1", "M2", "T1", "V", CEDdata, sims = 100)
+summary(ced)
 
 }
