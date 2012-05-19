@@ -659,7 +659,7 @@ print.summary.medsens <- function(x, ...){
 	            cat("\nSensitivity Region: ACME for Control Group\n\n")
     	        print(tab.d0)
     	    }
-            cat("\nRho at which Delta_0 = 0:", round(x$err.cr.d[1], 4))
+            cat("\nRho at which ACME for Control Group = 0:", round(x$err.cr.d[1], 4))
             cat("\nR^2_M*R^2_Y* at which ACME for Control Group = 0:", round(x$R2star.d.thresh[1], 4))
             cat("\nR^2_M~R^2_Y~ at which ACME for Control Group = 0:", round(x$R2tilde.d.thresh[1], 4), "\n\n")
             if(sum(x$ind.d1) > 0){
@@ -699,7 +699,7 @@ print.summary.medsens <- function(x, ...){
 	            cat("\nSensitivity Region: ADE for Control Group\n\n")
     	        print(tab.z0)
             }
-            cat("\nRho at which Delta_0 = 0:", round(x$err.cr.z[1], 4))
+            cat("\nRho at which ADE for Control Group = 0:", round(x$err.cr.z[1], 4))
             cat("\nR^2_M*R^2_Y* at which ADE for Control Group = 0:", round(x$R2star.z.thresh[1], 4))
             cat("\nR^2_M~R^2_Y~ at which ADE for Control Group = 0:", round(x$R2tilde.z.thresh[1], 4), "\n\n")
             if(sum(x$ind.z1) > 0){
