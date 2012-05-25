@@ -156,7 +156,8 @@ print.summary.multimed <- function(x, ...){
     printCoefmat(cmat[,1:3], digits=3)
     cat("\n")
     
-    cat("Sensitivity Analysis: Values of the sensitivity parameters at which ACME first crosses zero:\n")
+    cat("Sensitivity Analysis: \n")
+    cat("Values of the sensitivity parameters at which ACME first crosses zero:\n")
     ind.d1.b <- sum(sign(x$d1.lb) * sign(x$d1.ub) > 0) + 1
     ind.d1.c <- sum(sign(x$d1.ci[1,]) * sign(x$d1.ci[2,]) > 0) + 1
     ind.d0.b <- sum(sign(x$d0.lb) * sign(x$d0.ub) > 0) + 1

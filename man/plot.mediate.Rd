@@ -15,7 +15,7 @@ Function to plot results from \code{mediate}. The vertical axis lists indirect, 
 
 \arguments{
 \item{x}{ object of class \code{mediate} or \code{mediate.order} as produced by \code{mediate}.}
-\item{treatment}{ a character string indicating the baseline treatment value of the estimated causal mediation effect and direct effect to plot. Can be either "control", "treated" or "both". If 'NULL' (default), both sets of estimates are plotted if and only if they differ.}
+\item{treatment}{ a character string indicating the baseline treatment value of the estimated causal mediation effect and direct effect to plot. Can be either "control", "treated" or "both". If 'NULL' (default), both sets of estimates are plotted if and only if the treatment-mediator interaction term is included in the outcome model.}
 \item{labels}{ a vector of length 3 indicating the labels for the estimated effects.}
 \item{xlim}{ range of the horizontal axis.}
 \item{ylim}{ range of the vertical axis.}
