@@ -9,28 +9,36 @@ It estimates the average causal mediation effects (indirect effects) under the
 homogeneous interaction assumption based on a varying-coefficient linear
 structural equation model. The function also performs sensitivity analysis
 with respect to the violation of the homogenous interaction assumption.
+The function can be used for both the single experiment design and the
+parallel design.
 } 
 
 \usage{
 
-multimed(outcome, med.main, med.alt, treat, covariates = NULL,
-         data, sims = 1000, R2.by = 0.01, conf.level = 0.95)
+multimed(outcome, med.main, med.alt = NULL, treat, 
+         covariates = NULL, experiment = NULL,
+         data, design = c("single", "parallel"),
+         sims = 1000, R2.by = 0.01, conf.level = 0.95)
 
 }
 
 \arguments{
 \item{outcome}{ name of the outcome variable in 'data'.}
-\item{med.main}{ name of the mediator of interest.}
-\item{med.alt}{ name of the post-treatment confounder, i.e., the alternative mediator affecting both the main mediator and outcome.}
+\item{med.main}{ name of the mediator of interest. Under the parallel design this is the only mediator variable used in the estimation.}
+\item{med.alt}{ name of the post-treatment confounder, i.e., the alternative mediator affecting both the main mediator and outcome. Not needed for the parallel design.}
 \item{treat}{ name of the treatment variable in 'data'.}
-\item{covariates}{ vector of character strings representing the names of the pre-treatment covariates.}
+\item{covariates}{ vector of character strings representing the names of the pre-treatment covariates. Cannot be used for the parallel design.}
+\item{experiment}{ name of the binary indicator whether 'med.main' is randomly manipulated or not. Only used under the parallel design.}
 \item{data}{ a data frame containing all the above variables.}
+\item{design}{ experimental design used. Defaults to 'single'.}
 \item{sims}{ number of bootstrap samples used for the calculation of confidence intervals.}
 \item{R2.by}{ increment for the "R square tilde" parameter, i.e. the sensitivity parameter representing the proportion of residual outcome variance explained by heterogeneity in treatment-mediator interactions. Must be a numeric value between 0 and 1.}
 \item{conf.level}{ level to be used for confidence intervals.}
 }
 
-\details{This function implements the framework proposed by Imai and Yamamoto (2012) for the estimation and sensitivity analysis for multiple causal mechanisms. It estimates the average causal mediation effects with respect to the mediator of interest (`med.main'), i.e., the portion of the treatment effect on the outcome that is transmitted through that mediator. Unlike the "standard" causal mediation analysis implemented by \code{\link{mediate}} and \code{\link{medsens}}, this framework allows the existence of a post-treatment covariate that confounds the relationship between the main mediator and the outcome, or equivalently, an alternative mediator (`med.alt') that causally precedes the main mediator. 
+\details{This function implements the framework proposed by Imai and Yamamoto (2012) for the estimation and sensitivity analysis for multiple causal mechanisms. It estimates the average causal mediation effects with respect to the mediator of interest ('med.main'), i.e., the portion of the treatment effect on the outcome that is transmitted through that mediator. Unlike the "standard" causal mediation analysis implemented by \code{\link{mediate}} and \code{\link{medsens}}, this framework allows the existence of a post-treatment covariate that confounds the relationship between the main mediator and the outcome, or equivalently, an alternative mediator ('med.alt') that causally precedes the main mediator.
+	
+When the parallel design was used for the experiment (i.e. when the experiment contained an additional randomly assigned group for which both the treatment and the mediator were randomized), there is no need to specify a particular post-treatment confounder, for any such confounder (observed or unobserved) is allowed to exist by virtue of the design. Similarly, no observed covariates need to be included. The function instead requires an additional variable ('experiment') indicating whether the mediator was randomly manipulated for the unit.
 
 The estimation and sensitivity analysis are both based on a varying-coefficient linear structural equations model, which assumes additivity but allows for an arbitrary degree of heterogeneity in model coefficients across units and thus is substantially more flexible than a traditional SEM framework. For details see Imai and Yamamoto (2012).
 
@@ -71,9 +79,17 @@ Imai, K. and Yamamoto, T. (2012) Identification and Sensitivity Analysis for Mul
 data(framing)
 Xnames <- c("age", "educ", "gender", "income")
 res <- multimed("immigr", "emo", "p_harm", "treat", Xnames, 
-               data = framing, sims = 100)
+               data = framing, design = "single", sims = 100)
 summary(res)
 plot(res, type = "point")
 plot(res, type = c("sigma", "R2-total"), tgroup = "average")
+
+# Parallel design example using the simulated data of Imai, Tingley and Yamamoto (2012)
+
+data(boundsdata)
+res.para <- multimed(outcome = "out", med.main = "med", treat = "ttt", experiment = "manip",
+					 data = boundsdata, design = "parallel", sims = 100)
+summary(res.para)
+plot(res.para, tg = "av")
 
 }

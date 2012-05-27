@@ -2,37 +2,58 @@
 # Sensitivity Analysis for Multiple Mediators
 ##################################################################
 
-multimed <- function(outcome, med.main, med.alt, treat, covariates = NULL, 
-					 data, sims = 1000, R2.by = 0.01, conf.level = 0.95){
-    
-    varnames <- c(outcome, treat, med.main, med.alt, covariates)
+multimed <- function(outcome, med.main, med.alt = NULL, treat, 
+					 covariates = NULL, experiment = NULL, 
+					 data, design = c("single", "parallel"),
+					 sims = 1000, R2.by = 0.01, conf.level = 0.95){
+
+    varnames <- c(outcome, treat, med.main, med.alt, experiment, covariates)
     data <- na.omit(data[,varnames])
     
-    if (is.null(covariates)){
+    design <- match.arg(design)
+    
+    if(design == "single"){
+	    if (is.null(covariates)){
+	        f.y <- as.formula(paste(outcome, "~", treat, "+", med.main, "+",
+	                                paste(treat, med.main, sep=":"), "+", med.alt, "+",
+	                                paste(treat, med.alt, sep=":")))
+	        f.ytot <- as.formula(paste(outcome, "~", treat))
+	        f.m <- as.formula(paste(med.main, "~", treat))
+	        f.w <- as.formula(paste(med.alt, "~", treat))
+	    } else {
+	        f.y <- as.formula(paste(outcome, "~", treat, "+", med.main, "+",
+	                                paste(treat, med.main, sep=":"), "+", med.alt, "+",
+	                                paste(treat, med.alt, sep=":"), "+",
+	                                paste(covariates, collapse = " + ")))
+	        f.ytot <- as.formula(paste(outcome, "~", treat, "+", 
+	        						paste(covariates, collapse = " + ")))
+	        f.m <- as.formula(paste(med.main, "~", treat, "+", paste(covariates, collapse = " + ")))
+	        f.w <- as.formula(paste(med.alt, "~", treat, "+", paste(covariates, collapse = " + ")))
+	    }
+    } else if (design == "parallel"){
+    	if (!is.null(covariates)){
+    		warning("covariates currently cannot be used for the parallel design; option ignored")
+    	}
         f.y <- as.formula(paste(outcome, "~", treat, "+", med.main, "+",
-                                paste(treat, med.main, sep=":"), "+", med.alt, "+",
-                                paste(treat, med.alt, sep=":")))
+                                paste(treat, med.main, sep=":")))
         f.ytot <- as.formula(paste(outcome, "~", treat))
         f.m <- as.formula(paste(med.main, "~", treat))
-        f.w <- as.formula(paste(med.alt, "~", treat))
     } else {
-        f.y <- as.formula(paste(outcome, "~", treat, "+", med.main, "+",
-                                paste(treat, med.main, sep=":"), "+", med.alt, "+",
-                                paste(treat, med.alt, sep=":"), "+",
-                                paste(covariates, collapse = " + ")))
-        f.ytot <- as.formula(paste(outcome, "~", treat, "+", paste(covariates, collapse = " + ")))
-        f.m <- as.formula(paste(med.main, "~", treat, "+", paste(covariates, collapse = " + ")))
-        f.w <- as.formula(paste(med.alt, "~", treat, "+", paste(covariates, collapse = " + ")))
+    	stop("design unsupported by the multimed procedure")
     }
     
     # Compute sensitivity parameters
     R2.s <- seq(0, 1, by = R2.by)
 
-    ETM2 <- mean(data[,treat] * data[,med.main]^2)
-    model.y <- lm(f.y, data=data)
+	data.1 <- switch(design,
+					 single = data,
+					 parallel = subset(data, data[[experiment]] == 1))
+					   
+    ETM2 <- mean(data.1[,treat] * data.1[,med.main]^2)
+    model.y <- lm(f.y, data=data.1)
     sigma <- summary(model.y)$sigma * sqrt(R2.s/ETM2)
 
-    VY <- var(data[,outcome])
+    VY <- var(data.1[,outcome])
     R2.t <- ETM2 * sigma^2/VY
     
     # Bootstrap ACME values
@@ -47,17 +68,29 @@ multimed <- function(outcome, med.main, med.alt, treat, covariates = NULL,
         	data.b <- data
         }
 
+		# Subset data for parallel design
+		data.b.0 <- switch(design,
+						   single = data.b,
+						   parallel = subset(data.b, data.b[[experiment]] == 0))
+		data.b.1 <- switch(design,
+						   single = data.b,
+						   parallel = subset(data.b, data.b[[experiment]] == 1))
+		
         # Fit models
-        model.y <- lm(f.y, data=data.b)
-        model.ytot <- lm(f.ytot, data=data.b)
-        model.m <- lm(f.m, data=data.b)
-        model.w <- lm(f.w, data=data.b)
+        model.y <- lm(f.y, data=data.b.1)
+        model.ytot <- lm(f.ytot, data=data.b.0)
+        model.m <- lm(f.m, data=data.b.0)
+        if(design == "single"){
+	        model.w <- lm(f.w, data=data.b)
+        }
         
         beta3 <- coef(model.y)[treat]
         kappa <- coef(model.y)[paste(treat, med.main, sep=":")]
-        xi3 <- coef(model.y)[med.alt]
-        mu3 <- coef(model.y)[paste(treat, med.alt, sep=":")]
-
+        if(design == "single"){
+	        xi3 <- coef(model.y)[med.alt]
+    	    mu3 <- coef(model.y)[paste(treat, med.alt, sep=":")]
+		}
+		
         # E(M|T=t)
         mf.m1 <- mf.m0 <- mf.m <- model.frame(model.m)
         mf.m1[,treat] <- 1
@@ -70,29 +103,37 @@ multimed <- function(outcome, med.main, med.alt, treat, covariates = NULL,
         VM.0 <- sum(model.m$residuals[mf.m[,treat]==0]^2)/(sum(1-mf.m[,treat]) - length(coef(model.m)))
 
         # E(W|T=t)
-        mf.w1 <- mf.w0 <- model.frame(model.w)
-        mf.w1[,treat] <- 1
-        mf.w0[,treat] <- 0
-        EW.1 <- mean(predict(model.w, mf.w1))
-        EW.0 <- mean(predict(model.w, mf.w0))
+        if(design == "single"){
+	        mf.w1 <- mf.w0 <- model.frame(model.w)
+	        mf.w1[,treat] <- 1
+	        mf.w0[,treat] <- 0
+	        EW.1 <- mean(predict(model.w, mf.w1))
+	        EW.0 <- mean(predict(model.w, mf.w0))
+	    }
 
         ## Bounds
         # ACME
         if(b == sims + 1){
         	tau.o <- coef(model.ytot)[treat]
-	        ACME.1.lo.o <- tau.o - beta3 - kappa*EM.0 - sigma*sqrt(VM.0) - (xi3 + mu3)*EW.1 + xi3*EW.0
-    	    ACME.0.lo.o <- tau.o - beta3 - kappa*EM.1 - sigma*sqrt(VM.1) - (xi3 + mu3)*EW.1 + xi3*EW.0
-        	ACME.1.up.o <- tau.o - beta3 - kappa*EM.0 + sigma*sqrt(VM.0) - (xi3 + mu3)*EW.1 + xi3*EW.0
-        	ACME.0.up.o <- tau.o - beta3 - kappa*EM.1 + sigma*sqrt(VM.1) - (xi3 + mu3)*EW.1 + xi3*EW.0
+        	WXterms <- switch(design,
+        					  single = (xi3 + mu3)*EW.1 - xi3*EW.0,
+        					  parallel = 0)
+	        ACME.1.lo.o <- tau.o - beta3 - kappa*EM.0 - sigma*sqrt(VM.0) - WXterms
+	        ACME.0.lo.o <- tau.o - beta3 - kappa*EM.1 - sigma*sqrt(VM.1) - WXterms
+	        ACME.1.up.o <- tau.o - beta3 - kappa*EM.0 + sigma*sqrt(VM.0) - WXterms
+        	ACME.0.up.o <- tau.o - beta3 - kappa*EM.1 + sigma*sqrt(VM.1) - WXterms
    	        P <- mean(data.b[,treat])
     	    ACME.ave.lo.o <- P * ACME.1.lo.o + (1-P) * ACME.0.lo.o
         	ACME.ave.up.o <- P * ACME.1.up.o + (1-P) * ACME.0.up.o
         } else {
     	    tau[b] <- coef(model.ytot)[treat]
-	        ACME.1.lo[,b] <- tau[b] - beta3 - kappa*EM.0 - sigma*sqrt(VM.0) - (xi3 + mu3)*EW.1 + xi3*EW.0
-    	    ACME.0.lo[,b] <- tau[b] - beta3 - kappa*EM.1 - sigma*sqrt(VM.1) - (xi3 + mu3)*EW.1 + xi3*EW.0
-        	ACME.1.up[,b] <- tau[b] - beta3 - kappa*EM.0 + sigma*sqrt(VM.0) - (xi3 + mu3)*EW.1 + xi3*EW.0
-        	ACME.0.up[,b] <- tau[b] - beta3 - kappa*EM.1 + sigma*sqrt(VM.1) - (xi3 + mu3)*EW.1 + xi3*EW.0
+        	WXterms <- switch(design,
+        					  single = (xi3 + mu3)*EW.1 - xi3*EW.0,
+        					  parallel = 0)
+	        ACME.1.lo[,b] <- tau[b] - beta3 - kappa*EM.0 - sigma*sqrt(VM.0) - WXterms
+    	    ACME.0.lo[,b] <- tau[b] - beta3 - kappa*EM.1 - sigma*sqrt(VM.1) - WXterms
+        	ACME.1.up[,b] <- tau[b] - beta3 - kappa*EM.0 + sigma*sqrt(VM.0) - WXterms
+        	ACME.0.up[,b] <- tau[b] - beta3 - kappa*EM.1 + sigma*sqrt(VM.1) - WXterms
 	        P <- mean(data.b[,treat])
     	    ACME.ave.lo[,b] <- P * ACME.1.lo[,b] + (1-P) * ACME.0.lo[,b]
         	ACME.ave.up[,b] <- P * ACME.1.up[,b] + (1-P) * ACME.0.up[,b]
