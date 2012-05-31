@@ -1,688 +1,646 @@
 %\VignetteIndexEntry{mediation}
 
-\documentclass[11pt,letterpaper]{article}
-%% === margins ===
-\addtolength{\hoffset}{-0.75in} \addtolength{\voffset}{-0.75in}
-\addtolength{\textwidth}{1.5in} \addtolength{\textheight}{1.5in}
+\documentclass[nojss]{jss}
 
-\usepackage{Sweave}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% declarations for jss.cls %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% === basic packages ===
-\usepackage{latexsym}
-\usepackage{amssymb,amsmath, bm}
-\usepackage{graphicx}
-%% === bibliography packages ===
+%% almost as usual
+\author{Dustin Tingley\\Harvard \And
+        Teppei Yamamoto\\MIT \And
+        Luke Keele\\Penn State \And
+        Kosuke Imai\\Princeton
+}
+\title{\pkg{mediation}: \proglang{R} Package for Causal Mediation Analysis}
+
+%% for pretty printing and a nice hypersummary also set:
+\Plainauthor{Dustin Tingley, Teppei Yamamoto, Kosuke Imai, Luke Keele} %% comma-separated
+\Plaintitle{mediation: R Package for Causal Mediation Analysis} %% without formatting
+\Shorttitle{Causal Mediation Analysis}  %% a short title (if necessary)
+
+%% an abstract and keywords
+\Abstract{ 
+  
+  In this paper, we describe the \proglang{R} package \pkg{mediation}
+  for conducting causal mediation analysis in applied empirical
+  research.  In many scientific disciplines, the goal of researchers
+  is not only estimating causal effects of a treatment but also
+  understanding the process in which the treatment causally affects
+  the outcome.  Causal mediation analysis is frequently used to assess
+  potential causal mechanisms.  The \pkg{mediation} package implements
+  a comprehensive suite of statistical tools for conducting such an
+  analysis.  The package is organized into two distinct approaches.
+  Using the model-based approach, researchers can estimate causal
+  mediation effects and conduct sensitivity analysis under the
+  standard research design.  Furthermore, the design-based approach
+  provides several analysis tools that are applicable under different
+  experimental designs.  This approach requires weaker assumptions
+  than the model-based approach.  Finally, we also implement a
+  statistical method for dealing with multiple (causally dependent)
+  mediators, which are often encountered in practice. 
+  
+}
+\Keywords{causal mechanisms, mediation analysis, \pkg{mediation}, \proglang{R}}
+\Plainkeywords{causal mechanisms, mediation analysis, mediation, R} %% without formatting
+%% at least one keyword must be supplied
+
+%% publication information
+%% NOTE: Typically, this can be left commented and will be filled out by the technical editor
+%% \Volume{13}
+%% \Issue{9}
+%% \Month{September}
+%% \Year{2004}
+%% \Submitdate{2004-09-29}
+%% \Acceptdate{2004-09-29}
+
+%% The address of (at least) one author should be given
+%% in the following format:
+\Address{
+  Dustin Tingley\\
+  Department of Government\\
+  1737 Cambridge St, Cambridge, MA, USA\\
+  E-mail: \email{dtingley@gov.harvard.edu}\\
+  URL: \url{http://scholar.harvard.edu/dtingley}\\
+  \\
+  Teppei Yamamoto\\
+  Department of Political Science\\
+  77 Massachusetts Avenue, E53-463, Cambridge, MA, USA\\
+  E-mail: \email{teppei@mit.edu}\\
+  URL: \url{http://web.mit.edu/teppei/www}\\
+    \\
+  Luke Keele\\
+  Department of Political Science\\
+  211 Pond Lab\\
+  University Park, PA, USA\\
+  Email: \email{ljk20@psu.edu}\\
+  URL: \url{http://www.personal.psu.edu/ljk20}\\
+  \\
+  Kosuke Imai\\
+  Department of Politics \\
+  Princeton University\\
+  Princeton, NJ, USA\\
+  E-mail: \email{kimai@Princeton.Edu} \\
+  URL: \url{http://imai.princeton.edu}
+}
+
+%% It is also possible to add a telephone and fax number
+%% before the e-mail in the following format:
+%% Telephone: +43/1/31336-5053
+%% Fax: +43/1/31336-734
+
+%% for those who use Sweave please include the following line (with % symbols):
+%% need no \usepackage{Sweave.sty}
+
+%% end of declarations %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% == BibTeX packages
 \usepackage{natbib}
-\bibliographystyle{natbib}
-%% === hyperref options ===
-\usepackage{color}
-\usepackage[pdftex, bookmarksopen=true, bookmarksnumbered=true,
-pdfstartview=FitH, breaklinks=true, urlbordercolor={0 1 0}, citebordercolor={0 0 1}]{hyperref}
+\bibliographystyle{jss}
 
-% === dcolumn package ===
-\usepackage{dcolumn}
-\newcolumntype{.}{D{.}{.}{-1}}
-\newcolumntype{d}[1]{D{.}{.}{#1}}
-% === theorem package ===
-\usepackage{theorem}
-\theoremstyle{plain}
-\theoremheaderfont{\scshape}
-\newtheorem{theorem}{Theorem}
-\newtheorem{algorithm}{Algorithm}
-\newtheorem{assumption}{Assumption}
-\newtheorem{lemma}{Lemma}
-\newtheorem{remark}{Remark}
-\newcommand{\qed}{\hfill \ensuremath{\Box}}
-\newcommand\indep{\protect\mathpalette{\protect\independenT}{\perp}}
-\DeclareMathOperator{\sgn}{sgn}
-\DeclareMathOperator{\argmin}{arg\min}
-\def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
-\providecommand{\norm}[1]{\lVert#1\rVert}
-
-% ==== rotating package ===
+% == Other Packages
+\usepackage{amsmath, amsfonts, amssymb, url, bm}
 \usepackage{rotating}
+\usepackage{latexsym}
+\usepackage{graphicx}
+\usepackage{ulem}
 
-% ==== dotted lines in tables ===
-\usepackage{arydshln}
+% == New Commands
+% = For general typesetting
+\newcommand\spacingset[1]{\renewcommand{\baselinestretch}{#1}\small\normalsize}
+\renewcommand\r{\right}
+\renewcommand\l{\left}
 
-% == spacing between sections and subsections
-\usepackage[compact]{titlesec}
+% = For bibtex
+\def\citepos#1{\citeauthor{#1}'s (\citeyear{#1})}
+\newcommand\citea{\citeauthor}
 
+% = For general math
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}{Proposition}
+\newtheorem{assumption}{Assumption}
+\newcommand{\qed}{\hfill \ensuremath{\Box}}
+\DeclareMathOperator*\argmax{argmax}
+\DeclareMathOperator*\argmin{argmin}
 
-% == multiple figure control
-\usepackage{subfigure}
-\def\subfigcapskip{-.2in}
-\def\subfigtopskip{-.55in}
-%\def\subfigbottomskip{-1in}
-%\def\subfigcapmargin{1in}
-
-%\usepackage{times}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-% === new commands ===
+% = For stats & econometrics
+\renewcommand{\epsilon}{\varepsilon}
 \newcommand\ud{\mathrm{d}}
 \newcommand\dist{\buildrel\rm d\over\sim}
 \newcommand\ind{\stackrel{\rm indep.}{\sim}}
 \newcommand\iid{\stackrel{\rm i.i.d.}{\sim}}
 \newcommand\logit{{\rm logit}}
-\renewcommand\r{\right}
-\renewcommand\l{\left}
 \newcommand\cA{\mathcal{A}}
-\newcommand\E{\mathbb{E}}
+\renewcommand\E{\mathbb{E}}
+\newcommand\V{\mathbb{V}}
+\newcommand\Cov{\textrm{Cov}}
+\newcommand\Corr{\textrm{Corr}}
 \newcommand\cJ{\mathcal{J}}
-\newcommand\bR{{\bf R}}
-\newcommand\bmediation{{\bf mediation}}
-\newcommand\bt{\mathbf{t}}
-\newcommand\bone{\mathbf{1}}
-\newcommand\bzero{\mathbf{0}}
-\newcommand\var{{\rm Var}}
-\newcommand\cov{{\rm Cov}}
-\newcommand\tomega{\tilde\omega}
+\newcommand\cT{\mathcal{T}}
+\newcommand\y{{\bm y}}
+\newcommand\X{{\bm X}}
+\newcommand\x{{\bm x}}
+\newcommand\eps{{\bm\varepsilon}}
+\newcommand\zero{{\bm 0}}
+\newcommand\be{{\bm\beta}}
+\renewcommand\b{{\bm b}}
+\newcommand\C{{\bm C}}
+\newcommand\D{{\bm D}}
+\newcommand\I{{\bm I}}
+\newcommand\Z{{\bm Z}}
+\newcommand\eeta{{\bm \eta}}
+\DeclareMathOperator*\plim{plim}
+\DeclareMathOperator\rank{rank}
+\newcommand{\indep}{\mbox{$\perp\!\!\!\perp$}}
+\DeclareMathOperator{\sgn}{sgn}
+\def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% == document begins here
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
 
-\newcommand\spacingset[1]{\renewcommand{\baselinestretch}%
-{#1}\small\normalsize}
+%% include your article here, just as usual
+%% Note that you should use the \pkg{}, \proglang{} and \code{} commands.
 
-\spacingset{1.2}
+\SweaveOpts{keep.source=TRUE, echo = TRUE, results = verbatim, eval = TRUE}
+%\SweaveOpts{keep.source=TRUE, echo = TRUE, results = hide, eval = FALSE}
 
-\newcommand{\blind}{0}
-\newcommand{\polisci}{1}
-
-\newcommand{\tit}{Causal Mediation Analysis Using R}
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\if0\blind
-
-{\title{\bf \tit\thanks{This is an {\bf \color{red} old} vignette for the {\bf mediation} package,
-	which itself is an updated version of the tutorial originally published in 
-	an edited \citep{imai:etal:10}. The description is based on {\bf version 3.1} 
-	of {\bf mediation} and {\bf \color{red} does not accurately describe the most current version}. 
-	For the most up-to-date tutorial type {\tt vignette("mediationR2")} to read the
-	new vignette. Financial support from the National Science Foundation
-    (SES-0752050) is acknowledged.}}
-
-  \author{Kosuke Imai\thanks{Assistant Professor, Department of
-      Politics, Princeton University, Princeton NJ 08544. Phone:
-      609--258--6610, Email:
-      \href{mailto:kimai@princeton.edu}{kimai@princeton.edu}, URL:
-      \href{http://imai.princeton.edu}{http://imai.princeton.edu}}
-    \quad \quad Luke Keele\thanks{Associate Professor, Department of
-      Political Science, 2140 Derby Hall, Ohio State University,
-      Columbus, OH 43210 Phone: 614-247-4256, Email:
-      keele.4@polisci.osu.edu}
-    \quad \quad Dustin Tingley\thanks{Assistant Professor, Government Department, Harvard University. Email:
-      \href{dtingley@gov.harvard.edu}{dtingley@gov.harvard.edu}, URL:
-      \href{http://scholar.harvard.edu/dtingley}{http://scholar.harvard.edu/dtingley}}
-    \quad \quad Teppei Yamamoto\thanks{Assistant Professor, Department of
-        Political Science, Massachusetts Institute of Technology, 77 Massachusetts
-        Avenue, Cambridge, MA 02139. Phone: 617-253-6959, Email:
-        \href{mailto:teppei@mit.edu}{teppei@mit.edu}, URL:
-        \href{http://web.mit.edu/teppei/www}{http://web.mit.edu/teppei/www}}
-}
-
-\date{ \today
-%  First Draft: June 13, 2009 \\
-%  This Draft: July 13, 2009
-}
-
-\maketitle
-}\fi
-
-\if1\blind \title{\bf \tit} %\maketitle
-\fi
-
-\pdfbookmark[1]{Title Page}{Title Page}
-
-\thispagestyle{empty}
-\setcounter{page}{0}
-
-\begin{abstract}
-
-  Causal mediation analysis is widely used across many disciplines to
-  investigate possible causal mechanisms.  Such an analysis allows
-  researchers to explore various causal pathways, going beyond the
-  estimation of simple causal effects. Recently,
-  \citet*{imai:keel:yama:10} and \citet*{imai:keel:ting:10} developed
-  general algorithms to estimate causal mediation effects with the
-  variety of data types that are often encountered in practice.  The
-  new algorithms can estimate causal mediation effects for linear and
-  nonlinear relationships, with parametric and nonparametric models,
-  with continuous and discrete mediators, and various types of outcome
-  variables. In this paper, we show how to implement these algorithms
-  in the statistical computing language \bR.  Our easy-to-use
-  software, \bmediation, takes advantage of the object-oriented
-  programming nature of the \bR\ language and allows researchers to
-  estimate causal mediation effects in a straightforward manner.
-  Finally, \bmediation\ also implements sensitivity analyses which can
-  be used to formally assess the robustness of findings to the
-  potential violations of the key identifying assumption.  After
-  describing the basic structure of the software, we illustrate its
-  use with several empirical examples.
-
-\end{abstract}
-
-\clearpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 
-Causal mediation analysis is important for quantitative social science
-research because it allows researchers to identify possible causal
-mechanisms, thereby going beyond the simple estimation of causal
-effects.  As social scientists, we are often interested in empirically
-testing a theoretical explanation of a particular causal phenomenon.
-This is the primary goal of causal mediation analysis.  Thus, causal
-mediation analysis has a potential to overcome the common criticism of
-quantitative social science research that it only provides a black-box
-view of causality.
+Scholars across a range of disciplines are increasingly interested in
+identifying causal mechanisms, going beyond the estimation of causal
+effects. Once they ascertain that certain variables causally affect
+the outcome, the next natural step is to understand how these
+variables exert their influence.  The standard procedure for analyzing
+causal mechanisms in applied research is called {\it mediation
+  analysis}, where a set of linear regression models are fitted and
+then the estimates of ``mediation effects'' are computed from the
+fitted models
+\citep[e.g.,][]{haav:43,baro:kenn:86,shad:cook:camp:01,MacKinnon:2008}. In
+recent years, however, causal mechanisms have been studied within the
+modern framework of causal inference with an emphasis on the
+assumptions required for identification. This approach has highlighted
+limitations of earlier methods and pointed the way towards a more
+flexible estimation strategy.  In addition, new research designs have
+been proposed for identifying causal mechanisms.
 
-Recently, \citet*{imai:keel:yama:10} and \citet*{imai:keel:ting:10}
-developed general algorithms for the estimation of causal mediation
-effects with a wide variety of data that are often encountered in
-practice.  The new algorithms can estimate causal mediation effects
-for linear and nonlinear relationships, with parametric and
-nonparametric models, with continuous and discrete mediators, and
-various types of outcome variables.
-\citet{imai:keel:yama:10,imai:keel:ting:10} also develop sensitivity
-analyses which can be used to formally assess the robustness of
-findings to the potential violations of the key identifying
-assumption.  In this paper, we describe the easy-to-use software,
-\bmediation, which allows researchers to conduct causal mediation
-analysis within the statistical computing language \bR\ \citep{R:09}.
-We illustrate the use of the software with some of the empirical
-examples presented in \citet{imai:keel:ting:10}.
+In this paper, we introduce a full featured \proglang{R} package,
+\pkg{mediation}, for studying causal mechanisms. The \pkg{mediation}
+package allows users to (1) investigate the role of causal mechanisms
+using different types of data and statistical models, (2) explore how
+results change as identification assumptions are relaxed, and (3)
+calculate quantities of interest under alternative research
+designs. We focus on the demonstration of the functionalities
+available through the \pkg{mediation} package.  The statistical theory
+that underlies the procedures implemented in the \pkg{mediation}
+package is presented elsewhere along with various empirical examples
+\citep{imai:keel:yama:10,ImaiAPSR,imai:keel:ting:10,ImaiDesign}.
 
-\paragraph{Installation and Updating.} Before we begin, we explain how
-to install and update the software.  First, researchers need to
-install \bR\ which is available freely at the Comprehensive R Archive
-Network (\href{http://cran.r-project.org}{http://cran.r-project.org}).
-Next, open \bR\ and then type the following at the prompt,
-\begin{verbatim}
-R> install.packages("mediation")
-\end{verbatim}
-Once \bmediation\ is installed, the following command will load the package,
-\begin{verbatim}
-R> library("mediation")
-\end{verbatim}
-Finally, to update \bmediation\ to its latest version, try the
-following command,
-\begin{verbatim}
-R> update.packages("mediation")
-\end{verbatim}
+The \pkg{mediation} package is freely available for download via the
+\href{http://cran.r-project.org/web/packages/mediation}{Comprehensive
+  R Archive Network (CRAN)} and runs on a variety of computing
+platforms.  In addition, a \proglang{Stata} version of the package is
+available but has a more limited functionality \citep{MediateStata}.
+The first version of the \pkg{mediation} package appeared at CRAN in
+2009, and \citet{imai:etal:10} discuss an earlier version of the
+package.  Over the last three years, however, we have dramatically
+improved the package, which as a result has a significant number of
+new functionalities and improvements.  The current paper thus
+provides an up-to-date description of the analyses that can be
+conducted via the \pkg{mediation} package.  To install the
+\pkg{mediation} package, use the following standard syntax for
+installing an \proglang{R} package,
+<<eval=FALSE>>=
+install.packages("mediation")
+@
+where users may be prompted with the selection of CRAN mirror from
+which the package will be downloaded.  This step needs to be done only
+once (unless one wishes to update the \pkg{mediation} package to the
+new version).
 
-\section{New Features in Versions 3.x}
+In the next section, we present an overview of the \pkg{mediation}
+package.  We then describe the functionalities of the package for the
+model-based causal mediation analysis (Section~\ref{sec:mediate}), the
+design-based causal mediation analysis (Section~\ref{sec:design}), and
+the analysis of causally dependent multiple mediators
+(Section~\ref{sec:multimech}). Finally,
+Section~\ref{sec:conclude} concludes.
 
-This section describes the new features implemented since the release
-of \bmediation\ version 3.0. Although the rest of this document has
-also been updated to incorporate those additional features, we discuss
-them separately here for those readers who are already familiar with
-previous versions of the package and only want specific information
-about the recent updates. Those who are new to this package can safely
-skip this section and obtain the same information elsewhere in this
-vignette or in the help documents.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section[Overview of the mediation package]{Overview of the
+  \pkg{mediation} Package}
 
-\subsection{Features Added in Version 3.0}
-We implemented many new features in version 3.0,
-along with numerous small changes to the internal code for efficiency
-improvement.  The user-level changes from the previous version include:
+The \pkg{mediation} package consists of several main functions as well
+as various methods for summarizing output from these functions
+(e.g. \code{plot} and \code{summary}). The package requires little
+programming knowledge on the user's side. Figure~\ref{fg:structure} 
+illustrates the basic structure of the
+\pkg{mediation} package, which distinguishes between 
+model-based and design-based inference.
+Model-based inference has been standard practice in the mediation
+analysis to date. In the experimental setting, the treatment variable
+is randomized and the mediating and outcome variables are
+observed. \citet{imai:keel:ting:10} show that a range of parametric
+and semi-parametric models may then be used to estimate the average
+causal mediation effect, defined below, and other quantities of
+interest. This modeling approach relies on the sequential ignorability
+assumption for point identification, which as
+\citet{imai:keel:ting:10} show, provides a general purpose algorithm
+for calculation of quantities of interest. In contrast, design-based
+inference primarily employs the features of the experimental design 
+and does not require the sequential ignorability
+assumption. The formal identification properties of these designs are
+studied by \citet{ImaiDesign} and the examples from experimental and
+observational studies are contained in \citet{ImaiAPSR,ImaiDesign}.
+We refer readers to these papers for the details about the statistical
+methods implemented via the \pkg{mediation} package.
 
-\begin{itemize}
-\item More model types have been added to the main mediation analysis function {\tt mediate}.
-In addition to the models already implemented in the previous version, the {\tt mediate}
-function can now be used for ordered response models fitted via the {\tt polr}
-function, quantile regressions for mediators fitted via the {\tt qr} function in package
-{\tt quantreg}, and the tobit model for censored outcome variables fitted via the
-{\tt vglm} function in package {\tt VGAM}.  These models have not been made available
-for sensitivity analysis via {\tt medsens}, however.
-
-\item Continuous treatment variables can now be used with the {\tt mediate} function
-via the {\tt treat.value} and {\tt control.value} arguments.  The estimated average
-causal mediation effects (ACME) and average direct effects (ADE) will be equal to the
-effects of changing treatment from {\tt control.value} to {\tt treat.value} while
-holding the appropriate treatment status constant at either of these two values.
-This functionality, however, has not been implemented for the {\tt medsens} function yet.
-
-\item The sensitivity analysis via {\tt medsens} can now be conducted with respect
-to the average direct effects.  Users can choose from {\tt "indirect"}, {\tt "direct"}
-or {\tt "both"} using the {\tt effect.type} argument.  The {\tt summary} and {\tt plot}
-methods are also added for these cases.
-
-\item A {\tt plot} method function for {\tt mediate} objects is now included,
-so that the results of mediation analysis using {\tt mediate} can be easily graphically
-summarized.  When the input includes treatment-mediator interaction and the effect estimates
-therefore differ between the treatment and control conditions, the user can choose which
-set of estimates to plot by setting the {\tt treatment} argument to {\tt "treated"},
-{\tt "control"}, or {\tt "both"}.
-
-\item The {\tt summary} output for {\tt mediate} objects has been updated to include
-additional information and not to include unnecessary information (e.g. separate estimates
-for $\bar\delta(0)$ and $\bar\delta(1)$ when they are equal).
-
-\item The output of the {\tt mediate} function now by default includes the entire sets of
-simulation draws ({\tt d0.sims}, {\tt z0.sims}, etc.) in addition to their means
-and quantiles.  This can be disabled by setting the {\tt long} argument to {\tt FALSE}.
-
-\item The {\tt mediate} function can now run even when different data frames are used
-for the mediator model ({\tt model.m}) and outcome model ({\tt model.y}).  This is
-done by internally refitting both models using a combined data frame created via {\tt merge}.
-As a result, observations which contain missing values for either model will be
-automatically listwise discarded.  This feature is by default disabled and can be
-enabled by setting the {\tt dropobs} option to {\tt TRUE}.
-
-\item Confidence intervals can now be calculated using heteroskedasticity-consistent
-standard errors for some parametric models (e.g. {\tt lm}, {\tt glm}).  This
-feature is controled by the new {\tt robustSE} argument of the {\tt mediate} function.
-The standard errors are obtained via the {\tt vcovHC} function in package {\tt sandwich}
-and users may also pass options for {\tt vcovHC} to use different types of
-robust standard errors.  However, these standard errors are currently not carried
-through for sensitivity analysis; the output of {\tt medsens} will not be based
-on robust standard errors regardless of the {\tt robustSE} argument.
-
-\item Users no longer need to manually indicate whether their models include a 
-treatment-mediator interaction.  The old {\tt INT} argument is therefore deprecated 
-(but still accepted with a warning).
-
-\item Sampling weights can now be used for the {\tt mediate} and {\tt medsens}
-functions via the {\tt weights} arguments in the input mediator and outcome models.
-The estimated quantities will thus be weighted averages when the mediator and 
-outcome models are fitted with a non-{\tt NULL} {\tt weights} argument. This 
-will be useful if, for example, data come from a complex survey.
-
-\item We have added a new function {\tt mediations} to easily conduct multiple
-causal mediation analyses for different treatment-mediator-outcome combinations.
-Both {\tt summary} and {\tt plot} methods have also been added for this function.
-The function is intended for exploratory analyses only and users are cautioned against
-its potential abuse.  See Section~\ref{sec:mediations} for more discussion.
-
-\end{itemize}
-
-\subsection{Features Added in Version 3.1}
-We made minor updates to the \bmediation\ package upon the release of
-version 3.1.
-
-\begin{itemize}
-
-\item Confidence intervals can now be calculated using one way clustered 
-standard errors\footnote{See 
-  \href{http://people.su.se/~ma/clustering.pdf}{http://people.su.se/$\sim$ma/clustering.pdf} 
-  for a discussion of the implementation.} 
-for some parametric models (e.g., 
-{\tt lm}, {\tt glm}). This feature is controlled by the new {\tt cluster} 
-argument of the {\tt mediate} function. These standard errors are currently 
-not carried through for sensitivity analysis. The {\tt cluster} option is 
-enabled by specifying the variable on which to cluster. The default is to not 
-cluster and hence is set to {\tt NULL}. 
-
-\item Ordered mediator and outcome models can now be fitted via the
-  {\tt bayespolr} function in the {\tt arm} package, along with the
-  {\tt polr} function. 
-\end{itemize}
-
-\section{The Software}
-
-In this section, we give an overview of the software by describing its
-design and architecture.  To avoid the duplication, we do not provide
-the details of the methods that are implemented by \bmediation\ and
-the assumptions that underline them.  Readers are encouraged to read
-\citet{imai:keel:yama:10,imai:keel:ting:10} for more information about
-the methodology implemented in \bmediation.
-
-\subsection{The Overview}
-
-The methods implemented via \bmediation\ rely on the following
-identification result obtained under the sequential ignorability
-assumption of \citet{imai:keel:yama:10}, {\small \begin{eqnarray}
-    \bar\delta(t) & = & \int \int \E(Y_i \mid M_i = m, T_i=t, X_i = x)
-    \l\{ dF_{M_i \mid T_i = 1, X_i = x}(m) - dF_{M_i \mid T_i = 0, X_i = x}(m)\r\}\, dF_{X_i}(x), \label{eq:acme} \\
-    \bar\zeta(t) & = & \int \int \l\{ \E(Y_i \mid M_i = m, T_i = 1,
-    X_i = x) - \E(Y_i \mid M_i = m, T_i = 0, X_i = x) \r\}\, dF_{M_i
-      \mid T_i = t, X_i = x}(m)\, dF_{X_i}(x), \nonumber
-    \\ \label{eq:direct}
-  \end{eqnarray}}where $\bar\delta(t)$ and $\bar\zeta(t)$ are the
-average causal mediation and average (natural) direct effects, respectively, and
-$(Y_i,M_i,T_i,X_i)$ represents the observed outcome, mediator,
-treatment, and pre-treatment covariates.  The sequential ignorability
-assumption states that the observed mediator status is as if randomly
-assigned conditional on the randomized treatment variable and the pre-treatment covariates.  Causal mediation analysis under this assumption requires two statistical
-models; one for the mediator $f(M_i \mid T_i, X_i)$ and the other for
-the outcome variable $f(Y_i \mid T_i, M_i, X_i)$.  (Note that we use
-the empirical distribution of $X_i$ to approximate $F_{X_i}$.)  Once these
-models are chosen and fitted by researchers, then \bmediation\ will
-compute the estimated causal mediation and other relevant estimates
-using the algorithms proposed in \citet{imai:keel:ting:10}.  The
-algorithms also produce uncertainty estimates such as standard errors
-and confidence intervals, based on either a nonparametric bootstrap procedure (for parametric or nonparametric models) or a
-quasi-Bayesian Monte Carlo approximation (for parametric models).
-
-\begin{figure}[t]
-  \spacingset{1}
-  \begin{center}
-    \includegraphics[scale=.35]{mediation-chart.jpg}
-  \end{center}
-  \caption{The Diagram Illustrating the Use of the Software
-    \bmediation.  Users first fit the mediator and outcome models.
-    Then, the function {\tt mediate} conducts causal mediation
-    analysis while {\tt medsens} implements sensitivity analysis.  The
-    functions {\tt summary} and {\tt plot} help users interpret the
-    results of these analyses.} \label{fg:chart}
+\begin{figure}
+\begin{center}
+	\includegraphics[width=1.05\textwidth]{mediation-chart-new.jpg}
+\end{center}
+\caption{Structure of the \pkg{mediation} package as of version 4.0.}
+\label{fg:structure}
 \end{figure}
 
-Figure~\ref{fg:chart} graphically illustrates the three steps required
-for a mediation analysis. The first step is to fit the mediator and
-outcome models using, for example, regression models with the usual
-\texttt{lm} or \texttt{glm} functions. In the second step, the
-analysts takes the output objects from these models, which in
-Figure~\ref{fg:chart} we call {\tt model.m} and {\tt model.y}, and use
-them as inputs for the main function, {\tt mediate}. This function
-then estimates the causal mediation effects, direct effects, and total
-effect along with their uncertainty estimates. Finally, sensitivity
-analysis can be conducted via the function {\tt medsens} which takes
-the output of {\tt mediate} as an input.  For these outputs,
-there are both {\tt summary} and {\tt plot} methods to
-display numerical and graphical summaries of the analyses,
-respectively.
-
-\subsection{Estimation of the Causal Mediation Effects}
-
-Estimation of the causal mediation effects is based on
-Algorithms~1~and~2 of \citet{imai:keel:ting:10}. These are general
-algorithms in that they can be applied to any parametric
-(Algorithm~1~or~2) or semi/nonparametric models (Algorithm~2) for the
-mediator and outcome variables.  Here, we briefly describe how these
-algorithms have been implemented in \bmediation\ by taking advantage
-of the object-oriented nature of \bR\ programming language.
-
-\paragraph{Algorithm~1 for Parametric Models.}
-
-We begin by explaining how to implement Algorithm~1 of
-\citet{imai:keel:ting:10} for standard parametric models.  First,
-analysts fit parametric models for the mediator and outcome
-variables. That is, we model the observed mediator $M_i$ given the
-treatment $T_i$ and pre-treatment covariates $X_i$.  Similarly, we
-model the observed outcome $Y_i$ given the treatment, mediator, and
-pre-treatment covariates.  For example, to implement the Baron-Kenny
-procedure in \bmediation, linear models are fitted for both the
-mediator and outcome models using the {\tt lm} command.
-
-The model objects from these two parametric models form the inputs for
-the {\tt mediate} function.  The user must also supply the names for
-the mediator and outcome variables along with how many simulations
-should be used for inference, and whether the mediator variable
-interacts with the treatment variable in the outcome model.  Given
-these model objects, the estimation proceeds by simulating the model
-parameters based on their approximate asymptotic distribution (i.e.,
-the multivariate normal distribution with the mean equal to the
-parameter estimates and the variance equal to the asymptotic variance
-estimate), and then computing causal mediation effects of interest for
-each parameter draw (e.g., using
-equations~\eqref{eq:acme}~and~\eqref{eq:direct} for average causal
-mediation and (natural) direct effects, respectively).  This method of
-inference can be viewed as an approximation to the Bayesian posterior
-distribution due to the Bernstein-Von Mises Theorem
-\citep{king:tomz:witt:00}.  The advantage of this procedure is that it
-is relatively computationally efficient (when compared to
-Algorithm~2).
-
-We take advantage of the object-oriented nature of \bR\ programming
-language at several steps in the function {\tt mediate}.  For
-example, the functions like {\tt coef} and {\tt vcov} are useful
-for extracting the point and uncertainty estimates from the model
-objects to form the multivariate normal distribution from which the
-parameter draws are sampled.  In addition, the computation of the
-estimated causal mediation effects of interest requires the prediction
-of the mediator values under different treatment regimes as well as
-the prediction of the outcome values under different treatment and
-mediator values.  This can be done by using {\tt model.frame} to set
-the treatment and/or mediator values to specific levels while keeping
-the values of the other variables unchanged.  We then use the {\tt
-  model.matrix} and matrix multiplication with the distribution of
-simulated parameters to compute the mediation and direct effects.  The
-main advantage of this approach is that it is applicable to a wide
-range of parametric models and allows us to avoid coding a completely
-separate function for different models.
-
-\paragraph{Algorithm~2 for Non/Semiparametric Inference.}
-
-The disadvantage of Algorithm~1 is that it cannot be easily applied to
-non/semiparametric models.  For such models, Algorithm~2, which is
-based on nonparametric bootstrap, can be used although it is more
-computationally intensive.  Algorithm~2 may also be used for the usual
-parametric models which may be useful since mediation effects are
-known to have skewed distributions
-\citep[e.g.,][]{MacKinnon:2004,Preacher:Hayes:08}.  Specifically, in
-Algorithm~2, we resample the observed data with replacement.  Then,
-for each of bootstrapped samples, we fit both the outcome and mediator
-models and compute the quantities of interest.  As before, the
-computation requires the prediction of the mediator values under
-different treatment regimes as well as the prediction of the outcome
-values under different treatment and mediator values.  To take
-advantage of the object-oriented nature of the \bR\ language,
-Algorithm~2 relies on the \texttt{predict} function to compute these
-predictions, while we again manipulate the treatment and mediator
-status using the \texttt{model.frame} function. This process is
-repeated a large number of times and returns a bootstrap distribution
-of the mediation, direct, and total effects.  We use the percentiles
-of the bootstrap distribution for confidence intervals. Thus,
-Algorithm~2 allows analysts to estimate mediation effects with more
-flexible model specifications or to estimate mediation effects for
-quantiles of the distribution.
-
-\subsection{Sensitivity Analysis}
-
-Causal mediation analysis relies on the sequential ignorability
-assumption that cannot be directly verified with the observed data.
-The assumption implies that the treatment is ignorable given the
-observed pre-treatment confounders and that the mediator is ignorable
-given the observed treatment and the observed pre-treatment
-covariates.  In order to probe the plausibility of such a key
-identification assumption, analysts must perform a sensitivity
-analysis \citep{rose:02c}.  Unfortunately, it is difficult to
-construct a sensitivity analysis that is generally applicable to any
-parametric or nonparametric model.  Thus,
-\citet{imai:keel:yama:10,imai:keel:ting:10} develop sensitivity
-analyses for commonly used parametric models, which we implement in
-\bmediation.
-
-\paragraph{The Baron-Kenny Procedure.}
-
-\citet{imai:keel:yama:10} develop a sensitivity analysis for the
-Baron-Kenny procedure and \citet{imai:keel:ting:10} generalize it to
-the linear structural equation model (LSEM) with an interaction term.
-This general model is given by,
+Before describing the functions available in \pkg{mediation}, we
+briefly define the quantities of interest that our software is
+designed to estimate.  Here, we use the potential outcomes framework to
+define these quantities. Let $M_i(t)$ denote the potential value of a
+mediator of interest for unit $i$ under the treatment status $T_i =
+t$.  Let $Y_i(t,m)$ denote the potential outcome that would result if
+the treatment and mediating variables equal $t$ and $m$, respectively.
+Consider a standard experimental design where only the treatment
+variable is randomized.  We observe only one of the potential
+outcomes, and the observed outcome, $Y_i$, equals $Y_i(T_i, M_i(T_i))$
+where $M_i(T_i)$ represents the observed value of the mediator $M_i$.
+With this notation, the total unit treatment effect can be written as,
 \begin{eqnarray}
-  M_i & = & \alpha_2 + \beta_2 T_i + \xi_2^\top X_i + \epsilon_{i2}, \label{eq:MgivenTX} \\
-  Y_i & = & \alpha_3 + \beta_3 T_i + \gamma M_i + \kappa T_i M_i + \xi_3^\top X_i + \epsilon_{i3}, \label{eq:YgivenTMX}
+  \tau_i & \equiv & Y_i(1,M_i(1))-Y_i(0,M_i(0)).
 \end{eqnarray}
-where the sensitivity parameter is the correlation between
-$\epsilon_{i2}$ and $\epsilon_{i3}$, which we denote by $\rho$.  Under
-sequential ignorability, $\rho$ is equal to zero and thus the
-magnitude of this correlation coefficient represents the departure
-from the ignorability assumption (about the mediator).  Note that the
-treatment is assumed to be ignorable as it would be the case in
-randomized experiments where the treatment is randomized but the
-mediator is not.  Theorem~2 of \citet{imai:keel:ting:10} shows how the
-average causal mediation effects change as a function of $\rho$.
 
-To obtain the confidence intervals for the sensitivity analysis, we
-apply the following iterative algorithm to
-equations~\eqref{eq:MgivenTX}~and~\eqref{eq:YgivenTMX} for a fixed
-value of $\rho$.  At the $t$th iteration, given the current values of
-the coefficients, i.e., $\theta^{(t)}=(\alpha_2^{(t)}, \beta_2^{(t)},
-\xi_2^{(t)}, \alpha_3^{(t)},
-\beta_3^{(t)},\xi_3^{(t)},\gamma^{(t)},\kappa^{(t)})$, and a given
-error correlation $\rho$, we compute the variance-covariance matrix of
-$(\epsilon_{i2},\epsilon_{i3})$, which is denoted by $\Sigma^{(t)}$.
-The matrix is computed by setting
-${\sigma_j^{(t)}}^2=\norm{\hat{\epsilon}_j^{(t)}}^2/(n-L_j)$ and
-$\sigma_{23}^{(t)}=\rho \sigma_2^{(t)}\sigma_3^{(t)}$, where
-$\hat\epsilon_j^{(t)}$ is the residual vector and $L_j$ is the number
-of coefficients for the mediator model ($j=2$) and the outcome model
-($j=3$) at the $t$th iteration.  We then update the parameters via
-generalized least squares, i.e.,
-\begin{eqnarray*}
-  \theta^{(t+1)} & = & \{V^\top ({\Sigma^{(t)}}^{-1} \otimes I_n)V\}^{-1}
-  V^\top ({\Sigma^{(t)}}^{-1} \otimes I_n)W
-\end{eqnarray*}
-where
-$V  =  \l[\begin{array}{cccccccc} \mathbf{1} &  T & X & \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{0} \\
-  \mathbf{0} & \mathbf{0} & \mathbf{0} & \mathbf{1} & T & M & TM & X
-\end{array} \r]$,
-$W \ = \ \l[\begin{array}{c} M \\
-  Y
-\end{array} \r]$, $T=(T_1,\dots,T_n)^\top$, $M=(M_1,\dots,M_n)^\top$, and
-$Y=(Y_1,\dots,Y_n)^\top$ are column vectors of length $n$, and $X = (X_1, \dots, X_n)^\top$ are the $(n \times K)$ matrix of observed pre-treatment covariates, and $\otimes$ represents the Kronecker product. We typically use
-equation-by-equation least squares estimates as the starting values of $\theta$
-and iterate these two steps until convergence.  This is essentially an
-application of the iterative feasible generalized least square (FGLS) algorithm of the
-seemingly unrelated regression \citep{zell:62}, and thus the asymptotic variance
-of $\hat\theta$ is given by $\var(\hat\theta) = \{V^\top (\Sigma^{-1} \otimes
-I_n) V\}^{-1}$. Then, for a given value of $\rho$, the asymptotic variance of the estimated average causal mediation effects
-is found, for example, by the Delta method and the confidence intervals can be constructed.
+We can decompose this total effect into the two components.  First,
+the {\it causal mediation effects} are represented by
+\citep{robi:gree:92,pear:01},
+\begin{eqnarray}
+  \delta_i(t) & \equiv & Y_i(t, M_i(1)) - Y_i(t, M_i(0)), \label{eq:deltai}
+\end{eqnarray}
+for each treatment status $t=0,1$. All other causal mechanisms can be
+represented by the {\it direct effects} of the treatment as,
+\begin{eqnarray}
+  \zeta_i(t) & \equiv & Y_i(1, M_i(t)) - Y_i(0,
+  M_i(t)), \label{eq:zetai}
+\end{eqnarray}
+for each unit $i$ and each treatment status $t=0,1$.  Together, we see
+that they sum up to the total effect,
+\begin{eqnarray}
+  \tau_i & = & \delta_i(t) + \zeta_i(1-t)
+\end{eqnarray}
+for $t=0,1$.  The case of multiple candidate mediating variables 
+requires additional notation and is
+discussed in Section~\ref{sec:multimech}.  The {\it average causal
+  mediation effects} (ACME) $\bar\delta(t)$ and the average direct
+effects (ADE) $\bar\zeta(t)$, represent the population averages of
+these causal mediation and direct effects.
 
-\paragraph{The Binary Outcome Case.}
+Identification of the ACME requires an additional assumption beyond
+the strong ignorability of the treatment, which is sufficient for
+identifying the average total effect of the treatment.  Let $X_i$ be
+a vector of the observed pre-treatment confounders for unit $i$. The
+key identifying assumption is called sequential ignorability and can
+be written as,
+\begin{assumption}[Sequential Ignorability
+  \citep{imai:keel:yama:10}] \label{asm:ignorable} \spacingset{1.25}
+\begin{eqnarray}
+ \{Y_i(t^\prime,m), M_i(t)\} & \indep & T_i  \mid X_i = x, \label{eq:YMindepTgivenX}\\
+ Y_i(t^\prime,m) & \indep & M_i(t) \mid T_i = t, X_i = x, \label{eq:YindepMgivenTX}
+\end{eqnarray}
+where $0<\Pr(T_i = t \mid X_i = x)$ and $0 < p(M_i = m \mid T_i =
+t, X_i = x)$ for $t = 0,1$, and all $x$ and $m$ in the support of
+$X_i$ and $M_i$, respectively.
+\end{assumption}
+Equation~\eqref{eq:YMindepTgivenX} is the standard strong ignorability
+of the treatment assignment and is satisfied, for example, if the
+treatment is randomized (possibly conditional on $X_i$).  However,
+equation~\eqref{eq:YindepMgivenTX} requires that the mediator is also
+ignorable given the observed treatment and pre-treatment confounders.
+This additional assumption is quite strong because it excludes the
+existence of (measured or unmeasured) post-treatment confounders as
+well as that of unmeasured pre-treatment confounders.  This
+assumption, therefore, eliminates the need to consider multiple
+mediators that are causally related to each other (see
+Section~\ref{sec:multimech} for the method that is designed to deal
+with such a scenario).
 
-The sensitivity analysis for binary outcomes parallels the case when
-both the mediator and outcome are continuous.  Here, we assume that
-the model for the outcome is a probit regression. Using a probit
-regression for the outcome allows us to assume the error terms are
-jointly normal with a possibly non-zero correlation $\rho$.
-\citet{imai:keel:ting:10} derive the average causal mediation effects
-as a function of $\rho$ and a set of parameters that are identifiable
-due to randomization of the treatment. This lets us use $\rho$ as a
-sensitivity parameter in the same way as in the Baron-Kenny procedure.
-For the calculation of confidence intervals, we rely on the
-quasi-Bayesian approach of Algorithm~1 by approximating the posterior
-distribution with the sampling distribution of the maximum likelihood
-estimates.
+\section{Model-based Causal Mediation Analysis}
+\label{sec:mediate}
 
-% While it is possible to use a nonparametric bootstrap for the
-% confidence intervals, it is much more computationally intensive.
-% For a graphical summary of sensitivity analysis, we use a lowess
-% smoother to smooth out sampling variability from the simulation when
-% drawing the lines representing the point estimates and confidence
-% intervals at a variety of $\rho$ values.
+In this section, we briefly discuss the functionalities of the
+\pkg{mediation} package for the model-based causal mediation analysis
+under the assumption of sequential ignorability.  Many of these
+functionalities are described in detail in \citet{imai:etal:10}, but
+the current version of the package accommodates a larger class of
+statistical models.
 
-\paragraph{The Binary Mediator Case.}
+The model-based causal mediation analysis proceeds in two steps.
+First, the researchers specify two statistical models, the mediator
+model for the conditional distribution of the mediator $M_i$ given the
+treatment $T_i$ and a set of the observed pre-treatment covariates
+$X_i$ and the outcome model for the conditional distribution of the
+outcome $Y_i$ given $T_i$, $M_i$, and $X_i$.  These models are fitted
+separately and then their fitted objects comprise the main inputs to
+the \code{mediate} function, which computes the estimated ACME and
+other quantities of interest under
+these models and the sequential ignorability assumption. Since the
+sequential ignorability assumption is untestable, we recommend that
+the researchers conduct a sensitivity analysis via the \code{medsens}
+function, which can be applied to certain statistical models.  We now
+illustrate these functionalities with an empirical example.
 
-Finally, a similar sensitivity analysis can also be conducted in a
-situation where the mediator variable is dichotomous and the outcome
-is continuous.  In this case, we assume that the mediator can be
-modeled as a probit regression where the error term is independently
-and identically distributed as standard normal distribution.  A linear
-normal regression with error variance equal to $\sigma_3^2$ is used to
-model the continuous outcome variable.  We further assume that the two
-error terms jointly follow a bivariate normal distribution with mean
-zero and covariance $\rho\sigma_3$.  Then, as in the other two cases,
-we use the correlation between the two error terms $\rho$ as the
-sensitivity parameter.  \citet{imai:keel:ting:10} show that under this
-setup, the causal mediation effects can be expressed as a function of
-the model parameters that can be consistently estimated given a fixed
-value of $\rho$.  Uncertainty estimates are computed based on the
-quasi-Bayesian approach, as in the binary outcome case.  The results
-can be graphically summarized via the \texttt{plot} function in a
-manner similar to the other two cases.
-
-\paragraph{Alternative Interpretations Based on $R^2$}
-
-The main advantage of using $\rho$ as a sensitivity parameter is its
-simplicity.  However, applied researchers may find it difficult to
-interpret the magnitude of this correlation coefficient.  To overcome
-this limitation, \citet{imai:keel:yama:10} proposed alternative
-interpretations of $\rho$ based on the coefficients of determination
-or $R^2$ and \citet{imai:keel:ting:10} extended them to the binary
-mediator and binary outcome cases.  In that formulation, it is assumed
-that there exists a common unobserved pre-treament confounder in both
-mediator and outcome models.  Applied researchers are then required to
-specify whether the coefficients of this unobserved confounder in the
-two models have the same sign or not; i.e.,
-$\sgn(\lambda_2\lambda_3)=1$ or $-1$ where $\lambda_2$ and $\lambda_3$
-are the coefficients in the mediator and outcome models, respectively.
-Once this information is provided, the average causal mediation effect
-can be expressed as the function of ``the proportions of original
-variances explained by the unobserved confounder'' where the original
-variances refer to the variances of the mediator and the outcome (or
-the variance of latent variable in the case of binary dependent
-variable).  This allows researchers to quantify how large the
-unobserved confounder must be (relative to the observed pre-treatment
-covariates in the model) in order for the original conclusions to be
-reversed.
-
-\paragraph{Sensitivity Analyses with Respect to the Average Direct Effects.}
-In addition to the above procedures for the average causal mediation effects,
-an analogous sensitivity analysis can also be conducted for the average direct
-effects using the {\tt medsens} function.  This is possible because it can be
-shown that the average direct effects are also expressed as a function of $\rho$
-in any of the above three cases.  First, when both the mediator and outcome variables
-are continuous and modelled using linear structural equations, the iterative FGLS algorithm
-given above can be used to estimate the model coefficients and both the point and interval
-estimates of the average direct effects can be obtained using the formulas given by
-\citet[Section 4.1]{imai:keel:yama:10} and \citet[p.314 and Appendix A]{imai:keel:ting:10}.
-Second, when the mediator is binary and modelled using the probit regression,
-the average direct effect is given by $\bar\zeta(t) = \beta_3 + \kappa\E\{
-\Phi(\alpha_2 + \beta_2 t + \xi_2^\top X_i)\}$ using the same notation as
-\citet[footnote 12]{imai:keel:ting:10}, where all of the parameters, $(\alpha_2,
-\beta_2, \xi_2, \beta_3, \kappa)$, are identified and consistently estimated
-using the same procedure.  Finally, for the binary outcome case,
-the average direct effect is identified given a value of $\rho$ and expressed
-as $\bar\zeta(t) = \E\{\Phi(\alpha_1 + \beta_1 t + \xi_1^\top X_i +
-\beta_3(1-t)/\sqrt{\gamma^2\sigma_2^2 + 2\gamma\rho\sigma_2 + 1})
-- \Phi(\alpha_1 + \beta_1 t + \xi_1^\top X_i - \beta_3 t/\sqrt{\gamma^2\sigma_2^2 + 2\gamma\rho\sigma_2 + 1}) \}$, which can be estimated via the same procedure as
-described in Appendix H of \citet{imai:keel:ting:10}.  The {\tt medsens} function
-uses these procedures for sensitivity analyses for the average direct effects.
-
-\subsection{Current Limitations}
+\subsection{Estimation of the Average Causal Mediation Effects}
+\label{sec:mediateest}
 
 \begin{table}[t]
  \spacingset{1}
   \begin{center}
-\begin{tabular}{lcccccc}
+    \setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccccccc}
 \hline
-                     &\multicolumn{6}{c}{\it Outcome Model Types} \\
-\cline{2-7}
-{\it Mediator Model Types} & Linear & GLM & Ordered & Censored & Quantile & Semiparametric \\
+ & \multicolumn{7}{c}{\it Outcome Model Types} \\
+\cline{2-8}
+{\it Mediator Model Types} & Linear & GLM & Ordered & Censored & Quantile & GAM & Survival \\
 \hline
-Linear ({\tt lm}) & \checkmark & \checkmark & \checkmark$^\ast$ & \checkmark &
-                                                  \checkmark & \checkmark$^\ast$  \\
-GLM (probit etc. via {\tt glm})  & \checkmark & \checkmark & \checkmark$^\ast$ & \checkmark &
-                                                  \checkmark & \checkmark$^\ast$  \\
-Ordered ({\tt polr}/{\tt bayespolr}) & \checkmark & \checkmark & \checkmark$^\ast$ & \checkmark &
-                                                  \checkmark & \checkmark$^\ast$  \\
-Censored (tobit via {\tt vglm}) & - & - & - & - & - & - \\
-Quantile ({\tt rq}) & \checkmark$^\ast$ & \checkmark$^\ast$ & \checkmark$^\ast$ & \checkmark$^\ast$ &
-                                                  \checkmark$^\ast$ & \checkmark$^\ast$ \\
-Semiparametric ({\tt gam})   & \checkmark$^\ast$ & \checkmark$^\ast$ & \checkmark$^\ast$ & \checkmark$^\ast$ &
-                                                  \checkmark$^\ast$ & \checkmark$^\ast$ \\
+Linear (\code{lm}) & \checkmark & \checkmark & \checkmark$^\ast$ & \checkmark & \checkmark & \checkmark$^\ast$ & \checkmark  \\
+GLM (\code{glm}/\code{bayesglm})  & \checkmark & \checkmark & \checkmark$^\ast$ & \checkmark & \checkmark & \checkmark$^\ast$ & \checkmark  \\
+Ordered (\code{polr}/\code{bayespolr}) & \checkmark & \checkmark & \checkmark$^\ast$ & \checkmark & \checkmark & \checkmark$^\ast$ & \checkmark  \\
+Censored (tobit via \code{vglm}) & - & - & - & - & - & - & - \\
+Quantile (\code{rq}) & \checkmark$^\ast$ & \checkmark$^\ast$ & \checkmark$^\ast$ & \checkmark$^\ast$ & \checkmark$^\ast$ & \checkmark$^\ast$ & \checkmark \\
+GAM (\code{gam})   & \checkmark$^\ast$ & \checkmark$^\ast$ & \checkmark$^\ast$ & \checkmark$^\ast$ & \checkmark$^\ast$ & \checkmark$^\ast$ & \checkmark$^\ast$ \\
+Survival (\code{survreg}) & \checkmark & \checkmark & \checkmark$^\ast$ & \checkmark & \checkmark & \checkmark$^\ast$ & \checkmark  \\
 \hline
 \end{tabular}
-\caption{The Types of Models That Can be Handled by {\tt mediate} for the
-  Estimation of Causal Mediation Effects. Stars ($^\ast$) indicate the model combinations
-  that can only be estimated using the nonparametric bootstrap (i.e. with {\tt boot = TRUE}).} 
+\caption{Types of Statistical Models That Can be Used with the
+  \code{mediate} Function.  Asterisks, $^\ast$, indicate the model
+  combinations that can only be estimated using the nonparametric
+  bootstrap (i.e. with the argument \code{boot = TRUE} for the
+  \code{mediate} function).}
   \label{tab:MediateOptions}
   \end{center}
 \end{table}
 
-Our software, \bmediation, is quite flexible and can handle many of
-the model types that researchers are likely to use in practice.
-Table~\ref{tab:MediateOptions} categorizes the types of the mediator
-and outcome models and lists whether \bmediation\ can produce the
-point and uncertainty estimates of causal mediation effects. For
-example, while \bmediation\ can estimate average causal mediation
-effects for censored outcomes with the tobit model, it
-has not yet been extended to cases involving censored mediators.
-In addition, {\tt mediate} can be used with common generalized linear models 
-(GLMs) such as binary logit and probit, Poisson and gamma regression models, 
-but it cannot be used with binomial mediator models with multiple trials.
 
-In each situation handled by \bmediation, it is possible to have an
-interaction term between treatment status and the mediator variable,
-in which case the estimated quantities of interest will be reported
-separately for the treatment and control groups.
+The \code{mediate} function takes various standard model objects (such
+as \code{lm} and \code{glm}), which correspond to mediator and outcome
+models, and returns the estimates of the average causal mediation
+effects along with other causal quantities of interest.  The output of
+the \code{mediate} function can be passed to the \code{plot} and
+\code{summary} functions in order to obtain graphical and numerical
+summaries, respectively. The \code{mediate} function automatically
+detects the type of models used for the mediator and outcome models
+and calculate the estimates of the ACME and other quantities of
+interest via the general algorithms described in
+\citet{imai:keel:ting:10}.  Our estimation strategy overcomes the
+limitation of the standard methods based on the product or difference
+of coefficients, which is only applicable when both the mediator and
+outcome models are linear regressions. In contrast, the algorithms
+used in the \pkg{mediation} package nest this as a special case and
+accommodates a greater range of statistical models as shown in
+Table~\ref{tab:MediateOptions}.
 
-\begin{table}[t]
+We now illustrate the use of the \code{mediate} function with an
+empirical example based on the \code{framing} data of
+\citet{Brader:2008}.  This data set is a part of the \pkg{mediation}
+library and can be loaded via the following syntax,
+<<>>=
+## load the package
+library(mediation)
+## load the framing data
+data(framing)
+@
+A brief description of each variable in the data can be obtained
+through a help file,
+<<eval=FALSE>>=
+?framing
+@
+
+\citet{Brader:2008} conducted a randomized experiment where subjects
+are exposed to different media stories about immigration and the
+authors investigated how their framing influences attitudes and
+political behavior regarding immigration policy. They posit the role
+of anxiety as the mediating variable for the causal effect of framing
+on public opinion.  We first fit the mediator model where the measure
+of anxiety (\code{emo}) is modeled as a function of the framing
+treatment (\code{treat}) and pretreatment covariates (\code{age},
+\code{educ}, \code{gender}, and \code{income}).  Next, we model the
+outcome variable, which is a binary variable indicating whether or not
+the participant agreed to send a letter about
+immigration policy to his or her member of Congress
+(\code{cong_mesg}).  The explanatory variables of the outcome model
+include the mediator, treatment status, and the same set of
+pre-treatment variables as those used in the mediator model.  In this
+example, the treatment is expected to increase the level of
+respondents' emotional response, which in turn is hypothesized to make
+subjects more likely to send a letter to his or her member of
+Congress.  We use the linear least squares regression and the probit
+regression for the mediator and outcome models, respectively.
+<<>>=
+## Mediator Model
+med.fit <- lm(emo ~ treat + age + educ + gender + income, data = framing)
+## Outcome Model
+out.fit <- glm(cong_mesg ~ emo + treat + age + educ + gender + income,
+               data = framing, family = binomial("probit"))
+@
+
+We now use the \code{mediate} function to estimate the ACME and
+average direct effects.  As the inputs to this function, we must
+specify the model fits (in this case \code{med.fit} and
+\code{out.fit}) as well as the names of the treatment and mediating
+variables, which are represented as the arguments \code{treat} and
+\code{mediator}, respectively.  Here, we use the default number of
+simulations, which is \code{sims = 1000}, to calculate the uncertainty
+estimates but one may wish to increase this number if the estimates
+vary too much from one simulation to another.  In addition, we use a
+robust heteroskedasticity consistent variance-covariance matrix from the \pkg{sandwich}
+package (\code{vcovHC}). Finally, like most
+functions in \proglang{R}, the results of the \code{mediate} function
+can be summarized numerically by the \code{summary} function, which
+calculates point estimates, confidence intervals, and the $p$-values,
+for the average direct, indirect, and total effects.  The syntax is
+now given as,
+<<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+library(sandwich)
+med.out <- mediate(med.fit, out.fit, treat = "treat", mediator = "emo",
+                   robustSE = TRUE)
+summary(med.out)
+@
+
+One new feature in the tabular output from the \code{mediate}
+functions is the addition of $p$-values for the various estimates.  In
+this example, the estimated ACMEs are statistically significantly
+different from zero but the estimated average direct and total effects
+are not. The results suggest that the treatment in the framing
+experiment may have increased emotional response, which in turn made
+subjects more likely to send a message to his or her member of
+Congress. Here, since the outcome is binary all estimated effects are
+expressed as the increase in probability that the subject sent a
+message to his or her Congressperson.
+
+In addition, we can use the bootstrap rather than the Quasi-Bayesian
+Monte Carlo simulation for variance estimation via the \code{boot =
+  TRUE} argument,
+<<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+med.out <- mediate(med.fit, out.fit, boot = TRUE, treat = "treat",
+                   mediator = "emo")
+summary(med.out)
+@
+The output now indicates that the bootstrap is used for inferences.
+As expected, the results are largely the same.  In general, so long as
+computing power is not an issue, analysts should estimate confidence
+intervals via the bootstrap with more than 1000 resamples, which is
+the default number of simulations.
+
+As an alternative to the numerical summary, using the output from the
+\code{mediate} function as the input to the \code{plot} command
+provides a graphical summary of the three parameters (indirect,
+direct, and total effects) along with their confidence intervals.
+Figure~\ref{fig:mediate} shows the result of plotting the \code{med.out}
+object.
+
+\begin{figure}[t!]
+\begin{center}
+<<fig=TRUE,echo=FALSE>>=
+plot(med.out)
+@
+\caption{Graphical Display of Results from the \code{mediate} Function.}
+\label{fig:mediate}
+\end{center}
+\end{figure}
+
+Finally, it is possible that the ACMEs are conditional on the
+treatment value.  In such a situation, the researcher can add an
+interaction term between the treatment and mediator to the outcome
+model.  Then, the \code{mediate} function automatically detects the
+change in the specification and estimates the ACME conditional on
+treatment status.  In the output given below, the estimated ACME now
+varies with treatment status.
+<<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+med.fit <- lm(emo ~ treat + age + educ + gender + income, data=framing)
+out.fit <- glm(cong_mesg ~ emo * treat + age + educ + gender + income,
+               data = framing, family = binomial("probit"))
+med.out <- mediate(med.fit, out.fit, treat = "treat", mediator = "emo",
+                   robustSE = TRUE)
+summary(med.out)
+@
+
+
+\subsection{Moderated Mediation}
+\label{sec:modmed}
+
+One important feature of the \code{mediate} function is the analysis
+of moderated mediation.  Often analysts hypothesize that the magnitude
+of the ACME depends on (or moderated by) a pre-treatment covariate.
+Such a pre-treatment covariate is called a moderator. In the framing
+example, the ACME may be much stronger among older respondents than
+younger ones. In other words, the ACME may be moderated by age.  While
+earlier versions of the \pkg{mediation} package did not allow for this
+moderated mediation analysis, that functionality has now been added.
+To use this functionality, the researchers must alter both the
+statistical models as well as the syntax for the \code{mediate}
+function.  First, the mediator and outcome models should contain the
+moderator and its interaction terms with respect to the treatment and
+mediating variables.  For example, we may modify the previous models
+as follows,
+<<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+med.fit <- lm(emo ~ treat * age + educ + gender + income, data=framing)
+out.fit <- glm(cong_mesg ~ emo + treat * age + emo * age + educ + gender
+               + income, data = framing, family = binomial("probit"))
+@
+
+Once the two models are estimated, the researcher must specify the
+levels of the moderator at which effects will be calculated by the
+\code{mediate} function.  In the current example, this can be done by
+setting the \code{age} covariate to a specific value. To allow the
+mediation effects to be moderated by age, we set the value of
+\code{age} to be 20 in one model and 60 in another model. More complicated
+moderated mediations involving multiple moderators could be specified
+by expanding the list of the covariates.
+<<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+med.age20 <- mediate(med.fit, out.fit, treat = "treat",
+                     mediator = "emo", covariates = list(age = 20))
+med.age60 <- mediate(med.fit, out.fit, treat = "treat",
+                     mediator = "emo", covariates = list(age = 60))
+summary(med.age20)
+summary(med.age60)
+@
+Thus, the researcher receives two different sets of output. In the
+first output, the average mediation effect is estimated for those who
+are 20 years old.  In contrast, the second output applies to those who
+are 60 years old.
+
+\subsection{Non-Binary Treatment Variables}
+\label{sec:cattreat}
+
+Experimental manipulations are often complex and go beyond simple
+treatment and control conditions. In the framing experiment, for
+example, the researchers actually used a $2 \times 2$ factorial
+design.  That is, each subject was exposed to two different binary
+treatments, yielding four different experimental manipulations.  In
+the analysis presented above, we have focused on a comparison of one
+of these conditions relative to the other three conditions.  The
+\code{mediate} function, however, has the capability to handle more
+complex experimental contrasts, which can be represented by a
+non-binary treatment variable.
+
+Here, instead of using the binary \code{treat} variable, we use a
+variable named \code{cond}, which records which of the four conditions
+the subject was randomly exposed to.  Using the \code{control.value}
+and \code{treat.value} options, the user can calculate the specific
+contrast of interest.  For example, the comparison between the second
+and third conditions can be done with the following code.
+<<keep.source=TRUE, echo = TRUE, results = hide>>=
+med.fit <- lm(emo ~ cond + age + educ + gender + income, data = framing)
+out.fit <- glm(cong_mesg ~ emo + cond + age + educ + gender + income,
+               data = framing, family = binomial("probit"))
+med23.out <- mediate(med.fit, out.fit, treat = "cond", mediator = "emo",
+                     control.value = 2, treat.value = 3)
+summary(med23.out)
+@
+
+Similarly, the researcher can compare the first and fourth
+experimental conditions via the following syntax,
+<<keep.source=TRUE, echo = TRUE, results = hide>>=
+med14.out <- mediate(med.fit, out.fit, treat = "cond", mediator = "emo",
+                     control.value = 1, treat.value = 4)
+summary(med14.out)
+@
+
+Nothing changes in the format of the output, but the contrasts differ
+depending on the categories chosen for comparison by the
+researcher. In the case of a continuous treatment variable, the
+researcher would specify two values of the treatment to make the
+contrast \citep{imai:keel:ting:10}. For example, the causal mediation
+effects can be defined for any two levels of the treatment,
+\begin{eqnarray}
+\delta_i(t; t_1, t_0) & \equiv & Y_i(t, M_i(t_1)) - Y_i(t,M_i(t_0)),
+\end{eqnarray}
+where $t_1 \ne t_0$.  The corresponding average causal mediation
+effect is defined as $\bar\delta(t; t_1,t_0)\equiv\E(\delta_i(t;
+t_1,t_0))$. Thus, the researcher can set \code{control.value} to $t_0$
+and \code{treat.value} to $t_1$.  The researcher may also vary the
+value of $t_1$, while fixing the base line value of $t_0$, to examine
+how the ACME changes as the function of $t_1$.
+
+
+\subsection{Sensitivity Analysis for Sequential Ignorability}
+\label{subsec:medsens}
+
+
+\begin{table}[t!]
  \spacingset{1}
   \begin{center}
 \begin{tabular}{lcc}
@@ -695,882 +653,588 @@ Linear                     & \checkmark & \checkmark \\
 Binary Probit              & \checkmark & - \\
 \hline
 \end{tabular}
-\caption{The Types of Models That Can Be Handled by {\tt medsens} for
+\caption{The Types of Models That Can Be Handled by \code{medsens} for
   Sensitivity Analysis. } \label{tab:SensitivityOptions}
   \end{center}
 \end{table}
 
-Our software provides a convenient way to probe the sensitivity of
-results to potential violations of the ignorability assumption for
-certain model types. The sensitivity analysis requires the specific
-derivations for each combination of models, making it difficult to
-develop a general sensitivity analysis method.  As summarized in
-Table~\ref{tab:SensitivityOptions}, \bmediation\ can handle several
-cases that are likely to be encountered by applied researchers in
-practice. When the mediator is continuous, then sensitivity analysis
-can be conducted with continuous and binary outcome variables.  In
-addition, when the mediator is binary, sensitivity analysis is
-available for continuous outcome variables.  For sensitivity analyses
-that combine binary or continuous mediators and outcomes, analysts
-must use a probit regression model with a linear regression model.
-It should be noted that unlike the
-estimation of causal mediation effects, sensitivity analysis with
-treatment/mediator interactions can only be done for the continuous
-outcome/continuous mediator and continuous outcome/binary mediator cases.
-In the future, we hope to expand the range of models that
-are available for sensitivity analysis.
+Sequential ignorability is a strong assumption, and therefore a
+sensitivity analysis is recommended.  The \pkg{mediation} package
+allows the researcher to conduct a sensitivity analysis for the
+possible existence of unobserved pre-treatment covariates.
+Specifically, the output of the \code{mediate} function can be passed
+to the \code{medsens} function, which then computes the values of
+causal quantities as a function of sensitivity parameters. Both
+\code{summary} and \code{plot} functions are available for sensitivity
+analysis, and they display the results in the tabular and graphical
+form, respectively. Since derivation of sensitivity formulas must be
+done on a case-by-case basis, the range of options for conducting
+sensitivity analyses is somewhat limited.
+Table~\ref{tab:SensitivityOptions} gives the model combinations
+currently supported by the \code{medsens} function.
 
-\section{Examples}
+In our running example, after computing the ACME, we conduct a
+sensitivity analysis by passing the object from \code{mediate} to the
+\code{medsens} function.  We first choose as the sensitivity parameter
+the correlation $\rho$ between the residuals of the mediator and
+outcome regressions \citep{imai:keel:yama:10,imai:keel:ting:10}.  If
+there exist unobserved pre-treatment confounders which affect both the
+mediator and the outcome, we expect that the sequential ignorability
+assumption is violated and $\rho$ is no longer zero.  The sensitivity
+analysis is conducted by varying the value of $\rho$ and examining how
+the estimated ACME changes.  The following syntax can be used to
+conduct this analysis,
+<<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+## Mediation model
+med.fit <- lm(emo ~ treat + age + educ + gender + income, data = framing)
+## Outcome model
+out.fit <- glm(cong_mesg ~ emo + treat + age + educ + gender + income,
+               data = framing, family = binomial("probit"))
+## Computing the ACME etc.
+med.out <- mediate(med.fit, out.fit, treat = "treat", mediator = "emo",
+                   robustSE = TRUE)
+## Sensitivity analysis
+sens.out <- medsens(med.out, rho.by = 0.1, effect.type = "indirect")
+## Summary output
+summary(sens.out)
+@ 
+where \code{rho.by = 0.1} specifies that $\rho$ will vary from $-0.9$
+to $0.9$ by $0.1$ increments, and \code{effect.type = "indirect"}
+means that sensitivity analysis is conducted for the
+ACME. Alternatively, specifying \code{effect.type = "direct"} performs
+sensitivity analysis for the ADE and \code{"both"} returns sensitivity
+analysis for the ACME and ADE. 
 
-Next, we provide several examples to illustrate the use of
-\bmediation\ for the estimation of causal mediation effects and
-sensitivity analysis.  The data used is available as part of the
-package so that readers can replicate the results reported below.  We
-demonstrate the variety of models that can be used for the outcome and
-mediating variables.
 
-Before presenting our examples, we load the \bmediation\ library and
-the example data set included with the library.
-\begin{verbatim}
-R> library("mediation")
-mediation: R Package for Causal Mediation Analysis
-Version: 3.0
-R> data("jobs")
-\end{verbatim}
-This dataset is from the Job Search Intervention Study (JOBS II)
-\citep{Vinokur:1997}. In the JOBS II field experiment, 1,801
-unemployed workers received a pre-screening questionnaire and were
-then randomly assigned to treatment and control groups. Those in the
-treatment group participated in job-skills workshops.  Those in the
-control condition received a booklet describing job-search tips. In
-follow-up interviews, two key outcome variables were measured; a
-continuous measure of depressive symptoms based on the Hopkins Symptom
-Checklist (\texttt{depress2}), and a binary variable representing
-whether the respondent had become employed (\texttt{work1}). In the
-JOBS II data, a continuous measure of job-search self-efficacy
-represents a key mediating variable (\texttt{job\_seek}). In addition
-to the outcome and mediators, the JOBS II data also include the
-following list of baseline covariates that were measured prior to the
-administration of the treatment: pre-treatment level of depression
-(\texttt{depress1}), education (\texttt{educ}), income, race
-(\texttt{nonwhite}), marital status (\texttt{marital}), age, sex,
-previous occupation (\texttt{occp}), and the level of economic
-hardship (\texttt{econ\_hard}).
+The tabular output from the \code{summary} function displays the
+values of $\rho$ at which the confidence intervals contain zero for
+the ACME.  For both the control and treatment conditions, the
+confidence intervals for the ACME contain zero when $\rho$ equals
+$0.3$ and $0.4$.  An alternative but mathematically equivalent way to
+conduct sensitivity is in terms of the product of $R^2$ (or
+coefficients of determination) statistics from the mediator and
+outcome models. Discussed in more detail elsewhere
+\citep{imai:keel:yama:10,ImaiAPSR,imai:keel:ting:10}, the first row
+captures the point at which the ACME is $0$ as a function of the
+proportions of residual variance in the mediator and outcome explained
+by the hypothesized unobserved confounder. The second line uses the
+total variance instead of residual variance. We use ${R^\ast}^2$ for
+residual variance and $\tilde{R}^2$ for total variance. For example,
+when the product of the original variance explained by the omitted
+confounding is $.049$ the point estimate for ACME would be $0$.
 
-\subsection{Estimation of Causal Mediation Effects}
+A graphical display is often more intuitive and useful for the
+sensitivity analysis, especially for the R$^2$ interpretations.  This
+can be done, as before, by passing the object from the \code{medsens}
+function to the \code{plot} function.  The \code{plot} function allows
+the researcher to graphically summarize the results of sensitivity
+analysis either in terms of $\rho$ (\code{sens.par = "rho"}) or R$^2$
+statistics (\code{sens.par = "R2"}).
+<<eval=FALSE,fig=FALSE,echo=TRUE>>=
+plot(sens.out, sens.par = "rho", main = "Anxiety", ylim = c(-0.2, 0.2))
+@
 
-\paragraph{The Baron-Kenny Procedure.}
-We start with an example when both the mediator and the outcome are
-continuous.  In this instance, the results from either algorithm will
-return point estimates essentially identical to the usual Baron and
-Kenny procedure though the quasi-Bayesian or nonparametric bootstrap
-approximation is used.  Using the JOBS II data, we first estimate two
-linear regressions for both the mediator and the outcome using the {\tt
-lm} function.
-\begin{verbatim}
-R> model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age
-                  + occp + marital + nonwhite + educ + income, data = jobs)
-R> model.y <- lm(depress2 ~ treat + job_seek + depress1 + econ_hard + sex + age
-                  + occp + marital + nonwhite + educ + income, data = jobs)
-\end{verbatim}
-These two model objects, {\tt model.m} and {\tt model.y}, become the
-arguments for the \texttt{mediate} function.  When different data frames
-are used for these two models, the {\tt mediate} function internally refits
-them using a merged dataset if the {\tt dropobs} argument is set to
-{\tt TRUE}; otherwise an error message is returned.
-
-In the first call to \texttt{mediate} below, we specify \texttt{boot
-  = TRUE} to call the nonparametric bootstrap with 1000 resamples
-({\tt sims = 1000}). When this option is set to {\tt FALSE} in the second
-call, inference proceeds via the quasi-Bayesian Monte Carlo
-approximation using Algorithm~1 rather than Algorithm~2.  In this case,
-heteroskedasticity-robust standard errors can be used for the calculation of
-confidence intervals for some types of models by setting the {\tt robustSE}
-argument to {\tt TRUE}. Cluster-robust standard errors can also be
-used by the {\tt cluster} argument. Finally, we must also
-specify the variable names for the treatment indicator and the
-mediator variable using {\tt treat} and {\tt mediator}, respectively.
-\begin{verbatim}
-R> out.1 <- mediate(model.m, model.y, sims = 1000, boot = TRUE, treat = "treat",
-                    mediator = "job_seek")
-R> out.2 <- mediate(model.m, model.y, sims = 1000, treat = "treat",
-                    mediator = "job_seek")
-\end{verbatim}
-The objects from a call to \texttt{mediate}, i.e., {\tt out.1} and
-{\tt out.2} above, are lists of class {\tt "mediate"} which contain several different
-quantities from the analysis.  For example, \texttt{out.1\$d0} returns
-the point estimate for the average causal mediation effect based on
-Algorithm~1.  The help file contains a full list of values that are
-contained in \texttt{mediate} objects.
-
-The \texttt{summary}
-function prints out the results of the analysis in tabular form:
-\begin{verbatim}
-R> summary(out.2)
-
- Causal Mediation Analysis 
-
-Quasi-Bayesian Confidence Intervals
-
-Mediation Effect:  -0.01375 95 % CI  -0.031812  0.003299 
-Direct Effect:  -0.03873 95 % CI  -0.11938  0.04668 
-Total Effect:  -0.05247 95 % CI  -0.13431  0.03150 
-Proportion of Total Effect via Mediation:  0.2028 95 % CI  -1.383  1.934 
-
-Sample Size Used: 899 
-\end{verbatim}
-The output from the {\tt summary} function displays the estimates
-for the average causal mediation effect, direct effect, total effect,
-and proportion of total effect mediated. The first column displays the
-quantity of interest, the second column displays the point estimate,
-and the other columns present the confidence intervals at the level
-specified by the {\tt conf.level} argument which defaults to {\tt 0.95}.
-The number of observations used for the estimation is then displayed at
-the bottom.  In this case, we
-find that job search self-efficacy mediated the effect of the
-treatment on depression in the negative direction. This effect,
-however, was small with a point estimate of $-.014$ and the $95\%$
-confidence interval $(-.032,-.003)$ barely covers $0$.
-
-These results can be graphically presented by using the {\tt plot} function:
-\begin{verbatim}
-R> plot(out.2)
-\end{verbatim}
-The output is shown in Figure~\ref{fig:plot.mediate}. The standard arguments
-for {\tt plot}, such as titles ({\tt main}, {\tt xlab}, etc.) and line widths 
-({\tt lwd}), can be used and behave as expected.
-
-\begin{figure}[t]
-\spacingset{1}
-\vspace{-.5in}
+\begin{figure}[t!]
 \begin{center}
-\includegraphics[scale=.8]{plot-mediate.pdf}
+<<fig=TRUE,echo=FALSE>>=
+par(mfrow = c(2,2))
+plot(sens.out, sens.par = "rho", main = "Anxiety", ylim = c(-.2,.2))
+@
+\vspace{-2.5in}
+\caption{Graphical Display of Results from the \code{medsens} Function. Results as a Function of $\rho$.}
 \end{center}
-\vspace{-.5in}
-\caption{Graphical Summary of Causal Mediation Analysis.
-  \label{fig:plot.mediate}}
-\end{figure}
-
-\paragraph{The Baron-Kenny Procedure with the Interaction Term.}
-Analysts can also allow the causal mediation effect to vary with
-treatment status.  Here, the model for the outcome must be altered by
-including an interaction term between the treatment indicator,
-\texttt{treat}, and the mediator variable, \texttt{job\_seek}:
-\begin{verbatim}
-R> model.y <- lm(depress2 ~ treat + job_seek + treat:job_seek + depress1 + econ_hard
-               + sex + age + occp + marital + nonwhite + educ + income, data = jobs)
-R> out.3 <- mediate(model.m, model.y, sims = 1000, boot = TRUE,
-                    treat = "treat", mediator = "job_seek")
-R> summary(out.3)
-
- Causal Mediation Analysis 
-
-Quasi-Bayesian Confidence Intervals
-
-Mediation Effect_0:  -0.01899 95 % CI  -0.045271  0.003649 
-Mediation Effect_1:  -0.01203 95 % CI  -0.029640  0.002195 
-Direct Effect_0:  -0.03596 95 % CI  -0.1187  0.0426 
-Direct Effect_1:  -0.02899 95 % CI  -0.10879  0.05082 
-Total Effect:  -0.04799 95 % CI  -0.13495  0.03154 
-Proportion of Total Effect via Mediation_0:  0.2912 95 % CI  -3.386  2.707 
-Proportion of Total Effect via Mediation_1:  0.1823 95 % CI  -1.994  2.018 
-
-Mediation Effect (Average):  -0.01551 95 % CI  -0.035757  0.003138 
-Direct Effect (Average):  -0.03248 95 % CI  -0.1129  0.0464 
-Proportion of Total Effect via Mediation (Average):  0.2381 95 % CI  -2.867  2.443 
-
-Sample Size Used: 899 
-\end{verbatim}
-Again using the \texttt{summary} function provides a table of the
-results. Now estimates for the mediation effects, direct effects and
-proportion of totel effect mediated correspond
-to the levels of the treatment and are printed as such in the tabular
-summary.  In this case, the mediation effect under the treatment
-condition, listed as \texttt{Mediation Effect\_1} is estimated to be
-$-.012$ while the mediation effect under the control condition,
-\texttt{Mediation Effect\_0}, is $-.019$.  The bottom of the table shows
-the overall summary of these quantities averaged over the two treatment levels,
-as well as the number of data points.
-
-When using the {\tt plot} function on a {\tt mediate} object with interactions,
-one can select which treatment condition to plot the estimated effects for by
-specifying the {\tt treatment} argument.  The default is to plot both estimates,
-which is equivalent to setting {\tt treatment} to {\tt "both"}:
-\begin{verbatim}
-R> plot(out.3, treatment = "both")
-\end{verbatim}
-The resulting plot is in Figure~\ref{fig:plot.mediate.int}.
-
-\begin{figure}[t]
-\spacingset{1}
-\vspace{-.5in}
-\begin{center}
-\includegraphics[scale=.8]{plot-mediate-int.pdf}
-\end{center}
-\vspace{-.5in}
-\caption{Causal Mediation Analysis with Interaction
-between Treatment and Mediator.
-  \label{fig:plot.mediate.int}}
 \end{figure}
 
 
-\paragraph{Use of Non/Semi-parametric Regression.}
+When using the R$^2$ statistic version of sensitivity analysis the
+user must specify whether the hypothesized confounder affects the the
+mediator and outcome variables in the same direction or in different
+directions. This matters because the sensitivity analysis is in terms
+of the product of R$^2$ statistics. In the current example, we assume
+that the confounder influences both variables in the same direction by
+setting \code{sign.prod = "positive"} (rather than \code{sign.prod =
+  "negative"}). Here, we plot the total variance version of the
+sensitivity analysis. The bold line represents the various
+combinations of the R$^2$ statistics where the ACME would be $0$ (in
+this case the product equals $.049$). The graphical display also
+presents the corresponding contour plots for other products of the
+R$^2$ statistics.
+<<eval=FALSE,fig=FALSE,echo=TRUE>>=
+plot(sens.out, sens.par = "R2", r.type = "total", sign.prod = "positive")
+@
 
-The flexibility of \bmediation\ becomes readily apparent when we move
-beyond standard linear regression models.  For example, we might
-suspect that the mediator has a nonlinear effect on the outcome.
-Generalized Additive Models (GAMs) allow analysts to use splines for
-flexible nonlinear fits.  This presents no difficulties for the
-\texttt{mediate} function.  We model the mediator as before, but we
-alter the outcome model using the \texttt{gam} function from the
-\texttt{mgcv} library.
-\begin{verbatim}
-R> library(mgcv)
-R> model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age + occp + marital
-                 + nonwhite + educ + income, data = jobs)
-R> model.y <- gam(depress2 ~ treat + s(job_seek, bs = "cr")  + depress1 + econ_hard
-                 + sex + age + occp + marital + nonwhite + educ + income, data = jobs)
-\end{verbatim}
-In this case we fit a Generalized Additive Model for the outcome
-variable, but allow the effect of the \texttt{job\_seek} variable to
-be non-linear and determined by the data. This is done by using the
-\texttt{s} notation which allows the fit between the mediator and
-the outcome to be modeled with a spline.  Using the spline for the fit
-allows the estimate for the mediator on the outcome to be a series of
-piecewise polynomial regression fits. This semiparametric regression
-model is a more general version of nonparametric regression models
-such as lowess. The model above allows the estimate to vary across the
-range of the predictor variable. Here, we specify the model with a
-cubic basis function (\texttt{bs = "cr"}) for the smoothing spline and
-leave the smoothing selection to be done at the program defaults which
-is generalized cross-validation.  Fully understanding how to fit such
-models is beyond the scope here.  Interested readers should consult
-\cite{Wood:2006} for full technical details and \cite{Keele:2008}
-provides coverage of these models from a social science perspective.
-
-The call to \texttt{mediate} with a \texttt{gam} fit remains
-unchanged except that when the outcome model is a semiparametric
-regression only the nonparametric bootstrap is valid for calculating
-uncertainty estimates, i.e., {\tt boot = TRUE}.
-\begin{verbatim}
-R> out.4 <- mediate(model.m, model.y, sims = 1000, boot = TRUE, treat = "treat",
-                    mediator = "job_seek")
-\end{verbatim}
-
-The model for the mediator can be modeled with the \texttt{gam}
-function as well.  The \texttt{gam} function also allows analysts to
-include interactions; thus analysts can still allow the mediation
-effects to vary with treatment status.  This simply requires altering
-the model specification by using the \texttt{by} option in the
-\texttt{gam} function and using two separate indicator variables for
-treatment status.  To fit this model we need one variable that
-indicates whether the observation was in the treatment group and a
-second variable that indicates whether the observation was in the
-control group.  To allow the mediation effect to vary with treatment
-status, the call to \texttt{gam} takes the following form:
-\begin{verbatim}
-R> model.y <- gam(depress2 ~ treat + s(job_seek, by = treat) + s(job_seek, by = control)
-         + depress1 + econ_hard + sex + age + occp + marital + nonwhite + educ + income,
-         data = jobs)
-\end{verbatim}
-In this case, we must also alter the options in the \texttt{mediate}
-function by providing the variable
-name for the control group indicator using the \texttt{control} option.
-\begin{verbatim}
-R> out.5 <- mediate(model.m, model.y, sims = 1000, boot = TRUE,
-                    treat = "treat", mediator = "job_seek", control = "control")
-R> summary(out.5)
-
- Causal Mediation Analysis 
-
-Confidence Intervals Based on Nonparametric Bootstrap
-
-Mediation Effect_0:  -0.02254 95 % CI  -0.051956  0.004447 
-Mediation Effect_1:  -0.0171 95 % CI  -0.038895  0.002281 
-Direct Effect_0:  -0.009742 95 % CI  -0.09718  0.07924 
-Direct Effect_1:  -0.004302 95 % CI  -0.08926  0.08285 
-Total Effect:  -0.02684 95 % CI  -0.11932  0.06449 
-Proportion of Total Effect via Mediation_0:  0.3892 95 % CI  -4.411  9.161 
-Proportion of Total Effect via Mediation_1:  0.2768 95 % CI  -3.614  6.960 
-
-Mediation Effect (Average):  -0.01982 95 % CI  -0.045831  0.003105 
-Direct Effect (Average):  -0.007022 95 % CI  -0.09207  0.08178 
-Proportion of Total Effect via Mediation (Average):  0.3398 95 % CI  -3.870  8.105 
-
-Sample Size Used: 899 
-\end{verbatim}
-
-\paragraph{Quantile Causal Mediation Effects.}
-
-Researchers might also be interested in modeling mediation effects for
-quantiles of the outcome.  Quantile regression allows for a convenient
-way to model the quantiles of the outcome distribution while adjusting
-for a variety of covariates \citep{Koenker:2005}.  For example, a
-researcher might be interested in the 0.5 quantile (i.e., median)
-of the distribution. This also presents no difficulties for the
-\texttt{mediate} function.  Again for these models, uncertainty
-estimates are calculated using the nonparametric bootstrap.  To use
-quantile regression, we use the {\tt rq} function in package 
-\texttt{quantreg} and model
-the median of the outcome, though other quantiles are also
-permissible.  Analysts can also relax the no-interaction assumption
-for the quantile regression models as well.  Below we estimate the
-mediator with a standard linear regression, while for the outcome we
-use \texttt{rq} to model the median.
-\begin{verbatim}
-R> library(quantreg)
-R> model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age + occp + marital
-                 + nonwhite + educ + income, data = jobs)
-R> model.y <- rq(depress2 ~ treat + job_seek + depress1 + econ_hard + sex
-                 + age + occp + marital + nonwhite + educ + income, 
-                 tau = 0.5, data = jobs)
-R> out.6 <- mediate(model.m, model.y, sims = 1000, boot = TRUE, treat = "treat",
-                    mediator = "job_seek")
-R> summary(out.6)
-
- Causal Mediation Analysis 
-
-Confidence Intervals Based on Nonparametric Bootstrap
-
-Mediation Effect:  -0.01424 95 % CI  -0.031317  0.002109 
-Direct Effect:  -0.04165 95 % CI  -0.12413  0.03538 
-Total Effect:  -0.05589 95 % CI  -0.14305  0.02377 
-Proportion of Total Effect via Mediation:  0.2042 95 % CI  -2.003  2.707 
-
-Sample Size Used: 899 
-\end{verbatim}
-where the {\tt summary} command gives the estimated median causal
-mediation effect along with the estimates for the other quantities of
-interest.
-
-It is also possible to estimate mediation effects for quantiles of the
-outcome other than the median. This is done simply by specifying a
-different outcome quantile in the quantile regression model. For
-example, if the $10th$ percentile of the outcome were of interest,
-then the user can change {\tt tau} option,
-\begin{verbatim}
-R> model.y <- rq(depress2 ~ treat + job_seek + depress1 + econ_hard + sex
-                 + age + occp + marital + nonwhite + educ + income, 
-                 tau = 0.1, data = jobs)
-\end{verbatim}
-Furthermore, it is straightforward to loop over a set of quantiles and
-graph the mediation effects for a range of quantiles, as done in
-\citet{imai:keel:ting:10}.
-
-\paragraph{Discrete Mediator and Outcome Data.}
-
-Often analysts use measures for the mediator and outcome that are
-discrete.  For standard methods, this has presented a number of
-complications requiring individually tailored techniques.  The
-\bmediation\ software, however, can handle a number of different
-discrete data types using the general algorithms developed in
-\citet{imai:keel:ting:10}.  For example, one outcome of interest in
-the JOBS II study is a binary indicator (\texttt{work1}) for whether
-the subject became employed after the training sessions. To estimate
-the mediation effect, we simply use a probit regression instead of a
-linear regression for the outcome and then call \texttt{mediate} as
-before,
-\begin{verbatim}
-R> model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age 
-                + occp + marital + nonwhite + educ + income, data = jobs)
-R> model.y <- glm(work1 ~ treat + job_seek + depress1 + econ_hard + sex + age 
-                + occp + marital + nonwhite + educ + income, 
-                family = binomial(link = "probit"), data = jobs)
-R> out.7 <- mediate(model.m, model.y, sims = 1000, treat = "treat",
-                    mediator = "job_seek")
-R> summary(out.7)
-
- Causal Mediation Analysis 
-
-Quasi-Bayesian Confidence Intervals
-
-Mediation Effect_0:  0.003290 95 % CI  -0.0009537  0.0098747 
-Mediation Effect_1:  0.003538 95 % CI  -0.001052  0.010728 
-Direct Effect_0:  0.05514 95 % CI  -0.006427  0.113568 
-Direct Effect_1:  0.05538 95 % CI  -0.006487  0.114191 
-Total Effect:  0.05867 95 % CI  -0.003816  0.117091 
-Proportion of Total Effect via Mediation_0:  0.0455 95 % CI  -0.0768  0.4070 
-Proportion of Total Effect via Mediation_1:  0.05042 95 % CI  -0.0777  0.4110 
-
-Mediation Effect (Average):  0.003414 95 % CI  -0.001003  0.010269 
-Direct Effect (Average):  0.05526 95 % CI  -0.006457  0.113879 
-Proportion of Total Effect via Mediation (Average):  0.04802 95 % CI  -0.07725  0.41005 
-
-Sample Size Used: 899 
-\end{verbatim}
-
-In the table printed by the \texttt{summary} function, the estimated
-average causal mediation effect along with the quasi-Bayesian
-confidence interval are printed on the first line followed by the
-direct and total effects, and the proportion of the total effect due
-to mediation.  Even though the outcome model does not include an interaction
-term between the treatment and mediator, the estimated effects slightly differ
-between the treatment and control conditions.  This difference, however, 
-is solely due to the nonlinearity in the outcome model and should be
-extremely small.  It is also possible to use a logit model for the
-outcome instead of a probit model.  However, we recommend the use of a
-probit model because our implementation of the sensitivity analysis
-below requires a probit model for analytical tractability.
-
-The mediator can also be binary or ordered measures as well.  This
-simply requires modeling the mediator with either a probit or ordered
-probit model.  For demonstration purposes, the \texttt{jobs} data
-contains two variables, \texttt{job\_dich} and \texttt{job\_disc},
-which are recoded versions of \texttt{job\_seek}.  The first measure
-is simply the continuous scale divided at the median into a binary
-variable.  The second measure, \texttt{job\_disc}, recodes the
-continuous scale into a discrete four point scale.  We emphasize that
-this is for demonstration purposes only, and analysts in general
-should not recode continuous measures into discrete measures.
-Estimating mediation effects with a binary mediator is quite similar
-to the case above with a binary outcome.  We simply now use a probit
-model for the mediator and a linear regression for the outcome,
-\begin{verbatim}
-R> model.m <- glm(job_dich ~ treat + depress1 + econ_hard + sex + age
-                + occp + marital + nonwhite + educ + income, data = job, 
-                family = binomial(link = "probit"))
-R> model.y <- lm(depress2 ~ treat + job_dich + treat:job_dich + depress1
-                + econ_hard + sex + age + occp + marital + nonwhite 
-                + educ + income, data = jobs)
-\end{verbatim}
-
-In this example we include the interaction term between the treatment and
-mediator to allow the effect of the mediator to vary with
-treatment status.  The user now calls \texttt{mediate} and can use
-either the quasi-Bayesian approximation or nonparametric bootstrap.
-\begin{verbatim}
-R> out.8 <- mediate(model.m, model.y, sims = 1000, treat = "treat",
-                    mediator = "job_dich")
-R> summary(out.8)
- Causal Mediation Analysis 
-
-Quasi-Bayesian Confidence Intervals
-
-Mediation Effect_0:  -0.01823 95 % CI  -0.038944 -0.002616 
-Mediation Effect_1:  -0.02040 95 % CI  -0.038965 -0.003155 
-Direct Effect_0:  -0.02823 95 % CI  -0.10786  0.05154 
-Direct Effect_1:  -0.03039 95 % CI  -0.11164  0.04764 
-Total Effect:  -0.04863 95 % CI  -0.13146  0.02839 
-Proportion of Total Effect via Mediation_0:  0.2782 95 % CI  -3.055  3.325 
-Proportion of Total Effect via Mediation_1:  0.3162 95 % CI  -3.443  3.628 
-
-Mediation Effect (Average):  -0.01932 95 % CI  -0.037878 -0.003201 
-Direct Effect (Average):  -0.02931 95 % CI  -0.11052  0.04807 
-Proportion of Total Effect via Mediation (Average):  0.301 95 % CI  -3.016  3.477 
-
-Sample Size Used: 899 
-\end{verbatim}
-
-\noindent In the table, we see that \texttt{Mediation Effect\_0} is
-the mediation effect under the control condition, while
-\texttt{Mediation Effect\_1} is the mediation effect under the
-treatment condition.  The same notation applies to the direct effects.
-As the reader can see, the output also indicates which algorithm is
-used for the 95\% confidence intervals.
-
-When the mediator is an ordered variable, we switch to an ordered
-probit model for the mediator.  In \bR, the \texttt{polr} function
-in the \texttt{MASS} library provides this functionality.  (Alternatively,
-the \texttt{bayespolr} function in the \texttt{arm} library can also be used.)
-Thus, we fit the outcome and mediator models below,
-\begin{verbatim}
-R> model.m <- polr(job_disc ~ treat + depress1 + econ_hard + sex + age 
-                + occp + marital + nonwhite + educ + income, 
-                data = jobs, method = "probit", Hess = TRUE)
-R> model.y <- lm(depress2 ~ treat + job_disc + depress1 + econ_hard + sex + age 
-                + occp + marital + nonwhite + educ + income, data = jobs)
-\end{verbatim}
-The reader should note that in the call to \texttt{polr} the
-\texttt{Hess = TRUE} should be specified to compute the asymptotic variance
-covariance matrix for the estimated model coefficients in the quasi-Bayesian
-approximation.  Otherwise, the Hessian of the log-likelihood will be recalculated
-within the {\tt mediate} call.  
-
-Once we have estimated these two models, analysis proceeds as before,
-\begin{verbatim}
-R> out.9 <- mediate(model.m, model.y, sims = 1000, treat = "treat",
-                     mediator = "job_disc")
-R> summary(out.9)
-
- Causal Mediation Analysis 
-
-Quasi-Bayesian Confidence Intervals
-
-Mediation Effect:  -0.01048 95 % CI  -0.03188  0.01008 
-Direct Effect:  -0.03311 95 % CI  -0.10759  0.04848 
-Total Effect:  -0.04360 95 % CI  -0.12376  0.03895 
-Proportion of Total Effect via Mediation:  0.1726 95 % CI  -2.752  2.077 
-
-Sample Size Used: 899 
-\end{verbatim}
-Again, for any of these data types, analysts can relax the
-no-interaction assumption as before by including the interaction
-between treatment and the mediator variable in the outcome model.
-
-\subsection{Sensitivity Analysis}
-
-Once analysts have estimated mediation effects, they should explore how 
-robust their finding is to the ignorability assumption, whenever possible.
-The \texttt{medsens} function allows analysts to conduct sensitivity
-analyses for mediation effects as well as direct effects.  
-In this section we provide a demonstration of these functionalities.
-Currently, \bmediation\ can conduct sensitivity analyses when both mediator
-and outcome are continuous and modelled with the {\tt lm} function, as well
-as when either mediator or outcome (but not both) is binary and modelled using
-a binary probit regression via {\tt glm}.
-
-\paragraph{The Baron-Kenny Procedure.}
-As before, one must first fit models for the mediator and outcome and then pass these model objects through the mediate function:
-\begin{verbatim}
-R> model.m <- lm(job_seek ~ treat + depress1 + econ_hard + sex + age + occp 
-                + marital + nonwhite + educ + income, data = jobs)
-R> model.y <- lm(depress2 ~ treat + job_seek + depress1 + econ_hard + sex + age + occp
-                + marital + nonwhite + educ + income, data = jobs)
-R> med.cont <- mediate(model.m, model.y, sims=1000,  treat = "treat",
-                       mediator = "job_seek")
-\end{verbatim}
-
-Once the analyst estimates the mediation effects, the output from the
-{\tt mediate} function becomes the argument for \texttt{medsens},
-which is the workhorse function. The {\tt medsens} function
-recognizes main arguments specified in the {\tt mediate} function and
-thus there is no need to specify options such as \texttt{treat} or 
-\texttt{mediator}.
-\begin{verbatim}
-R> sens.cont <- medsens(med.cont, rho.by = 0.05)
-\end{verbatim}
-The \texttt{rho.by} option specifies how finely incremented the parameter $\rho$
-is for the sensitivity analysis. When $\rho$ is on a coarser grid, this speeds
-up estimation considerably but comes at the cost of estimating the
-robustness of the original conclusion only imprecisely.
-
-After running the sensitivity analysis via \texttt{medsens}, the
-\texttt{summary} function can be used to produce a table with the
-values of $\rho$ for which the confidence interval contains zero.
-This allows the analyst to immediately see the approximate range of
-$\rho$ where the sign of the causal mediation effect is indeterminate.
-The second section of the table contains the value of $\rho$ for which
-the mediation effect is exactly zero, which in this application is
-$-0.19$. The table also presents coefficients of determination that
-correspond to the critical value of $\rho$ where the mediation effect
-is zero. First, ${R^\ast}^2_M{R^\ast}^2_Y$ is the product of
-coefficients of determination which represents the proportion of the
-\emph{previously unexplained} variance in the mediator and outcome
-variables that is explained by an unobservable pretreatment
-unconfounder.  An alternative formulation is in terms of the
-proportion of the \emph{original} variance explained by an unobserved
-confounder, which we denote as $\widetilde{R}^2_M\widetilde{R}^2_Y$ .
-\begin{verbatim}
-R> summary(sens.cont)
-Mediation Sensitivity Analysis for Average Causal Mediation Effect
-
-Sensitivity Region
-
-        Rho Med. Eff. 95% CI Lower 95% CI Upper R^2_M*R^2_Y* R^2_M~R^2_Y~
-                
-[14,] -0.30    0.0064      -0.0025       0.0153       0.0900       0.0588
-[15,] -0.25    0.0028      -0.0026       0.0082       0.0625       0.0408
-[16,] -0.20   -0.0007      -0.0049       0.0036       0.0400       0.0261
-[17,] -0.15   -0.0040      -0.0105       0.0025       0.0225       0.0147
-
-
-Rho at which ACME = 0: -0.2 
-
-
-R^2_M*R^2_Y* at which ACME = 0: 0.04 
-
-
-R^2_M~R^2_Y~ at which ACME = 0: 0.0261 
-\end{verbatim}
-The table above presents the estimated mediation effect along with its
-confidence interval for each value of $\rho$.  The reader can verify
-that when $\rho$ is equal to zero, the reported mediation effect
-matches the estimate produced by the \texttt{mediate} function.  For
-other values of $\rho$, the mediation effect is calculated under
-different levels of unobserved confounding.
-
-The information from the sensitivity analysis can also be summarized
-graphically using the \texttt{plot} function.  First, passing the
-\texttt{medsens} object to \texttt{plot} and specifying the
-\texttt{sens.par} option to \texttt{"rho"}, i.e.,
-\begin{verbatim}
-R> plot(sens.cont, sens.par = "rho")
-\end{verbatim}
-produces the left hand side of Figure~\ref{jobplot1}.  In the plot, the dashed
-horizontal line represents the estimated mediation effect under the sequential
-ignorability assumption, and the solid line represents the mediation
-effect under various values of $\rho$.  The grey region represents the
-95\% confidence bands.
-
-Similarly, we can also plot the sensitivity analysis in terms of the
-coefficients of determination as discussed above. Here we specify \texttt{sens.par}
-option to \texttt{"R2"}.  We also need to specify two additional pieces of information.
-First, \texttt{r.type} option tells the plot function whether to plot
-${R^\ast}^2_M{R^\ast}^2_Y$ or $\widetilde{R}^2_M\widetilde{R}^2_Y$. To plot the
-former \texttt{r.type} is set to \texttt{"residual"} and to plot the latter 
-\texttt{r.type} is set
-to \texttt{"total"}.  Finally, the \texttt{sign.prod} option specifies the sign of the
-product of the coefficients of the unobserved confounder in the mediator and outcome models.
-This product indicates whether the unobserved confounder affects both mediator and outcome
-variables in the same direction (\texttt{"positive"}) or different directions 
-(\texttt{"negative"}), thereby
-reflecting the analyst's expectation about the nature of confounding.
-
-For example, the following command produces the plot representing the sensitivity
-of estimates with respect to the proportion of the original variances explained by
-the unobserved confounder when the confounder is hypothesized to affect the mediator
-and outcome variables in opposite directions.
-\begin{verbatim}
-R> plot(sens.cont, sens.par = "R2", r.type = "total", sign.prod = "negative")
-\end{verbatim}
-The resulting plot is shown on the right hand side of Figure~\ref{jobplot1}. Each contour
-line represents the mediation effect for the corresponding values of
-$\widetilde{R}^2_M$ and $\widetilde{R}^2_Y$. For example, the 0 contour line
-corresponds to values of the product $\widetilde{R}^2_M\widetilde{R}^2_Y$ such
-that the ACME is 0. As reported in the table, even a small proportion of
-original variance unexplained by the confounder, $.02\%$, produces mediation
-effects of 0.  Accordingly, the right hand side of Figure~\ref{jobplot1} shows
-how increases in $\widetilde{R}^2_M\widetilde{R}^2_Y$ (moving from the lower
-left to upper right) produce \emph{positive} mediation effects.
-
-For both types of sensitivity plots, the user can specify additional options
-available in the plot function such as alternative
-title (\texttt{main}) and axis labels (\texttt{xlab}, \texttt{ylab}) or
-manipulate common graphical options (e.g., \texttt{xlim}).
-
-
-\begin{figure}[t]
-\spacingset{1}
-\vspace{-.5in}
+\begin{figure}[t!]
 \begin{center}
-\includegraphics[scale=.8]{Rho-R2-ContCont-JOBS.pdf}
+<<fig=TRUE,echo=FALSE>>=
+par(mfrow = c(2,2))
+plot(sens.out, sens.par = "R2", r.type = "total", sign.prod = "positive")
+@
+\vspace{-2.5in}
+\caption{Graphical Display of Results from the \code{medsens} Function. Results as a Function of $\tilde{R}^2$.}
 \end{center}
-\vspace{-.5in}
-\caption{Sensitivity Analysis with Continuous Outcome and Mediator.
-  \label{jobplot1}}
 \end{figure}
 
 
-\paragraph{Binary Outcome.}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Design-Based Causal Mediation Analysis}
+\label{sec:design}
 
-The \texttt{medsens} function also extends to analyses where the
-mediator is binary and the outcome is continuous, as well as when the
-mediator is continuous and the outcome is binary.  If either variable
-is binary, \texttt{medsens} takes an additional argument.  For
-example, recall the binary outcome model estimated earlier:
-\begin{verbatim}
-R> model.y <- glm(work1 ~ treat + job_seek + depress1 + econ_hard + sex + age 
-                + occp + marital + nonwhite + educ + income, 
-                family = binomial(link = "probit"), data = jobs)
-R> med.bout <- mediate(model.m, model.y, sims = 1000, treat = "treat",
-                       mediator = "job_seek")
-\end{verbatim}
+An alternative approach to model-based inference is to use different
+research designs that are specifically designed for identifying causal
+mechanisms.  \citet{ImaiDesign} propose several such designs and
+describe the assumptions required for the identification of causal
+mediation effects under each of the designs.  In this section we
+briefly illustrate how to use our software to calculate the estimates
+of the quantities of interest under each design.
 
-The call to \texttt{medsens} works as before, with the output from the \texttt{mediate}
-function passed through \texttt{medsens}.
-\begin{verbatim}
-R> sens.bout <- medsens(med.bout, rho.by = 0.05, sims = 1000)
-\end{verbatim}
-The \texttt{sims} option provides control over the number of Monte Carlo draws 
-used to compute confidence bands.
-When either the mediator or outcome is binary, the exact values of
-sensitivity parameters where the mediation effects are zero cannot be analytically
-obtained as in the fully continuous case \citep[see][Section 4]{imai:keel:yama:10}.
-Thus, this information is reported based on the signs of the estimated mediation
-effects under various values of $\rho$ and corresponding coefficients of determination.
-The usage of the \texttt{summary} function, however, remains
-identical to the fully continuous case
-in that the output table contains the estimated mediation
-effects and the corresponding values of $\rho$ for which the
-confidence region contains zero.
+%%%%%%%%%%%%%%
+\subsection{Single Experiment Design}
 
-As in the case with continuous mediator and outcome variables, we can plot the
-results of the sensitivity analysis.  The following code produces Figure~\ref{SensBinOut}.
-\begin{verbatim}
-R> plot(sens.bout, sens.par = "rho")
-R> plot(sens.bout, sens.par = "R2", r.type = "total", sign.prod = "positive")
-\end{verbatim}
-On the left hand side we plot the ACME in terms of $\rho$, while we plot the ACME
-in terms of $\widetilde{R}^2_M$ and $\widetilde{R}^2_Y$ on the right hand side.
-In the $\rho$ plot, the dashed line represents the estimated mediation effect
-under sequential
-ignorability, and the solid line represents the mediation effect under
-various values of $\rho$.  The grey region represents the 95\%
-confidence bands. In the $\widetilde{R}^2$ plot the ACME is plotted against various values of $\widetilde{R}^2_M$ and $\widetilde{R}^2_Y$ and is interpreted in the same way as above.
+The single experiment design randomizes the treatment variable and
+measures the mediating and outcome variables. In
+Section~\ref{sec:mediate}, we discussed estimation functions that can
+be used with parametric and semi-parametric models. If the researchers
+wish to pursue a completely non-parametric approach the
+\pkg{mediation} package offers two options via the \code{mediate.sed}
+function. First, the researchers can continue to make the sequential
+ignorability assumption and nonparametrically estimate the ACME.  This
+approach works only when the mediator variable is discrete. Second,
+the sharp bounds on the ACME can be computed under the assumption that
+only the treatment is randomized.  Unfortunately, \citet{ImaiDesign}
+derive the bounds in the case with all binary variables (treatment,
+mediator, and outcome) and show that the bounds are never informative
+about the sign of the ACME (i.e., they always cover 0).
 
-\begin{figure}[t]
-\spacingset{1}
-\vspace{-.5in}
+Most mediation analysis proceeds under the sequential ignobility
+assumption.  Those analyses also tend to be model-based, but they need
+not be. \citet{imai:keel:yama:10} outline a design-based estimator for
+the ACME for when the mediator is discrete.  This estimator for the
+ACME is fully nonparametric.  One drawback to this estimator is that
+one can encounter mediator-treatment combinations for which there are
+no subjects because of data sparsity. Standard error calculation for 
+this estimator is based on either the Delta method or the nonparametric
+bootstrap.
+
+The \code{mediate.sed} function requires the names of the outcome,
+mediator, and treatment variables, along with the name of the data
+frame that contains these variables.  When \code{SI = TRUE}, the
+function will return the point estimates under the sequential
+ignorability assumption, and otherwise the results will be a set of
+sharp bounds for the ACME.  The method for inference also differs
+slightly from the \code{mediate} function.  When \code{boot = TRUE}
+the bootstrap is used, but when \code{boot = FALSE}, the Delta method
+is used to compute standard errors.
+
+Below, we present an example using the framing data from
+\citet{Brader:2008}.  The treatment variable is the same as before,
+i.e., \code{treat}, and the mediator is \code{anx}, which refers to a
+subject's reported level of anxiety.  This four level measure is one
+component of the \code{emo} variable that was previously used as the
+mediator and in the data all treatment-mediator combinations are
+present (a requirement for the estimator). The outcome variable in
+this example is \code{english} and measures on a four point scale how
+much someone supports English only laws, from strongly support to
+strongly oppose. Note that the \code{mediate.sed} function only take
+numeric variables as arguments.  Variables that are stored as factors
+must be converted to numeric variables as we show below.
+<<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+framing$english <- as.numeric(framing$english)
+framing$anx <- as.numeric(framing$anx)
+sed.est <- mediate.sed("english", "anx", "treat", data = framing, SI = TRUE,
+                       boot = TRUE)
+summary(sed.est)
+@
+The results from the \code{summary} function display the mediation
+effects along with the default 95\% confidence intervals. In this
+example both $\bar\delta(0)$ and $\bar\delta(1)$ are not significantly
+different from 0.
+
+%DT Note, we previously did not do an example for this. We can, but I'm not sure we need to.
+%<<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+%sed.2 <- mediate.sed("english", "anx", "treat", data=framing, SI=FALSE,
+%boot=TRUE, sims=50)
+%summary(sed.2)
+%@
+
+\subsection{Parallel Design}
+\label{subsec:parallel}
+An alternative to the single experiment design is the ``parallel
+design'' proposed by \citet{ImaiDesign}. In this design there are two
+separate experiments that are run in parallel with subjects randomly
+assigned to one of the two experiments. The first experiment follows
+the single experiment design. In the second experiment, subjects are
+randomly assigned to treatment or control. Then, a randomly selected
+set of subjects in each condition is assigned a value of the mediating
+variable. A key assumption of this design is that the manipulation of
+the mediating variable is possible and has no direct effect on the
+outcome variable.
+
+Under the parallel design, the ACME is not point identified without an
+additional assumption.  The \pkg{mediation} package offers two options
+via the \code{mediate.pd} function.  First, the researchers can assume
+no interaction between the treatment and mediating variables by
+setting \code{NINT = TRUE}.  In this case, the \code{mediate.pd}
+function will calculate the ACME along with its bootstrap confidence
+intervals.  Second, the assumption of no-interaction between treatment
+and mediator can be dropped via \code{NINT = FALSE}, and then the sharp
+bounds can be calculated for the ACME.  These bounds may be
+informative about the sign (i.e., do not cover 0) and are 
+always narrower compared to
+the bounds under the single experiment design where the only
+assumption is randomization of the treatment.
+
+For illustration, we simulated data based on the media framing
+experiment by \citet{Brader:2008} by creating a population
+distribution of potential mediators and outcomes (see
+\citet{ImaiDesign} for more details). We then sampled 1000 cases from
+this distribution. In this example, \code{out} represents the outcome
+variable (immigration attitudes), \code{med} represents the mediator
+(anxiety), and \code{ttt} represents the treatment. All variables are
+binary. \code{manip} represents whether the subject had the mediator
+manipulated ($-1$ if mediator is manipulated down, $0$ if no
+manipulation, and $1$ if manipulated up). First, the no-interaction
+assumption is made and options for the number of bootstrap simulations
+and confidence intervals are specified. In this case, the mediation
+effect is estimated at $-0.12$ with $95\%$ confidence intervals
+spanning $[-0.21, -0.03]$. In the second example, the no interaction
+assumption is dropped and the sharp bounds are calculated to span
+$[-0.3, 0.3]$ for the control condition and $[0.2, 0.77]$ for the
+treatment condition.
+<<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+data(boundsdata)
+pd <- mediate.pd("out", "med", "ttt", "manip", boundsdata,
+                 NINT = TRUE, sims = 1000, conf.level = 0.95)
+summary(pd)
+pd1 <- mediate.pd("out", "med", "ttt", "manip", boundsdata, NINT = FALSE)
+summary(pd1)
+@
+
+\subsection{Parallel Encouragement Design}
+
+In many situations, perfect manipulation of the mediating variable may
+be difficult. In the parallel encouragement design, subjects
+are split into two separate experiments. The first experiment is based
+on the single experiment design. In the second experiment subjects are
+randomly assigned to the treatment and control conditions and then,
+within each condition, a subset of subjects are randomly encouraged to
+have a high or low value of the mediator. Both the mediator and
+outcome variable are then measured. The \code{mediate.ped} function
+reports the sharp bounds on two estimands. First is the ACME and
+second is the ACME for the ``compliers'' who respond to the
+encouragement. The calculation of these bounds is accomplished via a
+standard linear programming approach as discussed in
+\citet{ImaiDesign}.
+
+The parallel encouragement design requires the analyst to specifically
+design some form of encouragement.  The functionality of the
+\code{mediate.ped} closely mirrors that of \code{mediate.sed}. The key
+difference is that the analyst must also include an indicator for
+encouragement.  For illustration, we simulated data based on the media
+framing experiment by \citet{Brader:2008}. We did this by creating a
+population distribution of potential mediators and outcomes, and
+compliance types. We then randomly draw the joint probabilities of the
+causal types and assign an encouragement status for those in the
+encouragement condition (see \citet{ImaiDesign} for more
+details). Based on the encouragement condition and encouragement
+status (\code{enc}, $-1$ if mediator is encouraged down, $0$ if no
+encouragement, and $1$ if encouraged up), the observed binary values
+of the mediator (\code{med.enc}) and outcome (\code{out.enc}) are
+determined. Using this simulated data we can then pass it through the
+\code{mediate.ped} function for the parallel encouragement design.
+<<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+data(boundsdata)
+ped <- mediate.ped("out.enc", "med.enc", "ttt", "enc", boundsdata)
+summary(ped)
+@
+Here, the results from \code{mediate.ped} function are a set of sharp
+bounds. We see that for the compliers, the sharp bounds on ACME under
+the treatment condition are informative as they do not cross 0.
+
+
+\subsection{Crossover Encouragement Design}
+
+The fourth experimental design included in the \pkg{mediation} package
+is the crossover encouragement design.  Under this design,
+subjects are exposed to two experiments. In the first experiment, the
+treatment variable is randomized and the mediator and outcome
+variables observed. In the second experiment, the treatment condition
+is set to the opposite value from the first period, but an encouragement
+is given to a randomly selected set of subjects 
+so that the mediator variable will take on the value 
+observed in the first experiment. Under this design, the ACME is
+point identified for the set of subjects that are able to have their
+mediator value manipulated (known as ``pliable units''). A crucial
+identification assumption is that the first experiment does not
+influence behavior in the second experiment. For this experimental
+design the \code{mediate.ced} function calculates point estimates and
+the bootstrap is used for estimates of uncertainty.
+
+For illustration, we simulated data based on the identification
+assumptions necessary for this design. \code{Y2} is the value of the
+outcome variable in the second experiment, \code{M1} and \code{M2} are
+the mediator values for the first and second experiment, \code{T1} is
+the value of the treatment in the first experiment, and \code{Z}
+indicates whether the subject's mediator value in the second
+experiment is encouraged to take on the value opposite to that observed
+in the first experiment. All variables are binary.
+<<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+data(CEDdata)
+ced <- mediate.ced("Y2", "M1", "M2", "T1", "Z", CEDdata, sims = 100)
+summary(ced)
+@
+The results from the \code{mediate.ced} function are point estimates
+and confidence intervals for the ACME under the treatment and control
+conditions. These estimates apply only to the pliable units. In this
+example, both values of the ACME are positive but the 95\% confidence
+intervals overlap with zero.
+
+
+\section{Analysis of Causally Dependent Multiple Mechanisms}
+\label{sec:multimech}
+
+Our discussion so far has focused on a single mediator, $M$.
+Frequently, however, researchers take measurements of more than one
+mediating variable in a given study.  Accounting for alternative
+mechanisms is indeed crucial for the identification of the mechanism
+of primary interest, especially when such mechanisms are causally not
+independent. This is because the alternative dependent mediators
+affect both the mediator of primary interest and the outcome variable,
+which, by definition, violates the sequential ignorability assumption
+(Assumption~\ref{asm:ignorable}).
+
+\subsection{The Methodology}
+
+\citet{imai:yama:11} develop a framework for dealing with multiple,
+causally related mediators (or equivalently, post-treatment
+mediator-outcome confounders).  We briefly review this
+framework. First, let $W_i(t)$ denote the vector of the potential
+values of those alternative mediators given treatment status $t$. To
+allow the causal dependence of both the primary mediator and outcome
+on $W$, we write the potential mediator and outcome as $M_i(t,w)$ and
+$Y_i(t,m,w)$, respectively. The observed values of these potential
+response variables can then be expressed as $W_i = W_i(T_i)$, $M_i =
+M_i(T_i, W_i(T_i))$, and $Y_i = Y_i(T_i, M_i(T_i,W_i(T_i)),
+W_i(T_i))$.  The causal mediation effects can now be reexpressed using
+these notations as,
+\begin{eqnarray*}
+    \delta_i(t) & = & Y_i(t, M_i(1,W_i(1)), W_i(t)) - Y_i(t, M_i(0,W_i(0)), W_i(t)),
+\end{eqnarray*}
+for $t = 0,1$. Note that this quantity represents the treatment
+effects that are transmitted through the mediator of primary interest
+$M_i$, irrespective of whether they also come through the alternative
+mediators $W_i$ or not.  Therefore, the quantity of interest remains
+unchanged from the previous sections, except that the existence of the
+other mediators are now explicitly taken into consideration.
+
+The framework of \citet{imai:yama:11} is based on the following varying
+coefficient linear structural equations model,
+\begin{eqnarray}
+    M_i(t, w) & = & \alpha_2 + \beta_{2i}t + \xi_{2i}^\top w + \mu_{2i}^\top tw
+        + \lambda_{2i}^\top x + \epsilon_{2i}, \label{eq:varsemM} \\
+    Y_i(t, m, w) & = & \alpha_3 + \beta_{3i}t + \gamma_i m + \kappa_i tm
+        + \xi_{3i}^\top w + \mu_{2i}^\top tw + \lambda_{3i}^\top x_i + \epsilon_{3i}, \label{eq:varsemY}
+\end{eqnarray}
+where $\E(\epsilon_{2i}) = \E(\epsilon_{3i}) = 0$ without loss of
+generality.  Although these equations may resemble a traditional
+linear structural equations model at a first glance, they are
+considerably more flexible because the coefficients are all allowed to
+vary arbitrarily across individual units.
+
+\citet{imai:yama:11} propose two strategies for the analysis of the
+average causal mediation effects, $\bar\delta(t) \equiv \E(\delta_i(t))$.
+First, it can be shown that the ACME is point identified
+under the above model and sequential ignorability (a weaker version allowing
+for post-treatment confounding; see \citeauthor{imai:yama:11}) if the
+{\it homogeneous interaction} assumption is satisfied. This additional
+assumption is formally written as,
+\begin{eqnarray*}
+  Y_i(1,m,W_i(1)) - Y_i(0, m, W_i(0)) & = & B_i + Cm \label{eq:homoint}
+\end{eqnarray*}
+for any $m$. The assumption states that the degree of interaction between the
+treatment and the primary mediator is constant across individual units, which
+may or may not be plausible depending on the empirical context.
+
+Second, when this assumption is violated, one can express the sharp
+bounds on the ACME as functions of a parameter representing the degree
+of the violation, and conduct a sensitivity analysis. The sensitivity
+parameter here is the standard deviation of the coefficient on the
+treatment-mediator interaction term, i.e.,
+\begin{eqnarray*}
+	\sigma & \equiv & \sqrt{\V(\kappa_i)},
+\end{eqnarray*}
+and the expression for the sharp bounds are given in \citet[footnote
+6]{imai:yama:11}.  Researchers can then analyze robustness to the
+potential violation of the homogeneous interaction assumption by
+examining how the location and width of the bounds vary as $\sigma$
+changes.
+
+The sensitivity analysis can also be formulated in terms of two
+alternative sensitivity parameters, both based on coefficients of
+determination as in the single mediator case (see
+Section~\ref{subsec:medsens}). Specifically, we use the proportion of
+the residual or total variance of the outcome variable that would be
+explained by allowing the heterogeneity in the treatment-mediator
+interaction in the outcome model. These parameters are formally
+defined as
+\begin{eqnarray}
+  R^{2\ast} & = & \frac{\V(\tilde\kappa_i T_i
+    M_i)}{\V(\eta_{3i}(T_i,M_i,W_i))} \quad {\rm and} \quad
+  \widetilde{R}^2
+  \ = \ \frac{\V(\tilde\kappa_i T_i M_i)}{\V(Y_i)}, \label{eq:R2}
+\end{eqnarray}
+where $\tilde{\kappa_i} = \kappa_i - \E(\kappa_i)$. Researchers may
+find these parameters to be easier to interpret in substantive terms,
+as they represent how important it would be to incorporate the
+interaction heterogeneity in order to explain the variation in the
+outcome model. \citet{imai:yama:11} show that these parameters have a
+one-to-one relationship with $\sigma$, implying that the ACME can also
+be written as a function of $R^{2\ast}$ or $\widetilde{R}^2$.
+
+\subsection{Single Experiment Design}
+
+The above framework has been implemented in the \pkg{mediation}
+package as the \code{multimed} function. The function takes a data
+frame containing the necessary variables (outcome, primary mediator,
+alternative mediator, treatment, and pre-treatment covariates if any)
+and outputs an object of class \code{multimed}, a list consisting of
+estimated bounds along with uncertainty estimates.  In the current
+version, only a single post-treatment confounder is allowed, although
+the theoretical framework accommodates more than one such confounder.
+
+The functionality of \code{multimed} differs in important ways from
+\code{mediate}. First, there is not a separate function for
+sensitivity analysis. Instead, a sensitivity analysis is conducted
+within the function along with the estimates of the mediation effects.
+Second, the arguments for the \code{multimed} function are rather
+different. Here, the names of the
+outcome (\code{outcome}), first mediator (\code{med.main}), 
+second mediator (\code{med.alt}) and treatment (\code{treat}) 
+variables are passed to the function along with a vector of
+the names of the pre-treatment covariates to condition on
+(\code{covariates}). In the \code{multimed} function, 
+inference can only be done with the nonparametric bootstrap. 
+
+To illustrate the use of the function we revisit the media framing example
+in Section~\ref{sec:mediate}. Here, we use a different outcome variable 
+\code{immigr}, which is a five category measure of whether immigration 
+should be increased or decreased (treated as a continuous measure).
+The main mediator is the same composite measure of anxiety, \code{emo},
+and the treatment and pretreatment covariates are defined as before. 
+We now introduce an alternative mediator \code{p_harm}, which is an eight 
+category measure of the perceived economic harm of immigrants. The
+reasoning behind the inclusion of this variable is that the media framing 
+treatment may also affect participants' opinion about immigrants by
+changing their factual belief about the economic impact of increased
+immigration, which may also affect the level of anxiety and therefore
+confound the mediator-outcome relationship.
+
+<<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+Xnames <- c("age", "educ", "gender", "income")
+m.med <- multimed(outcome = "immigr", med.main = "emo", med.alt = "p_harm", 
+                  treat = "treat", covariates = Xnames,
+                  data = framing, sims = 1000)
+summary(m.med)
+@
+
+The \code{summary} function produces two tables. The first table shows
+the estimated ACME and total treatment effect and their confidence intervals 
+(default at 95\%) under the homogeneous interaction assumption. 
+Three variants of the ACME are shown: the ACME conditional on the 
+treatment group, the control group, and the weighted average of the two with
+the weights being equal to the proportions of the treatment and control groups. 
+The second table shows key summary results from the sensitivity analysis
+with respect to possible heterogeneity in treatment-mediator interactions.
+Specifically, the table presents the values of $\sigma$ (column 1),
+$R^{2\ast}$ (column 3), and $\widetilde{R}^2$ (column 5) at which the
+true estimated ACMEs equal zero. The remaining columns (2, 4 and 6) show
+those values for the confidence bands of the three ACMEs.
+
+The results from the \code{multimed} function can also be analyzed graphically
+using the \code{plot} function. One can produce two types of plots, corresponding
+to the two tables in the \code{summary} output.  First, one can plot the 
+point estimates under the homogeneous interaction assumption by setting the
+\code{type} argument to \code{"point"}, as shown below. The output is in
+Figure~\ref{fig:multimedpoint}.
+<<eval=FALSE,fig=FALSE,echo=TRUE>>=
+plot(m.med, type = "point")
+@
+
+\begin{figure}[!t]
 \begin{center}
-\includegraphics[scale=.8]{Rho-R2-JobsBinOutcome.pdf}
+<<fig=TRUE,echo=FALSE>>=
+plot(m.med, type = "point")
+@
+\caption{Graphical Summary of the Results from the \code{multimed} Function
+under the Homogeneous Interaction Assumption.}
+\label{fig:multimedpoint}
 \end{center}
-\vspace{-.5in}
-\caption{Sensitivity Analysis with Continuous Outcome and Binary Mediator.
-  \label{SensBinOut}}
 \end{figure}
 
-When the outcome is binary, the proportion of the the total effect due to
-mediation can also be calculated as function of the sensitivity parameter $\rho$.
-The \texttt{pr.plot} option in the plot command (in conjunction with the
-\texttt{sens.par = "rho"} option) allows users to plot a summary
-of the sensitivity analysis for the proportion mediated. For example, the
-following call would provide a plot of this quantity:
-\begin{verbatim}
-R> plot(sens.bout, sens.par = "rho", pr.plot = TRUE)
-\end{verbatim}
+Second, the results from the sensitivity analysis with respect to
+$\sigma$, $R^{2\ast}$ or $\widetilde{R}^2$ can be plotted.
+In this case, the \code{type} argument can be used to specify
+which parameter(s) the estimated ACME should be plotted against.
+The possible values are \code{"sigma"}, \code{"R2-residual"},
+or \code{"R2-total"}. One can also choose the types of the ACME
+from \code{"treated"}, \code{"control"} and \code{"average"}
+via the \code{tgroup} argument. In the example below, we plot the
+estimated ACME for both treatment and control conditions as a function
+of $\sigma$ and $\widetilde{R}^2$. The output is in Figure~\ref{fig:multimedsens}.
+<<eval=FALSE,fig=FALSE,echo=TRUE>>=
+oldpar <- par(mfrow = c(2,2))
+plot(m.med, type = c("sigma", "R2-total"), tgroup = c("treated", "control"))
+par(oldpar)
+@
 
-
-\paragraph{Binary Mediator.}
-The final form of sensitivity analysis deals with the case where the
-outcome variable is continuous but the mediator is binary.  For the
-purpose of illustration, we simply dichotomize the \texttt{job\_seek}
-variable to produce a binary measure \texttt{job\_dich}. We fit a
-probit model for the mediator and linear regression for the outcome
-variable.
-\begin{verbatim}
-R> model.m <- glm(job_dich ~ treat + depress1 + econ_hard + sex + age 
-                + occp + marital + nonwhite + educ + income, 
-                data = jobs, family = binomial(link = "probit"))
-R> model.y <- lm(depress2 ~ treat + job_dich+ depress1 + econ_hard + sex + age 
-                + occp + marital + nonwhite + educ + income, data = jobs)
-R> med.bmed <- mediate(model.m, model.y, sims = 1000, treat = "treat",
-                       mediator = "job_dich")
-R> sens.bmed <- medsens(med.bmed, rho.by = 0.05, sims = 1000)
-\end{verbatim}
-Again we can pass the output of the \texttt{medsens} function through the \texttt{plot} function,
-\begin{verbatim}
-R> plot(sens.bmed, sens.par = "rho")
-\end{verbatim}
-producing Figure \ref{SensBinMed}. The plot is interpreted in the same
-way as the above cases. The user also has the option to plot sensitivity results
-in terms of the coefficients of determination just as in the case with
-continuous outcome and mediator variables.
-
-\begin{figure}[t]
-\spacingset{1}
-\vspace{-.5in}
+\begin{figure}[!t]
 \begin{center}
-\includegraphics[scale=.8]{BinaryMediator-Sensitivity-Rpaper.pdf}
+<<fig=TRUE,echo=FALSE>>=
+oldpar <- par(mfrow = c(2,2))
+plot(m.med, type = c("sigma", "R2-total"), tgroup = c("treated", "control"))
+par(oldpar)
+@
+\caption{Graphical Summary of Sensitivity Analysis using the \code{multimed} Function. 
+Results as a Function of $\sigma$ and $\widetilde{R}^2$.}
+\label{fig:multimedsens}
 \end{center}
-\vspace{-.5in}
-\caption{Sensitivity Analysis with Continuous Outcome and Binary Mediator.
-  \label{SensBinMed}}
 \end{figure}
 
-When the mediator variable is binary, the plotted values of the mediation effect
-and their confidence bands may not be perfectly smooth curves due to simulation errors.
-This is especially likely when the number of simulations (\texttt{sims}) is set
-to a small value.  In such situations, the user can choose to set the
-\texttt{smooth.effect} and \texttt{smooth.ci} options to \texttt{TRUE} in the
-\texttt{plot} function so that the corresponding values become smoothed
-out via a lowess smoother before being plotted.  Although this option
-often makes the produced graph look nicer, the user should be cautious as
-the adjustment could affect one's substantive conclusions in a
-significant way.  A recommended alternative is to increase the number of
-simulations.
 
-\section{Multiple Causal Mediation Analyses via {\tt mediations}}
-\label{sec:mediations}
-Researchers may face a situation where they want to conduct multiple causal
-mediation analyses. For example, the researcher may have run several different
-experiments that had different treatment conditions but had the same mediator
-and outcome variables. Or, a researcher may measure several different mediating
-variables in their experiment and wish to estimate causal mediation effects for
-each of these cases. In these situations the researcher would need to write
-separate lines of code for the different models. A more efficient way is to
-loop over the different combinations of interest.  The {\tt mediations} function
-facilitates this process.
+\subsection{Parallel Design}
 
-The {\tt mediations} function can be used to conduct causal mediation analyses
-over the range of treatment, mediator, and outcome combinations that could be
-present within a study. For example, if there were two treatment conditions, two
-measured mediators, and two outcomes, mediations would run eight causal
-mediation analyses. The results can then be analyzed with the {\tt
-summary} and {\tt plot} functions. If there is only one
-treatment variable, the user needs only a single data set that contains
-all mediators and outcomes of interest. If there are multiple treatment
-variables, then the researcher must first create separate data frames, each
-with all mediator/outcome variables to be considered, and named using a
-convention where the name of the data frame object begins with the name of the
-treatment variable contained within it.
+\citet[][Section 7]{imai:yama:11} show that the above framework can also be applied
+to the data collected under the parallel design.  As discussed in Section~\ref{subsec:parallel},
+the parallel design consists of two separate experiments to which subjects are randomly
+selected. In one experiment, only the treatment is randomized and the researcher observes the mediator and outcome variables, whereas in the other experiment both the treatment and mediator are randomly manipulated and the outcome variable is measured and recorded. 
 
-Use of the {\tt mediations} function is straightforward. First, the user creates
-vectors of the treatment, mediator, outcome, and covariates names that are to be used.
-The treatment, mediator, and outcome variables are looped over to produce
-all possible combinations of mediator and outcome models. The set of covariates
-is held constant across the models. The different model combinations are then
-entered into the {\tt mediate} function. 
+Unlike the single experiment design, one need not assume any kind of sequential ignorability under the parallel design. This is due to the existence of the second experimental group where both the treatment and mediator are randomly assigned. This implies that there is no need to explicitly incorporate an alternative mediator in the analysis, for any kind of post-treatment confounding (observed or unobserved) is allowed to exist in the natural causal process to identify the ACME under the parallel design using the proposed framework.
 
-The user can specify several different
-options for {\tt mediations}. First, the type of model to be used for the
-mediator and outcome equations must be specified. Currently, {\tt mediations} can
-handle a variety of different model combinations. Either the mediator or outcome
-equation can be modeled with linear regression, probit, ordered probit, and
-quantile regression. The {\tt mediations} function also handles the case where tobit is used for
-the outcome. Next, the user must also specify the standard features that are necessary for the
-{\tt mediate} function, such as the number of simulations ({\tt sims}). In addition, if
-quantile regression or tobit regression is used, the user needs to specify 
-the appropriate parameters, such as the quantiles to be estimated ({\tt tau.m},
-{\tt tau.y}) and cutpoints ({\tt LowerY}, {\tt UpperY}). 
-If the user wishes for estimates to include weights
-(e.g., survey weights) then the name of the weight variable needs to be passed
-via the {\tt weights} argument.
-
-The output of {\tt mediations} contains a collection of {\tt mediate} objects. The naming
-system uses the name of the particular outcome variable, mediator, and
-treatment, each separated by a dot. For example, if the output of {\tt mediations}
-is {\tt output} and the outcome, mediator and treatment variable names
-{\tt O}, {\tt M1} or {\tt M2}, and {\tt T}, respectively, 
-then {\tt output\$O.M2.T} would be the {\tt mediate} object from using mediator
-{\tt M2}.
-
-There are several limitations to the code. First, it works only with a subset of
-the model types that will be accommodated if {\tt mediate} is used individually.
-Second, one cannot specify separate sets of covariates for different
-treatment/mediator/outcome combinations. Users should use {\tt mediate} separately
-for individual models if more flexibility is required in their specific
-applications. 
-
-While {\tt mediations} is a helpful function, it is also easy to abuse. 
-First, researchers must be aware of the assumptions being made at every step of
-causal mediation analysis. For example, if there are multiple mediators, a
-strong assumption must be made for the estimates to be interpreted as causal
-quantities. One such assumption is that the mediators are not causally related. 
-Second, care must be taken against the risks of multiple testing when a 
-large number of treatment/mediator/outcome combinations are involved.  The
-{\tt mediations} function simply runs independent {\tt mediate} processes and
-does not use any correction procedures for multiple testing, so the confidence
-intervals may be too narrow. We recommend that the use of this function be limited
-for exploratory analyses.
-
-An illustration of the {\tt mediations} function can be found in the {\tt Examples}
-section of its help document; see {\tt ?mediations} or {\tt example(mediations)}.
+To apply the framework for the parallel design, one can use the \code{multimed} function with slightly modified inputs. First, the \code{med.alt} is no longer needed because the estimation framework is agnostic about what particular alternative mechanisms are confounding the mediator-outcome relationship. Second, one need to supply an additional variable (\code{experiment}) indicating whether units are assigned to the experiment with (\code{1}) or without (\code{0}) mediator manipulations. Finally, the \code{design} argument must be set to \code{"parallel"}, as opposed to the default value of \code{"single"}. For illustration, we again use the simulated data introduced in Section~\ref{subsec:parallel} and apply the varying coefficient linear structural equations framework.
+<<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+m.med.para <- multimed(outcome = "out", med.main = "med", treat = "ttt", 
+                       experiment = "manip", design = "parallel", 
+                       data = boundsdata, sims = 1000)
+summary(m.med.para)
+@
+The \code{plot} function can also be used in the same manner as in the single experiment case. The key differences between the above analysis and Section~\ref{subsec:parallel} are threefold. First, the point estimates in the first summary table here only rely on the homogeneous interaction assumption, not the stronger assumption of no interaction. Second, however, the estimates here depend on the additional assumption of additivity, which is embodied in the varying coefficient structural equations model in equations~\eqref{eq:varsemM}~and~\eqref{eq:varsemY}. The additivity assumption may not be plausible in some applications and needs to be carefully examined. Finally, the second summary table shows the result of the sensitivity analysis where the homogeneous interaction assumption is gradually relaxed until an arbitrary interaction heterogeneity is allowed. This may be preferred to the nonparametric bounds approach in Section~\ref{subsec:parallel}, which offers less nuanced information about how robust the point estimates are to the violation of the identification assumption.
 
 \section{Concluding Remarks}
+\label{sec:conclude}
 
-Causal mediation analysis is a key tool for social scientific
-research. In this paper, we describe our easy-to-use software for
-causal mediation analysis, \bmediation, that implements the new
-methods and algorithms introduced by \citet*{imai:keel:yama:10} and
-\citet*{imai:keel:ting:10}.  The software provides a flexible, unified
-approach to causal mediation analysis in various situations
-encountered by applied researchers.  The object-oriented nature of the
-\bR\ programming made it possible for us to implement these algorithms
-in a fairly general way.  In addition to the estimation of causal
-mediation effects, \bmediation\ implements formal sensitivity analyses
-so that researchers can assess the robustness of their findings to the
-potential violations of the key identifying assumption.  This is an
-important contribution for at least two reasons.  First, even in
-randomized experiments, causal mediation analysis requires an
-additional assumption that is not directly testable from the observed
-data.  Thus, researchers must evaluate the consequences of potential
-violations of the assumption via sensitivity analysis.  Second, the
-accumulation of such sensitivity analyses is essential for
-interpreting the relative degree of robustness across different
-studies.  Thus, the development of easy-to-use software, such as
-\bmediation, facilitates causal mediation analysis in applied social
-science research in several critical directions.
-
+In this paper, we described the functionalities of the \pkg{mediation}
+package, which allows applied researchers to conduct causal mediation
+analysis in a variety of settings.  The package implements a general
+algorithm for estimating causal mediation effects with a variety of
+statistical models.  Since the causal mediation analysis under the
+standard research design requires a strong and untestable assumption,
+we recommend sensitivity analysis which is also implemented via our
+package.  Finally, this strong identification assumption can be
+relaxed by adopting alternative research designs and we show how to
+use our package to conduct causal mediation analysis under those new
+designs.  The literature on causal mediation analysis is fast growing
+and we expect new methods to be developed in the coming years.  We
+hope that the \pkg{mediation} package can serve as a platform to which
+other researchers can add new methods and functionalities.
 
 \clearpage
 \pdfbookmark[1]{References}{References}
