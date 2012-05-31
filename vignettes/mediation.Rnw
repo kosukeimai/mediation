@@ -96,7 +96,7 @@
 
 % == BibTeX packages
 \usepackage{natbib}
-\bibliographystyle{jss}
+%\bibliographystyle{jss}
 
 % == Other Packages
 \usepackage{amsmath, amsfonts, amssymb, url, bm}
