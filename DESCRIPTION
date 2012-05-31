@@ -1,6 +1,6 @@
 Package: mediation
 Version: 4.1
-Date: 2012-XX-XX
+Date: 2012-5-31
 Title: R Package for Causal Mediation Analysis
 Author: Dustin Tingley <dtingley@gov.harvard.edu>,
         Teppei Yamamoto <teppei@mit.edu>,
