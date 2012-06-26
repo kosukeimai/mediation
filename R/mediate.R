@@ -178,6 +178,15 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         dfc*sandwich(fm, meat. = crossprod(uj)/N)
     }
 
+	pval <- function(x, xhat){
+		## Compute p-values
+	    if (xhat == 0) out <- 1
+	    else {
+	    	out <- 2 * sum((abs(x) >= 2 * abs(xhat)) & (sign(x) == sign(xhat))) / sims
+	    }
+	    return(min(out, 1))
+	}
+	
     ############################################################################
     ############################################################################
     ### CASE I: EVERYTHING EXCEPT ORDERED OUTCOME
@@ -861,17 +870,17 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         n.avg.ci <- quantile(nu.avg, c(low,high), na.rm=TRUE)
 
         # p-values
-        d0.p <- 2 * sum(sign(delta.0) != sign(median(delta.0)))/sims
-        d1.p <- 2 * sum(sign(delta.1) != sign(median(delta.1)))/sims
-        d.avg.p <- 2 * sum(sign(delta.avg) != sign(median(delta.avg)))/sims
-        z0.p <- 2 * sum(sign(zeta.0) != sign(median(zeta.0)))/sims
-        z1.p <- 2 * sum(sign(zeta.1) != sign(median(zeta.1)))/sims
-        z.avg.p <- 2 * sum(sign(zeta.avg) != sign(median(zeta.avg)))/sims
-        n0.p <- 2 * sum(sign(nu.0) != sign(median(nu.0)))/sims
-        n1.p <- 2 * sum(sign(nu.1) != sign(median(nu.1)))/sims
-        n.avg.p <- 2 * sum(sign(nu.avg) != sign(median(nu.avg)))/sims
-        tau.p <- 2 * sum(sign(tau) != sign(median(tau)))/sims
-
+        d0.p <- pval(delta.0, d0)
+        d1.p <- pval(delta.1, d1)
+        d.avg.p <- pval(delta.avg, d.avg)
+        z0.p <- pval(zeta.0, z0)
+        z1.p <- pval(zeta.1, z1)
+        z.avg.p <- pval(zeta.avg, z.avg)        
+        n0.p <- pval(nu.0, n0)
+        n1.p <- pval(nu.1, n1)
+        n.avg.p <- pval(nu.avg, n.avg)
+        tau.p <- pval(tau, tau.coef)
+        
         # Detect whether models include T-M interaction
         INT <- paste(treat,mediator,sep=":") %in% attr(terms(model.y),"term.labels") |
                paste(mediator,treat,sep=":") %in% attr(terms(model.y),"term.labels")
@@ -1201,11 +1210,14 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         z0.ci <- apply(zeta.0, 2, quantile, c(low,high))
 
         # p-values
-        d0.p <- 2 * apply(delta.0, 2, function(x) sum(sign(x) != sign(median(x)))/sims)
-        d1.p <- 2 * apply(delta.1, 2, function(x) sum(sign(x) != sign(median(x)))/sims)
-        z0.p <- 2 * apply(zeta.0, 2, function(x) sum(sign(x) != sign(median(x)))/sims)
-        z1.p <- 2 * apply(zeta.1, 2, function(x) sum(sign(x) != sign(median(x)))/sims)
-        tau.p <- 2 * apply(tau, 2, function(x) sum(sign(x) != sign(median(x)))/sims)
+        d0.p <- d1.p <- z0.p <- z1.p <- tau.p <- rep(NA, n.ycat)
+        for(i in 1:n.ycat){
+        	d0.p[i] <- pval(delta.0[,i], d0[i])
+        	d1.p[i] <- pval(delta.1[,i], d1[i])
+        	z0.p[i] <- pval(zeta.0[,i], z0[i])
+        	z1.p[i] <- pval(zeta.1[,i], z1[i])
+        	tau.p[i] <- pval(tau[,i], tau.coef[i])
+        }
 
         # Detect whether models include T-M interaction
         INT <- paste(treat,mediator,sep=":") %in% attr(model.y$terms,"term.labels") |
