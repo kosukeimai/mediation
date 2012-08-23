@@ -137,9 +137,11 @@ contcont <- mediate(b, c, sims=50, treat="treat", mediator="job_seek")
 summary(contcont)
 plot(contcont)
 
+\dontrun{
 # Estimation via nonparametric bootstrap
 contcont.boot <- mediate(b, c, boot=TRUE, sims=50, treat="treat", mediator="job_seek")
 summary(contcont.boot)
+}
 
 # Allowing treatment-mediator interaction
 d <- lm(depress2 ~ treat + job_seek + treat:job_seek + econ_hard + sex + age, data=jobs)
@@ -168,6 +170,7 @@ summary(contcont.cont)
 ######################################################
 # Example 2: Binary Outcome and Ordered Mediator
 ######################################################
+\dontrun{
 b.ord <- polr(job_disc ~ treat + econ_hard + sex + age, data=jobs,
             method="probit", Hess=TRUE)
 d.bin <- glm(work1 ~ treat * job_disc + econ_hard + sex + age, data=jobs,
@@ -180,6 +183,7 @@ require(sandwich)
 ordbin.rb <- mediate(b.ord, d.bin, sims=50, treat="treat", mediator="job_disc",
             robustSE=TRUE)
 summary(ordbin.rb)
+}
 
 ######################################################
 # Example 3: Quantile Causal Mediation Effect
@@ -193,6 +197,7 @@ summary(contquan)
 ######################################################
 # Example 4: GAM Outcome
 ######################################################
+\dontrun{
 require(mgcv)
 c.gam <- gam(depress2 ~ treat + s(job_seek, bs="cr") + 
             econ_hard + sex + age, data=jobs)
@@ -206,5 +211,6 @@ d.gam <- gam(depress2 ~ treat + s(job_seek, by = treat) +
 contgam.int <- mediate(b, d.gam, sims=10, treat="treat", mediator="job_seek",
     control = "control", boot=TRUE)
 summary(contgam.int)
+}
 
 } 
