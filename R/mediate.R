@@ -18,6 +18,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
 
     if(!is.null(cluster) && boot){
         warning("'cluster' is ignored for nonparametric bootstrap")
+        # TODO: take cluster variable from the data frame instead of an independent vector
     }
 
     if(robustSE & !is.null(cluster)){

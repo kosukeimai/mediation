@@ -1,10 +1,10 @@
 Package: mediation
-Version: 4.1
-Date: 2012-5-31
+Version: 4.1.1
+Date: 2012-8-23
 Title: R Package for Causal Mediation Analysis
 Author: Dustin Tingley <dtingley@gov.harvard.edu>,
         Teppei Yamamoto <teppei@mit.edu>,
-        Luke Keele <keele.4@polisci.osu.edu>,
+        Luke Keele <ljk20@psu.edu>,
         Kosuke Imai <kimai@princeton.edu>
 Maintainer: Dustin Tingley <dtingley@gov.harvard.edu>
 Depends: R (>= 2.14), MASS, Matrix, lpSolve, methods
