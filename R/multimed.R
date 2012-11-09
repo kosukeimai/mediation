@@ -8,6 +8,7 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
 					 sims = 1000, R2.by = 0.01, conf.level = 0.95){
 
     varnames <- c(outcome, treat, med.main, med.alt, experiment, covariates)
+    n.w <- length(med.alt)
     data <- na.omit(data[,varnames])
     
     design <- match.arg(design)
@@ -15,20 +16,28 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
     if(design == "single"){
 	    if (is.null(covariates)){
 	        f.y <- as.formula(paste(outcome, "~", treat, "+", med.main, "+",
-	                                paste(treat, med.main, sep=":"), "+", med.alt, "+",
-	                                paste(treat, med.alt, sep=":")))
+	                                paste(treat, med.main, sep=":"), "+", 
+	                                paste(med.alt, collapse=" + "), "+",
+	                                paste(treat, med.alt, sep=":", collapse=" + ")))
 	        f.ytot <- as.formula(paste(outcome, "~", treat))
 	        f.m <- as.formula(paste(med.main, "~", treat))
-	        f.w <- as.formula(paste(med.alt, "~", treat))
+	        f.w <- as.list(rep(NA, n.w))
+	        for(k in 1:n.w){
+    	        f.w[[k]] <- as.formula(paste(med.alt[k], "~", treat))
+    	    }
 	    } else {
 	        f.y <- as.formula(paste(outcome, "~", treat, "+", med.main, "+",
-	                                paste(treat, med.main, sep=":"), "+", med.alt, "+",
-	                                paste(treat, med.alt, sep=":"), "+",
+	                                paste(treat, med.main, sep=":"), "+", 
+	                                paste(med.alt, collapse=" + "), "+",
+	                                paste(treat, med.alt, sep=":", collapse=" + "), "+",
 	                                paste(covariates, collapse = " + ")))
 	        f.ytot <- as.formula(paste(outcome, "~", treat, "+", 
 	        						paste(covariates, collapse = " + ")))
 	        f.m <- as.formula(paste(med.main, "~", treat, "+", paste(covariates, collapse = " + ")))
-	        f.w <- as.formula(paste(med.alt, "~", treat, "+", paste(covariates, collapse = " + ")))
+	        f.w <- as.list(rep(NA, n.w))
+	        for(k in 1:n.w){
+    	        f.w[[k]] <- as.formula(paste(med.alt[k], "~", treat, "+", paste(covariates, collapse = " + ")))
+    	    }
 	    }
     } else if (design == "parallel"){
     	if (!is.null(covariates)){
@@ -81,7 +90,10 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
         model.ytot <- lm(f.ytot, data=data.b.0)
         model.m <- lm(f.m, data=data.b.0)
         if(design == "single"){
-	        model.w <- lm(f.w, data=data.b)
+            model.w <- as.list(rep(NA, n.w))
+            for(k in 1:n.w){
+    	        model.w[[k]] <- lm(f.w[[k]], data=data.b)
+    	    }
         }
         
         beta3 <- coef(model.y)[treat]
@@ -104,11 +116,15 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
 
         # E(W|T=t)
         if(design == "single"){
-	        mf.w1 <- mf.w0 <- model.frame(model.w)
-	        mf.w1[,treat] <- 1
-	        mf.w0[,treat] <- 0
-	        EW.1 <- mean(predict(model.w, mf.w1))
-	        EW.0 <- mean(predict(model.w, mf.w0))
+            mf.w1 <- mf.w0 <- as.list(rep(NA, n.w))
+            EW.1 <- EW.0 <- rep(NA, n.w)
+            for(k in 1:n.w){
+	            mf.w1[[k]] <- mf.w0[[k]] <- model.frame(model.w[[k]])
+	            mf.w1[[k]][,treat] <- 1
+	            mf.w0[[k]][,treat] <- 0
+	            EW.1[k] <- mean(predict(model.w[[k]], mf.w1[[k]]))
+	            EW.0[k] <- mean(predict(model.w[[k]], mf.w0[[k]]))
+	        }
 	    }
 
         ## Bounds
@@ -116,7 +132,7 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
         if(b == sims + 1){
         	tau.o <- coef(model.ytot)[treat]
         	WXterms <- switch(design,
-        					  single = (xi3 + mu3)*EW.1 - xi3*EW.0,
+        					  single = (xi3 + mu3) %*% EW.1 - xi3 %*% EW.0,
         					  parallel = 0)
 	        ACME.1.lo.o <- tau.o - beta3 - kappa*EM.0 - sigma*sqrt(VM.0) - WXterms
 	        ACME.0.lo.o <- tau.o - beta3 - kappa*EM.1 - sigma*sqrt(VM.1) - WXterms
@@ -128,7 +144,7 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
         } else {
     	    tau[b] <- coef(model.ytot)[treat]
         	WXterms <- switch(design,
-        					  single = (xi3 + mu3)*EW.1 - xi3*EW.0,
+        					  single = (xi3 + mu3) %*% EW.1 - xi3 %*% EW.0,
         					  parallel = 0)
 	        ACME.1.lo[,b] <- tau[b] - beta3 - kappa*EM.0 - sigma*sqrt(VM.0) - WXterms
     	    ACME.0.lo[,b] <- tau[b] - beta3 - kappa*EM.1 - sigma*sqrt(VM.1) - WXterms
