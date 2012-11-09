@@ -1095,11 +1095,12 @@ be written as a function of $R^{2\ast}$ or $\widetilde{R}^2$.
 The above framework has been implemented in the \pkg{mediation}
 package as the \code{multimed} function. The function takes a data
 frame containing the necessary variables (outcome, primary mediator,
-alternative mediator, treatment, and pre-treatment covariates if any)
+alternative mediators, treatment, and pre-treatment covariates if any)
 and outputs an object of class \code{multimed}, a list consisting of
-estimated bounds along with uncertainty estimates.  In the current
-version, only a single post-treatment confounder is allowed, although
-the theoretical framework accommodates more than one such confounder.
+estimated bounds along with uncertainty estimates.
+Note that the theoretical framework accommodates more than one
+post-treatment confounder, and the current version of \code{multimed}
+accommodates multiple post-treatment confounders (version 4.2 or later).
 
 The functionality of \code{multimed} differs in important ways from
 \code{mediate}. First, there is not a separate function for
@@ -1107,8 +1108,8 @@ sensitivity analysis. Instead, a sensitivity analysis is conducted
 within the function along with the estimates of the mediation effects.
 Second, the arguments for the \code{multimed} function are rather
 different. Here, the names of the
-outcome (\code{outcome}), first mediator (\code{med.main}), 
-second mediator (\code{med.alt}) and treatment (\code{treat}) 
+outcome (\code{outcome}), primary mediator (\code{med.main}), 
+alternative mediators (\code{med.alt}) and treatment (\code{treat}) 
 variables are passed to the function along with a vector of
 the names of the pre-treatment covariates to condition on
 (\code{covariates}). In the \code{multimed} function, 

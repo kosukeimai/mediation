@@ -2,9 +2,9 @@
 \alias{multimed} 
 \title{Estimation and Sensitivity Analysis for Multiple Causal Mechanisms} 
 \description{ 
-'multimed' is used for causal mediation analysis when a post-treatment 
-mediator-outcome confounder, or an alternative mediator causally preceding 
-the mediator of interest, exists in the hypothesized causal mechanisms.
+'multimed' is used for causal mediation analysis when post-treatment 
+mediator-outcome confounders, or alternative mediators causally preceding 
+the mediator of interest, exist in the hypothesized causal mechanisms.
 It estimates the average causal mediation effects (indirect effects) under the
 homogeneous interaction assumption based on a varying-coefficient linear
 structural equation model. The function also performs sensitivity analysis
@@ -25,7 +25,7 @@ multimed(outcome, med.main, med.alt = NULL, treat,
 \arguments{
 \item{outcome}{ name of the outcome variable in 'data'.}
 \item{med.main}{ name of the mediator of interest. Under the parallel design this is the only mediator variable used in the estimation.}
-\item{med.alt}{ name of the post-treatment confounder, i.e., the alternative mediator affecting both the main mediator and outcome. Not needed for the parallel design.}
+\item{med.alt}{ vector of character strings indicating the names of the post-treatment confounders, i.e., the alternative mediators affecting both the main mediator and outcome. Not needed for the parallel design.}
 \item{treat}{ name of the treatment variable in 'data'.}
 \item{covariates}{ vector of character strings representing the names of the pre-treatment covariates. Cannot be used for the parallel design.}
 \item{experiment}{ name of the binary indicator whether 'med.main' is randomly manipulated or not. Only used under the parallel design.}
@@ -36,7 +36,7 @@ multimed(outcome, med.main, med.alt = NULL, treat,
 \item{conf.level}{ level to be used for confidence intervals.}
 }
 
-\details{This function implements the framework proposed by Imai and Yamamoto (2012) for the estimation and sensitivity analysis for multiple causal mechanisms. It estimates the average causal mediation effects with respect to the mediator of interest ('med.main'), i.e., the portion of the treatment effect on the outcome that is transmitted through that mediator. Unlike the "standard" causal mediation analysis implemented by \code{\link{mediate}} and \code{\link{medsens}}, this framework allows the existence of a post-treatment covariate that confounds the relationship between the main mediator and the outcome, or equivalently, an alternative mediator ('med.alt') that causally precedes the main mediator.
+\details{This function implements the framework proposed by Imai and Yamamoto (2012) for the estimation and sensitivity analysis for multiple causal mechanisms. It estimates the average causal mediation effects with respect to the mediator of interest ('med.main'), i.e., the portion of the treatment effect on the outcome that is transmitted through that mediator. Unlike the "standard" causal mediation analysis implemented by \code{\link{mediate}} and \code{\link{medsens}}, this framework allows the existence of post-treatment covariates that confound the relationship between the main mediator and the outcome, or equivalently, alternative mediators ('med.alt') that causally precede the main mediator.
 	
 When the parallel design was used for the experiment (i.e. when the experiment contained an additional randomly assigned group for which both the treatment and the mediator were randomized), there is no need to specify a particular post-treatment confounder, for any such confounder (observed or unobserved) is allowed to exist by virtue of the design. Similarly, no observed covariates need to be included. The function instead requires an additional variable ('experiment') indicating whether the mediator was randomly manipulated for the unit.
 
