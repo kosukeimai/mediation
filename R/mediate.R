@@ -5,7 +5,10 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                     control.value = 0, treat.value = 1,
                     long = TRUE, dropobs = FALSE,
                     robustSE = FALSE, cluster = NULL, ...){
-
+    # TODO: cluster has to be better implemented. key elements:
+    #         * correctly match with main data frame via rownames
+    #         * correctly handle missing factor levels without dropobs
+    
     # Warn users who still use INT option
     if(match("INT", names(match.call()), 0L)){
         warning("'INT' is deprecated - existence of interaction terms is now automatically detected from model formulas")
@@ -18,7 +21,6 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
 
     if(!is.null(cluster) && boot){
         warning("'cluster' is ignored for nonparametric bootstrap")
-        # TODO: take cluster variable from the data frame instead of an independent vector
     }
 
     if(robustSE & !is.null(cluster)){
