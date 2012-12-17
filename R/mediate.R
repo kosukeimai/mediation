@@ -6,7 +6,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                     long = TRUE, dropobs = FALSE,
                     robustSE = FALSE, cluster = NULL, ...){
 
-  # Warn users who still use INT option
+    # Warn users who still use INT option
     if(match("INT", names(match.call()), 0L)){
         warning("'INT' is deprecated - existence of interaction terms is now automatically detected from model formulas")
     }
@@ -50,7 +50,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         model.m <- eval.parent(call.m)
         model.y <- eval.parent(call.y)
         if(!is.null(cluster)){
-          cluster <- factor(newdata[, ncol(newdata)])  # factor drops missing levels
+            cluster <- factor(newdata[, ncol(newdata)])  # factor drops missing levels
         }
     }
 
