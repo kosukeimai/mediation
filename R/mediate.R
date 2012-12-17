@@ -28,6 +28,12 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     if(dropobs){
         odata.m <- model.frame(model.m)
         odata.y <- model.frame(model.y)
+        if(!is.null(cluster)){
+          odata.y <- merge(odata.y, as.data.frame(cluster), sort=FALSE,
+                           by="row.names")
+          rownames(odata.y) <- odata.y$Row.names
+          odata.y <- odata.y[,-1L]
+        }
         newdata <- merge(odata.m, odata.y, sort=FALSE,
                     by=c("row.names", intersect(names(odata.m), names(odata.y))))
         rownames(newdata) <- newdata$Row.names
@@ -43,6 +49,9 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         }
         model.m <- eval.parent(call.m)
         model.y <- eval.parent(call.y)
+        if(!is.null(cluster)){
+          cluster <- factor(newdata[, ncol(newdata)])  # factor drops missing levels
+        }
     }
 
     # Model type indicators
