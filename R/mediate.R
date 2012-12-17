@@ -29,6 +29,11 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         odata.m <- model.frame(model.m)
         odata.y <- model.frame(model.y)
         if(!is.null(cluster)){
+          if(is.null(row.names(cluster)) &
+              (nrow(odata.m)!=length(cluster) | nrow(odata.y)!=length(cluster))
+            ){
+              warning("cluster IDs may not correctly match original observations due to missing data")
+            }
           odata.y <- merge(odata.y, as.data.frame(cluster), sort=FALSE,
                            by="row.names")
           rownames(odata.y) <- odata.y$Row.names
