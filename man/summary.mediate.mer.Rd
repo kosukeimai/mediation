@@ -1,0 +1,41 @@
+\name{summary.mediate.mer}
+\alias{summary.mediate.mer}
+\alias{print.summary.mediate.mer}
+\alias{print.summary.mediate.mer.2}
+\alias{print.summary.mediate.mer.3}
+
+\title{Summarizing Output from Mediation Analysis of Multilevel Models}
+\description{
+Function to report results from mediation analysis of multilevel models. Reported categories are mediation effect, direct effect, total effect, and proportion of total effect mediated. All quantities reported with confidence intervals. Group-specific effects and confidence intervals reported based on the mediator or the outcome group. Group-average quantities reported as default. 
+}
+\usage{
+
+  \method{summary}{mediate.mer}(object, output = "default", ...)
+
+  \method{print}{summary.mediate.mer}(x, ...)
+
+  \method{print}{summary.mediate.mer.2}(x, ...)
+
+  \method{print}{summary.mediate.mer.3}(x, ...)
+}
+
+\arguments{
+\item{object}{ output from mediate function.}
+\item{output}{ group-specific effects organized by effect if output = "byeffect"; group-specific effects organized by group if output = "bygroup"; group-average effects reported as default.}
+\item{x}{ output from summary.mediate.mer function.}
+\item{...}{ additional arguments affecting the summary produced.}
+}
+
+\references{
+Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2011). Unpacking the Black Box of Causality: Learning about Causal Mechanisms from Experimental and Observational Studies, American Political Science Review, Vol. 105, No. 4 (November), pp. 765-789.
+
+Imai, K., Keele, L. and Tingley, D. (2010) A General Approach to Causal Mediation Analysis, Psychological Methods, Vol. 15, No. 4 (December), pp. 309-334.
+
+Imai, K., Keele, L. and Yamamoto, T. (2010) Identification, Inference, and Sensitivity Analysis for Causal Mediation Effects, Statistical Science, Vol. 25, No. 1 (February), pp. 51-71.
+
+Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation Analysis Using R" in Advances in Social Science Research Using R, ed. H. D. Vinod New York: Springer.}
+
+\author{Kentaro Hirose, Princeton University, \email{hirose@princeton.edu}.}
+
+\seealso{\code{\link{mediate}}, \code{\link{plot.mediate.mer}}.}
+
