@@ -13,13 +13,13 @@ mediate(model.m, model.y, sims = 1000, boot = FALSE,
         control = NULL, conf.level = .95, 
         control.value = 0, treat.value = 1, 
         long = TRUE, dropobs = FALSE,
-        robustSE = FALSE, cluster = NULL, ...)
+        robustSE = FALSE, cluster = NULL, group.m = NULL, group.y = NULL, group.out = NULL, ...)
 
 } 
 
 \arguments{ 
-\item{model.m}{ a fitted model object for mediator.  Can be of class 'lm', 'polr', 'bayespolr', 'glm', 'bayesglm', 'gam', 'rq', or 'survreg'.} 
-\item{model.y}{ a fitted model object for outcome.  Can be of class 'lm', 'polr', 'bayespolr', 'glm', 'bayesglm', 'gam', 'vglm', 'rq', or 'survreg'.} 
+\item{model.m}{ a fitted model object for mediator.  Can be of class 'lm', 'polr', 'bayespolr', 'glm', 'bayesglm', 'gam', 'rq', 'survreg', or 'mer'.} 
+\item{model.y}{ a fitted model object for outcome.  Can be of class 'lm', 'polr', 'bayespolr', 'glm', 'bayesglm', 'gam', 'vglm', 'rq', 'survreg', or 'mer'.} 
 \item{sims}{ number of Monte Carlo draws for nonparametric bootstrap or quasi-Bayesian approximation.} 
 \item{boot}{ a logical value. if 'FALSE' a quasi-Bayesian approximation is used for confidence intervals; if 'TRUE' nonparametric bootstrap will be used. Default is 'FALSE'.}
 \item{conf.level}{ level of the returned two-sided confidence intervals.  Default is to return
@@ -35,6 +35,9 @@ the 2.5 and 97.5 percentiles of the simulated quantities.}
 \item{dropobs}{ a logical value indicating the behavior when the model frames of 'model.m' and 'model.y' (and the 'cluster' variable if included) are composed of different observations. If 'TRUE', models will be re-fitted using common data rows. If 'FALSE', error is returned. Default is 'FALSE'.}
 \item{robustSE}{ a logical value. If 'TRUE', heteroskedasticisy-consistent standard errors will be used in quasi-Bayesian simulations. Ignored if 'boot' is 'TRUE' or neither 'model.m' nor 'model.y' has a method for \code{vcovHC} in the \code{sandwich} package. Default is 'FALSE'.}
 \item{cluster}{ a variable indicating clusters for standard errors.}
+\item{group.m}{ a character string indicating the name of the mediator group used in the models. Only necessary if lmer or glmer is used for the mediator.}
+\item{group.y}{ a character string indicating the name of the outcome group used in the models. Only necessary if lmer or glmer is used for the outcome.}
+\item{group.out}{ a character string indicating the name of the group on which the output is based. Only relevant if glmer is used for the outcome or the mediator.} 
 \item{...}{ other arguments passed to \code{vcovHC} in the \code{sandwich} package: typically the 'type' argument. Ignored if 'robustSE' is 'FALSE'.}
 }
 
@@ -52,7 +55,7 @@ If it is desired that inference be made conditional on specific values of the pr
 
 The prior weights in the mediator and outcome models are taken as sampling weights and the estimated effects will be weighted averages when non-NULL weights are used in fitting 'model.m' and 'model.y'. This will be useful when data does not come from a simple random sample, for example. 
 
-As of version 4.0, the mediator model can be of either 'lm', 'glm' (or `bayesglm'), 'polr' (or `bayespolr'), 'gam', 'rq', or `survreg' class, corresponding respectively to the linear regression models, generalized linear models, ordered response models, generalized additive models, quantile regression models, or parametric duration models. For binary response models, the 'mediator' must be a numeric variable with values 0 or 1 as opposed to a factor. Quasi-likelihood-based inferences are not allowed for the mediator model because the functional form must be exactly specified for the estimation algorithm to work.  The 'binomial' family can only be used for binary response mediators and cannot be used for multiple-trial responses.  This is due to conflicts between how the latter type of models are implemented in \code{\link{glm}} and how 'mediate' is currently written.
+As of version 4.0, the mediator model can be of either 'lm', 'glm' (or `bayesglm'), 'polr' (or `bayespolr'), 'gam', 'rq', `survreg', or `mer' class, corresponding respectively to the linear regression models, generalized linear models, ordered response models, generalized additive models, quantile regression models, parametric duration models, or multilevel models.. For binary response models, the 'mediator' must be a numeric variable with values 0 or 1 as opposed to a factor. Quasi-likelihood-based inferences are not allowed for the mediator model because the functional form must be exactly specified for the estimation algorithm to work.  The 'binomial' family can only be used for binary response mediators and cannot be used for multiple-trial responses.  This is due to conflicts between how the latter type of models are implemented in \code{\link{glm}} and how 'mediate' is currently written.
 
 For the outcome model, the censored regression model fitted via package \code{VGAM} (of class 'vglm' with 'family@vfamily' equal to "tobit") can be used in addition to the models listed above for the mediator.  The 'mediate' function is not compatible with censored regression models fitted via other packages.  When the quantile regression is used for the outcome model ('rq'), the estimated quantities are quantile causal mediation effects, quantile direct effects and etc., instead of the average effects. If the outcome model is of class 'survreg', the name of the outcome variable must be explicitly supplied in the `outcome' argument. This is due to the fact that 'survreg' objects do not contain that information in an easily extractable form. It should also be noted that for \code{\link{survreg}} models, the \code{\link{Surv}} function must be directly used in the model formula in the call to the survreg function, and that censoring types requiring more than two arguments to Surv (e.g., interval censoring) are not currently supported by 'mediate'.
 
@@ -64,9 +67,9 @@ When the treatment variable is continuous or a factor with multiple levels, user
 }
 
 
-\value{\code{mediate} returns an object of class "\code{mediate}" (or "\code{mediate.order}" if the outcome model used is 'polr' or 'bayespolr'), a list that contains the components listed below.  Some of these elements are not available if 'long' is set to 'FALSE' by the user.
+\value{\code{mediate} returns an object of class "\code{mediate}", "\code{mediate.order}" if the outcome model used is 'polr' or 'bayespolr', or "\code{mediate.mer}" if 'lmer' or 'glmer' is used for the outcome or the mediator model, a list that contains the components listed below.  Some of these elements are not available if 'long' is set to 'FALSE' by the user.
 
-The function \code{summary} (i.e., \code{summary.mediate} or \code{summary.mediate.order}) can be used to obtain a table of the results.  The function \code{plot} (i.e., \code{plot.mediate} or \code{plot.mediate.order}) can be used to produce a plot of the estimated average causal mediation, average direct, and total effects along with their confidence intervals.
+The function \code{summary} (i.e., \code{summary.mediate}, \code{summary.mediate.order}, or \code{summary.mediate.mer}) can be used to obtain a table of the results.  The function \code{plot} (i.e., \code{plot.mediate}, \code{plot.mediate.order}, or \code{plot.mediate.mer}) can be used to produce a plot of the estimated average causal mediation, average direct, and total effects along with their confidence intervals.
 
 \item{d0, d1}{point estimates for average causal mediation effects under the control and treatment conditions.}
 \item{d0.ci, d1.ci}{confidence intervals for average causal mediation effects. The confidence level is set at the value specified in 'conf.level'.}
@@ -88,6 +91,26 @@ The function \code{summary} (i.e., \code{summary.mediate} or \code{summary.media
 \item{d.avg.ci, z.avg.ci, n.avg.ci}{confidence intervals for the above.}
 \item{d.avg.p, z.avg.p, n.avg.p}{two-sided p-values for the above.}
 \item{d.avg.sims, z.avg.sims, n.avg.sims}{vectors of length 'sims' containing simulation draws of d.avg, z.avg and n.avg, respectively.}
+\item{d0.group, d1.group}{group-specific point estimates for average causal mediation effects under the control and treatment conditions.}
+\item{d0.ci.group, d1.ci.group}{group-specific confidence intervals for average causal mediation effects. The confidence level is set at the value specified in 'conf.level'.}
+\item{d0.p.group, d1.p.group}{group-specific two-sided p-values for average causal mediation effects.}
+\item{d0.sims.group, d1.sims.group}{group-specific vectors of length 'sims' containing simulation draws of average causal mediation effects.}
+\item{z0.group, z1.group}{group-specific point estimates for average direct effect under the control and treatment conditions.}
+\item{z0.ci.group, z1.ci.group}{group-specific confidence intervals for average direct effects.}
+\item{z0.p.group, z1.p.group}{group-specific two-sided p-values for average causal direct effects.}
+\item{z0.sims.group, z1.sims.group}{group-specific vectors of length 'sims' containing simulation draws of average direct effects.}
+\item{n0.group, n1.group}{the group-specific "proportions mediated", or the size of the group-specific average causal mediation effects relative to the total effect.}
+\item{n0.ci.group, n1.ci.group}{group-specific confidence intervals for the proportions mediated.}
+\item{n0.p.group, n1.p.group}{group-specific two-sided p-values for proportions mediated.}
+\item{n0.sims.group, n1.sims.group}{group-specific vectors of length 'sims' containing simulation draws of the proportions mediated.}
+\item{tau.coef.group}{group-specific point estimate for total effect.}
+\item{tau.ci.group}{group-specific confidence interval for total effect.}
+\item{tau.p.group}{group-specific two-sided p-values for total effect.}
+\item{tau.sims.group}{a group-specific vector of length 'sims' containing simulation draws of the total effect.}
+\item{d.avg.group, z.avg.group, n.avg.group}{group-specific simple averages of d0 and d1, z0 and z1, n0 and n1, respectively, which users may want to use as summary values when those quantities differ.}
+\item{d.avg.ci.group, z.avg.ci.group, n.avg.ci.group}{group-specific confidence intervals for the above.}
+\item{d.avg.p.group, z.avg.p.group, n.avg.p.group}{group-specific two-sided p-values for the above.}
+\item{d.avg.sims.group, z.avg.sims.group, n.avg.sims.group}{group-specific vectors of length 'sims' containing simulation draws of d.avg, z.avg and n.avg, respectively.}
 \item{boot}{logical, the 'boot' argument used.}
 \item{treat}{a character string indicating the name of the 'treat' variable used.}
 \item{mediator}{a character string indicating the name of the 'mediator' variable used.}
@@ -95,6 +118,12 @@ The function \code{summary} (i.e., \code{summary.mediate} or \code{summary.media
 \item{conf.level}{the confidence level used. }
 \item{model.y}{the outcome model used.}
 \item{model.m}{the mediator model used.}
+\item{group.m}{the name of the mediator group used.}
+\item{group.y}{the name of the outcome group used.}
+\item{group.name}{the name of the group on which the output is based.}
+\item{group.id.m}{the data on the mediator group.}
+\item{group.id.y}{the data on the outcome group.}
+\item{group.id}{the data on the group on which the output is based.}
 \item{control.value}{value of the treatment variable used as the control condition.}
 \item{treat.value}{value of the treatment variable used as the treatment condition.}
 \item{nobs}{number of observations in the model frame for 'model.m' and 'model.y'. May differ from the numbers in the original models input to 'mediate' if 'dropobs' was 'TRUE'.}
@@ -113,9 +142,10 @@ Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation Analy
 \author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu}; 
 Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}; 
 Luke Keele, Penn State University, \email{ljk20@psu.edu}; 
-Kosuke Imai, Princeton University, \email{kimai@princeton.edu}. }
+Kosuke Imai, Princeton University, \email{kimai@princeton.edu};
+Kentaro Hirose, Princeton University, \email{hirose@princeton.edu}.}
  
-\seealso{\code{\link{medsens}}, \code{\link{plot.mediate}}, \code{\link{summary.mediate}}, \code{\link{mediations}}, \code{vcovHC} }
+\seealso{\code{\link{medsens}}, \code{\link{plot.mediate}}, \code{\link{summary.mediate}}, \code{\link{summary.mediate.mer}}, \code{\link{plot.mediate.mer}}, \code{\link{mediations}}, \code{vcovHC} }
 
 \examples{ 
 # Examples with JOBS II Field Experiment
@@ -210,5 +240,37 @@ contgam.int <- mediate(b, d.gam, sims=10, treat="treat", mediator="job_seek",
     control = "control", boot=TRUE)
 summary(contgam.int)
 }
+######################################################
+# Example 5: Multilevel Outcome and Mediator Models
+######################################################
+require(arm)
+
+# educ: mediator group
+# occp: outcome group
+
+# Varying intercept for mediator 
+model.m <- glmer(job_dich ~ treat + econ_hard + (1 | educ), 
+             		     family = binomial(link = "probit"), data = jobs)
+
+# Varying intercept and slope for outcome
+model.y <- glmer(work1 ~ treat + job_dich + econ_hard + (1 + econ_hard | occp), 
+                family = binomial(link = "probit"), data = jobs)
+
+# Output based on mediator group
+multilevel <- mediate(model.m, model.y, treat = "treat", mediator = "job_dich", sims=50, group.m="educ", group.y="occp", group.out="educ")
+
+# Group-average effects  
+summary(multilevel)
+#plot(multilevel)
+
+# Group-specific effects organized by effect
+summary(multilevel, output="byeffect")
+#plot(multilevel, group.plot=TRUE)
+
+# Group-specific effects organized by group
+summary(multilevel, output="bygroup")
+
+
+
 
 } 
