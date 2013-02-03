@@ -69,7 +69,7 @@ When the treatment variable is continuous or a factor with multiple levels, user
 
 \value{\code{mediate} returns an object of class "\code{mediate}", "\code{mediate.order}" if the outcome model used is 'polr' or 'bayespolr', or "\code{mediate.mer}" if 'lmer' or 'glmer' is used for the outcome or the mediator model, a list that contains the components listed below.  Some of these elements are not available if 'long' is set to 'FALSE' by the user.
 
-The function \code{summary} (i.e., \code{summary.mediate}, \code{summary.mediate.order}, or \code{summary.mediate.mer}) can be used to obtain a table of the results.  The function \code{plot} (i.e., \code{plot.mediate}, \code{plot.mediate.order}, or \code{plot.mediate.mer}) can be used to produce a plot of the estimated average causal mediation, average direct, and total effects along with their confidence intervals.
+The function \code{summary} (i.e., \code{summary.mediate}, \code{summary.mediate.order}, or \code{summary.mediate.mer}) can be used to obtain a table of the results.  The function \code{plot} (i.e., \code{plot.mediate}, \code{plot.mediate.order}, or \code{plot.mediate.mer}) can be used to produce a plot of the estimated average causal mediation, average direct, and total effects along with their confidence intervals. 
 
 \item{d0, d1}{point estimates for average causal mediation effects under the control and treatment conditions.}
 \item{d0.ci, d1.ci}{confidence intervals for average causal mediation effects. The confidence level is set at the value specified in 'conf.level'.}
@@ -266,6 +266,8 @@ summary(multilevel)
 # Group-specific effects organized by effect
 summary(multilevel, output="byeffect")
 #plot(multilevel, group.plot=TRUE)
+#plot(multilevel, group.plot=TRUE, plot.type = c(2,4))
+### see summary.mediate.mer and plot.mediate.mer 
 
 # Group-specific effects organized by group
 summary(multilevel, output="bygroup")
