@@ -39,3 +39,33 @@ Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation Analy
 
 \seealso{\code{\link{mediate}}, \code{\link{plot.mediate.mer}}.}
 
+\examples{ 
+# Examples with JOBS II Field Experiment
+
+# **For illustration purposes a small number of simulations are used**
+
+data(jobs)
+require(arm)
+
+# educ: mediator group
+# occp: outcome group
+
+# Varying intercept for mediator 
+model.m <- glmer(job_dich ~ treat + econ_hard + (1 | educ), 
+             		     family = binomial(link = "probit"), data = jobs)
+
+# Varying intercept and slope for outcome
+model.y <- glmer(work1 ~ treat + job_dich + econ_hard + (1 + econ_hard | occp), 
+                family = binomial(link = "probit"), data = jobs)
+
+# Output based on mediator group
+multilevel <- mediate(model.m, model.y, treat = "treat", mediator = "job_dich", sims=50, group.m="educ", group.y="occp", group.out="educ")
+
+# Group-average effects  
+summary(multilevel)
+
+# Group-specific effects organized by effect
+summary(multilevel, output="byeffect")
+
+# Group-specific effects organized by group
+summary(multilevel, output="bygroup")
