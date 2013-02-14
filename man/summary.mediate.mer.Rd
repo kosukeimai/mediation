@@ -10,7 +10,7 @@ Function to report results from mediation analysis of multilevel models. Reporte
 }
 \usage{
 
-  \method{summary}{mediate.mer}(object, output = "default", ...)
+  \method{summary}{mediate.mer}(object, output = c("default","byeffect","bygroup"), ...)
 
   \method{print}{summary.mediate.mer}(x, ...)
 
@@ -59,7 +59,7 @@ model.y <- glmer(work1 ~ treat + job_dich + econ_hard + (1 + econ_hard | occp),
                 family = binomial(link = "probit"), data = jobs)
 
 # Output based on mediator group
-multilevel <- mediate(model.m, model.y, treat = "treat", mediator = "job_dich", sims=50, group.m="educ", group.y="occp", group.out="educ")
+multilevel <- mediate(model.m, model.y, treat = "treat", mediator = "job_dich", sims=50, group.out="educ")
 
 # Group-average effects  
 summary(multilevel)

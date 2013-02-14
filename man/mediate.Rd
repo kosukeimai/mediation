@@ -13,7 +13,7 @@ mediate(model.m, model.y, sims = 1000, boot = FALSE,
         control = NULL, conf.level = .95, 
         control.value = 0, treat.value = 1, 
         long = TRUE, dropobs = FALSE,
-        robustSE = FALSE, cluster = NULL, group.m = NULL, group.y = NULL, group.out = NULL, ...)
+        robustSE = FALSE, cluster = NULL, group.out = NULL, ...)
 
 } 
 
@@ -35,9 +35,7 @@ the 2.5 and 97.5 percentiles of the simulated quantities.}
 \item{dropobs}{ a logical value indicating the behavior when the model frames of 'model.m' and 'model.y' (and the 'cluster' variable if included) are composed of different observations. If 'TRUE', models will be re-fitted using common data rows. If 'FALSE', error is returned. Default is 'FALSE'.}
 \item{robustSE}{ a logical value. If 'TRUE', heteroskedasticisy-consistent standard errors will be used in quasi-Bayesian simulations. Ignored if 'boot' is 'TRUE' or neither 'model.m' nor 'model.y' has a method for \code{vcovHC} in the \code{sandwich} package. Default is 'FALSE'.}
 \item{cluster}{ a variable indicating clusters for standard errors.}
-\item{group.m}{ a character string indicating the name of the mediator group used in the models. Only necessary if lmer or glmer is used for the mediator.}
-\item{group.y}{ a character string indicating the name of the outcome group used in the models. Only necessary if lmer or glmer is used for the outcome.}
-\item{group.out}{ a character string indicating the name of the group on which the output is based. Only relevant if glmer is used for the outcome or the mediator.} 
+\item{group.out}{ a character string indicating the name of the lmer/glmer group on which the mediate output is based. Can be used even when a mer function is applied to only one of the mediator or the outcome. If mer functions are applied to both the mediator and the outcome, default is the group name used in the outcome model; if the mediator group and the outcome group are different and the user is interested in the mediate output based on the mediator group, then set group.out to the group name used in the mediator mer model. If a mer function is applied to only one of the mediator or the outcome, group.out is automatically set to the group name used in the mer model.}  
 \item{...}{ other arguments passed to \code{vcovHC} in the \code{sandwich} package: typically the 'type' argument. Ignored if 'robustSE' is 'FALSE'.}
 }
 
@@ -244,7 +242,7 @@ summary(contgam.int)
 # Example 5: Multilevel Outcome and Mediator Models
 ######################################################
 require(arm)
-
+ 
 # educ: mediator group
 # occp: outcome group
 
@@ -256,8 +254,11 @@ model.m <- glmer(job_dich ~ treat + econ_hard + (1 | educ),
 model.y <- glmer(work1 ~ treat + job_dich + econ_hard + (1 + econ_hard | occp), 
                 family = binomial(link = "probit"), data = jobs)
 
-# Output based on mediator group
-multilevel <- mediate(model.m, model.y, treat = "treat", mediator = "job_dich", sims=50, group.m="educ", group.y="occp", group.out="educ")
+# Output based on mediator group ("educ")
+multilevel <- mediate(model.m, model.y, treat = "treat", mediator = "job_dich", sims=50, group.out="educ")
+
+# Output based on outcome group ("occp")
+#multilevel <- mediate(model.m, model.y, treat = "treat", mediator = "job_dich", sims=50) 
 
 # Group-average effects  
 summary(multilevel)
@@ -266,12 +267,12 @@ summary(multilevel)
 # Group-specific effects organized by effect
 summary(multilevel, output="byeffect")
 #plot(multilevel, group.plot=TRUE)
-#plot(multilevel, group.plot=TRUE, plot.type = c(2,4))
-### see summary.mediate.mer and plot.mediate.mer 
+#plot(multilevel, group.plot=TRUE, ask = FALSE, plot.type = c(2,3,4))
+# See summary.mediate.mer and plot.mediate.mer for detailed explanations 
 
 # Group-specific effects organized by group
 summary(multilevel, output="bygroup")
-
+# See summary.mediate.mer for detailed explanations 
 
 
 
