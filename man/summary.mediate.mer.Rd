@@ -55,7 +55,7 @@ model.m <- glmer(job_dich ~ treat + econ_hard + (1 | educ),
              		     family = binomial(link = "probit"), data = jobs)
 
 # Varying intercept and slope for outcome
-model.y <- glmer(work1 ~ treat + job_dich + econ_hard + (1 + econ_hard | occp), 
+model.y <- glmer(work1 ~ treat + job_dich + econ_hard + (1 + treat | occp), 
                 family = binomial(link = "probit"), data = jobs)
 
 # Output based on mediator group

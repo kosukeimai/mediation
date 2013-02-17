@@ -178,21 +178,41 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                                         # Specify group names
 
   if(isMer.m && isMer.y){
-    group.m <- names(model.m@flist)[1]
-    group.y <- names(model.y@flist)[1]
-    if(!is.null(group.out) && !(group.out %in% c(group.m, group.y))){
-      warning("group.out does not match group names used in mer")
-    } else if(is.null(group.out)){
-      group.out <- group.y
+    med.group <- names(model.m@flist)
+    out.group <- names(model.y@flist)
+    n.med <- length(med.group)
+    n.out <- length(out.group)
+    if(n.med > 1 || n.out > 1){
+      warning("number of groups cannot exceed one")
+    } else {
+      group.m <- med.group
+      group.y <- out.group
+      if(!is.null(group.out) && !(group.out %in% c(group.m, group.y))){
+        warning("group.out does not match group names used in mer")
+      } else if(is.null(group.out)){
+        group.out <- group.y
+      }
     }
   } else if(!isMer.m && isMer.y){
-    group.m <- NULL
-    group.y <- names(model.y@flist)[1]
-    group.out <- group.y
+    out.group <- names(model.y@flist)
+    n.out <- length(out.group)
+    if(n.out > 1){
+      warning("number of groups cannot exceed one")
+    } else {
+      group.m <- NULL
+      group.y <- out.group
+      group.out <- group.y
+    }
   } else if(isMer.m && !isMer.y){
-    group.m <- names(model.m@flist)[1]
-    group.y <- NULL
-    group.out <- group.m
+    med.group <- names(model.m@flist)
+    n.med <- length(med.group)
+    if(n.med >1){
+      warning("number of groups cannot exceed one")
+    } else {
+      group.m <- med.group
+      group.y <- NULL
+      group.out <- group.m
+    }
   } else {
     group.m <- NULL
     group.y <- NULL
@@ -375,13 +395,6 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         MModel.var.cov <- vcov(model.m)[(1:k),(1:k)]
       } else if(isSurvreg.m){
         MModel.var.cov <- vcov(model.m)
-      } else if(isMer.m){
-        MModel.fixef.vcov <- vcov(model.m)
-        Nm.ranef <- ncol(MModel.ranef[[1]])   # number of random effect terms for mediator equation 
-        MModel.ranef.vcov <- vector("list",Nm.ranef)
-        for (d in 1:Nm.ranef){   # vcov matrix for each term of mediator random effects 
-          MModel.ranef.vcov[[d]] <- (as.vector(se.ranef(model.m)[[1]][,d]))^2*diag(model.m@Gp[2]/Nm.ranef)
-        } 
       } else {
         if(robustSE){
           MModel.var.cov <- vcovHC(model.m, ...)
@@ -415,13 +428,6 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         YModel.var.cov <- summary(model.y, covariance=TRUE)$cov
       } else if(isSurvreg.y){
         YModel.var.cov <- vcov(model.y)
-      } else if(isMer.y){
-        YModel.fixef.vcov <- vcov(model.y)
-        Ny.ranef <- ncol(YModel.ranef[[1]])   # number of random effect terms for outcome equation
-        YModel.ranef.vcov <- vector("list",Ny.ranef)
-        for (d in 1:Ny.ranef){   # vcov matrix for each term of outcome random effects 
-          YModel.ranef.vcov[[d]] <- (as.vector(se.ranef(model.y)[[1]][,d]))^2*diag(model.y@Gp[2]/Ny.ranef)
-        }
       } else {
         if(robustSE){
           YModel.var.cov <- vcovHC(model.y, ...)
@@ -441,10 +447,12 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                                         # Draw model coefficients from normal
 
       if(isMer.m){
+        MModel.fixef.vcov <- vcov(model.m)
         MModel.fixef.sim <- mvrnorm(sims,mu=MModel.fixef,Sigma=MModel.fixef.vcov)
+        Nm.ranef <- ncol(ranef(model.m)[[1]]) 
         MModel.ranef.sim <- vector("list",Nm.ranef)
         for (d in 1:Nm.ranef){
-          MModel.ranef.sim[[d]] <- mvrnorm(sims,mu=MModel.ranef[[1]][,d],Sigma=MModel.ranef.vcov[[d]])
+          MModel.ranef.sim[[d]] <- matrix(rnorm(sims*nrow(ranef(model.m)[[1]]), mean = ranef(model.m)[[1]][,d], sd = se.ranef(model.m)[[1]][,d]), nrow = sims, byrow = TRUE)
         }
       } else {
         if(sum(is.na(MModel.coef)) > 0){
@@ -454,10 +462,12 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
       }
       
       if(isMer.y){
+        YModel.fixef.vcov <- vcov(model.y)
         YModel.fixef.sim <- mvrnorm(sims,mu=YModel.fixef,Sigma=YModel.fixef.vcov)
+        Ny.ranef <- ncol(ranef(model.y)[[1]]) 
         YModel.ranef.sim <- vector("list",Ny.ranef)
         for (d in 1:Ny.ranef){
-          YModel.ranef.sim[[d]] <- mvrnorm(sims,mu=YModel.ranef[[1]][,d],Sigma=YModel.ranef.vcov[[d]])
+          YModel.ranef.sim[[d]] <- matrix(rnorm(sims*nrow(ranef(model.y)[[1]]), mean = ranef(model.y)[[1]][,d], sd = se.ranef(model.y)[[1]][,d]), nrow = sims, byrow = TRUE)
         }
       } else {
         if(sum(is.na(YModel.coef)) > 0){
@@ -2257,11 +2267,70 @@ plot.process.mer <- function(model) {
 #########################################################################
 plot.mediate.mer <- function(x,  treatment = NULL, xlim = NULL, ylim = NULL, xlab = "", ylab = "",
                              main = NULL, lwd = 1.5, cex = .85,
-                             col = "black", group.plot=FALSE, plot.type = 1:5, ask = TRUE, ...){
-    
+                             col = "black", ask = TRUE, ...){
+
   param <- plot.process.mer(x)
+  if(!ask){
+    if(is.null(treatment)){
+      if(x$INT){
+        treatment <- c(0,1)
+      } else {
+        treatment <- 1
+      }
+    } else {
+      treatment <- switch(treatment,
+                          control = 0,
+                          treated = 1,
+                          both = c(0,1))
+    }
+    labels = c("ACME","Direct\nEffect","Total\nEffect")
+    y.axis <- c(length(param$coef.vec.1):.5)
+    y.axis <- y.axis + 1
+    
+    if(is.null(xlim)){
+      if(length(treatment) > 1) {
+        xlim <- range(param$range.1, param$range.0) * 1.2
+      } else if (treatment == 1){
+        xlim <- param$range.1 * 1.2
+      } else {
+        xlim <- param$range.0 * 1.2
+      }
+    }
   
-  if(!group.plot){
+    if(is.null(ylim)){
+      ylim <- c(min(y.axis) -1- 0.5, max(y.axis) + 0.5)
+    }
+  
+    plot(param$coef.vec.1, y.axis, type = "n", xlab = xlab, ylab = ylab,
+         yaxt = "n", xlim = xlim, ylim = ylim, main = main, ...)
+  
+    if(length(treatment) == 1){
+      adj <- 0
+    } else {
+      adj <- 0.05
+    }
+  
+    if(1 %in% treatment){
+      points(param$coef.vec.1, y.axis + adj, type = "p", pch = 19, cex = cex, col = col)
+      segments(param$lower.vec.1, y.axis + adj, param$upper.vec.1, y.axis + adj,
+               lwd = lwd, col = col)
+      points(param$tau.vec[1], 1, type = "p", pch = 19, cex = cex, col = col)
+      segments(param$tau.vec[2], 1 , param$tau.vec[3], 1 ,
+               lwd = lwd, col = col)
+    }
+    if(0 %in% treatment) {
+      points(param$coef.vec.0, y.axis - adj, type = "p", pch = 1, cex = cex, col = col)
+      segments(param$lower.vec.0, y.axis - adj, param$upper.vec.0, y.axis - adj,
+               lwd = lwd, lty = 3, col = col)
+    }
+    y.axis.new <- c(3,2,1)
+    axis(2, at = y.axis.new, labels = labels, las = 1, tick = TRUE, ...)
+    abline(v = 0, lty = 2)
+  } else {
+#########################################################################
+    oask <- devAskNewPage(TRUE)
+    on.exit(devAskNewPage(oask))
+
     if(is.null(treatment)){
       if(x$INT){
         treatment <- c(0,1)
@@ -2317,243 +2386,118 @@ plot.mediate.mer <- function(x,  treatment = NULL, xlim = NULL, ylim = NULL, xla
     y.axis.new <- c(3,2,1)
     axis(2, at = y.axis.new, labels = labels, las = 1, tick = TRUE, ...)
     abline(v = 0, lty = 2)
-  } else {
-#########################################################################
-    if (ask) {
-      oask <- devAskNewPage(TRUE)
-      on.exit(devAskNewPage(oask))
-      
-      if(is.factor(x$group.id)){
-        labels <- levels(x$group.id)
-      } else {
-        labels = sort(unique(x$group.id))
-      }
-#########################################################################    
-      y.axis <- c(length(param$coef.vec.0.group[,1]):.5)
-      y.axis <- y.axis + 1
-           
-      xlim <- c(param$lower.vec.0.group[,1], param$coef.vec.0.group[,1], param$upper.vec.0.group[,1]) 
-      MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
-      MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
-      xlim <- c(MIN, MAX)
-  
-      ylim <- c(min(y.axis), max(y.axis))
-      
-      plot(param$coef.vec.0.group[,1], y.axis, type = "n", xlab = xlab, ylab = ylab,
-           yaxt = "n", xlim = xlim, ylim = ylim, main = "ACME0", ...)
-  
-      points(param$coef.vec.0.group[,1], y.axis, type = "p", pch = 19, cex = cex, col = col)
-      segments(param$lower.vec.0.group[,1], y.axis, param$upper.vec.0.group[,1], y.axis,
-               lwd = lwd, col = col)
-  
-      axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
-      abline(v = 0, lty = 2)
-
-######################################################################### 
-      y.axis <- c(length(param$coef.vec.1.group[,1]):.5)
-      y.axis <- y.axis + 1
-      
-      xlim <- c(param$lower.vec.1.group[,1], param$coef.vec.1.group[,1], param$upper.vec.1.group[,1])
-      MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
-      MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
-      xlim <- c(MIN, MAX)
-      
-      ylim <- c(min(y.axis), max(y.axis))
-      
-      plot(param$coef.vec.1.group[,1], y.axis, type = "n", xlab = xlab, ylab = ylab,
-           yaxt = "n", xlim = xlim, ylim = ylim, main = "ACME1", ...)
-      
-      points(param$coef.vec.1.group[,1], y.axis, type = "p", pch = 19, cex = cex, col = col)
-      segments(param$lower.vec.1.group[,1], y.axis, param$upper.vec.1.group[,1], y.axis,
-               lwd = lwd, col = col)
-      
-      axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
-      abline(v = 0, lty = 2)
-######################################################################### 
-      y.axis <- c(length(param$coef.vec.0.group[,2]):.5)
-      y.axis <- y.axis + 1
-                                       
-      xlim <- c(param$lower.vec.0.group[,2], param$coef.vec.0.group[,2], param$upper.vec.0.group[,2])
-      MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
-      MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
-      xlim <- c(MIN, MAX)
-  
-      ylim <- c(min(y.axis), max(y.axis))
-  
-      plot(param$coef.vec.0.group[,2], y.axis, type = "n", xlab = xlab, ylab = ylab,
-           yaxt = "n", xlim = xlim, ylim = ylim, main = "Direct\nEffect0", ...)
-      
-      points(param$coef.vec.0.group[,2], y.axis, type = "p", pch = 1, cex = cex, col = col)
-      segments(param$lower.vec.0.group[,2], y.axis, param$upper.vec.0.group[,2], y.axis,
-               lwd = lwd, lty = 3, col = col)
-  
-      axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
-      abline(v = 0, lty = 2)
-      
-######################################################################### 
-      y.axis <- c(length(param$coef.vec.1.group[,2]):.5)
-      y.axis <- y.axis + 1
-      
-      xlim <- c(param$lower.vec.1.group[,2], param$coef.vec.1.group[,2], param$upper.vec.1.group[,2])
-      MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
-      MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
-      xlim <- c(MIN, MAX)
-      
-      ylim <- c(min(y.axis), max(y.axis))
-      
-      plot(param$coef.vec.1.group[,2], y.axis, type = "n", xlab = xlab, ylab = ylab,
-           yaxt = "n", xlim = xlim, ylim = ylim, main = "Direct\nEffect1", ...)
-      
-      points(param$coef.vec.1.group[,2], y.axis, type = "p", pch = 1, cex = cex, col = col)
-      segments(param$lower.vec.1.group[,2], y.axis, param$upper.vec.1.group[,2], y.axis,
-               lwd = lwd, lty = 3, col = col)
-      
-      axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
-      abline(v = 0, lty = 2)
-      
-######################################################################### 
-      y.axis <- c(length(param$tau.vec.group[,1]):.5)
-      y.axis <- y.axis + 1
-      
-      xlim <- c(param$tau.vec.group[,1], param$tau.vec.group[,2], param$tau.vec.group[,3])
-      MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
-      MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
-      xlim <- c(MIN, MAX)
-      
-      ylim <- c(min(y.axis), max(y.axis))
-      
-      plot(param$tau.vec.group[,1], y.axis, type = "n", xlab = xlab, ylab = ylab,
-           yaxt = "n", xlim = xlim, ylim = ylim, main = "Total\nEffect", ...)
-      
-      points(param$tau.vec.group[,1], y.axis , type = "p", pch = 19, cex = cex, col = col)
-      segments(param$tau.vec.group[,2], y.axis , param$tau.vec.group[,3], y.axis ,
-               lwd = lwd, col = col)
-      
-      axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
-      abline(v = 0, lty = 2)
-      
+#########################################################################     
+    if(is.factor(x$group.id)){
+      labels <- levels(x$group.id)
     } else {
-#########################################################################
-      Q <- length(plot.type)
-      par(mfrow=c(1,Q))
-      if(is.factor(x$group.id)){
-        labels <- levels(x$group.id)
-      } else {
-        labels = sort(unique(x$group.id))
-      }
-#########################################################################
-      if(1 %in% plot.type){
-        y.axis <- c(length(param$coef.vec.0.group[,1]):.5)
-        y.axis <- y.axis + 1
-           
-        xlim <- c(param$lower.vec.0.group[,1], param$coef.vec.0.group[,1], param$upper.vec.0.group[,1]) 
-        MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
-        MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
-        xlim <- c(MIN, MAX)
-        
-        ylim <- c(min(y.axis), max(y.axis))
-        
-        plot(param$coef.vec.0.group[,1], y.axis, type = "n", xlab = xlab, ylab = ylab,
-             yaxt = "n", xlim = xlim, ylim = ylim, main = "ACME0", ...)
-  
-        points(param$coef.vec.0.group[,1], y.axis, type = "p", pch = 19, cex = cex, col = col)
-        segments(param$lower.vec.0.group[,1], y.axis, param$upper.vec.0.group[,1], y.axis,
-                 lwd = lwd, col = col)
-        
-        axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
-        abline(v = 0, lty = 2)
-      }
-#########################################################################
-      if(2 %in% plot.type){
-        y.axis <- c(length(param$coef.vec.1.group[,1]):.5)
-        y.axis <- y.axis + 1
-        
-        xlim <- c(param$lower.vec.1.group[,1], param$coef.vec.1.group[,1], param$upper.vec.1.group[,1])
-        MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
-        MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
-        xlim <- c(MIN, MAX)
-        
-        ylim <- c(min(y.axis), max(y.axis))
-      
-        plot(param$coef.vec.1.group[,1], y.axis, type = "n", xlab = xlab, ylab = ylab,
-             yaxt = "n", xlim = xlim, ylim = ylim, main = "ACME1", ...)
-      
-        points(param$coef.vec.1.group[,1], y.axis, type = "p", pch = 19, cex = cex, col = col)
-        segments(param$lower.vec.1.group[,1], y.axis, param$upper.vec.1.group[,1], y.axis,
-                 lwd = lwd, col = col)
-      
-        axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
-        abline(v = 0, lty = 2)
-      }
-#########################################################################
-      if(3 %in% plot.type){
-        y.axis <- c(length(param$coef.vec.0.group[,2]):.5)
-        y.axis <- y.axis + 1
-        
-        xlim <- c(param$lower.vec.0.group[,2], param$coef.vec.0.group[,2], param$upper.vec.0.group[,2])
-        MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
-        MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
-        xlim <- c(MIN, MAX)
-        
-        ylim <- c(min(y.axis), max(y.axis))
-  
-        plot(param$coef.vec.0.group[,2], y.axis, type = "n", xlab = xlab, ylab = ylab,
-             yaxt = "n", xlim = xlim, ylim = ylim, main = "Direct\nEffect0", ...)
-      
-        points(param$coef.vec.0.group[,2], y.axis, type = "p", pch = 1, cex = cex, col = col)
-        segments(param$lower.vec.0.group[,2], y.axis, param$upper.vec.0.group[,2], y.axis,
-                 lwd = lwd, lty = 3, col = col)
-  
-        axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
-        abline(v = 0, lty = 2)
-      }
-######################################################################### 
-      if(4 %in% plot.type){
-        y.axis <- c(length(param$coef.vec.1.group[,2]):.5)
-        y.axis <- y.axis + 1
-        
-        xlim <- c(param$lower.vec.1.group[,2], param$coef.vec.1.group[,2], param$upper.vec.1.group[,2])
-        MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
-        MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
-        xlim <- c(MIN, MAX)
-      
-        ylim <- c(min(y.axis), max(y.axis))
-        
-        plot(param$coef.vec.1.group[,2], y.axis, type = "n", xlab = xlab, ylab = ylab,
-             yaxt = "n", xlim = xlim, ylim = ylim, main = "Direct\nEffect1", ...)
-      
-        points(param$coef.vec.1.group[,2], y.axis, type = "p", pch = 1, cex = cex, col = col)
-        segments(param$lower.vec.1.group[,2], y.axis, param$upper.vec.1.group[,2], y.axis,
-                 lwd = lwd, lty = 3, col = col)
-      
-        axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
-        abline(v = 0, lty = 2)
-      }
-######################################################################### 
-      if(5 %in% plot.type){
-        y.axis <- c(length(param$tau.vec.group[,1]):.5)
-        y.axis <- y.axis + 1
-        
-        xlim <- c(param$tau.vec.group[,1], param$tau.vec.group[,2], param$tau.vec.group[,3])
-        MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
-        MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
-        xlim <- c(MIN, MAX)
-        
-        ylim <- c(min(y.axis), max(y.axis))
-        
-        plot(param$tau.vec.group[,1], y.axis, type = "n", xlab = xlab, ylab = ylab,
-             yaxt = "n", xlim = xlim, ylim = ylim, main = "Total\nEffect", ...)
-        
-        points(param$tau.vec.group[,1], y.axis , type = "p", pch = 19, cex = cex, col = col)
-        segments(param$tau.vec.group[,2], y.axis , param$tau.vec.group[,3], y.axis ,
-                 lwd = lwd, col = col)
-        
-        axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
-        abline(v = 0, lty = 2)   
-      }
+      labels = sort(unique(x$group.id))
     }
+#########################################################################    
+    y.axis <- c(length(param$coef.vec.0.group[,1]):.5)
+    y.axis <- y.axis + 1
+           
+    xlim <- c(param$lower.vec.0.group[,1], param$coef.vec.0.group[,1], param$upper.vec.0.group[,1]) 
+    MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
+    MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
+    xlim <- c(MIN, MAX)
+    
+    ylim <- c(min(y.axis), max(y.axis))
+    
+    plot(param$coef.vec.0.group[,1], y.axis, type = "n", xlab = xlab, ylab = ylab,
+         yaxt = "n", xlim = xlim, ylim = ylim, main = "ACME0", ...)
+    
+    points(param$coef.vec.0.group[,1], y.axis, type = "p", pch = 19, cex = cex, col = col)
+    segments(param$lower.vec.0.group[,1], y.axis, param$upper.vec.0.group[,1], y.axis,
+             lwd = lwd, col = col)
+    
+    axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
+    abline(v = 0, lty = 2)
+    
+######################################################################### 
+    y.axis <- c(length(param$coef.vec.1.group[,1]):.5)
+    y.axis <- y.axis + 1
+    
+    xlim <- c(param$lower.vec.1.group[,1], param$coef.vec.1.group[,1], param$upper.vec.1.group[,1])
+    MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
+    MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
+    xlim <- c(MIN, MAX)
+    
+    ylim <- c(min(y.axis), max(y.axis))
+    
+    plot(param$coef.vec.1.group[,1], y.axis, type = "n", xlab = xlab, ylab = ylab,
+         yaxt = "n", xlim = xlim, ylim = ylim, main = "ACME1", ...)
+    
+    points(param$coef.vec.1.group[,1], y.axis, type = "p", pch = 19, cex = cex, col = col)
+    segments(param$lower.vec.1.group[,1], y.axis, param$upper.vec.1.group[,1], y.axis,
+             lwd = lwd, col = col)
+    
+    axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
+    abline(v = 0, lty = 2)
+######################################################################### 
+    y.axis <- c(length(param$coef.vec.0.group[,2]):.5)
+    y.axis <- y.axis + 1
+    
+    xlim <- c(param$lower.vec.0.group[,2], param$coef.vec.0.group[,2], param$upper.vec.0.group[,2])
+    MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
+    MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
+    xlim <- c(MIN, MAX)
+    
+    ylim <- c(min(y.axis), max(y.axis))
+    
+    plot(param$coef.vec.0.group[,2], y.axis, type = "n", xlab = xlab, ylab = ylab,
+         yaxt = "n", xlim = xlim, ylim = ylim, main = "Direct\nEffect0", ...)
+    
+    points(param$coef.vec.0.group[,2], y.axis, type = "p", pch = 1, cex = cex, col = col)
+    segments(param$lower.vec.0.group[,2], y.axis, param$upper.vec.0.group[,2], y.axis,
+             lwd = lwd, lty = 3, col = col)
+    
+    axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
+    abline(v = 0, lty = 2)
+    
+######################################################################### 
+    y.axis <- c(length(param$coef.vec.1.group[,2]):.5)
+    y.axis <- y.axis + 1
+    
+    xlim <- c(param$lower.vec.1.group[,2], param$coef.vec.1.group[,2], param$upper.vec.1.group[,2])
+    MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
+    MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
+    xlim <- c(MIN, MAX)
+    
+    ylim <- c(min(y.axis), max(y.axis))
+    
+    plot(param$coef.vec.1.group[,2], y.axis, type = "n", xlab = xlab, ylab = ylab,
+         yaxt = "n", xlim = xlim, ylim = ylim, main = "Direct\nEffect1", ...)
+    
+    points(param$coef.vec.1.group[,2], y.axis, type = "p", pch = 1, cex = cex, col = col)
+    segments(param$lower.vec.1.group[,2], y.axis, param$upper.vec.1.group[,2], y.axis,
+             lwd = lwd, lty = 3, col = col)
+    
+    axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
+    abline(v = 0, lty = 2)
+    
+######################################################################### 
+    y.axis <- c(length(param$tau.vec.group[,1]):.5)
+    y.axis <- y.axis + 1
+    
+    xlim <- c(param$tau.vec.group[,1], param$tau.vec.group[,2], param$tau.vec.group[,3])
+    MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
+    MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
+    xlim <- c(MIN, MAX)
+    
+    ylim <- c(min(y.axis), max(y.axis))
+    
+    plot(param$tau.vec.group[,1], y.axis, type = "n", xlab = xlab, ylab = ylab,
+         yaxt = "n", xlim = xlim, ylim = ylim, main = "Total\nEffect", ...)
+    
+    points(param$tau.vec.group[,1], y.axis , type = "p", pch = 19, cex = cex, col = col)
+    segments(param$tau.vec.group[,2], y.axis , param$tau.vec.group[,3], y.axis ,
+             lwd = lwd, col = col)
+    
+    axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
+    abline(v = 0, lty = 2)    
   }
 }
+  
 #########################################################################
 plot.process.order <- function(model){
   length <- length(model$d1)

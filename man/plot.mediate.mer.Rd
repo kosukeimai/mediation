@@ -10,14 +10,12 @@ Function to plot group-specific effects derived from causal mediation analysis o
 \usage{ 
 \method{plot}{mediate.mer}(x,  treatment = NULL, xlim = NULL, ylim = NULL, xlab = "", ylab = "",
                              main = NULL, lwd = 1.5, cex = .85,
-                             col = "black", group.plot=FALSE, plot.type = 1:5, ask = TRUE, ...)
+                             col = "black", ask = TRUE, ...)
 }
 
 \arguments{ 
 \item{x}{ object of class 'mediate.mer' produced by 'mediate'.}
-\item{group.plot}{ group-specific effects if group.plot = "TRUE"; default is group-average effects.}
-\item{ask}{ a logical value. If 'TRUE', the user is asked for input before a new figure is plotted. Default is TRUE. Relevant only if group.plot = TRUE.}
-\item{plot.type}{ select group effects to plot in one figure for comparison. Can be used only if ask = FALSE. Mediation effect (0) if plot.type = 1; mediation effect (1) if plot.type = 2; direct effect (0) if plot.type = 3; direct effect (1) if plot.type = 4; total effect if plot.type = 5. Combination is possible; for example, mediation effect (1), direct effect (0), and direct effect (1) in one figure if plot.type = c(2,3,4). Default is c(1,2,3,4,5).}
+\item{ask}{ a logical value. If 'TRUE', the user is asked for input before a new figure is plotted. If 'FALSE', only group-average effects will be shown. Default is TRUE.}
 \item{treatment}{ a character string indicating the baseline treatment value of the estimated causal mediation effect and direct effect to plot. Can be either "control", "treated", or "both". If 'NULL' (default), both sets of estimates are plotted if and only if the treatment-mediator interaction term is included in the outcome model. Only relevant if group.plot = "FALSE".}
 \item{xlim}{ range of the horizontal axis.}
 \item{ylim}{ range of the vertical axis.}
@@ -51,21 +49,12 @@ model.m <- glmer(job_dich ~ treat + econ_hard + (1 | educ),
              		     family = binomial(link = "probit"), data = jobs)
 
 # Varying intercept and slope for outcome
-model.y <- glmer(work1 ~ treat + job_dich + econ_hard + (1 + econ_hard | occp), 
+model.y <- glmer(work1 ~ treat + job_dich + econ_hard + (1 + treat | occp), 
                 family = binomial(link = "probit"), data = jobs)
 
 # Output based on mediator group
 multilevel <- mediate(model.m, model.y, treat = "treat", mediator = "job_dich", sims=50, group.out="educ")
 
-### group-average effects
 #plot(multilevel)
 
-### group-specific effects (multiple figures)   
-#plot(multilevel, group.plot=TRUE)     
-
-### group-specific effects (one figure; all types of effects)
-#plot(multilevel, group.plot=TRUE, ask=FALSE)   
-
-### group-specific effects (one figure; specific types of effects)
-#plot(multilevel, group.plot=TRUE, ask=FALSE, plot.type = c(2,3,4))
 

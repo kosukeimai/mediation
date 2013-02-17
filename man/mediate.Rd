@@ -251,7 +251,7 @@ model.m <- glmer(job_dich ~ treat + econ_hard + (1 | educ),
              		     family = binomial(link = "probit"), data = jobs)
 
 # Varying intercept and slope for outcome
-model.y <- glmer(work1 ~ treat + job_dich + econ_hard + (1 + econ_hard | occp), 
+model.y <- glmer(work1 ~ treat + job_dich + econ_hard + (1 + treat | occp), 
                 family = binomial(link = "probit"), data = jobs)
 
 # Output based on mediator group ("educ")
@@ -262,12 +262,10 @@ multilevel <- mediate(model.m, model.y, treat = "treat", mediator = "job_dich", 
 
 # Group-average effects  
 summary(multilevel)
-#plot(multilevel)
 
 # Group-specific effects organized by effect
 summary(multilevel, output="byeffect")
-#plot(multilevel, group.plot=TRUE)
-#plot(multilevel, group.plot=TRUE, ask = FALSE, plot.type = c(2,3,4))
+# plot(multilevel)
 # See summary.mediate.mer and plot.mediate.mer for detailed explanations 
 
 # Group-specific effects organized by group
