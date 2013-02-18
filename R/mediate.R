@@ -2283,11 +2283,11 @@ plot.process.mer <- function(model) {
 
 
 #########################################################################
-plot.mediate.mer <- function(x,  treatment = NULL,
+plot.mediate.mer <- function(x, treatment = NULL, group.plots = FALSE,
+                             ask = prod(par("mfcol")) < nplots, 
                              xlim = NULL, ylim = NULL, xlab = "", ylab = "",
                              main = NULL, lwd = 1.5, cex = .85,
-                             col = "black", group.plots = FALSE,
-                             ask = prod(par("mfcol")) < nplots, ...){
+                             col = "black", ...){
 
     param <- plot.process.mer(x)
   
