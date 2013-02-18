@@ -183,7 +183,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     n.med <- length(med.group)
     n.out <- length(out.group)
     if(n.med > 1 || n.out > 1){
-      warning("number of groups cannot exceed one")
+      stop("mediate does not support more than two levels per model")
     } else {
       group.m <- med.group
       group.y <- out.group
@@ -197,7 +197,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     out.group <- names(model.y@flist)
     n.out <- length(out.group)
     if(n.out > 1){
-      warning("number of groups cannot exceed one")
+      stop("mediate does not support more than two levels per model")
     } else {
       group.m <- NULL
       group.y <- out.group
@@ -206,8 +206,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
   } else if(isMer.m && !isMer.y){
     med.group <- names(model.m@flist)
     n.med <- length(med.group)
-    if(n.med >1){
-      warning("number of groups cannot exceed one")
+    if(n.med > 1){
+      stop("mediate does not support more than two levels per model")
     } else {
       group.m <- med.group
       group.y <- NULL
@@ -1866,6 +1866,7 @@ print.summary.mediate <- function(x, ...){
   cat("Simulations:", x$sims,"\n\n")
   invisible(x)
 }
+
 #########################################################################
 summary.mediate.mer <- function(object, output=c("default","byeffect","bygroup"),...){
   output <- match.arg(output)
@@ -1874,6 +1875,7 @@ summary.mediate.mer <- function(object, output=c("default","byeffect","bygroup")
          byeffect = structure(object, class = c("summary.mediate.mer.2", class(object))),   
          bygroup = structure(object, class = c("summary.mediate.mer.3", class(object))))
 }
+
 #########################################################################
 print.summary.mediate.mer <- function(x,...){  
   clp <- 100 * x$conf.level
@@ -1920,6 +1922,7 @@ print.summary.mediate.mer <- function(x,...){
   cat("Simulations:", x$sims,"\n\n")
   invisible(x)
 }
+
 #########################################################################
 print.summary.mediate.mer.2 <- function(x,...){
   clp <- 100 * x$conf.level
@@ -2022,6 +2025,7 @@ print.summary.mediate.mer.2 <- function(x,...){
   cat("Simulations:", x$sims,"\n\n")
   invisible(x)
 }
+
 #########################################################################
 print.summary.mediate.mer.3 <- function(x,...){
   clp <- 100 * x$conf.level
@@ -2078,6 +2082,7 @@ print.summary.mediate.mer.3 <- function(x,...){
   cat("Simulations:", x$sims,"\n\n")
   invisible(x)
 }
+
 #########################################################################
 summary.mediate.order <- function(object, ...){
   structure(object, class = c("summary.mediate.order", class(object)))
@@ -2158,6 +2163,7 @@ plot.process <- function(model) {
               lower.vec.0=lower.vec.0, upper.vec.0=upper.vec.0, tau.vec=tau.vec,
               range.1=range.1, range.0=range.0))
 }
+
 #########################################################################
 plot.mediate <- function(x, treatment = NULL,
                          labels = c("ACME","Direct\nEffect","Total\nEffect"),
@@ -2165,11 +2171,20 @@ plot.mediate <- function(x, treatment = NULL,
                          main = NULL, lwd = 1.5, cex = .85,
                          col = "black", ...){
                                         # Determine which graph to plot
+  isLinear.y <- (	(class(x$model.y)[1] %in% c("lm", "rq")) ||
+                 (inherits(x$model.y, "glm") &&
+                  x$model.y$family$family == "gaussian" &&
+                  x$model.y$family$link == "identity") ||
+                 (inherits(x$model.y, "survreg") &&
+                  x$model.y$dist == "gaussian") )
+  
+  printone <- !x$INT && isLinear.y
+  
   if(is.null(treatment)){
-    if(x$INT){
-      treatment <- c(0,1)
-    } else {
+    if(printone){
       treatment <- 1
+    } else {
+      treatment <- c(0,1)
     }
   } else {
     treatment <- switch(treatment,
@@ -2232,6 +2247,7 @@ plot.mediate <- function(x, treatment = NULL,
   axis(2, at = y.axis.new, labels = labels, las = 1, tick = TRUE, ...)
   abline(v = 0, lty = 2)
 }
+
 #########################################################################
 plot.process.mer <- function(model) {
   coef.vec.1 <- c(model$d1, model$z1)
@@ -2264,78 +2280,33 @@ plot.process.mer <- function(model) {
               upper.vec.1.group=upper.vec.1.group, coef.vec.0.group=coef.vec.0.group,
               lower.vec.0.group=lower.vec.0.group, upper.vec.0.group=upper.vec.0.group, tau.vec.group=tau.vec.group))
 }
+
+
 #########################################################################
-plot.mediate.mer <- function(x,  treatment = NULL, xlim = NULL, ylim = NULL, xlab = "", ylab = "",
+plot.mediate.mer <- function(x,  treatment = NULL,
+                             xlim = NULL, ylim = NULL, xlab = "", ylab = "",
                              main = NULL, lwd = 1.5, cex = .85,
-                             col = "black", ask = TRUE, ...){
+                             col = "black", group.plots = FALSE,
+                             ask = prod(par("mfcol")) < nplots, ...){
 
-  param <- plot.process.mer(x)
-  if(!ask){
-    if(is.null(treatment)){
-      if(x$INT){
-        treatment <- c(0,1)
-      } else {
-        treatment <- 1
-      }
-    } else {
-      treatment <- switch(treatment,
-                          control = 0,
-                          treated = 1,
-                          both = c(0,1))
-    }
-    labels = c("ACME","Direct\nEffect","Total\nEffect")
-    y.axis <- c(length(param$coef.vec.1):.5)
-    y.axis <- y.axis + 1
+    param <- plot.process.mer(x)
+  
+    isLinear.y <- (	(class(x$model.y)[1] %in% c("lm", "rq")) || # lm or quantile
+                   (inherits(x$model.y, "glm") &&
+                    x$model.y$family$family == "gaussian" &&
+                    x$model.y$family$link == "identity") ||      # glm normal
+                   (inherits(x$model.y, "survreg") &&
+                    x$model.y$dist == "gaussian") ||             # surv normal
+                   (inherits(x$model.y, "mer") &&
+                    x$model.y@call[[1]] == "lmer") )          # lmer
     
-    if(is.null(xlim)){
-      if(length(treatment) > 1) {
-        xlim <- range(param$range.1, param$range.0) * 1.2
-      } else if (treatment == 1){
-        xlim <- param$range.1 * 1.2
-      } else {
-        xlim <- param$range.0 * 1.2
-      }
-    }
-  
-    if(is.null(ylim)){
-      ylim <- c(min(y.axis) -1- 0.5, max(y.axis) + 0.5)
-    }
-  
-    plot(param$coef.vec.1, y.axis, type = "n", xlab = xlab, ylab = ylab,
-         yaxt = "n", xlim = xlim, ylim = ylim, main = main, ...)
-  
-    if(length(treatment) == 1){
-      adj <- 0
-    } else {
-      adj <- 0.05
-    }
-  
-    if(1 %in% treatment){
-      points(param$coef.vec.1, y.axis + adj, type = "p", pch = 19, cex = cex, col = col)
-      segments(param$lower.vec.1, y.axis + adj, param$upper.vec.1, y.axis + adj,
-               lwd = lwd, col = col)
-      points(param$tau.vec[1], 1, type = "p", pch = 19, cex = cex, col = col)
-      segments(param$tau.vec[2], 1 , param$tau.vec[3], 1 ,
-               lwd = lwd, col = col)
-    }
-    if(0 %in% treatment) {
-      points(param$coef.vec.0, y.axis - adj, type = "p", pch = 1, cex = cex, col = col)
-      segments(param$lower.vec.0, y.axis - adj, param$upper.vec.0, y.axis - adj,
-               lwd = lwd, lty = 3, col = col)
-    }
-    y.axis.new <- c(3,2,1)
-    axis(2, at = y.axis.new, labels = labels, las = 1, tick = TRUE, ...)
-    abline(v = 0, lty = 2)
-  } else {
-#########################################################################
-    oask <- devAskNewPage(TRUE)
-    on.exit(devAskNewPage(oask))
-
+    printone <- !x$INT && isLinear.y
+    
     if(is.null(treatment)){
-      if(x$INT){
-        treatment <- c(0,1)
-      } else {
+      if(printone){
         treatment <- 1
+      } else {
+        treatment <- c(0,1)
       }
     } else {
       treatment <- switch(treatment,
@@ -2343,6 +2314,16 @@ plot.mediate.mer <- function(x,  treatment = NULL, xlim = NULL, ylim = NULL, xla
                           treated = 1,
                           both = c(0,1))
     }
+        
+    nplots <- 1 + group.plots * (2 * length(treatment) + 1)  # n of plots necessary
+    
+    if(ask){
+        oask <- devAskNewPage(TRUE)
+        on.exit(devAskNewPage(oask))
+    }
+    
+# 1. Summary plot for population effects
+
     labels = c("ACME","Direct\nEffect","Total\nEffect")
     y.axis <- c(length(param$coef.vec.1):.5)
     y.axis <- y.axis + 1
@@ -2386,95 +2367,104 @@ plot.mediate.mer <- function(x,  treatment = NULL, xlim = NULL, ylim = NULL, xla
     y.axis.new <- c(3,2,1)
     axis(2, at = y.axis.new, labels = labels, las = 1, tick = TRUE, ...)
     abline(v = 0, lty = 2)
+
+# 2. Group effects    
+  if(group.plots){
+
 #########################################################################     
     if(is.factor(x$group.id)){
       labels <- levels(x$group.id)
     } else {
       labels = sort(unique(x$group.id))
     }
-#########################################################################    
-    y.axis <- c(length(param$coef.vec.0.group[,1]):.5)
-    y.axis <- y.axis + 1
-           
-    xlim <- c(param$lower.vec.0.group[,1], param$coef.vec.0.group[,1], param$upper.vec.0.group[,1]) 
-    MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
-    MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
-    xlim <- c(MIN, MAX)
-    
-    ylim <- c(min(y.axis), max(y.axis))
-    
-    plot(param$coef.vec.0.group[,1], y.axis, type = "n", xlab = xlab, ylab = ylab,
-         yaxt = "n", xlim = xlim, ylim = ylim, main = "ACME0", ...)
-    
-    points(param$coef.vec.0.group[,1], y.axis, type = "p", pch = 19, cex = cex, col = col)
-    segments(param$lower.vec.0.group[,1], y.axis, param$upper.vec.0.group[,1], y.axis,
-             lwd = lwd, col = col)
-    
-    axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
-    abline(v = 0, lty = 2)
-    
+#########################################################################
+    if(0 %in% treatment){
+        y.axis <- c(length(param$coef.vec.0.group[,1]):.5)
+        y.axis <- y.axis + 1
+               
+        xlim <- c(param$lower.vec.0.group[,1], param$coef.vec.0.group[,1], param$upper.vec.0.group[,1]) 
+        MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
+        MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
+        xlim <- c(MIN, MAX)
+        
+        ylim <- c(min(y.axis), max(y.axis))
+        
+        plot(param$coef.vec.0.group[,1], y.axis, type = "n", xlab = xlab, ylab = ylab,
+             yaxt = "n", xlim = xlim, ylim = ylim, main = "ACME0", ...)
+        
+        points(param$coef.vec.0.group[,1], y.axis, type = "p", pch = 1, cex = cex, col = col)
+        segments(param$lower.vec.0.group[,1], y.axis, param$upper.vec.0.group[,1], y.axis,
+                 lwd = lwd, col = col)
+        
+        axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
+        abline(v = 0, lty = 2)
+    }
 ######################################################################### 
-    y.axis <- c(length(param$coef.vec.1.group[,1]):.5)
-    y.axis <- y.axis + 1
-    
-    xlim <- c(param$lower.vec.1.group[,1], param$coef.vec.1.group[,1], param$upper.vec.1.group[,1])
-    MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
-    MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
-    xlim <- c(MIN, MAX)
-    
-    ylim <- c(min(y.axis), max(y.axis))
-    
-    plot(param$coef.vec.1.group[,1], y.axis, type = "n", xlab = xlab, ylab = ylab,
-         yaxt = "n", xlim = xlim, ylim = ylim, main = "ACME1", ...)
-    
-    points(param$coef.vec.1.group[,1], y.axis, type = "p", pch = 19, cex = cex, col = col)
-    segments(param$lower.vec.1.group[,1], y.axis, param$upper.vec.1.group[,1], y.axis,
-             lwd = lwd, col = col)
-    
-    axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
-    abline(v = 0, lty = 2)
+    if(1 %in% treatment){
+        y.axis <- c(length(param$coef.vec.1.group[,1]):.5)
+        y.axis <- y.axis + 1
+        
+        xlim <- c(param$lower.vec.1.group[,1], param$coef.vec.1.group[,1], param$upper.vec.1.group[,1])
+        MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
+        MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
+        xlim <- c(MIN, MAX)
+        
+        ylim <- c(min(y.axis), max(y.axis))
+        
+        plot(param$coef.vec.1.group[,1], y.axis, type = "n", xlab = xlab, ylab = ylab,
+             yaxt = "n", xlim = xlim, ylim = ylim, main = ifelse(printone, "ACME", "ACME1"), ...)
+        
+        points(param$coef.vec.1.group[,1], y.axis, type = "p", pch = 19, cex = cex, col = col)
+        segments(param$lower.vec.1.group[,1], y.axis, param$upper.vec.1.group[,1], y.axis,
+                 lwd = lwd, col = col)
+        
+        axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
+        abline(v = 0, lty = 2)
+    }
 ######################################################################### 
-    y.axis <- c(length(param$coef.vec.0.group[,2]):.5)
-    y.axis <- y.axis + 1
-    
-    xlim <- c(param$lower.vec.0.group[,2], param$coef.vec.0.group[,2], param$upper.vec.0.group[,2])
-    MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
-    MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
-    xlim <- c(MIN, MAX)
-    
-    ylim <- c(min(y.axis), max(y.axis))
-    
-    plot(param$coef.vec.0.group[,2], y.axis, type = "n", xlab = xlab, ylab = ylab,
-         yaxt = "n", xlim = xlim, ylim = ylim, main = "Direct\nEffect0", ...)
-    
-    points(param$coef.vec.0.group[,2], y.axis, type = "p", pch = 1, cex = cex, col = col)
-    segments(param$lower.vec.0.group[,2], y.axis, param$upper.vec.0.group[,2], y.axis,
-             lwd = lwd, lty = 3, col = col)
-    
-    axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
-    abline(v = 0, lty = 2)
-    
+    if(0 %in% treatment){
+        y.axis <- c(length(param$coef.vec.0.group[,2]):.5)
+        y.axis <- y.axis + 1
+        
+        xlim <- c(param$lower.vec.0.group[,2], param$coef.vec.0.group[,2], param$upper.vec.0.group[,2])
+        MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
+        MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
+        xlim <- c(MIN, MAX)
+        
+        ylim <- c(min(y.axis), max(y.axis))
+        
+        plot(param$coef.vec.0.group[,2], y.axis, type = "n", xlab = xlab, ylab = ylab,
+             yaxt = "n", xlim = xlim, ylim = ylim, main = "Direct\nEffect0", ...)
+        
+        points(param$coef.vec.0.group[,2], y.axis, type = "p", pch = 1, cex = cex, col = col)
+        segments(param$lower.vec.0.group[,2], y.axis, param$upper.vec.0.group[,2], y.axis,
+                 lwd = lwd, lty = 3, col = col)
+        
+        axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
+        abline(v = 0, lty = 2)
+    }    
 ######################################################################### 
-    y.axis <- c(length(param$coef.vec.1.group[,2]):.5)
-    y.axis <- y.axis + 1
-    
-    xlim <- c(param$lower.vec.1.group[,2], param$coef.vec.1.group[,2], param$upper.vec.1.group[,2])
-    MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
-    MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
-    xlim <- c(MIN, MAX)
-    
-    ylim <- c(min(y.axis), max(y.axis))
-    
-    plot(param$coef.vec.1.group[,2], y.axis, type = "n", xlab = xlab, ylab = ylab,
-         yaxt = "n", xlim = xlim, ylim = ylim, main = "Direct\nEffect1", ...)
-    
-    points(param$coef.vec.1.group[,2], y.axis, type = "p", pch = 1, cex = cex, col = col)
-    segments(param$lower.vec.1.group[,2], y.axis, param$upper.vec.1.group[,2], y.axis,
-             lwd = lwd, lty = 3, col = col)
-    
-    axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
-    abline(v = 0, lty = 2)
-    
+    if(1 %in% treatment){
+        y.axis <- c(length(param$coef.vec.1.group[,2]):.5)
+        y.axis <- y.axis + 1
+        
+        xlim <- c(param$lower.vec.1.group[,2], param$coef.vec.1.group[,2], param$upper.vec.1.group[,2])
+        MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
+        MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
+        xlim <- c(MIN, MAX)
+        
+        ylim <- c(min(y.axis), max(y.axis))
+        
+        plot(param$coef.vec.1.group[,2], y.axis, type = "n", xlab = xlab, ylab = ylab,
+             yaxt = "n", xlim = xlim, ylim = ylim, main = ifelse(printone, "Direct\nEffect", "Direct\nEffect1"), ...)
+        
+        points(param$coef.vec.1.group[,2], y.axis, type = "p", pch = 19, cex = cex, col = col)
+        segments(param$lower.vec.1.group[,2], y.axis, param$upper.vec.1.group[,2], y.axis,
+                 lwd = lwd, lty = 3, col = col)
+        
+        axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
+        abline(v = 0, lty = 2)
+    }    
 ######################################################################### 
     y.axis <- c(length(param$tau.vec.group[,1]):.5)
     y.axis <- y.axis + 1
@@ -2494,7 +2484,8 @@ plot.mediate.mer <- function(x,  treatment = NULL, xlim = NULL, ylim = NULL, xla
              lwd = lwd, col = col)
     
     axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
-    abline(v = 0, lty = 2)    
+    abline(v = 0, lty = 2)
+        
   }
 }
   

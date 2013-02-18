@@ -8,15 +8,18 @@ Function to plot group-specific effects derived from causal mediation analysis o
 }
 
 \usage{ 
-\method{plot}{mediate.mer}(x,  treatment = NULL, xlim = NULL, ylim = NULL, xlab = "", ylab = "",
+\method{plot}{mediate.mer}(x, treatment = NULL, group.plots = FALSE,
+                             ask = prod(par("mfcol")) < nplots, 
+                             xlim = NULL, ylim = NULL, xlab = "", ylab = "",
                              main = NULL, lwd = 1.5, cex = .85,
-                             col = "black", ask = TRUE, ...)
+                             col = "black", ...)
 }
 
 \arguments{ 
 \item{x}{ object of class 'mediate.mer' produced by 'mediate'.}
-\item{ask}{ a logical value. If 'TRUE', the user is asked for input before a new figure is plotted. If 'FALSE', only group-average effects will be shown. Default is TRUE.}
-\item{treatment}{ a character string indicating the baseline treatment value of the estimated causal mediation effect and direct effect to plot. Can be either "control", "treated", or "both". If 'NULL' (default), both sets of estimates are plotted if and only if the treatment-mediator interaction term is included in the outcome model. Only relevant if group.plot = "FALSE".}
+\item{treatment}{ a character string indicating the baseline treatment value of the estimated causal mediation effect and direct effect to plot. Can be either "control", "treated", or "both". If 'NULL' (default), both sets of estimates are plotted if and only if the treatment-mediator interaction term is included in the outcome model.}
+\item{group.plots}{ a logical value indicating whether group-specific effects should be plotted in addition to the population-averaged effects.}
+\item{ask}{ a logical value. If 'TRUE', the user is asked for input before a new figure is plotted. Default is to ask only if the number of plots on current screen is fewer than necessary.}
 \item{xlim}{ range of the horizontal axis.}
 \item{ylim}{ range of the vertical axis.}
 \item{xlab}{ label of the horizontal axis.}

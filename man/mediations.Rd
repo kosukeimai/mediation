@@ -40,7 +40,7 @@ Individual elements of the output list (see "Value") may be passed through \code
 
 The default value of 'covariates' is 'NULL' and no covariate will be included in either mediator or outcome models without a custom value. It should be noted that users typically should have pre-treatment covariates to make the sequential ignorability assumption more plausible.
 
-There are several limitations to the code. First, it works only with a subset of the model types that will be accommodated if 'mediate' is used individually (see the 'families' argument above for details). Second, one cannot specify separate sets of covariates for different treatment/mediator/outcome combinations. Users should use 'mediate' separately for individual models if more flexibility is required in their specific applications. Third, a class of "mer" (lmer or glmer) is not supported.} 
+There are several limitations to the code. First, it works only with a subset of the model types that will be accommodated if 'mediate' is used individually (see the 'families' argument above for details). Second, one cannot specify separate sets of covariates for different treatment/mediator/outcome combinations. Users should use 'mediate' separately for individual models if more flexibility is required in their specific applications.} 
 
 \value{ An object of class "mediations" (or "mediations.order" if the outcome model is ordered probit), a list of "mediate" ("mediate.order") objects produced by applications of \code{\link{mediate}} for the specified treatment/mediator/outcome combinations.  The elements are named based on the names of the outcome, treatment, and mediator variables, each separated by a "." (see example below).} 
 
