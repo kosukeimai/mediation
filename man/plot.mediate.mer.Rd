@@ -60,4 +60,4 @@ multilevel <- mediate(model.m, model.y, treat = "treat", mediator = "job_dich", 
 
 #plot(multilevel)
 
-
+}

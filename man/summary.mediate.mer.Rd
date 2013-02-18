@@ -69,3 +69,5 @@ summary(multilevel, output="byeffect")
 
 # Group-specific effects organized by group
 summary(multilevel, output="bygroup")
+
+}
