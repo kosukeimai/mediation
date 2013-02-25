@@ -17,7 +17,7 @@ Function to plot group-specific effects derived from causal mediation analysis o
 
 \arguments{ 
 \item{x}{ object of class 'mediate.mer' produced by 'mediate'.}
-\item{treatment}{ a character string indicating the baseline treatment value of the estimated causal mediation effect and direct effect to plot. Can be either "control", "treated", or "both". If 'NULL' (default), both sets of estimates are plotted if and only if the treatment-mediator interaction term is included in the outcome model.}
+\item{treatment}{ a character string indicating the baseline treatment value of the estimated causal mediation effect and direct effect to plot. Can be either "control", "treated", or "both". If 'NULL' (default), both sets of estimates are plotted if and only if they differ.}
 \item{group.plots}{ a logical value indicating whether group-specific effects should be plotted in addition to the population-averaged effects.}
 \item{ask}{ a logical value. If 'TRUE', the user is asked for input before a new figure is plotted. Default is to ask only if the number of plots on current screen is fewer than necessary.}
 \item{xlim}{ range of the horizontal axis.}
