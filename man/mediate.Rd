@@ -265,7 +265,7 @@ summary(multilevel)
 
 # Group-specific effects organized by effect
 summary(multilevel, output="byeffect")
-# plot(multilevel)
+# plot(multilevel, group.plots=TRUE)
 # See summary.mediate.mer and plot.mediate.mer for detailed explanations 
 
 # Group-specific effects organized by group

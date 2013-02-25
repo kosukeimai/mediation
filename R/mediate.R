@@ -1894,25 +1894,45 @@ print.summary.mediate.mer <- function(x,...){
   cat("Mediator Groups:", x$group.m,"\n\n")
   cat("Outcome Groups:", x$group.y,"\n\n")
   cat("Output Based on Overall Averages Across Groups","\n\n")
-  
-  smat <- c(x$d0, x$d0.ci, x$d0.p)
-  smat <- rbind(smat, c(x$d1, x$d1.ci, x$d1.p))
-  smat <- rbind(smat, c(x$z0, x$z0.ci, x$z0.p))
-  smat <- rbind(smat, c(x$z1, x$z1.ci, x$z1.p))
-  smat <- rbind(smat, c(x$tau.coef, x$tau.ci, x$tau.p))
-  smat <- rbind(smat, c(x$n0, x$n0.ci, x$n0.p))
-  smat <- rbind(smat, c(x$n1, x$n1.ci, x$n1.p))
-  smat <- rbind(smat, c(x$d.avg, x$d.avg.ci, x$d.avg.p))
-  smat <- rbind(smat, c(x$z.avg, x$z.avg.ci, x$z.avg.p))
-  smat <- rbind(smat, c(x$n.avg, x$n.avg.ci, x$n.avg.p))
-  rownames(smat) <- c("Mediation Effect_0", "Mediation Effect_1",
-                      "Direct Effect_0", "Direct Effect_1",
-                      "Total Effect",
-                      "Proportion via Mediation_0",
-                      "Proportion via Mediation_1",
-                      "Mediation Effect (Ave.)",
-                      "Direct Effect (Ave.)",
-                      "Proportion via Mediation (Ave.)")
+
+  isLinear.y <- (	(class(x$model.y)[1] %in% c("lm", "rq")) || # lm or quantile
+                 (inherits(x$model.y, "glm") &&
+                  x$model.y$family$family == "gaussian" &&
+                  x$model.y$family$link == "identity") ||      # glm normal
+                 (inherits(x$model.y, "survreg") &&
+                  x$model.y$dist == "gaussian") ||             # surv normal
+                 (inherits(x$model.y, "mer") &&
+                  x$model.y@call[[1]] == "lmer") )          # lmer
+    
+  printone <- !x$INT && isLinear.y
+
+  if(printone){
+    smat <- c(x$d1, x$d1.ci, x$d1.p)
+    smat <- rbind(smat, c(x$z0, x$z0.ci, x$z0.p))
+    smat <- rbind(smat, c(x$tau.coef, x$tau.ci, x$tau.p))
+    smat <- rbind(smat, c(x$n0, x$n0.ci, x$n0.p))
+    rownames(smat) <- c("Mediation Effect", "Direct Effect",
+                        "Total Effect", "Proportion via Mediation")
+  }else{
+    smat <- c(x$d0, x$d0.ci, x$d0.p)
+    smat <- rbind(smat, c(x$d1, x$d1.ci, x$d1.p))
+    smat <- rbind(smat, c(x$z0, x$z0.ci, x$z0.p))
+    smat <- rbind(smat, c(x$z1, x$z1.ci, x$z1.p))
+    smat <- rbind(smat, c(x$tau.coef, x$tau.ci, x$tau.p))
+    smat <- rbind(smat, c(x$n0, x$n0.ci, x$n0.p))
+    smat <- rbind(smat, c(x$n1, x$n1.ci, x$n1.p))
+    smat <- rbind(smat, c(x$d.avg, x$d.avg.ci, x$d.avg.p))
+    smat <- rbind(smat, c(x$z.avg, x$z.avg.ci, x$z.avg.p))
+    smat <- rbind(smat, c(x$n.avg, x$n.avg.ci, x$n.avg.p))
+    rownames(smat) <- c("Mediation Effect_0", "Mediation Effect_1",
+                        "Direct Effect_0", "Direct Effect_1",
+                        "Total Effect",
+                        "Proportion via Mediation_0",
+                        "Proportion via Mediation_1",
+                        "Mediation Effect (Ave.)",
+                        "Direct Effect (Ave.)",
+                        "Proportion via Mediation (Ave.)")
+  }
   colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
                       paste(clp, "% CI Upper", sep=""), "p-value")
   printCoefmat(smat, digits=3)
@@ -1922,7 +1942,6 @@ print.summary.mediate.mer <- function(x,...){
   cat("Simulations:", x$sims,"\n\n")
   invisible(x)
 }
-
 #########################################################################
 print.summary.mediate.mer.2 <- function(x,...){
   clp <- 100 * x$conf.level
