@@ -1966,85 +1966,132 @@ print.summary.mediate.mer.2 <- function(x,...){
   } else {
     gname <- sort(unique(x$group.id))
   }
-  
-  cat("Mediation Effect_0","\n\n")
-  smat<-cbind(x$d0.group,x$d0.ci.group,x$d0.p.group)
-  rownames(smat) <- gname
-  colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
-                      paste(clp, "% CI Upper", sep=""), "p-value") 
-  printCoefmat(smat, digits=3)
-  cat("\n")
-  cat("Mediation Effect_1","\n\n")
-  smat<-cbind(x$d1.group, x$d1.ci.group, x$d1.p.group)
-  rownames(smat) <- gname
-  colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
-                      paste(clp, "% CI Upper", sep=""), "p-value") 
-  printCoefmat(smat, digits=3)
-  cat("\n")
-  cat("Direct Effect_0","\n\n")
-  smat<-cbind(x$z0.group, x$z0.ci.group, x$z0.p.group)
-  rownames(smat) <- gname
-  colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
-                      paste(clp, "% CI Upper", sep=""), "p-value") 
-  printCoefmat(smat, digits=3)
-  cat("\n")
-  cat("Direct Effect_1","\n\n")
-  smat<-cbind(x$z1.group, x$z1.ci.group, x$z1.p.group)
-  rownames(smat) <- gname
-  colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
-                      paste(clp, "% CI Upper", sep=""), "p-value") 
-  printCoefmat(smat, digits=3)
-  cat("\n")    
-  cat("Total Effect","\n\n")
-  smat<-cbind(x$tau.coef.group, x$tau.ci.group, x$tau.p.group)
-  rownames(smat) <- gname
-  colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
-                      paste(clp, "% CI Upper", sep=""), "p-value") 
-  printCoefmat(smat, digits=3)
-  cat("\n") 
-  cat("Proportion via Mediation_0","\n\n")
-  smat<-cbind(x$n0.group, x$n0.ci.group, x$n0.p.group)
-  rownames(smat) <- gname
-  colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
-                      paste(clp, "% CI Upper", sep=""), "p-value") 
-  printCoefmat(smat, digits=3)
-  cat("\n")  
-  cat("Proportion via Mediation_1","\n\n")
-  smat<-cbind(x$n1.group, x$n1.ci.group, x$n1.p.group)
-  rownames(smat) <- gname
-  colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
-                      paste(clp, "% CI Upper", sep=""), "p-value") 
-  printCoefmat(smat, digits=3)
-  cat("\n") 
-  cat("Mediation Effect (Ave.)","\n\n")
-  smat<-cbind(x$d.avg.group, x$d.avg.ci.group, x$d.avg.p.group)
-  rownames(smat) <- gname
-  colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
-                      paste(clp, "% CI Upper", sep=""), "p-value") 
-  printCoefmat(smat, digits=3)
-  cat("\n") 
-  cat("Direct Effect (Ave.)","\n\n")
-  smat<-cbind(x$z.avg.group, x$z.avg.ci.group, x$z.avg.p.group)
-  rownames(smat) <- gname
-  colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
-                      paste(clp, "% CI Upper", sep=""), "p-value") 
-  printCoefmat(smat, digits=3)
-  cat("\n")
-  cat("Proportion via Mediation (Ave.)","\n\n")
-  smat<-cbind(x$n.avg.group, x$n.avg.ci.group, x$n.avg.p.group)   
-  rownames(smat) <- gname
-  colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
-                      paste(clp, "% CI Upper", sep=""), "p-value") 
-  printCoefmat(smat, digits=3)
-  cat("\n")                          
-	   
-  cat("\n")
-  cat("Sample Size Used:", x$nobs,"\n\n")
-  cat("\n")
-  cat("Simulations:", x$sims,"\n\n")
-  invisible(x)
-}
 
+  isLinear.y <- (	(class(x$model.y)[1] %in% c("lm", "rq")) || # lm or quantile
+                 (inherits(x$model.y, "glm") &&
+                  x$model.y$family$family == "gaussian" &&
+                  x$model.y$family$link == "identity") ||      # glm normal
+                 (inherits(x$model.y, "survreg") &&
+                  x$model.y$dist == "gaussian") ||             # surv normal
+                 (inherits(x$model.y, "mer") &&
+                  x$model.y@call[[1]] == "lmer") )          # lmer
+  
+  printone <- !x$INT && isLinear.y
+  
+  if(printone){
+    cat("Mediation Effect","\n\n")
+    smat<-cbind(x$d0.group,x$d0.ci.group,x$d0.p.group)
+    rownames(smat) <- gname
+    colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
+                        paste(clp, "% CI Upper", sep=""), "p-value") 
+    printCoefmat(smat, digits=3)
+    cat("\n")
+    cat("Direct Effect","\n\n")
+    smat<-cbind(x$z0.group, x$z0.ci.group, x$z0.p.group)
+    rownames(smat) <- gname
+    colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
+                        paste(clp, "% CI Upper", sep=""), "p-value") 
+    printCoefmat(smat, digits=3)
+    cat("\n")
+    cat("Total Effect","\n\n")
+    smat<-cbind(x$tau.coef.group, x$tau.ci.group, x$tau.p.group)
+    rownames(smat) <- gname
+    colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
+                        paste(clp, "% CI Upper", sep=""), "p-value") 
+    printCoefmat(smat, digits=3)
+    cat("\n") 
+    cat("Proportion via Mediation","\n\n")
+    smat<-cbind(x$n0.group, x$n0.ci.group, x$n0.p.group)
+    rownames(smat) <- gname
+    colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
+                        paste(clp, "% CI Upper", sep=""), "p-value") 
+    printCoefmat(smat, digits=3)
+    cat("\n")  
+    
+    cat("\n")
+    cat("Sample Size Used:", x$nobs,"\n\n")
+    cat("\n")
+    cat("Simulations:", x$sims,"\n\n")
+    invisible(x) 
+  }else{
+    cat("Mediation Effect_0","\n\n")
+    smat<-cbind(x$d0.group,x$d0.ci.group,x$d0.p.group)
+    rownames(smat) <- gname
+    colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
+                        paste(clp, "% CI Upper", sep=""), "p-value") 
+    printCoefmat(smat, digits=3)
+    cat("\n")
+    cat("Mediation Effect_1","\n\n")
+    smat<-cbind(x$d1.group, x$d1.ci.group, x$d1.p.group)
+    rownames(smat) <- gname
+    colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
+                        paste(clp, "% CI Upper", sep=""), "p-value") 
+    printCoefmat(smat, digits=3)
+    cat("\n")
+    cat("Direct Effect_0","\n\n")
+    smat<-cbind(x$z0.group, x$z0.ci.group, x$z0.p.group)
+    rownames(smat) <- gname
+    colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
+                        paste(clp, "% CI Upper", sep=""), "p-value") 
+    printCoefmat(smat, digits=3)
+    cat("\n")
+    cat("Direct Effect_1","\n\n")
+    smat<-cbind(x$z1.group, x$z1.ci.group, x$z1.p.group)
+    rownames(smat) <- gname
+    colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
+                        paste(clp, "% CI Upper", sep=""), "p-value") 
+    printCoefmat(smat, digits=3)
+    cat("\n")    
+    cat("Total Effect","\n\n")
+    smat<-cbind(x$tau.coef.group, x$tau.ci.group, x$tau.p.group)
+    rownames(smat) <- gname
+    colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
+                        paste(clp, "% CI Upper", sep=""), "p-value") 
+    printCoefmat(smat, digits=3)
+    cat("\n") 
+    cat("Proportion via Mediation_0","\n\n")
+    smat<-cbind(x$n0.group, x$n0.ci.group, x$n0.p.group)
+    rownames(smat) <- gname
+    colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
+                        paste(clp, "% CI Upper", sep=""), "p-value") 
+    printCoefmat(smat, digits=3)
+    cat("\n")  
+    cat("Proportion via Mediation_1","\n\n")
+    smat<-cbind(x$n1.group, x$n1.ci.group, x$n1.p.group)
+    rownames(smat) <- gname
+    colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
+                        paste(clp, "% CI Upper", sep=""), "p-value") 
+    printCoefmat(smat, digits=3)
+    cat("\n") 
+    cat("Mediation Effect (Ave.)","\n\n")
+    smat<-cbind(x$d.avg.group, x$d.avg.ci.group, x$d.avg.p.group)
+    rownames(smat) <- gname
+    colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
+                        paste(clp, "% CI Upper", sep=""), "p-value") 
+    printCoefmat(smat, digits=3)
+    cat("\n") 
+    cat("Direct Effect (Ave.)","\n\n")
+    smat<-cbind(x$z.avg.group, x$z.avg.ci.group, x$z.avg.p.group)
+    rownames(smat) <- gname
+    colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
+                        paste(clp, "% CI Upper", sep=""), "p-value") 
+    printCoefmat(smat, digits=3)
+    cat("\n")
+    cat("Proportion via Mediation (Ave.)","\n\n")
+    smat<-cbind(x$n.avg.group, x$n.avg.ci.group, x$n.avg.p.group)   
+    rownames(smat) <- gname
+    colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
+                        paste(clp, "% CI Upper", sep=""), "p-value") 
+    printCoefmat(smat, digits=3)
+    cat("\n")                          
+    
+    cat("\n")
+    cat("Sample Size Used:", x$nobs,"\n\n")
+    cat("\n")
+    cat("Simulations:", x$sims,"\n\n")
+    invisible(x)
+  }
+}
 #########################################################################
 print.summary.mediate.mer.3 <- function(x,...){
   clp <- 100 * x$conf.level
@@ -2070,38 +2117,71 @@ print.summary.mediate.mer.3 <- function(x,...){
     gname <- sort(unique(x$group.id))
   }
   G<-length(gname)
-  for (g in 1:G){  
+  isLinear.y <- (	(class(x$model.y)[1] %in% c("lm", "rq")) || # lm or quantile
+                 (inherits(x$model.y, "glm") &&
+                  x$model.y$family$family == "gaussian" &&
+                  x$model.y$family$link == "identity") ||      # glm normal
+                 (inherits(x$model.y, "survreg") &&
+                  x$model.y$dist == "gaussian") ||             # surv normal
+                 (inherits(x$model.y, "mer") &&
+                  x$model.y@call[[1]] == "lmer") )          # lmer
+  
+  printone <- !x$INT && isLinear.y
+  
+  if(printone){
+    for (g in 1:G){  
+      cat("\n")
+      cat("Group:",gname[g],"\n") 
+      smat <- c(x$d0.group[g], x$d0.ci.group[g,], x$d0.p.group[g])
+      smat <- rbind(smat, c(x$z0.group[g], x$z0.ci.group[g,], x$z0.p.group[g]))
+      smat <- rbind(smat, c(x$tau.coef.group[g], x$tau.ci.group[g,], x$tau.p.group[g]))
+      smat <- rbind(smat, c(x$n0.group[g], x$n0.ci.group[g,], x$n0.p.group[g]))
+      rownames(smat) <- c("Mediation Effect", 
+                          "Direct Effect", 
+                          "Total Effect",
+                          "Proportion via Mediation") 
+      colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
+                          paste(clp, "% CI Upper", sep=""), "p-value")             
+      printCoefmat(smat, digits=3)
+    }
     cat("\n")
-    cat("Group:",gname[g],"\n") 
-    smat <- c(x$d0.group[g], x$d0.ci.group[g,], x$d0.p.group[g])
-    smat <- rbind(smat, c(x$d1.group[g], x$d1.ci.group[g,], x$d1.p.group[g]))
-    smat <- rbind(smat, c(x$z0.group[g], x$z0.ci.group[g,], x$z0.p.group[g]))
-    smat <- rbind(smat, c(x$z1.group[g], x$z1.ci.group[g,], x$z1.p.group[g]))
-    smat <- rbind(smat, c(x$tau.coef.group[g], x$tau.ci.group[g,], x$tau.p.group[g]))
-    smat <- rbind(smat, c(x$n0.group[g], x$n0.ci.group[g,], x$n0.p.group[g]))
-    smat <- rbind(smat, c(x$n1.group[g], x$n1.ci.group[g,], x$n1.p.group[g]))
-    smat <- rbind(smat, c(x$d.avg.group[g], x$d.avg.ci.group[g,], x$d.avg.p.group[g]))
-    smat <- rbind(smat, c(x$z.avg.group[g], x$z.avg.ci.group[g,], x$z.avg.p.group[g]))
-    smat <- rbind(smat, c(x$n.avg.group[g], x$n.avg.ci.group[g,], x$n.avg.p.group[g]))   
-    rownames(smat) <- c("Mediation Effect_0", "Mediation Effect_1",
-                        "Direct Effect_0", "Direct Effect_1",
-                        "Total Effect",
-                        "Proportion via Mediation_0",
-                        "Proportion via Mediation_1",
-                        "Mediation Effect (Ave.)",
-                        "Direct Effect (Ave.)",
-                        "Proportion via Mediation (Ave.)") 
-    colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
-                        paste(clp, "% CI Upper", sep=""), "p-value")             
-    printCoefmat(smat, digits=3)
+    cat("Sample Size Used:", x$nobs,"\n\n")
+    cat("\n")
+    cat("Simulations:", x$sims,"\n\n")
+    invisible(x)    
+  }else{
+    for (g in 1:G){  
+      cat("\n")
+      cat("Group:",gname[g],"\n") 
+      smat <- c(x$d0.group[g], x$d0.ci.group[g,], x$d0.p.group[g])
+      smat <- rbind(smat, c(x$d1.group[g], x$d1.ci.group[g,], x$d1.p.group[g]))
+      smat <- rbind(smat, c(x$z0.group[g], x$z0.ci.group[g,], x$z0.p.group[g]))
+      smat <- rbind(smat, c(x$z1.group[g], x$z1.ci.group[g,], x$z1.p.group[g]))
+      smat <- rbind(smat, c(x$tau.coef.group[g], x$tau.ci.group[g,], x$tau.p.group[g]))
+      smat <- rbind(smat, c(x$n0.group[g], x$n0.ci.group[g,], x$n0.p.group[g]))
+      smat <- rbind(smat, c(x$n1.group[g], x$n1.ci.group[g,], x$n1.p.group[g]))
+      smat <- rbind(smat, c(x$d.avg.group[g], x$d.avg.ci.group[g,], x$d.avg.p.group[g]))
+      smat <- rbind(smat, c(x$z.avg.group[g], x$z.avg.ci.group[g,], x$z.avg.p.group[g]))
+      smat <- rbind(smat, c(x$n.avg.group[g], x$n.avg.ci.group[g,], x$n.avg.p.group[g]))   
+      rownames(smat) <- c("Mediation Effect_0", "Mediation Effect_1",
+                          "Direct Effect_0", "Direct Effect_1",
+                          "Total Effect",
+                          "Proportion via Mediation_0",
+                          "Proportion via Mediation_1",
+                          "Mediation Effect (Ave.)",
+                          "Direct Effect (Ave.)",
+                          "Proportion via Mediation (Ave.)") 
+      colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
+                          paste(clp, "% CI Upper", sep=""), "p-value")             
+      printCoefmat(smat, digits=3)
+    }
+    cat("\n")
+    cat("Sample Size Used:", x$nobs,"\n\n")
+    cat("\n")
+    cat("Simulations:", x$sims,"\n\n")
+    invisible(x)
   }
-  cat("\n")
-  cat("Sample Size Used:", x$nobs,"\n\n")
-  cat("\n")
-  cat("Simulations:", x$sims,"\n\n")
-  invisible(x)
 }
-
 #########################################################################
 summary.mediate.order <- function(object, ...){
   structure(object, class = c("summary.mediate.order", class(object)))
