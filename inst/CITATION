@@ -78,7 +78,7 @@ citEntry(entry = "Article",
         "American Political Science Review, 105(4), 765-789.")
 )
 
-citEntry(entry = "Unpublished",
+citEntry(entry = "Article",
   title        = "Identification and Sensitivity Analysis for Multiple Causal Mechanisms: Revisiting Evidence from Framing Experiments",
   author       = personList(as.person("Kosuke Imai"),
                             as.person("Teppei Yamamoto")),
