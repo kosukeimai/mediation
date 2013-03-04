@@ -13,3 +13,4 @@ version      date  description
 4.1.1    08/23/12  Put in p-value computation fixed
 4.1.2    08/23/12  No change; version number change due to glitch in uploading to CRAN
 4.2      12/18/12  multimed with multiple alternative mediators; cluster with missing data
+4.2.1    02/27/13  Mixed-effects (multilevel) models via lmer supported in mediate

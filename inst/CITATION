@@ -82,14 +82,16 @@ citEntry(entry = "Unpublished",
   title        = "Identification and Sensitivity Analysis for Multiple Causal Mechanisms: Revisiting Evidence from Framing Experiments",
   author       = personList(as.person("Kosuke Imai"),
                             as.person("Teppei Yamamoto")),
-  year         = "2012",
-  note         = "Unpublished manuscript",
+  journal      = "Political Analysis",
+  year         = "2013",
+  volume       = "21",
+  number       = "2",
   url          = "http://imai.princeton.edu/research/medsens.html",
 
   textVersion  =
-  paste("Kosuke Imai and Teppei Yamamoto (2012).",
+  paste("Kosuke Imai and Teppei Yamamoto (2013).",
         "Identification and Sensitivity Analysis for Multiple Causal Mechanisms: Revisiting Evidence from Framing Experiments.",
-        "Unpublished manuscript.")
+        "Political Analysis, 21(2), forthcoming.")
 )
 
 citEntry(entry = "InCollection",

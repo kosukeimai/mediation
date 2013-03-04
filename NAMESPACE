@@ -5,6 +5,7 @@ importFrom(lpSolve, lp)
 
 export(mediate, summary.mediate, plot.mediate,
        summary.mediate.order, plot.mediate.order,
+       summary.mediate.mer, plot.mediate.mer,
        medsens, summary.medsens, plot.medsens,
        mediations, summary.mediations, plot.mediations,
        summary.mediations.order, plot.mediations.order,
@@ -14,6 +15,7 @@ export(mediate, summary.mediate, plot.mediate,
 
 S3method(summary, mediate)
 S3method(summary, mediate.order)
+S3method(summary, mediate.mer)
 S3method(summary, medsens)
 S3method(summary, mediations)
 S3method(summary, mediations.order)
@@ -21,12 +23,16 @@ S3method(summary, multimed)
 S3method(summary, mediate.design)
 S3method(plot, mediate)
 S3method(plot, mediate.order)
+S3method(plot, mediate.mer)
 S3method(plot, medsens)
 S3method(plot, mediations)
 S3method(plot, mediations.order)
 S3method(plot, multimed)
 S3method(print, summary.mediate)
 S3method(print, summary.mediate.order)
+S3method(print, summary.mediate.mer)
+S3method(print, summary.mediate.mer.2)
+S3method(print, summary.mediate.mer.3)
 S3method(print, summary.medsens)
 S3method(print, summary.mediations)
 S3method(print, summary.mediations.order)
