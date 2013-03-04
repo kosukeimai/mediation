@@ -339,7 +339,6 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
   getvcov <- function(dat, fm, cluster){
     ## Compute cluster robust standard errors
     ## fm is the model object
-    attach(dat, warn.conflicts = F)
     cluster <- factor(cluster)  # remove missing levels and NA
     M <- nlevels(cluster)
     N <- sum(!is.na(cluster))
