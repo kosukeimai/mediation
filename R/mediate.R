@@ -498,10 +498,11 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
       if(!is.null(covariates)){
         for(p in 1:length(covariates)){
           vl <- names(covariates[p])
-          x <- ifelse(is.factor(pred.data.t[,vl]),
-                      factor(covariates[[p]], levels = levels(m.data[,vl])),
-                      covariates[[p]])
-          pred.data.t[,vl] <- pred.data.c[,vl] <- x
+          if(is.factor(pred.data.t[,vl])){
+            pred.data.t[,vl] <- pred.data.c[,vl] <- factor(covariates[[p]], levels = levels(m.data[,vl]))
+          } else {
+            pred.data.t[,vl] <- pred.data.c[,vl] <- covariates[[p]]
+          }
         }
       }
 
@@ -793,10 +794,11 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
           if(!is.null(covariates)){
             for(p in 1:length(covariates)){
               vl <- names(covariates[p])
-              x <- ifelse(is.factor(pred.data.t[,vl]),
-                          factor(covariates[[p]], levels = levels(y.data[,vl])),
-                          covariates[[p]])
-              pred.data.t[,vl] <- pred.data.c[,vl] <- x
+              if(is.factor(pred.data.t[,vl])){
+                pred.data.t[,vl] <- pred.data.c[,vl] <- factor(covariates[[p]], levels = levels(y.data[,vl]))
+              } else {
+                pred.data.t[,vl] <- pred.data.c[,vl] <- covariates[[p]]
+              }
             }
           }
 		
@@ -1080,10 +1082,11 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         if(!is.null(covariates)){
           for(p in 1:length(covariates)){
             vl <- names(covariates[p])
-            x <- ifelse(is.factor(pred.data.t[,vl]),
-                        factor(covariates[[p]], levels = levels(m.data[,vl])),
-                        covariates[[p]])
-            pred.data.t[,vl] <- pred.data.c[,vl] <- x
+            if(is.factor(pred.data.t[,vl])){
+              pred.data.t[,vl] <- pred.data.c[,vl] <- factor(covariates[[p]], levels = levels(m.data[,vl]))
+            } else {
+              pred.data.t[,vl] <- pred.data.c[,vl] <- covariates[[p]]
+            }
           }
         }
         
@@ -1194,10 +1197,11 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
           if(!is.null(covariates)){
             for(p in 1:length(covariates)){
               vl <- names(covariates[p])
-              x <- ifelse(is.factor(pred.data.t[,vl]),
-                          factor(covariates[[p]], levels = levels(y.data[,vl])),
-                          covariates[[p]])
-              pred.data.t[,vl] <- pred.data.c[,vl] <- x
+              if(is.factor(pred.data.t[,vl])){
+                pred.data.t[,vl] <- pred.data.c[,vl] <- factor(covariates[[p]], levels = levels(y.data[,vl]))
+              } else {
+                pred.data.t[,vl] <- pred.data.c[,vl] <- covariates[[p]]
+              }
             }
           }
           
@@ -1566,10 +1570,11 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
       if(!is.null(covariates)){
         for(p in 1:length(covariates)){
           vl <- names(covariates[p])
-          x <- ifelse(is.factor(pred.data.t[,vl]),
-                      factor(covariates[[p]], levels = levels(m.data[,vl])),
-                      covariates[[p]])
-          pred.data.t[,vl] <- pred.data.c[,vl] <- x
+          if(is.factor(pred.data.t[,vl])){
+            pred.data.t[,vl] <- pred.data.c[,vl] <- factor(covariates[[p]], levels = levels(m.data[,vl]))
+          } else {
+            pred.data.t[,vl] <- pred.data.c[,vl] <- covariates[[p]]
+          }
         }
       }
       
@@ -1681,10 +1686,11 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         if(!is.null(covariates)){
           for(p in 1:length(covariates)){
             vl <- names(covariates[p])
-            x <- ifelse(is.factor(pred.data.t[,vl]),
-                        factor(covariates[[p]], levels = levels(y.data[,vl])),
-                        covariates[[p]])
-            pred.data.t[,vl] <- pred.data.c[,vl] <- x
+            if(is.factor(pred.data.t[,vl])){
+              pred.data.t[,vl] <- pred.data.c[,vl] <- factor(covariates[[p]], levels = levels(y.data[,vl]))
+            } else {
+              pred.data.t[,vl] <- pred.data.c[,vl] <- covariates[[p]]
+            }
           }
         }
         
