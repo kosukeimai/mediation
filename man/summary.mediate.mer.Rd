@@ -43,7 +43,7 @@ Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation Analy
 # Examples with JOBS II Field Experiment
 
 # **For illustration purposes a small number of simulations are used**
-
+\dontrun{
 data(jobs)
 require(arm)
 
@@ -69,5 +69,5 @@ summary(multilevel, output="byeffect")
 
 # Group-specific effects organized by group
 summary(multilevel, output="bygroup")
-
+}
 }

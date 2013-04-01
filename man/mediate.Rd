@@ -241,6 +241,7 @@ summary(contgam.int)
 ######################################################
 # Example 5: Multilevel Outcome and Mediator Models
 ######################################################
+\dontrun{
 require(arm)
  
 # educ: mediator group
@@ -271,7 +272,7 @@ summary(multilevel, output="byeffect")
 # Group-specific effects organized by group
 summary(multilevel, output="bygroup")
 # See summary.mediate.mer for detailed explanations 
-
+}
 
 
 } 

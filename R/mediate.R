@@ -669,7 +669,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
           M.RANEF1 <- M.ranef*var1 + M.RANEF1   # sum of (random effects*corresponding covarites)  
           M.RANEF0 <- M.ranef*var0 + M.RANEF0
         }
-        sigma <- summary(model.m)@sigma
+        sigma <- lme4:::sigma(model.m)
         error <- rnorm(sims*n, mean=0, sd=sigma)
         muM1 <- tcrossprod(MModel.fixef.sim, mmat.t) + M.RANEF1
         muM0 <- tcrossprod(MModel.fixef.sim, mmat.c) + M.RANEF0

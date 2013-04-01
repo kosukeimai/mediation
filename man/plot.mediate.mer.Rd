@@ -40,7 +40,7 @@ Function to plot group-specific effects derived from causal mediation analysis o
 # Examples with JOBS II Field Experiment
 
 # **For illustration purposes a small number of simulations are used**
-
+\dontrun{
 data(jobs)
 require(arm)
 
@@ -59,5 +59,5 @@ model.y <- glmer(work1 ~ treat + job_dich + econ_hard + (1 + treat | occp),
 multilevel <- mediate(model.m, model.y, treat = "treat", mediator = "job_dich", sims=50, group.out="educ")
 
 #plot(multilevel, group.plots=TRUE)
-
+}
 }
