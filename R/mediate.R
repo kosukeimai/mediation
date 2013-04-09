@@ -76,82 +76,62 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
   isMer.y <- inherits(model.y, "mer") # Note lmer and glmer do not inherit "lm" and "glm"
   isMer.m <- inherits(model.m, "mer") # Note lmer and glmer do not inherit "lm" and "glm"
 
-                                        # Record family and link of model.m if glmer 
+# Record family and link of model.m if glmer 
   if(isMer.m && getCall(model.m)[[1]] == "glmer"){
-    m.family <- as.character(model.m@call$family)
-    if(is.na(m.family[2])){
-      if(m.family[1] == "binomial"){
+      m.family <- as.character(model.m@call$family)
+      if(m.family[1] == "binomial" && (is.na(m.family[2]) || m.family[2] == "logit")){
         M.fun <- binomial(link = "logit")
-      }
-      if(m.family[1] == "poisson"){
-        M.fun <- poisson(link = "log")
-      }
-      if(m.family[1] == "Gamma"){
-        M.fun <- Gamma(link = "inverse")
-      }
-      if(m.family[1] == "inverse.gaussian"){
-        M.fun <- inverse.gaussian(link = "1/mu^2")
-      } 	
-    } else {
-      if(m.family[1] == "binomial" && m.family[2] == "probit"){
+      } else if(m.family[1] == "binomial" && m.family[2] == "probit"){
         M.fun <- binomial(link = "probit")
-      }
-      if(m.family[1] == "binomial" && m.family[2] == "cloglog"){ 
+      } else if(m.family[1] == "binomial" && m.family[2] == "cloglog"){ 
         M.fun <- binomial(link = "cloglog")
-      } 	 
-      if(m.family[1] == "poisson" && m.family[2] == "identity"){
+      } else if(m.family[1] == "poisson" && (is.na(m.family[2]) || m.family[2] == "log")){
+        M.fun <- poisson(link = "log")
+      } else if(m.family[1] == "poisson" && m.family[2] == "identity"){
         M.fun <- poisson(link = "identity")
-      }
-      if(m.family[1] == "poisson" && m.family[2] == "sqrt"){
+      } else if(m.family[1] == "poisson" && m.family[2] == "sqrt"){
         M.fun <- poisson(link = "sqrt")
-      }	
-      if(m.family[1] == "Gamma" && m.family[2] == "identity"){
+      }	else if(m.family[1] == "Gamma" && (is.na(m.family[2]) || m.family[2] == "inverse")){
+        M.fun <- Gamma(link = "inverse")
+      } else if(m.family[1] == "Gamma" && m.family[2] == "identity"){
         M.fun <- Gamma(link = "identity")
-      }
-      if(m.family[1] == "Gamma" && m.family[2] == "log"){
+      } else if(m.family[1] == "Gamma" && m.family[2] == "log"){
         M.fun <- Gamma(link = "log")
-      } 
-    }	
+      } else if(m.family[1] == "inverse.gaussian" && (is.na(m.family[2]) || m.family[2] == "1/mu^2")){
+        M.fun <- inverse.gaussian(link = "1/mu^2")
+      } else {
+        stop("glmer family for the mediation model not supported")
+      }
   }
 
-                                        # Record family and link of model.y if glmer
+# Record family and link of model.y if glmer 
   if(isMer.y && getCall(model.y)[[1]] == "glmer"){
-    y.family <- as.character(model.y@call$family)
-    if(is.na(y.family[2])){
-      if(y.family[1] == "binomial"){
+      y.family <- as.character(model.y@call$family)
+      if(y.family[1] == "binomial" && (is.na(y.family[2]) || y.family[2] == "logit")){
         Y.fun <- binomial(link = "logit")
-      }
-      if(y.family[1] == "poisson"){
-        Y.fun <- poisson(link = "log")
-      }
-      if(y.family[1] == "Gamma"){
-        Y.fun <- Gamma(link = "inverse")
-      }
-      if(y.family[1] == "inverse.gaussian"){
-        Y.fun <- inverse.gaussian(link = "1/mu^2")
-      } 	
-    } else {
-      if(y.family[1] == "binomial" && y.family[2] == "probit"){
+      } else if(y.family[1] == "binomial" && y.family[2] == "probit"){
         Y.fun <- binomial(link = "probit")
-      }
-      if(y.family[1] == "binomial" && y.family[2] == "cloglog"){ 
+      } else if(y.family[1] == "binomial" && y.family[2] == "cloglog"){ 
         Y.fun <- binomial(link = "cloglog")
-      } 	 
-      if(y.family[1] == "poisson" && y.family[2] == "identity"){
+      } else if(y.family[1] == "poisson" && (is.na(y.family[2]) || y.family[2] == "log")){
+        Y.fun <- poisson(link = "log")
+      } else if(y.family[1] == "poisson" && y.family[2] == "identity"){
         Y.fun <- poisson(link = "identity")
-      }
-      if(y.family[1] == "poisson" && y.family[2] == "sqrt"){
+      } else if(y.family[1] == "poisson" && y.family[2] == "sqrt"){
         Y.fun <- poisson(link = "sqrt")
-      }	
-      if(y.family[1] == "Gamma" && y.family[2] == "identity"){
+      }	else if(y.family[1] == "Gamma" && (is.na(y.family[2]) || y.family[2] == "inverse")){
+        Y.fun <- Gamma(link = "inverse")
+      } else if(y.family[1] == "Gamma" && y.family[2] == "identity"){
         Y.fun <- Gamma(link = "identity")
-      }
-      if(y.family[1] == "Gamma" && y.family[2] == "log"){
+      } else if(y.family[1] == "Gamma" && y.family[2] == "log"){
         Y.fun <- Gamma(link = "log")
-      } 
-    }	
+      } else if(y.family[1] == "inverse.gaussian" && (is.na(y.family[2]) || y.family[2] == "1/mu^2")){
+        Y.fun <- inverse.gaussian(link = "1/mu^2")
+      } else {
+        stop("glmer family for the outcome model not supported")
+      }
   }
-  
+
                                         # Record family of model.m if glm
   if(isGlm.m){
     FamilyM <- model.m$family$family
@@ -938,11 +918,11 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
           delta.0.group<-matrix(NA,G,sims)
           zeta.1.group<-matrix(NA,G,sims)
           zeta.0.group<-matrix(NA,G,sims)
-          for (g in 1:G){
-            delta.1.group[g,] <- t(as.matrix(apply(et1[group.id.m==unique(group.id.m)[g],], 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]])))
-            delta.0.group[g,] <- t(as.matrix(apply(et2[group.id.m==unique(group.id.m)[g],], 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]])))
-            zeta.1.group[g,] <- t(as.matrix(apply(et3[group.id.m==unique(group.id.m)[g],], 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]])))
-            zeta.0.group[g,] <- t(as.matrix(apply(et4[group.id.m==unique(group.id.m)[g],], 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]])))
+          for (g in 1:G){0
+            delta.1.group[g,] <- t(apply(matrix(et1[group.id.m==unique(group.id.m)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]]))
+            delta.0.group[g,] <- t(apply(matrix(et2[group.id.m==unique(group.id.m)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]]))
+            zeta.1.group[g,] <- t(apply(matrix(et3[group.id.m==unique(group.id.m)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]]))
+            zeta.0.group[g,] <- t(apply(matrix(et4[group.id.m==unique(group.id.m)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]]))
           }
         } else {
           G<-length(unique(group.id.y))
@@ -951,10 +931,10 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
           zeta.1.group<-matrix(NA,G,sims)
           zeta.0.group<-matrix(NA,G,sims)
           for (g in 1:G){
-            delta.1.group[g,] <- t(as.matrix(apply(et1[group.id.y==unique(group.id.y)[g],], 2, weighted.mean, w=weights[group.id.y==unique(group.id.y)[g]])))
-            delta.0.group[g,] <- t(as.matrix(apply(et2[group.id.y==unique(group.id.y)[g],], 2, weighted.mean, w=weights[group.id.y==unique(group.id.y)[g]])))
-            zeta.1.group[g,] <- t(as.matrix(apply(et3[group.id.y==unique(group.id.y)[g],], 2, weighted.mean, w=weights[group.id.y==unique(group.id.y)[g]])))
-            zeta.0.group[g,] <- t(as.matrix(apply(et4[group.id.y==unique(group.id.y)[g],], 2, weighted.mean, w=weights[group.id.y==unique(group.id.y)[g]])))
+            delta.1.group[g,] <- t(apply(matrix(et1[group.id.y==unique(group.id.y)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.y==unique(group.id.y)[g]]))
+            delta.0.group[g,] <- t(apply(matrix(et2[group.id.y==unique(group.id.y)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.y==unique(group.id.y)[g]]))
+            zeta.1.group[g,] <- t(apply(matrix(et3[group.id.y==unique(group.id.y)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.y==unique(group.id.y)[g]]))
+            zeta.0.group[g,] <- t(apply(matrix(et4[group.id.y==unique(group.id.y)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.y==unique(group.id.y)[g]]))
           }
         } 
         tau.group <- (zeta.1.group + delta.0.group + zeta.0.group + delta.1.group)/2
