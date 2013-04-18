@@ -6,8 +6,7 @@
 Function to plot results from \code{mediate}. The vertical axis lists indirect, direct, and total effects and the horizontal axis indicates the respective magnitudes. Most standard options for plot function available.
 }
 \usage{
-\method{plot}{mediate}(x, treatment = NULL,
-    labels = c("ACME","Direct\nEffect","Total\nEffect"),
+\method{plot}{mediate}(x, treatment = NULL, labels = NULL,
     effect.type = c("indirect","direct","total"),
     xlim = NULL, ylim = NULL, xlab = "", ylab = "",
     main = NULL, lwd = 1.5, cex = .85,
@@ -17,8 +16,8 @@ Function to plot results from \code{mediate}. The vertical axis lists indirect, 
 \arguments{
 \item{x}{ object of class \code{mediate} or \code{mediate.order} as produced by \code{mediate}.}
 \item{treatment}{ a character string indicating the baseline treatment value of the estimated causal mediation effect and direct effect to plot. Can be either "control", "treated" or "both". If 'NULL' (default), both sets of estimates are plotted if and only if they differ.}
-\item{labels}{ a vector of length 3 indicating the labels for the estimated effects.}
-\item{effect.type}{ a vector indicating which quantities of interest to plot. Only plotting total effects not available.}
+\item{labels}{ a vector of character strings indicating the labels for the estimated effects. The default labels will be used if NULL.}
+\item{effect.type}{ a vector indicating which quantities of interest to plot. Default is to plot all three quantities (indirect, direct and total effects).}
 \item{xlim}{ range of the horizontal axis.}
 \item{ylim}{ range of the vertical axis.}
 \item{xlab}{ label of the horizontal axis.}

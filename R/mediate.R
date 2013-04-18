@@ -5,13 +5,13 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                     control.value = 0, treat.value = 1,
                     long = TRUE, dropobs = FALSE,
                     robustSE = FALSE, cluster = NULL, group.out = NULL, ...){
-
-                                        # Warn users who still use INT option
+  
+  # Warn users who still use INT option
   if(match("INT", names(match.call()), 0L)){
     warning("'INT' is deprecated - existence of interaction terms is now automatically detected from model formulas")
   }
   
-                                        # Warning for robustSE and cluster used with boot
+  # Warning for robustSE and cluster used with boot
   if(robustSE && boot){
     warning("'robustSE' is ignored for nonparametric bootstrap")
   }
@@ -24,14 +24,14 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     stop("choose either `robustSE' or `cluster' option, not both")
   }
   
-                                        # Drop observations not common to both mediator and outcome models
+  # Drop observations not common to both mediator and outcome models
   if(dropobs){
     odata.m <- model.frame(model.m)
     odata.y <- model.frame(model.y)
     if(!is.null(cluster)){
       if(is.null(row.names(cluster)) &
-         (nrow(odata.m)!=length(cluster) | nrow(odata.y)!=length(cluster))
-         ){
+           (nrow(odata.m)!=length(cluster) | nrow(odata.y)!=length(cluster))
+      ){
         warning("cluster IDs may not correctly match original observations due to missing data")
       }
       odata.y <- merge(odata.y, as.data.frame(cluster), sort=FALSE,
@@ -59,7 +59,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     }
   }
   
-                                        # Model type indicators
+  # Model type indicators
   isGam.y <- inherits(model.y, "gam")
   isGam.m <- inherits(model.m, "gam")
   isGlm.y <- inherits(model.y, "glm")  # Note gam and bayesglm also inherits "glm"
@@ -75,74 +75,74 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
   isSurvreg.m <- inherits(model.m, "survreg")
   isMer.y <- inherits(model.y, "mer") # Note lmer and glmer do not inherit "lm" and "glm"
   isMer.m <- inherits(model.m, "mer") # Note lmer and glmer do not inherit "lm" and "glm"
-
-# Record family and link of model.m if glmer 
+  
+  # Record family and link of model.m if glmer 
   if(isMer.m && getCall(model.m)[[1]] == "glmer"){
-      m.family <- as.character(model.m@call$family)
-      if(m.family[1] == "binomial" && (is.na(m.family[2]) || m.family[2] == "logit")){
-        M.fun <- binomial(link = "logit")
-      } else if(m.family[1] == "binomial" && m.family[2] == "probit"){
-        M.fun <- binomial(link = "probit")
-      } else if(m.family[1] == "binomial" && m.family[2] == "cloglog"){ 
-        M.fun <- binomial(link = "cloglog")
-      } else if(m.family[1] == "poisson" && (is.na(m.family[2]) || m.family[2] == "log")){
-        M.fun <- poisson(link = "log")
-      } else if(m.family[1] == "poisson" && m.family[2] == "identity"){
-        M.fun <- poisson(link = "identity")
-      } else if(m.family[1] == "poisson" && m.family[2] == "sqrt"){
-        M.fun <- poisson(link = "sqrt")
-      }	else if(m.family[1] == "Gamma" && (is.na(m.family[2]) || m.family[2] == "inverse")){
-        M.fun <- Gamma(link = "inverse")
-      } else if(m.family[1] == "Gamma" && m.family[2] == "identity"){
-        M.fun <- Gamma(link = "identity")
-      } else if(m.family[1] == "Gamma" && m.family[2] == "log"){
-        M.fun <- Gamma(link = "log")
-      } else if(m.family[1] == "inverse.gaussian" && (is.na(m.family[2]) || m.family[2] == "1/mu^2")){
-        M.fun <- inverse.gaussian(link = "1/mu^2")
-      } else {
-        stop("glmer family for the mediation model not supported")
-      }
+    m.family <- as.character(model.m@call$family)
+    if(m.family[1] == "binomial" && (is.na(m.family[2]) || m.family[2] == "logit")){
+      M.fun <- binomial(link = "logit")
+    } else if(m.family[1] == "binomial" && m.family[2] == "probit"){
+      M.fun <- binomial(link = "probit")
+    } else if(m.family[1] == "binomial" && m.family[2] == "cloglog"){ 
+      M.fun <- binomial(link = "cloglog")
+    } else if(m.family[1] == "poisson" && (is.na(m.family[2]) || m.family[2] == "log")){
+      M.fun <- poisson(link = "log")
+    } else if(m.family[1] == "poisson" && m.family[2] == "identity"){
+      M.fun <- poisson(link = "identity")
+    } else if(m.family[1] == "poisson" && m.family[2] == "sqrt"){
+      M.fun <- poisson(link = "sqrt")
+    }	else if(m.family[1] == "Gamma" && (is.na(m.family[2]) || m.family[2] == "inverse")){
+      M.fun <- Gamma(link = "inverse")
+    } else if(m.family[1] == "Gamma" && m.family[2] == "identity"){
+      M.fun <- Gamma(link = "identity")
+    } else if(m.family[1] == "Gamma" && m.family[2] == "log"){
+      M.fun <- Gamma(link = "log")
+    } else if(m.family[1] == "inverse.gaussian" && (is.na(m.family[2]) || m.family[2] == "1/mu^2")){
+      M.fun <- inverse.gaussian(link = "1/mu^2")
+    } else {
+      stop("glmer family for the mediation model not supported")
+    }
   }
-
-# Record family and link of model.y if glmer 
+  
+  # Record family and link of model.y if glmer 
   if(isMer.y && getCall(model.y)[[1]] == "glmer"){
-      y.family <- as.character(model.y@call$family)
-      if(y.family[1] == "binomial" && (is.na(y.family[2]) || y.family[2] == "logit")){
-        Y.fun <- binomial(link = "logit")
-      } else if(y.family[1] == "binomial" && y.family[2] == "probit"){
-        Y.fun <- binomial(link = "probit")
-      } else if(y.family[1] == "binomial" && y.family[2] == "cloglog"){ 
-        Y.fun <- binomial(link = "cloglog")
-      } else if(y.family[1] == "poisson" && (is.na(y.family[2]) || y.family[2] == "log")){
-        Y.fun <- poisson(link = "log")
-      } else if(y.family[1] == "poisson" && y.family[2] == "identity"){
-        Y.fun <- poisson(link = "identity")
-      } else if(y.family[1] == "poisson" && y.family[2] == "sqrt"){
-        Y.fun <- poisson(link = "sqrt")
-      }	else if(y.family[1] == "Gamma" && (is.na(y.family[2]) || y.family[2] == "inverse")){
-        Y.fun <- Gamma(link = "inverse")
-      } else if(y.family[1] == "Gamma" && y.family[2] == "identity"){
-        Y.fun <- Gamma(link = "identity")
-      } else if(y.family[1] == "Gamma" && y.family[2] == "log"){
-        Y.fun <- Gamma(link = "log")
-      } else if(y.family[1] == "inverse.gaussian" && (is.na(y.family[2]) || y.family[2] == "1/mu^2")){
-        Y.fun <- inverse.gaussian(link = "1/mu^2")
-      } else {
-        stop("glmer family for the outcome model not supported")
-      }
+    y.family <- as.character(model.y@call$family)
+    if(y.family[1] == "binomial" && (is.na(y.family[2]) || y.family[2] == "logit")){
+      Y.fun <- binomial(link = "logit")
+    } else if(y.family[1] == "binomial" && y.family[2] == "probit"){
+      Y.fun <- binomial(link = "probit")
+    } else if(y.family[1] == "binomial" && y.family[2] == "cloglog"){ 
+      Y.fun <- binomial(link = "cloglog")
+    } else if(y.family[1] == "poisson" && (is.na(y.family[2]) || y.family[2] == "log")){
+      Y.fun <- poisson(link = "log")
+    } else if(y.family[1] == "poisson" && y.family[2] == "identity"){
+      Y.fun <- poisson(link = "identity")
+    } else if(y.family[1] == "poisson" && y.family[2] == "sqrt"){
+      Y.fun <- poisson(link = "sqrt")
+    }	else if(y.family[1] == "Gamma" && (is.na(y.family[2]) || y.family[2] == "inverse")){
+      Y.fun <- Gamma(link = "inverse")
+    } else if(y.family[1] == "Gamma" && y.family[2] == "identity"){
+      Y.fun <- Gamma(link = "identity")
+    } else if(y.family[1] == "Gamma" && y.family[2] == "log"){
+      Y.fun <- Gamma(link = "log")
+    } else if(y.family[1] == "inverse.gaussian" && (is.na(y.family[2]) || y.family[2] == "1/mu^2")){
+      Y.fun <- inverse.gaussian(link = "1/mu^2")
+    } else {
+      stop("glmer family for the outcome model not supported")
+    }
   }
-
-                                        # Record family of model.m if glm
+  
+  # Record family of model.m if glm
   if(isGlm.m){
     FamilyM <- model.m$family$family
   }
   
-                                        # Record vfamily of model.y if vglm (currently only tobit)
+  # Record vfamily of model.y if vglm (currently only tobit)
   if(isVglm.y){
     VfamilyY <- model.y@family@vfamily
   }
-
-                                        # Warning for unused options
+  
+  # Warning for unused options
   if(!is.null(control) && !isGam.y){
     warning("'control' is only used for GAM outcome models - ignored")
     control <- NULL
@@ -151,12 +151,12 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     warning("'outcome' is only relevant for survival outcome models with bootstrap - ignored")
   }
   
-                                        # Model frames for M and Y models
+  # Model frames for M and Y models
   m.data <- model.frame(model.m)  # Call.M$data
   y.data <- model.frame(model.y)  # Call.Y$data
-
-                                        # Specify group names
-
+  
+  # Specify group names
+  
   if(isMer.m && isMer.y){
     med.group <- names(model.m@flist)
     out.group <- names(model.y@flist)
@@ -199,7 +199,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     group.out <- NULL
   }
   
-                                        # group data if lmer or glmer 
+  # group data if lmer or glmer 
   if(isMer.m){
     group.id.m <- m.data[,group.m]
   } else {
@@ -210,7 +210,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
   } else {
     group.id.y <- NULL
   }
-                                        # group data to be output in summary and plot if lmer or glmer 
+  # group data to be output in summary and plot if lmer or glmer 
   if(isMer.m && isMer.y){
     if(group.out == group.m){
       group.id <- m.data[,group.m]
@@ -231,7 +231,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
   }
   
   
-                                        # Numbers of observations and categories
+  # Numbers of observations and categories
   n.m <- nrow(m.data)
   n.y <- nrow(y.data)
   if(n.m != n.y){
@@ -240,11 +240,11 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     n <- n.m
   }
   m <- length(sort(unique(model.frame(model.m)[,1])))
-
-                                        # Extracting weights from models
+  
+  # Extracting weights from models
   weights.m <- model.weights(m.data)
   weights.y <- model.weights(y.data)
-
+  
   if(!is.null(weights.m) && isGlm.m && FamilyM == "binomial"){
     message("weights taken as sampling weights, not total number of trials")
   }
@@ -262,21 +262,21 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
   } else {
     weights <- weights.m
   }
-
-                                        # Convert character treatment to factor
+  
+  # Convert character treatment to factor
   if(is.character(m.data[,treat])){
     m.data[,treat] <- factor(m.data[,treat])
   }
   if(is.character(y.data[,treat])){
     y.data[,treat] <- factor(y.data[,treat])
   }
-
-                                        # Convert character mediator to factor
+  
+  # Convert character mediator to factor
   if(is.character(y.data[,mediator])){
     y.data[,mediator] <- factor(y.data[,mediator])
   }
-
-                                        # Factor treatment indicator
+  
+  # Factor treatment indicator
   isFactorT.m <- is.factor(m.data[,treat])
   isFactorT.y <- is.factor(y.data[,treat])
   if(isFactorT.m != isFactorT.y){
@@ -284,7 +284,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
   } else {
     isFactorT <- isFactorT.y
   }
-
+  
   if(isFactorT){
     t.levels <- levels(y.data[,treat])
     if(treat.value %in% t.levels & control.value %in% t.levels){
@@ -299,23 +299,23 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     cat.0 <- control.value
     cat.1 <- treat.value
   }
-
-                                        # Factor mediator indicator
+  
+  # Factor mediator indicator
   isFactorM <- is.factor(y.data[,mediator])
-
+  
   if(isFactorM){
     m.levels <- levels(y.data[,mediator])
   }
-
-#####################################
+  
+  #####################################
   ## Define functions
-#####################################
-
+  #####################################
+  
   indexmax <- function(x){
     ## Return position of largest element in vector x
     order(x)[length(x)]
   }
-
+  
   getvcov <- function(dat, fm, cluster){
     ## Compute cluster robust standard errors
     ## fm is the model object
@@ -336,24 +336,24 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     }
     return(min(out, 1))
   }
-	
-############################################################################
-############################################################################
-### CASE I: EVERYTHING EXCEPT ORDERED OUTCOME
-############################################################################
-############################################################################
+  
+  ############################################################################
+  ############################################################################
+  ### CASE I: EVERYTHING EXCEPT ORDERED OUTCOME
+  ############################################################################
+  ############################################################################
   if (!isOrdered.y) {
-
-########################################################################
+    
+    ########################################################################
     ## Case I-1: Quasi-Bayesian Monte Carlo
-########################################################################
+    ########################################################################
     if(!boot){
-                                        # Error if gam outcome or quantile mediator
+      # Error if gam outcome or quantile mediator
       if(isGam.m | isGam.y | isRq.m){
         stop("'boot' must be 'TRUE' for models used")
       }
       
-                                        # Get mean and variance parameters for mediator simulations
+      # Get mean and variance parameters for mediator simulations
       if(isSurvreg.m && is.null(survreg.distributions[[model.m$dist]]$scale)){
         MModel.coef <- c(coef(model.m), log(model.m$scale))
         scalesim.m <- TRUE
@@ -365,7 +365,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         MModel.coef <- coef(model.m)
         scalesim.m <- FALSE
       }
-
+      
       if(isOrdered.m){
         if(is.null(model.m$Hess)){
           cat("Mediator model object does not contain 'Hessian';")
@@ -389,8 +389,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
           MModel.var.cov <- vcov(model.m)
         }
       }
-
-                                        # Get mean and variance parameters for outcome simulations
+      
+      # Get mean and variance parameters for outcome simulations
       if(isSurvreg.y && is.null(survreg.distributions[[model.y$dist]]$scale)){
         YModel.coef <- c(coef(model.y), log(model.y$scale))
         scalesim.y <- TRUE  # indicates if survreg scale parameter is simulated
@@ -402,7 +402,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         YModel.coef <- coef(model.y)
         scalesim.y <- FALSE
       }
-
+      
       if(isRq.y){
         YModel.var.cov <- summary(model.y, covariance=TRUE)$cov
       } else if(isSurvreg.y){
@@ -422,9 +422,9 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
           YModel.var.cov <- vcov(model.y)
         }
       }
-
-                                        # Draw model coefficients from normal
-
+      
+      # Draw model coefficients from normal
+      
       if(isMer.m){
         MModel.fixef.vcov <- vcov(model.m)
         MModel.fixef.sim <- mvrnorm(sims,mu=MModel.fixef,Sigma=MModel.fixef.vcov)
@@ -461,10 +461,10 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
       if(!is.null(cluster) && (isSurvreg.m | isSurvreg.y)){
         warning("`cluster' ignored for survival models; fit the model with 'cluster()' term in the formula\n")
       }
-           	
-#####################################
+      
+      #####################################
       ##  Mediator Predictions
-#####################################
+      #####################################
       pred.data.t <- pred.data.c <- m.data
       
       if(isFactorT){
@@ -474,7 +474,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         pred.data.t[,treat] <- cat.1
         pred.data.c[,treat] <- cat.0
       }
-
+      
       if(!is.null(covariates)){
         for(p in 1:length(covariates)){
           vl <- names(covariates[p])
@@ -485,11 +485,11 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
           }
         }
       }
-
+      
       mmat.t <- model.matrix(terms(model.m), data=pred.data.t)
       mmat.c <- model.matrix(terms(model.m), data=pred.data.c)
-
-### Case I-1-a: GLM Mediator
+      
+      ### Case I-1-a: GLM Mediator
       if(isGlm.m){
         muM1 <- model.m$family$linkinv(tcrossprod(MModel, mmat.t))
         muM0 <- model.m$family$linkinv(tcrossprod(MModel, mmat.c))
@@ -522,8 +522,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         } else {
           stop("unsupported glm family")
         }
-
-### Case I-1-b: Ordered mediator
+        
+        ### Case I-1-b: Ordered mediator
       } else if(isOrdered.m){
         if(model.m$method=="logistic"){
           linkfn <- plogis
@@ -532,53 +532,53 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         } else {
           stop("unsupported polr method; use 'logistic' or 'probit'")
         }
-
+        
         m.cat <- sort(unique(model.frame(model.m)[,1]))
         lambda <- model.m$zeta
-
+        
         mmat.t <- mmat.t[,-1]
         mmat.c <- mmat.c[,-1]
-
+        
         ystar_m1 <- tcrossprod(MModel, mmat.t)
         ystar_m0 <- tcrossprod(MModel, mmat.c)
-
+        
         PredictM1 <- matrix(,nrow=sims, ncol=n)
         PredictM0 <- matrix(,nrow=sims, ncol=n)
-
+        
         for(i in 1:sims){
           cprobs_m1 <- matrix(NA,n,m)
           cprobs_m0 <- matrix(NA,n,m)
           probs_m1 <- matrix(NA,n,m)
           probs_m0 <- matrix(NA,n,m)
-
+          
           for (j in 1:(m-1)) {  # loop to get category-specific probabilities
             cprobs_m1[,j] <- linkfn(lambda[j]-ystar_m1[i,])
             cprobs_m0[,j] <- linkfn(lambda[j]-ystar_m0[i,])
-                                        # cumulative probabilities
+            # cumulative probabilities
             probs_m1[,m] <- 1-cprobs_m1[,m-1] # top category
             probs_m0[,m] <- 1-cprobs_m0[,m-1] # top category
             probs_m1[,1] <- cprobs_m1[,1]     # bottom category
             probs_m0[,1] <- cprobs_m0[,1]     # bottom category
           }
-
+          
           for (j in 2:(m-1)){  # middle categories
             probs_m1[,j] <- cprobs_m1[,j]-cprobs_m1[,j-1]
             probs_m0[,j] <- cprobs_m0[,j]-cprobs_m0[,j-1]
           }
-
+          
           draws_m1 <- matrix(NA, n, m)
           draws_m0 <- matrix(NA, n, m)
-
+          
           for(ii in 1:n){
             draws_m1[ii,] <- t(rmultinom(1, 1, prob = probs_m1[ii,]))
             draws_m0[ii,] <- t(rmultinom(1, 1, prob = probs_m0[ii,]))
           }
-
+          
           PredictM1[i,] <- apply(draws_m1, 1, indexmax)
           PredictM0[i,] <- apply(draws_m0, 1, indexmax)
         }
-
-### Case I-1-c: Linear
+        
+        ### Case I-1-c: Linear
       } else if(isLm.m){
         sigma <- summary(model.m)$sigma
         error <- rnorm(sims*n, mean=0, sd=sigma)
@@ -587,8 +587,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         PredictM1 <- muM1 + matrix(error, nrow=sims)
         PredictM0 <- muM0 + matrix(error, nrow=sims)
         rm(error)
-
-### Case I-1-d: Survreg
+        
+        ### Case I-1-d: Survreg
       } else if(isSurvreg.m){
         dd <- survreg.distributions[[model.m$dist]]
         if (is.null(dd$itrans)){
@@ -617,8 +617,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         PredictM1 <- itrans(lpM1 + scale * matrix(error, nrow=sims))
         PredictM0 <- itrans(lpM0 + scale * matrix(error, nrow=sims))
         rm(error)
-
-### Case I-1-e: Linear Mixed Effect			
+        
+        ### Case I-1-e: Linear Mixed Effect			
       } else if(isMer.m && getCall(model.m)[[1]]=="lmer"){
         M.RANEF1 <- M.RANEF0 <- 0
         for (d in 1:Nm.ranef){
@@ -656,8 +656,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         PredictM1 <- muM1 + matrix(error, nrow=sims)
         PredictM0 <- muM0 + matrix(error, nrow=sims)
         rm(error)          	
-                 	
-### Case I-1-f: Generalized Linear Mixed Effect                  	
+        
+        ### Case I-1-f: Generalized Linear Mixed Effect                  	
       } else if(isMer.m && getCall(model.m)[[1]]=="glmer"){
         M.RANEF1 <-M.RANEF0 <- 0 ### 1=RE for M(1); 0=RE for M(0)
         for (d in 1:Nm.ranef){
@@ -716,12 +716,12 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
       }
       
       rm(mmat.t, mmat.c)
-			
-#####################################
+      
+      #####################################
       ##  Outcome Predictions
-#####################################
+      #####################################
       effects.tmp <- array(NA, dim = c(n, sims, 4))
-            
+      
       if(isMer.y){
         Y.RANEF1 <- Y.RANEF2 <- Y.RANEF3 <- Y.RANEF4 <- 0
         ### 1=RE for Y(1,M(1)); 2=RE for Y(1,M(0)); 3=RE for Y(0,M(1)); 4=RE for Y(0,M(0))
@@ -762,15 +762,15 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
           Y.RANEF4 <- Y.ranef*var4 + Y.RANEF4
         }       	
       }
-            
+      
       for(e in 1:4){
         tt <- switch(e, c(1,1,1,0), c(0,0,1,0), c(1,0,1,1), c(1,0,0,0))
         Pr1 <- matrix(, nrow=n, ncol=sims)
         Pr0 <- matrix(, nrow=n, ncol=sims)
-
+        
         for(j in 1:sims){
           pred.data.t <- pred.data.c <- y.data
-
+          
           if(!is.null(covariates)){
             for(p in 1:length(covariates)){
               vl <- names(covariates[p])
@@ -781,8 +781,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
               }
             }
           }
-		
-                                        # Set treatment values
+          
+          # Set treatment values
           cat.t <- ifelse(tt[1], cat.1, cat.0)
           cat.c <- ifelse(tt[2], cat.1, cat.0)
           cat.t.ctrl <- ifelse(tt[1], cat.0, cat.1)
@@ -802,8 +802,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
               pred.data.c[,control] <- cat.c.ctrl
             }
           }
-
-                                        # Set mediator values
+          
+          # Set mediator values
           PredictMt <- PredictM1[j,] * tt[3] + PredictM0[j,] * (1 - tt[3])
           PredictMc <- PredictM1[j,] * tt[4] + PredictM0[j,] * (1 - tt[4])
           if(isFactorM) {
@@ -813,10 +813,10 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
             pred.data.t[,mediator] <- PredictMt
             pred.data.c[,mediator] <- PredictMc
           }
-
+          
           ymat.t <- model.matrix(terms(model.y), data=pred.data.t)
           ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
-
+          
           if(isVglm.y){
             if(VfamilyY=="tobit") {
               Pr1.tmp <- ymat.t %*% YModel[j,-2]
@@ -849,10 +849,10 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
             Pr1[,j] <- t(as.matrix(YModel[j,])) %*% t(ymat.t)
             Pr0[,j] <- t(as.matrix(YModel[j,])) %*% t(ymat.c)
           }
-
+          
           rm(ymat.t, ymat.c, pred.data.t, pred.data.c)
         }
-
+        
         if(isGlm.y){
           Pr1 <- apply(Pr1, 2, model.y$family$linkinv)
           Pr0 <- apply(Pr0, 2, model.y$family$linkinv)
@@ -869,7 +869,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
           Pr1 <- apply(Pr1, 2, Y.fun$linkinv)
           Pr0 <- apply(Pr0, 2, Y.fun$linkinv)                	
         }
-
+        
         effects.tmp[,,e] <- Pr1 - Pr0 ### e=1:mediation(1); e=2:mediation(0); e=3:direct(1); e=4:direct(0)
         rm(Pr1, Pr0)
       }
@@ -886,20 +886,20 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
       et2<-effects.tmp[,,2] ### mediation effect (0)
       et3<-effects.tmp[,,3] ### direct effect (1)
       et4<-effects.tmp[,,4] ### direct effect (0)
-
+      
       delta.1 <- t(as.matrix(apply(et1, 2, weighted.mean, w=weights)))
       delta.0 <- t(as.matrix(apply(et2, 2, weighted.mean, w=weights)))
       zeta.1 <- t(as.matrix(apply(et3, 2, weighted.mean, w=weights)))
       zeta.0 <- t(as.matrix(apply(et4, 2, weighted.mean, w=weights)))
       rm(effects.tmp)
-
+      
       tau <- (zeta.1 + delta.0 + zeta.0 + delta.1)/2
       nu.0 <- delta.0/tau
       nu.1 <- delta.1/tau
       delta.avg <- (delta.1 + delta.0)/2
       zeta.avg <- (zeta.1 + zeta.0)/2
       nu.avg <- (nu.1 + nu.0)/2
-			
+      
       d0 <- mean(delta.0)			# mediation effect
       d1 <- mean(delta.1)
       z1 <- mean(zeta.1)			# direct effect
@@ -910,7 +910,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
       d.avg <- (d0 + d1)/2
       z.avg <- (z0 + z1)/2
       n.avg <- (n0 + n1)/2
-
+      
       if(isMer.y | isMer.m){
         if(!is.null(group.m) && group.name == group.m){
           G<-length(unique(group.id.m))
@@ -919,10 +919,10 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
           zeta.1.group<-matrix(NA,G,sims)
           zeta.0.group<-matrix(NA,G,sims)
           for (g in 1:G){0
-            delta.1.group[g,] <- t(apply(matrix(et1[group.id.m==unique(group.id.m)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]]))
-            delta.0.group[g,] <- t(apply(matrix(et2[group.id.m==unique(group.id.m)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]]))
-            zeta.1.group[g,] <- t(apply(matrix(et3[group.id.m==unique(group.id.m)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]]))
-            zeta.0.group[g,] <- t(apply(matrix(et4[group.id.m==unique(group.id.m)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]]))
+                         delta.1.group[g,] <- t(apply(matrix(et1[group.id.m==unique(group.id.m)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]]))
+                         delta.0.group[g,] <- t(apply(matrix(et2[group.id.m==unique(group.id.m)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]]))
+                         zeta.1.group[g,] <- t(apply(matrix(et3[group.id.m==unique(group.id.m)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]]))
+                         zeta.0.group[g,] <- t(apply(matrix(et4[group.id.m==unique(group.id.m)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]]))
           }
         } else {
           G<-length(unique(group.id.y))
@@ -955,11 +955,11 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         z.avg.group <- (z0.group + z1.group)/2
         n.avg.group <- (n0.group + n1.group)/2
       } 
-########################################################################
+      ########################################################################
       ## Case I-2: Nonparametric Bootstrap
-########################################################################
+      ########################################################################
     } else {
-                                        # Error if lmer or glmer 
+      # Error if lmer or glmer 
       if(isMer.m | isMer.y){
         stop("'boot' must be 'FALSE' for models used")
       }
@@ -967,14 +967,14 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
       Call.M <- getCall(model.m)
       Call.Y <- getCall(model.y)
       
-                                        # Storage
+      # Storage
       delta.1 <- matrix(NA, sims, 1)
       delta.0 <- matrix(NA, sims, 1)
       zeta.1 <- matrix(NA, sims, 1)
       zeta.0 <- matrix(NA, sims, 1)
       tau <- matrix(NA, sims, 1)
       
-                                        # Bootstrap loop begins
+      # Bootstrap loop begins
       for(b in 1:(sims+1)){
         index <- sample(1:n, n, replace = TRUE)
         
@@ -1042,13 +1042,13 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
           stop("insufficient variation on mediator")
         }
         
-                                        # Refit Models with Resampled Data
+        # Refit Models with Resampled Data
         new.fit.M <- eval.parent(Call.M)
         new.fit.Y <- eval.parent(Call.Y)
         
-#####################################
-                                        #  Mediator Predictions
-#####################################
+        #####################################
+        #  Mediator Predictions
+        #####################################
         pred.data.t <- pred.data.c <- m.data
         
         if(isFactorT){
@@ -1070,7 +1070,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
           }
         }
         
-### Case I-2-a: GLM Mediator (including GAMs)
+        ### Case I-2-a: GLM Mediator (including GAMs)
         if(isGlm.m){
           
           muM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
@@ -1099,7 +1099,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
             stop("unsupported glm family")
           }
           
-### Case I-2-b: Ordered Mediator
+          ### Case I-2-b: Ordered Mediator
         } else if(isOrdered.m) {
           probs_m1 <- predict(new.fit.M, newdata=pred.data.t, type="probs")
           probs_m0 <- predict(new.fit.M, newdata=pred.data.c, type="probs")
@@ -1112,9 +1112,9 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
           PredictM1 <- apply(draws_m1, 1, indexmax)
           PredictM0 <- apply(draws_m0, 1, indexmax)
           
-### Case I-2-c: Quantile Regression for Mediator
+          ### Case I-2-c: Quantile Regression for Mediator
         } else if(isRq.m){
-                                        # Use inverse transform sampling to predict M
+          # Use inverse transform sampling to predict M
           call.new <- new.fit.M$call
           call.new$tau <- runif(n)
           newfits <- eval.parent(call.new)
@@ -1128,7 +1128,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
           PredictM0 <- rowSums(X.c * t(newfits$coefficients))
           rm(newfits, X.t, X.c)
           
-### Case I-2-d: Linear
+          ### Case I-2-d: Linear
         } else if(isLm.m){
           sigma <- summary(new.fit.M)$sigma
           error <- rnorm(n, mean=0, sd=sigma)
@@ -1138,7 +1138,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                                newdata=pred.data.c) + error
           rm(error)
           
-### Case I-2-e: Survreg
+          ### Case I-2-e: Survreg
         } else if(isSurvreg.m){
           dd <- survreg.distributions[[new.fit.M$dist]]
           if (is.null(dd$itrans)){
@@ -1166,9 +1166,9 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
           stop("mediator model is not yet implemented")
         }
         
-#####################################
-                                        #  Outcome Predictions
-#####################################
+        #####################################
+        #  Outcome Predictions
+        #####################################
         effects.tmp <- matrix(NA, nrow = n, ncol = 4)
         for(e in 1:4){
           tt <- switch(e, c(1,1,1,0), c(0,0,1,0), c(1,0,1,1), c(1,0,0,0))
@@ -1185,7 +1185,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
             }
           }
           
-                                        # Set treatment values
+          # Set treatment values
           cat.t <- ifelse(tt[1], cat.1, cat.0)
           cat.c <- ifelse(tt[2], cat.1, cat.0)
           cat.t.ctrl <- ifelse(tt[1], cat.0, cat.1)
@@ -1206,7 +1206,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
             }
           }
           
-                                        # Set mediator values
+          # Set mediator values
           PredictM1.tmp <- PredictM1
           PredictM0.tmp <- PredictM0
           PredictMt <- PredictM1 * tt[3] + PredictM0 * (1 - tt[3])
@@ -1236,7 +1236,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
           rm(pred.data.t, pred.data.c, pr.1, pr.0, pr.mat)
         }
         
-                                        # Compute all QoIs
+        # Compute all QoIs
         if(b == sims+1){
           d1 <- weighted.mean(effects.tmp[,1], weights)
           d0 <- weighted.mean(effects.tmp[,2], weights)
@@ -1266,10 +1266,10 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
       
     }  # nonpara boot branch ends
     
-########################################################################
+    ########################################################################
     ## Compute Outputs and Put Them Together
-########################################################################
-
+    ########################################################################
+    
     low <- (1 - conf.level)/2
     high <- 1 - low
     d0.ci <- quantile(delta.0, c(low,high), na.rm=TRUE)
@@ -1282,8 +1282,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     d.avg.ci <- quantile(delta.avg, c(low,high), na.rm=TRUE)
     z.avg.ci <- quantile(zeta.avg, c(low,high), na.rm=TRUE)
     n.avg.ci <- quantile(nu.avg, c(low,high), na.rm=TRUE)
-
-                                        # p-values
+    
+    # p-values
     d0.p <- pval(delta.0, d0)
     d1.p <- pval(delta.1, d1)
     d.avg.p <- pval(delta.avg, d.avg)
@@ -1294,7 +1294,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     n1.p <- pval(nu.1, n1)
     n.avg.p <- pval(nu.avg, n.avg)
     tau.p <- pval(tau, tau.coef)
-        
+    
     if(isMer.y | isMer.m){
       QUANT<-function(object){
         z<-quantile(object,c(low,high),na.rm=TRUE)
@@ -1334,10 +1334,10 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         tau.p.group[g] <- pval(tau.group[g,], tau.coef.group[g])
       }
     }
-        
-                                        # Detect whether models include T-M interaction
+    
+    # Detect whether models include T-M interaction
     INT <- paste(treat,mediator,sep=":") %in% attr(terms(model.y),"term.labels") |
-    paste(mediator,treat,sep=":") %in% attr(terms(model.y),"term.labels")
+      paste(mediator,treat,sep=":") %in% attr(terms(model.y),"term.labels")
     if(!INT & isGam.y){
       INT <- !isTRUE(all.equal(d0, d1))  # if gam, determine empirically
     }
@@ -1454,37 +1454,37 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                   group.id.m=group.id.m,group.id.y=group.id.y,group.id=group.id)
       class(out) <- "mediate.mer"
     }
-        
+    
     out
-
-############################################################################
-############################################################################
-### CASE II: ORDERED OUTCOME
-############################################################################
-############################################################################
+    
+    ############################################################################
+    ############################################################################
+    ### CASE II: ORDERED OUTCOME
+    ############################################################################
+    ############################################################################
   } else {
     if(boot != TRUE){
       warning("ordered outcome model can only be used with nonparametric bootstrap - option forced")
       boot <- TRUE
     }
-
+    
     if(isMer.m){
       stop("mer class is not supported for ordered outcome")
     }
-
+    
     n.ycat <- length(unique(model.response(y.data)))
     
-                                        # Storage
+    # Storage
     delta.1 <- matrix(NA, sims, n.ycat)
     delta.0 <- matrix(NA, sims, n.ycat)
     zeta.1 <- matrix(NA, sims, n.ycat)
     zeta.0 <- matrix(NA, sims, n.ycat)
     tau <- matrix(NA, sims, n.ycat)
-
-                                        # Bootstrap loop begins
+    
+    # Bootstrap loop begins
     for(b in 1:(sims+1)){
-
-                                        # Resampling Step
+      
+      # Resampling Step
       index <- sample(1:n, n, replace = TRUE)
       if(b == sims + 1){  # use original data for the last iteration
         index <- 1:n
@@ -1525,7 +1525,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
       new.fit.Y <- eval.parent(Call.Y)
       
       if(isOrdered.m && length(unique(y.data[index,mediator]))!=m){
-                                        # Modify the coefficients when mediator has empty cells
+        # Modify the coefficients when mediator has empty cells
         coefnames.y <- names(model.y$coefficients)
         coefnames.new.y <- names(new.fit.Y$coefficients)
         new.fit.Y.coef <- rep(0, length(coefnames.y))
@@ -1534,9 +1534,9 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         new.fit.Y$coefficients <- new.fit.Y.coef
       }
       
-#####################################
-                                        # Mediator Predictions
-#####################################
+      #####################################
+      # Mediator Predictions
+      #####################################
       pred.data.t <- pred.data.c <- m.data
       
       if(isFactorT){
@@ -1558,7 +1558,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         }
       }
       
-### Case II-a: GLM Mediator (including GAMs)
+      ### Case II-a: GLM Mediator (including GAMs)
       if(isGlm.m){
         
         muM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
@@ -1587,7 +1587,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
           stop("unsupported glm family")
         }
         
-### Case II-b: Ordered Mediator
+        ### Case II-b: Ordered Mediator
       } else if(isOrdered.m) {
         probs_m1 <- predict(new.fit.M, type="probs", newdata=pred.data.t)
         probs_m0 <- predict(new.fit.M, type="probs", newdata=pred.data.c)
@@ -1601,9 +1601,9 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         PredictM1 <- apply(draws_m1, 1, indexmax)
         PredictM0 <- apply(draws_m0, 1, indexmax)
         
-### Case II-c: Quantile Regression for Mediator
+        ### Case II-c: Quantile Regression for Mediator
       } else if(isRq.m){
-                                        # Use inverse transform sampling to predict M
+        # Use inverse transform sampling to predict M
         call.new <- new.fit.M$call
         call.new$tau <- runif(n)
         newfits <- eval.parent(call.new)
@@ -1617,7 +1617,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         PredictM0 <- rowSums(X.c * t(newfits$coefficients))
         rm(newfits, X.t, X.c)
         
-### Case II-d: Linear
+        ### Case II-d: Linear
       } else if(isLm.m){
         sigma <- summary(new.fit.M)$sigma
         error <- rnorm(n, mean=0, sd=sigma)
@@ -1627,7 +1627,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                              newdata=pred.data.c) + error
         rm(error)
         
-### Case I-2-e: Survreg
+        ### Case I-2-e: Survreg
       } else if(isSurvreg.m){
         dd <- survreg.distributions[[new.fit.M$dist]]
         if (is.null(dd$itrans)){
@@ -1655,9 +1655,9 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         stop("mediator model is not yet implemented")
       }
       
-#####################################
-                                        #  Outcome Predictions
-#####################################
+      #####################################
+      #  Outcome Predictions
+      #####################################
       effects.tmp <- array(NA, dim = c(n, n.ycat, 4))
       for(e in 1:4){
         tt <- switch(e, c(1,1,1,0), c(0,0,1,0), c(1,0,1,1), c(1,0,0,0))
@@ -1674,7 +1674,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
           }
         }
         
-                                        # Set treatment values
+        # Set treatment values
         cat.t <- ifelse(tt[1], cat.1, cat.0)
         cat.c <- ifelse(tt[2], cat.1, cat.0)
         cat.t.ctrl <- ifelse(tt[1], cat.0, cat.1)
@@ -1695,7 +1695,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
           }
         }
         
-                                        # Set mediator values
+        # Set mediator values
         PredictM1.tmp <- PredictM1
         PredictM0.tmp <- PredictM0
         PredictMt <- PredictM1 * tt[3] + PredictM0 * (1 - tt[3])
@@ -1713,7 +1713,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         rm(pred.data.t, pred.data.c, probs_p1, probs_p0)
       }
       
-                                        # Compute all QoIs
+      # Compute all QoIs
       if(b == sims+1){
         d1 <- apply(effects.tmp[,,1], 2, weighted.mean, w=weights)
         d0 <- apply(effects.tmp[,,2], 2, weighted.mean, w=weights)
@@ -1731,9 +1731,9 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     tau.coef <- (d1 + d0 + z1 + z0)/2
     tau <- (zeta.1 + zeta.0 + delta.0 + delta.1)/2
     
-########################################################################
+    ########################################################################
     ## Compute Outputs and Put Them Together
-########################################################################
+    ########################################################################
     low <- (1 - conf.level)/2
     high <- 1 - low
     d0.ci <- apply(delta.0, 2, quantile, c(low,high))
@@ -1742,7 +1742,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     z1.ci <- apply(zeta.1, 2, quantile, c(low,high))
     z0.ci <- apply(zeta.0, 2, quantile, c(low,high))
     
-                                        # p-values
+    # p-values
     d0.p <- d1.p <- z0.p <- z1.p <- tau.p <- rep(NA, n.ycat)
     for(i in 1:n.ycat){
       d0.p[i] <- pval(delta.0[,i], d0[i])
@@ -1752,9 +1752,9 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
       tau.p[i] <- pval(tau[,i], tau.coef[i])
     }
     
-                                        # Detect whether models include T-M interaction
+    # Detect whether models include T-M interaction
     INT <- paste(treat,mediator,sep=":") %in% attr(model.y$terms,"term.labels") |
-    paste(mediator,treat,sep=":") %in% attr(model.y$terms,"term.labels")
+      paste(mediator,treat,sep=":") %in% attr(model.y$terms,"term.labels")
     
     if(long) {
       out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
@@ -1806,16 +1806,16 @@ print.summary.mediate <- function(x, ...){
   }
   
   isLinear.y <- (	(class(x$model.y)[1] %in% c("lm", "rq")) ||
-                 (inherits(x$model.y, "glm") &&
-                  x$model.y$family$family == "gaussian" &&
-                  x$model.y$family$link == "identity") ||
-                 (inherits(x$model.y, "survreg") &&
-                  x$model.y$dist == "gaussian") )
+                    (inherits(x$model.y, "glm") &&
+                       x$model.y$family$family == "gaussian" &&
+                       x$model.y$family$link == "identity") ||
+                    (inherits(x$model.y, "survreg") &&
+                       x$model.y$dist == "gaussian") )
   
   printone <- !x$INT && isLinear.y
   
   if (printone){
-                                        # Print only one set of values if lmY/quanY/linear gamY without interaction
+    # Print only one set of values if lmY/quanY/linear gamY without interaction
     smat <- c(x$d1, x$d1.ci, x$d1.p)
     smat <- rbind(smat, c(x$z0, x$z0.ci, x$z0.p))
     smat <- rbind(smat, c(x$tau.coef, x$tau.ci, x$tau.p))
@@ -1879,18 +1879,18 @@ print.summary.mediate.mer <- function(x,...){
   cat("Mediator Groups:", x$group.m,"\n\n")
   cat("Outcome Groups:", x$group.y,"\n\n")
   cat("Output Based on Overall Averages Across Groups","\n\n")
-
+  
   isLinear.y <- (	(class(x$model.y)[1] %in% c("lm", "rq")) || # lm or quantile
-                 (inherits(x$model.y, "glm") &&
-                  x$model.y$family$family == "gaussian" &&
-                  x$model.y$family$link == "identity") ||      # glm normal
-                 (inherits(x$model.y, "survreg") &&
-                  x$model.y$dist == "gaussian") ||             # surv normal
-                 (inherits(x$model.y, "mer") &&
-                  x$model.y@call[[1]] == "lmer") )          # lmer
-    
+                    (inherits(x$model.y, "glm") &&
+                       x$model.y$family$family == "gaussian" &&
+                       x$model.y$family$link == "identity") ||      # glm normal
+                    (inherits(x$model.y, "survreg") &&
+                       x$model.y$dist == "gaussian") ||             # surv normal
+                    (inherits(x$model.y, "mer") &&
+                       x$model.y@call[[1]] == "lmer") )          # lmer
+  
   printone <- !x$INT && isLinear.y
-
+  
   if(printone){
     smat <- c(x$d1, x$d1.ci, x$d1.p)
     smat <- rbind(smat, c(x$z0, x$z0.ci, x$z0.p))
@@ -1937,7 +1937,7 @@ print.summary.mediate.mer.2 <- function(x,...){
   } else {
     cat("Quasi-Bayesian Confidence Intervals\n\n")
   }
-
+  
   if(!is.null(x$covariates)){
     cat("(Inference Conditional on the Covariate Values Specified in `covariates')\n\n")
   }
@@ -1945,21 +1945,21 @@ print.summary.mediate.mer.2 <- function(x,...){
   cat("Mediator Groups:", x$group.m,"\n\n")
   cat("Outcome Groups:", x$group.y,"\n\n")
   cat("Output Based on", x$group.name,"\n\n")
-
+  
   if(is.factor(x$group.id)){
     gname <- levels(x$group.id)
   } else {
     gname <- sort(unique(x$group.id))
   }
-
+  
   isLinear.y <- (	(class(x$model.y)[1] %in% c("lm", "rq")) || # lm or quantile
-                 (inherits(x$model.y, "glm") &&
-                  x$model.y$family$family == "gaussian" &&
-                  x$model.y$family$link == "identity") ||      # glm normal
-                 (inherits(x$model.y, "survreg") &&
-                  x$model.y$dist == "gaussian") ||             # surv normal
-                 (inherits(x$model.y, "mer") &&
-                  x$model.y@call[[1]] == "lmer") )          # lmer
+                    (inherits(x$model.y, "glm") &&
+                       x$model.y$family$family == "gaussian" &&
+                       x$model.y$family$link == "identity") ||      # glm normal
+                    (inherits(x$model.y, "survreg") &&
+                       x$model.y$dist == "gaussian") ||             # surv normal
+                    (inherits(x$model.y, "mer") &&
+                       x$model.y@call[[1]] == "lmer") )          # lmer
   
   printone <- !x$INT && isLinear.y
   
@@ -2087,7 +2087,7 @@ print.summary.mediate.mer.3 <- function(x,...){
   } else {
     cat("Quasi-Bayesian Confidence Intervals\n\n")
   }
-
+  
   if(!is.null(x$covariates)){
     cat("(Inference Conditional on the Covariate Values Specified in `covariates')\n\n")
   }
@@ -2095,7 +2095,7 @@ print.summary.mediate.mer.3 <- function(x,...){
   cat("Mediator Groups:", x$group.m,"\n\n")
   cat("Outcome Groups:", x$group.y,"\n\n")
   cat("Output Based on", x$group.name,"\n\n")
-
+  
   if(is.factor(x$group.id)){
     gname <- levels(x$group.id)
   } else {
@@ -2103,13 +2103,13 @@ print.summary.mediate.mer.3 <- function(x,...){
   }
   G<-length(gname)
   isLinear.y <- (	(class(x$model.y)[1] %in% c("lm", "rq")) || # lm or quantile
-                 (inherits(x$model.y, "glm") &&
-                  x$model.y$family$family == "gaussian" &&
-                  x$model.y$family$link == "identity") ||      # glm normal
-                 (inherits(x$model.y, "survreg") &&
-                  x$model.y$dist == "gaussian") ||             # surv normal
-                 (inherits(x$model.y, "mer") &&
-                  x$model.y@call[[1]] == "lmer") )          # lmer
+                    (inherits(x$model.y, "glm") &&
+                       x$model.y$family$family == "gaussian" &&
+                       x$model.y$family$link == "identity") ||      # glm normal
+                    (inherits(x$model.y, "survreg") &&
+                       x$model.y$dist == "gaussian") ||             # surv normal
+                    (inherits(x$model.y, "mer") &&
+                       x$model.y@call[[1]] == "lmer") )          # lmer
   
   printone <- !x$INT && isLinear.y
   
@@ -2181,7 +2181,7 @@ print.summary.mediate.order <- function(x, ...){
   tab.z1 <- rbind(x$z1, x$z1.ci, x$z1.p)
   tab.tau <- rbind(x$tau.coef, x$tau.ci, x$tau.p)
   
-                                        # Outcome Table Labels
+  # Outcome Table Labels
   y.lab <- sort(unique(levels(model.frame(x$model.y)[,1])))
   out.names <- c()
   for(i in 1:length(y.lab)){
@@ -2189,7 +2189,7 @@ print.summary.mediate.order <- function(x, ...){
     out.names <- c(out.names, out.names.tmp)
   }
   
-                                        # Label Tables
+  # Label Tables
   rownames(tab.d0)[1] <- "Mediation Effect_0 "
   rownames(tab.d0)[4] <- "p-value "
   colnames(tab.d0) <- out.names
@@ -2304,7 +2304,7 @@ plot.mediate <- function(x, treatment = NULL, labels = NULL,
   
   # Create blank plot first
   plot(rep(0,IND+DIR+TOT), y.axis, type = "n", xlab = xlab, ylab = ylab,
-         yaxt = "n", xlim = xlim, ylim = ylim, main = main, ...)
+       yaxt = "n", xlim = xlim, ylim = ylim, main = main, ...)
   
   # Set offset values depending on number of bars to plot
   if(length(treatment) == 1){
@@ -2378,13 +2378,13 @@ plot.process.mer <- function(model) {
   coef.vec.0.group <- cbind(model$d0.group, model$z0.group)
   lower.vec.0.group <- cbind(model$d0.ci.group[,1], model$z0.ci.group[,1])
   upper.vec.0.group <- cbind(model$d0.ci.group[,2], model$z0.ci.group[,2])
-    
+  
   coef.vec.1.group <- cbind(model$d1.group, model$z1.group)
   lower.vec.1.group <- cbind(model$d1.ci.group[,1], model$z1.ci.group[,1])
   upper.vec.1.group <- cbind(model$d1.ci.group[,2], model$z1.ci.group[,2])
   
   tau.vec.group <- cbind(model$tau.coef.group, model$tau.ci.group[,1], model$tau.ci.group[,2])
-
+  
   return(list(coef.vec.1=coef.vec.1, lower.vec.1=lower.vec.1,
               upper.vec.1=upper.vec.1, coef.vec.0=coef.vec.0,
               lower.vec.0=lower.vec.0, upper.vec.0=upper.vec.0, tau.vec=tau.vec,
@@ -2399,184 +2399,184 @@ plot.mediate.mer <- function(x, treatment = NULL, group.plots = FALSE,
                              xlim = NULL, ylim = NULL, xlab = "", ylab = "",
                              main = NULL, lwd = 1.5, cex = .85,
                              col = "black", ...){
-
-    param <- plot.process.mer(x)
   
-    isLinear.y <- (	(class(x$model.y)[1] %in% c("lm", "rq")) || # lm or quantile
-                   (inherits(x$model.y, "glm") &&
-                    x$model.y$family$family == "gaussian" &&
-                    x$model.y$family$link == "identity") ||      # glm normal
-                   (inherits(x$model.y, "survreg") &&
-                    x$model.y$dist == "gaussian") ||             # surv normal
-                   (inherits(x$model.y, "mer") &&
-                    x$model.y@call[[1]] == "lmer") )          # lmer
-    
-    printone <- !x$INT && isLinear.y
-    
-    if(is.null(treatment)){
-      if(printone){
-        treatment <- 1
-      } else {
-        treatment <- c(0,1)
-      }
+  param <- plot.process.mer(x)
+  
+  isLinear.y <- (	(class(x$model.y)[1] %in% c("lm", "rq")) || # lm or quantile
+                    (inherits(x$model.y, "glm") &&
+                       x$model.y$family$family == "gaussian" &&
+                       x$model.y$family$link == "identity") ||      # glm normal
+                    (inherits(x$model.y, "survreg") &&
+                       x$model.y$dist == "gaussian") ||             # surv normal
+                    (inherits(x$model.y, "mer") &&
+                       x$model.y@call[[1]] == "lmer") )          # lmer
+  
+  printone <- !x$INT && isLinear.y
+  
+  if(is.null(treatment)){
+    if(printone){
+      treatment <- 1
     } else {
-      treatment <- switch(treatment,
-                          control = 0,
-                          treated = 1,
-                          both = c(0,1))
+      treatment <- c(0,1)
     }
-        
-    nplots <- 1 + group.plots * (2 * length(treatment) + 1)  # n of plots necessary
-    
-    if(ask){
-        oask <- devAskNewPage(TRUE)
-        on.exit(devAskNewPage(oask))
-    }
-    
-# 1. Summary plot for population effects
-
-    labels = c("ACME","Direct\nEffect","Total\nEffect")
-    y.axis <- c(length(param$coef.vec.1):.5)
-    y.axis <- y.axis + 1
-                                 
-    if(is.null(xlim)){
-      if(length(treatment) > 1) {
-        xlim <- range(param$range.1, param$range.0) * 1.2
-      } else if (treatment == 1){
-        xlim <- param$range.1 * 1.2
-      } else {
-        xlim <- param$range.0 * 1.2
-      }
-    }
+  } else {
+    treatment <- switch(treatment,
+                        control = 0,
+                        treated = 1,
+                        both = c(0,1))
+  }
   
-    if(is.null(ylim)){
-      ylim <- c(min(y.axis) -1- 0.5, max(y.axis) + 0.5)
-    }
+  nplots <- 1 + group.plots * (2 * length(treatment) + 1)  # n of plots necessary
   
-    plot(param$coef.vec.1, y.axis, type = "n", xlab = xlab, ylab = ylab,
-         yaxt = "n", xlim = xlim, ylim = ylim, main = main, ...)
+  if(ask){
+    oask <- devAskNewPage(TRUE)
+    on.exit(devAskNewPage(oask))
+  }
   
-    if(length(treatment) == 1){
-      adj <- 0
+  # 1. Summary plot for population effects
+  
+  labels = c("ACME","Direct\nEffect","Total\nEffect")
+  y.axis <- c(length(param$coef.vec.1):.5)
+  y.axis <- y.axis + 1
+  
+  if(is.null(xlim)){
+    if(length(treatment) > 1) {
+      xlim <- range(param$range.1, param$range.0) * 1.2
+    } else if (treatment == 1){
+      xlim <- param$range.1 * 1.2
     } else {
-      adj <- 0.05
+      xlim <- param$range.0 * 1.2
     }
+  }
   
-    if(1 %in% treatment){
-      points(param$coef.vec.1, y.axis + adj, type = "p", pch = 19, cex = cex, col = col)
-      segments(param$lower.vec.1, y.axis + adj, param$upper.vec.1, y.axis + adj,
-               lwd = lwd, col = col)
-      points(param$tau.vec[1], 1, type = "p", pch = 19, cex = cex, col = col)
-      segments(param$tau.vec[2], 1 , param$tau.vec[3], 1 ,
-               lwd = lwd, col = col)
-    }
-    if(0 %in% treatment) {
-      points(param$coef.vec.0, y.axis - adj, type = "p", pch = 1, cex = cex, col = col)
-      segments(param$lower.vec.0, y.axis - adj, param$upper.vec.0, y.axis - adj,
-               lwd = lwd, lty = 3, col = col)
-    }
-    y.axis.new <- c(3,2,1)
-    axis(2, at = y.axis.new, labels = labels, las = 1, tick = TRUE, ...)
-    abline(v = 0, lty = 2)
-
-# 2. Group effects    
+  if(is.null(ylim)){
+    ylim <- c(min(y.axis) -1- 0.5, max(y.axis) + 0.5)
+  }
+  
+  plot(param$coef.vec.1, y.axis, type = "n", xlab = xlab, ylab = ylab,
+       yaxt = "n", xlim = xlim, ylim = ylim, main = main, ...)
+  
+  if(length(treatment) == 1){
+    adj <- 0
+  } else {
+    adj <- 0.05
+  }
+  
+  if(1 %in% treatment){
+    points(param$coef.vec.1, y.axis + adj, type = "p", pch = 19, cex = cex, col = col)
+    segments(param$lower.vec.1, y.axis + adj, param$upper.vec.1, y.axis + adj,
+             lwd = lwd, col = col)
+    points(param$tau.vec[1], 1, type = "p", pch = 19, cex = cex, col = col)
+    segments(param$tau.vec[2], 1 , param$tau.vec[3], 1 ,
+             lwd = lwd, col = col)
+  }
+  if(0 %in% treatment) {
+    points(param$coef.vec.0, y.axis - adj, type = "p", pch = 1, cex = cex, col = col)
+    segments(param$lower.vec.0, y.axis - adj, param$upper.vec.0, y.axis - adj,
+             lwd = lwd, lty = 3, col = col)
+  }
+  y.axis.new <- c(3,2,1)
+  axis(2, at = y.axis.new, labels = labels, las = 1, tick = TRUE, ...)
+  abline(v = 0, lty = 2)
+  
+  # 2. Group effects    
   if(group.plots){
-
-#########################################################################     
+    
+    #########################################################################     
     if(is.factor(x$group.id)){
       labels <- levels(x$group.id)
     } else {
       labels = sort(unique(x$group.id))
     }
-#########################################################################
+    #########################################################################
     if(0 %in% treatment){
-        y.axis <- c(length(param$coef.vec.0.group[,1]):.5)
-        y.axis <- y.axis + 1
-               
-        xlim <- c(param$lower.vec.0.group[,1], param$coef.vec.0.group[,1], param$upper.vec.0.group[,1]) 
-        MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
-        MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
-        xlim <- c(MIN, MAX)
-        
-        ylim <- c(min(y.axis), max(y.axis))
-        
-        plot(param$coef.vec.0.group[,1], y.axis, type = "n", xlab = xlab, ylab = ylab,
-             yaxt = "n", xlim = xlim, ylim = ylim, main = "ACME0", ...)
-        
-        points(param$coef.vec.0.group[,1], y.axis, type = "p", pch = 1, cex = cex, col = col)
-        segments(param$lower.vec.0.group[,1], y.axis, param$upper.vec.0.group[,1], y.axis,
-                 lwd = lwd, col = col)
-        
-        axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
-        abline(v = 0, lty = 2)
+      y.axis <- c(length(param$coef.vec.0.group[,1]):.5)
+      y.axis <- y.axis + 1
+      
+      xlim <- c(param$lower.vec.0.group[,1], param$coef.vec.0.group[,1], param$upper.vec.0.group[,1]) 
+      MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
+      MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
+      xlim <- c(MIN, MAX)
+      
+      ylim <- c(min(y.axis), max(y.axis))
+      
+      plot(param$coef.vec.0.group[,1], y.axis, type = "n", xlab = xlab, ylab = ylab,
+           yaxt = "n", xlim = xlim, ylim = ylim, main = "ACME0", ...)
+      
+      points(param$coef.vec.0.group[,1], y.axis, type = "p", pch = 1, cex = cex, col = col)
+      segments(param$lower.vec.0.group[,1], y.axis, param$upper.vec.0.group[,1], y.axis,
+               lwd = lwd, col = col)
+      
+      axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
+      abline(v = 0, lty = 2)
     }
-######################################################################### 
+    ######################################################################### 
     if(1 %in% treatment){
-        y.axis <- c(length(param$coef.vec.1.group[,1]):.5)
-        y.axis <- y.axis + 1
-        
-        xlim <- c(param$lower.vec.1.group[,1], param$coef.vec.1.group[,1], param$upper.vec.1.group[,1])
-        MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
-        MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
-        xlim <- c(MIN, MAX)
-        
-        ylim <- c(min(y.axis), max(y.axis))
-        
-        plot(param$coef.vec.1.group[,1], y.axis, type = "n", xlab = xlab, ylab = ylab,
-             yaxt = "n", xlim = xlim, ylim = ylim, main = ifelse(printone, "ACME", "ACME1"), ...)
-        
-        points(param$coef.vec.1.group[,1], y.axis, type = "p", pch = 19, cex = cex, col = col)
-        segments(param$lower.vec.1.group[,1], y.axis, param$upper.vec.1.group[,1], y.axis,
-                 lwd = lwd, col = col)
-        
-        axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
-        abline(v = 0, lty = 2)
+      y.axis <- c(length(param$coef.vec.1.group[,1]):.5)
+      y.axis <- y.axis + 1
+      
+      xlim <- c(param$lower.vec.1.group[,1], param$coef.vec.1.group[,1], param$upper.vec.1.group[,1])
+      MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
+      MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
+      xlim <- c(MIN, MAX)
+      
+      ylim <- c(min(y.axis), max(y.axis))
+      
+      plot(param$coef.vec.1.group[,1], y.axis, type = "n", xlab = xlab, ylab = ylab,
+           yaxt = "n", xlim = xlim, ylim = ylim, main = ifelse(printone, "ACME", "ACME1"), ...)
+      
+      points(param$coef.vec.1.group[,1], y.axis, type = "p", pch = 19, cex = cex, col = col)
+      segments(param$lower.vec.1.group[,1], y.axis, param$upper.vec.1.group[,1], y.axis,
+               lwd = lwd, col = col)
+      
+      axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
+      abline(v = 0, lty = 2)
     }
-######################################################################### 
+    ######################################################################### 
     if(0 %in% treatment){
-        y.axis <- c(length(param$coef.vec.0.group[,2]):.5)
-        y.axis <- y.axis + 1
-        
-        xlim <- c(param$lower.vec.0.group[,2], param$coef.vec.0.group[,2], param$upper.vec.0.group[,2])
-        MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
-        MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
-        xlim <- c(MIN, MAX)
-        
-        ylim <- c(min(y.axis), max(y.axis))
-        
-        plot(param$coef.vec.0.group[,2], y.axis, type = "n", xlab = xlab, ylab = ylab,
-             yaxt = "n", xlim = xlim, ylim = ylim, main = "Direct\nEffect0", ...)
-        
-        points(param$coef.vec.0.group[,2], y.axis, type = "p", pch = 1, cex = cex, col = col)
-        segments(param$lower.vec.0.group[,2], y.axis, param$upper.vec.0.group[,2], y.axis,
-                 lwd = lwd, lty = 3, col = col)
-        
-        axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
-        abline(v = 0, lty = 2)
+      y.axis <- c(length(param$coef.vec.0.group[,2]):.5)
+      y.axis <- y.axis + 1
+      
+      xlim <- c(param$lower.vec.0.group[,2], param$coef.vec.0.group[,2], param$upper.vec.0.group[,2])
+      MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
+      MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
+      xlim <- c(MIN, MAX)
+      
+      ylim <- c(min(y.axis), max(y.axis))
+      
+      plot(param$coef.vec.0.group[,2], y.axis, type = "n", xlab = xlab, ylab = ylab,
+           yaxt = "n", xlim = xlim, ylim = ylim, main = "Direct\nEffect0", ...)
+      
+      points(param$coef.vec.0.group[,2], y.axis, type = "p", pch = 1, cex = cex, col = col)
+      segments(param$lower.vec.0.group[,2], y.axis, param$upper.vec.0.group[,2], y.axis,
+               lwd = lwd, lty = 3, col = col)
+      
+      axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
+      abline(v = 0, lty = 2)
     }    
-######################################################################### 
+    ######################################################################### 
     if(1 %in% treatment){
-        y.axis <- c(length(param$coef.vec.1.group[,2]):.5)
-        y.axis <- y.axis + 1
-        
-        xlim <- c(param$lower.vec.1.group[,2], param$coef.vec.1.group[,2], param$upper.vec.1.group[,2])
-        MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
-        MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
-        xlim <- c(MIN, MAX)
-        
-        ylim <- c(min(y.axis), max(y.axis))
-        
-        plot(param$coef.vec.1.group[,2], y.axis, type = "n", xlab = xlab, ylab = ylab,
-             yaxt = "n", xlim = xlim, ylim = ylim, main = ifelse(printone, "Direct\nEffect", "Direct\nEffect1"), ...)
-        
-        points(param$coef.vec.1.group[,2], y.axis, type = "p", pch = 19, cex = cex, col = col)
-        segments(param$lower.vec.1.group[,2], y.axis, param$upper.vec.1.group[,2], y.axis,
-                 lwd = lwd, lty = 3, col = col)
-        
-        axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
-        abline(v = 0, lty = 2)
+      y.axis <- c(length(param$coef.vec.1.group[,2]):.5)
+      y.axis <- y.axis + 1
+      
+      xlim <- c(param$lower.vec.1.group[,2], param$coef.vec.1.group[,2], param$upper.vec.1.group[,2])
+      MIN <- ifelse(min(xlim)>0, min(xlim)*0.9, min(xlim)*1.1)
+      MAX <- ifelse(max(xlim)>0, max(xlim)*1.1, max(xlim)*0.9)
+      xlim <- c(MIN, MAX)
+      
+      ylim <- c(min(y.axis), max(y.axis))
+      
+      plot(param$coef.vec.1.group[,2], y.axis, type = "n", xlab = xlab, ylab = ylab,
+           yaxt = "n", xlim = xlim, ylim = ylim, main = ifelse(printone, "Direct\nEffect", "Direct\nEffect1"), ...)
+      
+      points(param$coef.vec.1.group[,2], y.axis, type = "p", pch = 19, cex = cex, col = col)
+      segments(param$lower.vec.1.group[,2], y.axis, param$upper.vec.1.group[,2], y.axis,
+               lwd = lwd, lty = 3, col = col)
+      
+      axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
+      abline(v = 0, lty = 2)
     }    
-######################################################################### 
+    ######################################################################### 
     y.axis <- c(length(param$tau.vec.group[,1]):.5)
     y.axis <- y.axis + 1
     
@@ -2596,10 +2596,10 @@ plot.mediate.mer <- function(x, treatment = NULL, group.plots = FALSE,
     
     axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
     abline(v = 0, lty = 2)
-        
+    
   }
 }
-  
+
 #########################################################################
 plot.process.order <- function(model){
   length <- length(model$d1)
@@ -2637,7 +2637,7 @@ plot.mediate.order <- function(x, treatment = NULL,
                                xlim = NULL, ylim = NULL, xlab = "", ylab = "",
                                main = NULL, lwd = 1.5, cex = .85,
                                col = "black", ...){
-                                        # Determine which graph to plot
+  # Determine which graph to plot
   if(is.null(treatment)){
     if(x$INT){
       treatment <- c(0,1)
@@ -2654,9 +2654,9 @@ plot.mediate.order <- function(x, treatment = NULL,
   param <- plot.process.order(x)
   y.axis <- c(ncol(param$coef.vec.1):.5)
   y.axis <- y.axis + 1
-                                        # create indicator for y.axis, descending so labels go from top to bottom
+  # create indicator for y.axis, descending so labels go from top to bottom
   
-                                        # Set xlim
+  # Set xlim
   if(is.null(xlim)){
     if(length(treatment) > 1) {
       xlim <- range(param$range.1, param$range.0) * 1.2
@@ -2667,16 +2667,16 @@ plot.mediate.order <- function(x, treatment = NULL,
     }
   }
   
-                                        # Set ylim
+  # Set ylim
   if(is.null(ylim)){
     ylim <- c(min(y.axis) - 1 - 0.5, max(y.axis) + 0.5)
   }
   
-                                        # Plot
+  # Plot
   plot(param$coef.vec.1[1,], y.axis, type = "n", xlab = xlab, ylab = ylab,
        yaxt = "n", xlim = xlim, ylim = ylim, main = main, ...)
   
-                                        # Set offset values depending on number of bars to plot
+  # Set offset values depending on number of bars to plot
   if(length(treatment) == 1){
     adj <- 0
   } else {

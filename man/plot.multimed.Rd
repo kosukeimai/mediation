@@ -22,7 +22,7 @@
 \item{x}{ object of class \code{multimed}, typically output from the \code{multimed} funciton.}
 \item{type}{ type of plot(s) required. The default is to produce all, i.e., the point estimates of the effects under the homogenous interaction assumpton ("point") and bounds as function of the sigma ("sigma"), R square star ("R2-residual") and R square tilde ("R2-total") parameters.}
 \item{tgroup}{ treatment group(s) for which the estimates are produced. The default is to plot all, i.e., the average causal mediation effect when treated ("treated"), control ("control") and the simple average of these two effects ("average").}
-\item{effect.type}{ a vector indicating which quantities of interest to plot. Only plotting total effects not available.}
+\item{effect.type}{ a vector indicating which quantities of interest to plot for the point estimates. Only plotting total effects is not available.}
 \item{ask}{  a logical value. If 'TRUE', the user is asked for input before a new figure is plotted.  Default is to ask only if the number of plots on current screen is fewer than necessary.}
 \item{xlab}{ label for the x axis. Default labels are used if 'NULL'.}
 \item{ylab}{ label for the y axis. Default labels are used if 'NULL'.}

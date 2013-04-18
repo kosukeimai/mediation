@@ -1,6 +1,6 @@
 Package: mediation
-Version: 4.2.1
-Date: 2013-2-27
+Version: 4.2.2
+Date: 2013-4-18
 Title: R Package for Causal Mediation Analysis
 Author: Kentaro Hirose <hirose@princeton.edu>,
 	Dustin Tingley <dtingley@gov.harvard.edu>,
@@ -8,8 +8,8 @@ Author: Kentaro Hirose <hirose@princeton.edu>,
         Luke Keele <ljk20@psu.edu>,
         Kosuke Imai <kimai@princeton.edu>
 Maintainer: Teppei Yamamoto <teppei@mit.edu>
-Depends: R (>= 2.15.1), MASS, Matrix, lpSolve, methods
-Suggests: mgcv, quantreg, VGAM, sandwich, SuppDists, arm, survival
+Depends: R (>= 2.15.1), MASS, Matrix, lpSolve, methods, sandwich
+Suggests: mgcv, quantreg, VGAM, SuppDists, lme4, arm, survival
 Description: mediation is a publicly available R package that allows both parametric and nonparametric causal mediation analysis.  It implements the methods and suggestions in Imai, Keele, and Yamamoto (2010) and Imai, Keele, Tingley (2010).  In addition to the estimation of causal mediation effects, the software also allows researchers to conduct sensitivity analysis for certain parametric models.
 LazyLoad: yes
 LazyData: yes
