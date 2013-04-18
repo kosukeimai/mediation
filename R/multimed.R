@@ -239,14 +239,23 @@ print.summary.multimed <- function(x, ...){
 ## Plot
 plot.multimed <- function(x, type = c("point", "sigma", "R2-residual", "R2-total"),
 						  tgroup = c("average", "treated", "control"),
+                          effect.type = c("indirect", "total"),
 						  ask = prod(par("mfcol")) < nplots,
 						  xlab = NULL, ylab = NULL, xlim = NULL, ylim = NULL, main = NULL,
-						  lwd = par("lwd"), pch = par("pch"), cex = par("cex"), las = par("las"), 
+						  lwd = par("lwd"), pch = par("pch"), cex = par("cex"), las = par("las"),
 						  col.eff = "black", col.cbar = "black", col.creg = "gray", ...){
 	
 	type <- match.arg(type, several.ok = TRUE)
 	tgroup <- match.arg(tgroup, several.ok = TRUE)
+	effect.type <- match.arg(effect.type, several.ok=TRUE)
 	
+	IND <- "indirect" %in% effect.type
+	TOT <- "total" %in% effect.type
+
+    if(!IND && TOT) {
+        stop("No support for only plotting total effect.")
+    }
+
 	show.point <- "point" %in% type
 	nplots <- show.point + (length(type) - show.point) * length(tgroup)
 	if(ask){
@@ -273,7 +282,7 @@ plot.multimed <- function(x, type = c("point", "sigma", "R2-residual", "R2-total
     	ci.lo <- cbind(ci.lo, x$d.ave.ci[1,])
     	ci.up <- cbind(ci.up, x$d.ave.ci[2,])
 	}
-			
+
 	## 1. Point Estimate under Homogeneous Interaction Assumption	  	
 	if(show.point){
 		if(is.null(main)){
@@ -293,11 +302,19 @@ plot.multimed <- function(x, type = c("point", "sigma", "R2-residual", "R2-total
 			if("average" %in% tgroup){
 				 yla <- c(yla, expression(paste("Average (", bar(bar(delta)), ")")))
 		    }
+            if(!TOT) {
+                yla <- yla[-1]
+            }
 		} else yla <- ylab
 		
-        eff <- c(x$tau, eff.lo[1,])
-        ci <- cbind(x$tau.ci, rbind(ci.lo[1,], ci.up[1,]))
-		
+        if(IND && TOT) {
+            eff <- c(x$tau, eff.lo[1,])
+            ci <- cbind(x$tau.ci, rbind(ci.lo[1,], ci.up[1,]))
+        } else if(IND && !TOT) {
+            eff <- c(eff.lo[1,])
+            ci <- rbind(ci.lo[1,], ci.up[1,])
+		}
+
 		if(is.null(xlim)){
 			xli <- c(min(ci), max(ci))
 		} else xli <- xlim

@@ -2249,20 +2249,25 @@ plot.process <- function(model) {
 }
 
 #########################################################################
-plot.mediate <- function(x, treatment = NULL,
-                         labels = c("ACME","Direct\nEffect","Total\nEffect"),
+plot.mediate <- function(x, treatment = NULL, labels = NULL,
+                         effect.type = c("indirect","direct","total"),
                          xlim = NULL, ylim = NULL, xlab = "", ylab = "",
                          main = NULL, lwd = 1.5, cex = .85,
                          col = "black", ...){
-                                        # Determine which graph to plot
+  # Determine which graph to plot
   isLinear.y <- (	(class(x$model.y)[1] %in% c("lm", "rq")) ||
-                 (inherits(x$model.y, "glm") &&
-                  x$model.y$family$family == "gaussian" &&
-                  x$model.y$family$link == "identity") ||
-                 (inherits(x$model.y, "survreg") &&
-                  x$model.y$dist == "gaussian") )
+                    (inherits(x$model.y, "glm") &&
+                       x$model.y$family$family == "gaussian" &&
+                       x$model.y$family$link == "identity") ||
+                    (inherits(x$model.y, "survreg") &&
+                       x$model.y$dist == "gaussian") )
   
   printone <- !x$INT && isLinear.y
+  
+  effect.type <- match.arg(effect.type, several.ok=TRUE)
+  IND <- "indirect" %in% effect.type
+  DIR <- "direct" %in% effect.type
+  TOT <- "total" %in% effect.type
   
   if(is.null(treatment)){
     if(printone){
@@ -2278,11 +2283,10 @@ plot.mediate <- function(x, treatment = NULL,
   }
   
   param <- plot.process(x)
-  y.axis <- c(length(param$coef.vec.1):.5)
-  y.axis <- y.axis + 1
-                                        # create indicator for y.axis, descending so labels go from top to bottom
   
-                                        # Set xlim
+  y.axis <- (IND + DIR + TOT):1
+  
+  # Set xlim
   if(is.null(xlim)){
     if(length(treatment) > 1) {
       xlim <- range(param$range.1, param$range.0) * 1.2
@@ -2293,16 +2297,16 @@ plot.mediate <- function(x, treatment = NULL,
     }
   }
   
-                                        # Set ylim
+  # Set ylim
   if(is.null(ylim)){
-    ylim <- c(min(y.axis) -1- 0.5, max(y.axis) + 0.5)
+    ylim <- c(min(y.axis) - 0.5, max(y.axis) + 0.5)
   }
   
-                                        # Plot
-  plot(param$coef.vec.1, y.axis, type = "n", xlab = xlab, ylab = ylab,
-       yaxt = "n", xlim = xlim, ylim = ylim, main = main, ...)
+  # Create blank plot first
+  plot(rep(0,IND+DIR+TOT), y.axis, type = "n", xlab = xlab, ylab = ylab,
+         yaxt = "n", xlim = xlim, ylim = ylim, main = main, ...)
   
-                                        # Set offset values depending on number of bars to plot
+  # Set offset values depending on number of bars to plot
   if(length(treatment) == 1){
     adj <- 0
   } else {
@@ -2310,25 +2314,49 @@ plot.mediate <- function(x, treatment = NULL,
   }
   
   if(1 %in% treatment){
-    points(param$coef.vec.1, y.axis + adj, type = "p", pch = 19, cex = cex, col = col)
-    segments(param$lower.vec.1, y.axis + adj, param$upper.vec.1, y.axis + adj,
-             lwd = lwd, col = col)
-    points(param$tau.vec[1], 1, type = "p", pch = 19, cex = cex, col = col)
-    segments(param$tau.vec[2], 1 , param$tau.vec[3], 1 ,
-             lwd = lwd, col = col)
+    if(IND && DIR) {
+      points(param$coef.vec.1, y.axis[1:2] + adj, type = "p", pch = 19, cex = cex, col = col)
+      segments(param$lower.vec.1, y.axis[1:2] + adj, param$upper.vec.1, y.axis[1:2] + adj,
+               lwd = lwd, col = col)
+    }
+    if(IND && !DIR) {
+      points(param$coef.vec.1[1], y.axis[1] + adj, type = "p", pch = 19, cex = cex, col = col)
+      segments(param$lower.vec.1[1], y.axis[1] + adj, param$upper.vec.1[1], y.axis[1] + adj,
+               lwd = lwd, col = col)
+    }
+    if(!IND && DIR) {
+      points(param$coef.vec.1[2], y.axis[1] + adj, type = "p", pch = 19, cex = cex, col = col)
+      segments(param$lower.vec.1[2], y.axis[1] + adj, param$upper.vec.1[2], y.axis[1] + adj,
+               lwd = lwd, col = col)
+    }    
   }
   if(0 %in% treatment) {
-    points(param$coef.vec.0, y.axis - adj, type = "p", pch = 1, cex = cex, col = col)
-    segments(param$lower.vec.0, y.axis - adj, param$upper.vec.0, y.axis - adj,
-             lwd = lwd, lty = 3, col = col)
+    if(IND && DIR) {
+      points(param$coef.vec.0, y.axis[1:2] - adj, type = "p", pch = 1, cex = cex, col = col)
+      segments(param$lower.vec.0, y.axis[1:2] - adj, param$upper.vec.0, y.axis[1:2] - adj,
+               lwd = lwd, lty = 3, col = col)
+    }
+    if(IND && !DIR) {
+      points(param$coef.vec.0[1], y.axis[1] - adj, type = "p", pch = 1, cex = cex, col = col)
+      segments(param$lower.vec.0[1], y.axis[1] - adj, param$upper.vec.0[1], y.axis[1] - adj,
+               lwd = lwd, lty = 3, col = col)
+    }
+    if(!IND && DIR) {
+      points(param$coef.vec.0[2], y.axis[1] - adj, type = "p", pch = 1, cex = cex, col = col)
+      segments(param$lower.vec.0[2], y.axis[1] - adj, param$upper.vec.0[2], y.axis[1] - adj,
+               lwd = lwd, lty = 3, col = col)
+    }
   }
-  if(treatment[1]==0 & length(treatment)==1) {
+  if (TOT) {
     points(param$tau.vec[1], 1 , type = "p", pch = 19, cex = cex, col = col)
     segments(param$tau.vec[2], 1 , param$tau.vec[3], 1 ,
              lwd = lwd, col = col)
   }
-  y.axis.new <- c(3,2,1)
-  axis(2, at = y.axis.new, labels = labels, las = 1, tick = TRUE, ...)
+  
+  if(is.null(labels)){
+    labels <- c("ACME","Direct\nEffect","Total\nEffect")[c(IND,DIR,TOT)]
+  }
+  axis(2, at = y.axis, labels = labels, las = 1, tick = TRUE, ...)
   abline(v = 0, lty = 2)
 }
 
@@ -2364,7 +2392,6 @@ plot.process.mer <- function(model) {
               upper.vec.1.group=upper.vec.1.group, coef.vec.0.group=coef.vec.0.group,
               lower.vec.0.group=lower.vec.0.group, upper.vec.0.group=upper.vec.0.group, tau.vec.group=tau.vec.group))
 }
-
 
 #########################################################################
 plot.mediate.mer <- function(x, treatment = NULL, group.plots = FALSE,
