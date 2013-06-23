@@ -332,7 +332,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     ## Compute p-values
     if (xhat == 0) out <- 1
     else {
-      out <- 2 * sum((abs(x) >= 2 * abs(xhat)) & (sign(x) == sign(xhat))) / sims
+      out <- 2 * min(sum(x > 0), sum(x < 0)) / sims
     }
     return(min(out, 1))
   }
