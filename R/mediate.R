@@ -6,8 +6,10 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                     long = TRUE, dropobs = FALSE,
                     robustSE = FALSE, cluster = NULL, group.out = NULL, ...){
   
+  cl <- match.call()
+  
   # Warn users who still use INT option
-  if(match("INT", names(match.call()), 0L)){
+  if(match("INT", names(cl), 0L)){
     warning("'INT' is deprecated - existence of interaction terms is now automatically detected from model formulas")
   }
   
@@ -326,15 +328,6 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     dfc <- (M/(M-1))*((N-1)/(N-K))
     uj  <- apply(estfun(fm),2, function(x) tapply(x, cluster, sum));
     dfc*sandwich(fm, meat. = crossprod(uj)/N)
-  }
-  
-  pval <- function(x, xhat){
-    ## Compute p-values
-    if (xhat == 0) out <- 1
-    else {
-      out <- 2 * min(sum(x > 0), sum(x < 0)) / sims
-    }
-    return(min(out, 1))
   }
   
   ############################################################################
@@ -1362,7 +1355,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                   INT=INT, conf.level=conf.level,
                   model.y=model.y, model.m=model.m,
                   control.value=control.value, treat.value=treat.value,
-                  nobs=n, sims=sims)
+                  nobs=n, sims=sims, call=cl)
       class(out) <- "mediate"
     } 
     if(!long && !isMer.y && !isMer.m){
@@ -1381,7 +1374,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                   INT=INT, conf.level=conf.level,
                   model.y=model.y, model.m=model.m,
                   control.value=control.value, treat.value=treat.value,
-                  nobs=n, sims=sims)
+                  nobs=n, sims=sims, call=cl)
       class(out) <- "mediate"
     }
     if(long && isMer.y || isMer.m) {
@@ -1418,7 +1411,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                   INT=INT, conf.level=conf.level,
                   model.y=model.y, model.m=model.m,
                   control.value=control.value, treat.value=treat.value,
-                  nobs=n, sims=sims,
+                  nobs=n, sims=sims, call=cl,
                   group.m=group.m,group.y=group.y,group.name=group.name,
                   group.id.m=group.id.m,group.id.y=group.id.y,group.id=group.id)   
       class(out) <- "mediate.mer"
@@ -1449,7 +1442,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                   INT=INT, conf.level=conf.level,
                   model.y=model.y, model.m=model.m,
                   control.value=control.value, treat.value=treat.value,
-                  nobs=n, sims=sims,
+                  nobs=n, sims=sims, call=cl,
                   group.m=group.m,group.y=group.y,group.name=group.name,
                   group.id.m=group.id.m,group.id.y=group.id.y,group.id=group.id)
       class(out) <- "mediate.mer"
@@ -1768,7 +1761,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                   covariates=covariates,
                   INT=INT, conf.level=conf.level,
                   model.y=model.y, model.m=model.m,
-                  control.value=control.value, treat.value=treat.value, nobs=n, sims=sims)
+                  control.value=control.value, treat.value=treat.value, 
+                  nobs=n, sims=sims, call=cl)
     } else {
       out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
                   d0.p=d0.p, d1.p=d1.p,
@@ -1779,7 +1773,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                   covariates=covariates,
                   INT=INT, conf.level=conf.level,
                   model.y=model.y, model.m=model.m,
-                  control.value=control.value, treat.value=treat.value, nobs=n, sims=sims)
+                  control.value=control.value, treat.value=treat.value, 
+                  nobs=n, sims=sims, call=cl)
     }
     class(out) <- "mediate.order"
     out
@@ -2727,4 +2722,13 @@ plot.mediate.order <- function(x, treatment = NULL,
   y.axis.new <- c(3,2,1)
   axis(2, at = y.axis.new, labels = labels, las = 1, tick = TRUE, ...)
   abline(v = 0, lty = 2)
+}
+
+pval <- function(x, xhat){
+  ## Compute p-values
+  if (xhat == 0) out <- 1
+  else {
+    out <- 2 * min(sum(x > 0), sum(x < 0)) / length(x)
+  }
+  return(min(out, 1))
 }
