@@ -1,4 +1,4 @@
-test.TMint.mediate <- function(x, conf.level = 0.95){
+test.TMint.mediate <- function(x, conf.level = x$conf.level){
   if(is.null(x$d0.sims) || is.null(x$d1.sims) || is.null(x$z0.sims) || is.null(x$z1.sims)){
     stop("simulation draws missing; rerun mediate with 'long' set to TRUE")
   }
@@ -7,29 +7,39 @@ test.TMint.mediate <- function(x, conf.level = 0.95){
   }
   d.diff <- x$d1 - x$d0
   d.diff.sims <- x$d1.sims - x$d0.sims  
-  cat("\n")
-  cat("Null: ACME(1) - ACME(0) = 0 \n")
-  cat("Two-sided p-value:", pval(d.diff.sims, d.diff), "\n")
-  cat(100*conf.level, "% confidence interval:", 
-      quantile(d.diff.sims, c((1 - conf.level)/2, (1 + conf.level)/2)), "\n\n")
+  
+  # Format results in the htest format
+  
+  pv <- pval(d.diff.sims, d.diff)
+  ci <- quantile(d.diff.sims, c((1 - conf.level)/2, (1 + conf.level)/2))
+  
+  null.value <- 0
+  names(d.diff) <- names(null.value) <- "ACME(1) - ACME(0)"
+  attr(ci, "conf.level") <- conf.level
+  
+  res <- list(statistic = d.diff, p.value = pv, conf.int = ci,
+               null.value = null.value, alternative = "two.sided",
+               method = "Test of ACME(1) - ACME(0) = 0",
+               data.name = paste("estimates from", deparse(substitute(x))))
+               
+  class(res) <- "htest"
+  return(res)
 }
 
 
-test.modmed.mediate <- function(x, covariates.1, covariates.2, 
-                                sims = x$sims, conf.level = x$conf.level){
+test.modmed.mediate <- function(object, covariates.1, covariates.2,
+                                sims = object$sims, conf.level = object$conf.level){
   
-  cl <- getCall(x)
+  cl <- getCall(object)
+  cl$long <- TRUE
+  cl$sims <- sims
   
   seed <- .Random.seed
   cl$covariates <- covariates.1
-  cl$long <- TRUE
-  cl$sims <- sims
   out.1 <- eval(cl)
   
   .Random.seed <- seed
   cl$covariates <- covariates.2
-  cl$long <- TRUE
-  cl$sims <- sims
   out.2 <- eval(cl)
   
   d1.diff <- out.1$d1 - out.2$d1
@@ -38,7 +48,7 @@ test.modmed.mediate <- function(x, covariates.1, covariates.2,
   z0.diff <- out.1$z0 - out.2$z0
   z0.diff.sims <- out.1$z0.sims - out.2$z0.sims
   
-  if(x$INT){
+  if(object$INT){
   
     d0.diff <- out.1$d0 - out.2$d0
     d0.diff.sims <- out.1$d0.sims - out.2$d0.sims
@@ -48,49 +58,87 @@ test.modmed.mediate <- function(x, covariates.1, covariates.2,
     
   }
   
-  # Print results
+  # Format results
   
-  if(x$INT){
-  cat("\n")
-  cat("Null: ACME(1|covariates.1) - ACME(1|covariates.2) = 0 \n")
-  cat("Two-sided p-value:", pval(d1.diff.sims, d1.diff), "\n")
-  cat(100*conf.level, "% confidence interval:", 
-      quantile(d1.diff.sims, c((1 - conf.level)/2, (1 + conf.level)/2)), "\n\n")
+  null.value <- 0
   
-  cat("\n")
-  cat("Null: ACME(0|covariates.1) - ACME(0|covariates.2) = 0 \n")
-  cat("Two-sided p-value:", pval(d0.diff.sims, d0.diff), "\n")
-  cat(100*conf.level, "% confidence interval:", 
-      quantile(d0.diff.sims, c((1 - conf.level)/2, (1 + conf.level)/2)), "\n\n")
+  if(object$INT){
+    
+    pv <- pval(d1.diff.sims, d1.diff)
+    ci <- quantile(d1.diff.sims, c((1 - conf.level)/2, (1 + conf.level)/2))
+    names(d1.diff) <- names(null.value) <- "ACME(1|covariates.1) - ACME(1|covariates.2)"
+    attr(ci, "conf.level") <- conf.level
+    res.d1 <- list(statistic = d1.diff, p.value = pv, conf.int = ci,
+                 null.value = null.value, alternative = "two.sided",
+                 method = "Test of ACME(1|covariates.1) - ACME(1|covariates.2) = 0",
+                 data.name = paste("estimates from", deparse(substitute(object))))
   
-  cat("\n")
-  cat("Null: ADE(1|covariates.1) - ADE(1|covariates.2) = 0 \n")
-  cat("Two-sided p-value:", pval(z1.diff.sims, z1.diff), "\n")
-  cat(100*conf.level, "% confidence interval:", 
-      quantile(z1.diff.sims, c((1 - conf.level)/2, (1 + conf.level)/2)), "\n\n")
+    pv <- pval(d0.diff.sims, d0.diff)
+    ci <- quantile(d0.diff.sims, c((1 - conf.level)/2, (1 + conf.level)/2))
+    names(d0.diff) <- names(null.value) <- "ACME(0|covariates.1) - ACME(0|covariates.2)"
+    attr(ci, "conf.level") <- conf.level
+    res.d0 <- list(statistic = d0.diff, p.value = pv, conf.int = ci,
+                 null.value = null.value, alternative = "two.sided",
+                 method = "Test of ACME(0|covariates.1) - ACME(0|covariates.2) = 0",
+                 data.name = paste("estimates from", deparse(substitute(object))))
+
+    pv <- pval(z1.diff.sims, z1.diff)
+    ci <- quantile(z1.diff.sims, c((1 - conf.level)/2, (1 + conf.level)/2))
+    names(z1.diff) <- names(null.value) <- "ADE(1|covariates.1) - ADE(1|covariates.2)"
+    attr(ci, "conf.level") <- conf.level
+    res.z1 <- list(statistic = z1.diff, p.value = pv, conf.int = ci,
+                 null.value = null.value, alternative = "two.sided",
+                 method = "Test of ADE(1|covariates.1) - ADE(1|covariates.2) = 0",
+                 data.name = paste("estimates from", deparse(substitute(object))))
   
-  cat("\n")
-  cat("Null: ADE(0|covariates.1) - ADE(0|covariates.2) = 0 \n")
-  cat("Two-sided p-value:", pval(z0.diff.sims, z0.diff), "\n")
-  cat(100*conf.level, "% confidence interval:", 
-      quantile(z0.diff.sims, c((1 - conf.level)/2, (1 + conf.level)/2)), "\n\n")
+    pv <- pval(z0.diff.sims, z0.diff)
+    ci <- quantile(z0.diff.sims, c((1 - conf.level)/2, (1 + conf.level)/2))
+    names(z0.diff) <- names(null.value) <- "ADE(0|covariates.1) - ADE(0|covariates.2)"
+    attr(ci, "conf.level") <- conf.level
+    res.z0 <- list(statistic = z0.diff, p.value = pv, conf.int = ci,
+                 null.value = null.value, alternative = "two.sided",
+                 method = "Test of ADE(0|covariates.1) - ADE(0|covariates.2) = 0",
+                 data.name = paste("estimates from", deparse(substitute(object))))
+    
+    class(res.d1) <- class(res.d0) <- class(res.z1) <- class(res.z0) <- "htest"
+    res <- list(res.d1, res.d0, res.z1, res.z0)
 
   } else {
   
-  cat("\n")
-  cat("Null: ACME(covariates.1) - ACME(covariates.2) = 0 \n")
-  cat("Two-sided p-value:", pval(d1.diff.sims, d1.diff), "\n")
-  cat(100*conf.level, "% confidence interval:", 
-      quantile(d1.diff.sims, c((1 - conf.level)/2, (1 + conf.level)/2)), "\n\n")
+    
+    pv <- pval(d1.diff.sims, d1.diff)
+    ci <- quantile(d1.diff.sims, c((1 - conf.level)/2, (1 + conf.level)/2))
+    names(d1.diff) <- names(null.value) <- "ACME(covariates.1) - ACME(covariates.2)"
+    attr(ci, "conf.level") <- conf.level
+    res.d1 <- list(statistic = d1.diff, p.value = pv, conf.int = ci,
+                 null.value = null.value, alternative = "two.sided",
+                 method = "Test of ACME(covariates.1) - ACME(covariates.2) = 0",
+                 data.name = paste("estimates from", deparse(substitute(object))))
+
+    pv <- pval(z0.diff.sims, z0.diff)
+    ci <- quantile(z0.diff.sims, c((1 - conf.level)/2, (1 + conf.level)/2))
+    names(z0.diff) <- names(null.value) <- "ADE(covariates.1) - ADE(covariates.2)"
+    attr(ci, "conf.level") <- conf.level
+    res.z0 <- list(statistic = z0.diff, p.value = pv, conf.int = ci,
+                 null.value = null.value, alternative = "two.sided",
+                 method = "Test of ADE(covariates.1) - ADE(covariates.2) = 0",
+                 data.name = paste("estimates from", deparse(substitute(object))))
   
-  cat("\n")
-  cat("Null: ADE(covariates.1) - ADE(covariates.2) = 0 \n")
-  cat("Two-sided p-value:", pval(z0.diff.sims, z0.diff), "\n")
-  cat(100*conf.level, "% confidence interval:", 
-      quantile(z0.diff.sims, c((1 - conf.level)/2, (1 + conf.level)/2)), "\n\n")
-  
+    class(res.d1) <- class(res.z0) <- "htest"
+    res <- list(res.d1, res.z0)
+    
   }
   
+  class(res) <- "test.modmed.mediate"
+  return(res)
+  
 }
+
+print.test.modmed.mediate <- function(x, ...){
+  for(i in 1:length(x)){
+    print(x[[i]], ...)
+  }
+}
+
 
 
