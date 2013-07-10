@@ -1,17 +1,17 @@
-#takes output of mediations and calculates summary statistics.
-#also sources plot.process
+##takes output of mediations and calculates summary statistics.
+##also sources plot.process
 
 
-#To use mediations, must make list of multiple datasets. Then, must also repeat the treatment assignment list as many times as you have data sets.
-T12<-T1
-datasets <- list(T1=T1, T12=T12)
-mediators <- c("M1")
-outcome<-c("Ycont1")
-treatment <- c("T1","T1")
-covariates <- c("X1+X2")
-olsols <- mediations(datasets, treatment, mediators,outcome, covariates,families=c("gaussian","gaussian"),interaction=FALSE,conf.level=.90, sims=50)
-summary(olsols)
-plot(olsols, ask=FALSE)
+##To use mediations, must make list of multiple datasets. Then, must also repeat the treatment assignment list as many times as you have data sets.
+#T12<-T1
+#datasets <- list(T1=T1, T12=T12)
+#mediators <- c("M1")
+#outcome<-c("Ycont1")
+#treatment <- c("T1","T1")
+#covariates <- c("X1+X2")
+#olsols <- mediations(datasets, treatment, mediators,outcome, covariates,families=c("gaussian","gaussian"),interaction=FALSE,conf.level=.90, sims=50)
+#summary(olsols)
+#plot(olsols, ask=FALSE)
 
 
 
