@@ -12,8 +12,7 @@ export(mediate, summary.mediate, plot.mediate,
        multimed, summary.multimed, plot.multimed,
        mediate.sed, mediate.pd, mediate.ped, mediate.ced,
        summary.mediate.design,
-       test.TMint.mediate,
-       test.modmed.mediate)
+       test.TMint, test.modmed)
 
 S3method(summary, mediate)
 S3method(summary, mediate.order)
@@ -41,5 +40,7 @@ S3method(print, summary.mediations.order)
 S3method(print, summary.multimed)
 S3method(print, summary.mediate.design)
 S3method(print, test.modmed.mediate)
+S3method(test.TMint, default)
 S3method(test.TMint, mediate)
+S3method(test.modmed, default)
 S3method(test.modmed, mediate)

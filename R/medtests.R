@@ -1,4 +1,12 @@
-test.TMint.mediate <- function(x, conf.level = x$conf.level){
+test.TMint <- function(x, ...){
+  UseMethod("test.TMint")
+}
+
+test.TMint.default <- function(x, ...){
+  stop("currently no test.TMint method exists for the input object.")
+}
+
+test.TMint.mediate <- function(x, conf.level = x$conf.level, ...){
   if(is.null(x$d0.sims) || is.null(x$d1.sims) || is.null(x$z0.sims) || is.null(x$z1.sims)){
     stop("simulation draws missing; rerun mediate with 'long' set to TRUE")
   }
@@ -27,8 +35,17 @@ test.TMint.mediate <- function(x, conf.level = x$conf.level){
 }
 
 
+test.modmed <- function(object, ...){
+  UseMethod("test.modmed")
+}
+
+test.modmed.default <- function(object, ...){
+  stop("currently no test.modmed method exists for the input object.")
+}
+
+
 test.modmed.mediate <- function(object, covariates.1, covariates.2,
-                                sims = object$sims, conf.level = object$conf.level){
+                                sims = object$sims, conf.level = object$conf.level, ...){
   
   cl <- getCall(object)
   cl$long <- TRUE

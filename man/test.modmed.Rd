@@ -1,4 +1,6 @@
 \name{test.modmed}
+\alias{test.modmed}
+\alias{test.modmed.default}
 \alias{test.modmed.mediate}
 \alias{print.test.modmed.mediate}
 \title{Significance Test for Moderated Mediation}
@@ -6,8 +8,8 @@
 Function to test whether the average causal mediation effects and direct effects are significantly different between two moderator strata.
 }
 \usage{
-\method{test.modmed}{mediate} function(object, covariates.1, covariates.2,
-                                sims = x$sims, conf.level = x$conf.level)
+\method{test.modmed}{mediate}(object, covariates.1, covariates.2,
+                              sims = object$sims, conf.level = object$conf.level, ...)
 \method{print}{test.modmed.mediate}(x, ...)
 }
 
@@ -17,6 +19,8 @@ Function to test whether the average causal mediation effects and direct effects
 \item{covariates.2}{ second set of value(s) of covariates (moderators) included in the mediator and outcome models.}
 \item{sims}{ number of simulation draws the test will be based on. Defaults to the number used in the original mediate fit.}
 \item{conf.level}{ level of the returned two-sided confidence intervals for the effect differences. By default it is set to the value used in the original mediate call.}
+\item{x}{ output from \code{test.modmed} function.}
+\item{...}{ additional arguments.}
 }
 
 \value{\code{test.modmed} returns an object of class "\code{test.modmed.mediate}", a list composed of "\code{htest}" objects. See \code{\link{t.test}} for more explanations of \code{htest} objects.

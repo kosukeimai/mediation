@@ -1,16 +1,19 @@
 \name{test.TMint}
+\alias{test.TMint}
+\alias{test.TMint.default}
 \alias{test.TMint.mediate}
 \title{Significance Test for Treatment-Mediator Interaction in Causal Mediation Analysis}
 \description{
 Function to test whether the average causal mediation effects and direct effects are significantly different between the treatment and control contitions.
 }
 \usage{
-\method{test.TMint}{mediate}(x, conf.level = x$conf.level)
+\method{test.TMint}{mediate}(x, conf.level = x$conf.level, ...)
 }
 
 \arguments{
 \item{x}{ output from \code{mediate} function.}
 \item{conf.level}{ level of the returned two-sided confidence intervals for the effect differences. By default it is set to the value used in the original mediate call.}
+\item{...}{ additional arguments.}
 }
 
 \value{\code{test.TMint} returns an object of class "\code{htest}". See \code{\link{t.test}} for more explanations of the contents.
