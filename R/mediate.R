@@ -156,6 +156,13 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
   # Model frames for M and Y models
   m.data <- model.frame(model.m)  # Call.M$data
   y.data <- model.frame(model.y)  # Call.Y$data
+
+  # group-level mediator 
+  if(isMer.y & !isMer.m){
+    m.data <- eval(model.m$call$data, environment(formula(model.m)))  ### add group ID to m.data 
+    m.data <- na.omit(m.data)
+    y.data <- na.omit(y.data)
+  }
   
   # Specify group names
   
@@ -213,7 +220,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     group.id.y <- NULL
   }
   # group data to be output in summary and plot if lmer or glmer 
-  if(isMer.m && isMer.y){
+  if(isMer.y && isMer.m){
     if(group.out == group.m){
       group.id <- m.data[,group.m]
       group.name <- group.m
@@ -221,12 +228,25 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
       group.id <- y.data[,group.y]     
       group.name <- group.y
     }
-  } else if(isMer.m && !isMer.y){
+  } else if(!isMer.y && isMer.m){
     group.id <- m.data[,group.m]   
     group.name <- group.m
-  } else if(!isMer.m && isMer.y){
-    group.id <- y.data[,group.y]
-    group.name <- group.y
+  } else if(isMer.y && !isMer.m){   ### group-level mediator
+    if(!(group.y %in% names(m.data))){
+      stop("specify group-level variable in mediator data")
+    } else {
+      group.id <- y.data[,group.y]
+      group.name <- group.y
+      Y.ID<- sort(unique(group.id))
+      M.ID <- sort(as.vector(data.matrix(m.data[group.y])))
+      if(length(Y.ID) != length(M.ID)){
+        stop("groups do not match between mediator and outcome models")
+      } else {
+        if(FALSE %in% unique(Y.ID == M.ID)){
+          stop("groups do not match between mediator and outcome models")
+        }
+      }
+    }
   } else {
     group.id <- NULL
     group.name <- NULL
@@ -236,12 +256,14 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
   # Numbers of observations and categories
   n.m <- nrow(m.data)
   n.y <- nrow(y.data)
-  if(n.m != n.y){
-    stop("number of observations do not match between mediator and outcome models")
-  } else{
-    n <- n.m
+  if(!(isMer.y & !isMer.m)){   ### n.y and n.m are different when group-level mediator is used 
+    if(n.m != n.y){
+      stop("number of observations do not match between mediator and outcome models")
+    } else{
+      n <- n.m
+    }
+    m <- length(sort(unique(model.frame(model.m)[,1])))
   }
-  m <- length(sort(unique(model.frame(model.m)[,1])))
   
   # Extracting weights from models
   weights.m <- model.weights(m.data)
@@ -259,12 +281,16 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
   if(is.null(weights.y)){
     weights.y <- rep(1,nrow(y.data))
   }
-  if(!all(weights.m == weights.y)) {
-    stop("weights on outcome and mediator models not identical")
-  } else {
-    weights <- weights.m
+  if(!(isMer.y & !isMer.m)){
+    if(!all(weights.m == weights.y)) {
+      stop("weights on outcome and mediator models not identical")
+    } else {
+      weights <- weights.m
+    }
+  } else{
+    weights <- weights.y  ### group-level mediator  
   }
-  
+
   # Convert character treatment to factor
   if(is.character(m.data[,treat])){
     m.data[,treat] <- factor(m.data[,treat])
@@ -458,6 +484,11 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
       #####################################
       ##  Mediator Predictions
       #####################################
+      ### number of observations are different when group-level mediator is used
+      if(isMer.y & !isMer.m){
+        n <- n.m
+      }
+      
       pred.data.t <- pred.data.c <- m.data
       
       if(isFactorT){
@@ -467,7 +498,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
         pred.data.t[,treat] <- cat.1
         pred.data.c[,treat] <- cat.0
       }
-      
+
       if(!is.null(covariates)){
         for(p in 1:length(covariates)){
           vl <- names(covariates[p])
@@ -707,14 +738,37 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
       } else {
         stop("mediator model is not yet implemented")
       }
+
+      ### group-level mediator : J -> NJ
+      if(isMer.y & !isMer.m){
+        J <- nrow(m.data)
+        group.id.m <- as.vector(data.matrix(m.data[group.y]))
+        v1 <- v0 <- matrix(NA, sims, length(group.id.y))
+        num.m <- 1:J
+        num.y <- 1:length(group.id.y)
+        for (j in 1:J){
+          id.y <- unique(group.id.y)[j]
+          NUM.M <- num.m[group.id.m == id.y]
+          NUM.Y <- num.y[group.id.y == id.y]
+          v1[, NUM.Y] <- PredictM1[, NUM.M]
+          v0[, NUM.Y] <- PredictM0[, NUM.M]
+        }
+        PredictM1 <- v1
+        PredictM0 <- v0
+      }
       
       rm(mmat.t, mmat.c)
       
       #####################################
       ##  Outcome Predictions
       #####################################
+      ### number of observations are different when group-level mediator is used
+      if(isMer.y & !isMer.m){
+        n <- n.y
+      }
+
       effects.tmp <- array(NA, dim = c(n, sims, 4))
-      
+
       if(isMer.y){
         Y.RANEF1 <- Y.RANEF2 <- Y.RANEF3 <- Y.RANEF4 <- 0
         ### 1=RE for Y(1,M(1)); 2=RE for Y(1,M(0)); 3=RE for Y(0,M(1)); 4=RE for Y(0,M(0))
@@ -755,7 +809,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
           Y.RANEF4 <- Y.ranef*var4 + Y.RANEF4
         }       	
       }
-      
+
       for(e in 1:4){
         tt <- switch(e, c(1,1,1,0), c(0,0,1,0), c(1,0,1,1), c(1,0,0,0))
         Pr1 <- matrix(, nrow=n, ncol=sims)

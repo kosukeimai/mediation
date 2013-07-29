@@ -2,6 +2,7 @@
 
 \documentclass[nojss]{jss}
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% declarations for jss.cls %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -773,6 +774,196 @@ plot(sens.out, sens.par = "R2", r.type = "total", sign.prod = "positive")
 \caption{Graphical Display of Results from the \code{medsens} Function. Results as a Function of $\tilde{R}^2$.}
 \end{center}
 \end{figure}
+
+
+
+
+
+\subsection{Mediation Analysis of Multilevel Data}
+\label{subsec:multilevel}
+
+The new version of the \pkg{mediation} package allows for mediation analysis
+of multilevel data. Researchers are often interested in analyzing data where
+individuals such as students, patients, and employees are clustered
+within groups such as schools, hospitals, and companies. Data on
+individuals may be correlated within groups, but also different groups
+may have different data generating processes. Multilevel models take
+into account such heterogeneity within and between groups
+simultaneously. Existing studies of multilevel
+mediation analysis have considered mainly three types of data structures
+(see, \citealt{Krull:2001}; \citealt{Zhang:2009}). In each type of data
+structure, individuals are clustered within groups and the outcome
+variable is at the individual level. In the first type, both the treatment
+and the mediator are individual-level variables. In the second type,
+the treatment is a group-level variable but the mediator is at the
+individual level. In the third type, both the treatment and
+the mediator are group-level variables. The \code{mediate} function
+can be used to analyze all these three types of multilevel data
+structures. 
+
+To illustrate the usage, we examine the data on
+education where students are clustered within schools. Using a random
+sample selection process, the Education
+Longitudinal Study of 2002 collected data on 10th grade students from public, Catholic,
+and other private schools. The \pkg{mediation}
+library contains two related data sets. In the \code{student} data set,
+all variables, including school-level variables, are organized at the
+student level, whereas the \code{school} data set only contains
+school-level variables (the number of observations in the
+\code{school} data set is therefore the
+same as the number of groups in the \code{student} data set). Each
+data set contains the same group indicator (\code{SCH_ID}) which
+takes the same value for each student in the same school. Researchers
+need to be careful to include exactly the same groups in both the
+mediator and the outcome models. This becomes important especially
+when some covariates have missing values, and so the groups (e.g., schools) used in
+the mediator model are different from the ones used in the outcome
+model. As explained below in detail, the group-level data set is
+required only when we analyze the data 
+where both the treatment and the mediator are group-level variables. 
+In this case, researchers need to add the group indicator into the
+group-level data set. The label of the group indicator used in the group-level
+data set needs to be exactly the same as the one used in the individual-level
+data. The two data sets \code{student} and \code{school} can be loaded via the following
+syntax from the \pkg{mediation} library, 
+<<>>=
+## load the student and school data
+data(student)
+data(school)
+@
+A brief description of each variable in the data sets can be obtained
+through a help file,
+<<eval=FALSE>>=
+?student
+?school
+@
+
+Let us begin with the case where both the treatment and the mediator
+are student-level variables. We first fit the mediator model
+where the frequency in which the student is late for school
+(\code{late}) is modeled as a function of a binary treatment of
+whether he or she has a part-time job (\code{work}) and pretreatment
+covariates (\code{gender}, \code{income}, \code{pared},
+\code{white}, \code{black}, \code{hispanic}, and
+\code{asian}). In the following, we assume that the treatment is randomly assigned to
+each subject after controlling for the effects of covariates. Next, we fit the
+outcome model where the test score (\code{score}) is modeled as a
+function of the student-level treatment (\code{work}), the
+student-level mediator (\code{late}), and the same set of pretreatment covariates. To take into account the
+multilevel data structure, we allow the intercepts in the mediator and the outcome
+models to vary for each school (\code{SCH_ID}). For generality, we
+also allow the slope of the treatment in the mediator model and the slopes of the treatment and the
+mediator in the outcome model to vary for schools. We implement
+100 simulation runs (\code{sims = 100}) as the number of
+observations is relatively large in this example, but 
+researchers should use the default (or larger) value of \code{sims} to
+obtain reliable estimates. Since the dependent variables are linear
+functions of covariates, we use the \code{lmer} function of the
+\pkg{arm} package for both the mediator and the outcome models. 
+<<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+## load the arm package
+library(arm)
+med.fit <- lmer(late ~ work + gender + income + pared + white + black + hispanic + asian + (1 + work|SCH_ID), data = student)
+out.fit <- lmer(score ~ work + late + gender + income + pared + white + black + hispanic + asian + (1 + work + late|SCH_ID), data = student)
+med.out <- mediate(med.fit, out.fit, treat = "work", mediator = "late", sims = 100)
+summary(med.out)
+@
+
+The estimated mediation, direct, and total effects are all
+significantly different from zero. The results suggest that the
+treatment (\code{work}) increases the value of the mediator (\code{late}), which
+then decreases the value of the outcome (\code{score}), and also that the
+treatment decreases the value of the outcome directly or in different causal
+paths. The \code{summary} function can produce group-specific
+effects by adding a new argument \code{output =
+  "bygroup"} or \code{output = "byeffect"}. For example,
+\code{summary(med.out, output = "bygroup")} produces the output
+organized by groups, and \code{summary(med.out, output = "byeffect")}
+produces the output organized by effects. Group-specific effects can 
+be displayed by \code{plot(med.out, group.plots = TRUE)}. The
+\code{mediate} function also allows researchers to specify different groups
+in the mediator and the outcome models, respectively. For example, it
+may be reasonable to assume that the students in the mediator model
+are correlated within schools but those in the outcome model are
+correlated within districts. In this case, if we want to estimate
+school-level effects, we can add a new argument \code{group.out =
+  "SCH_ID"} into the \code{mediate} function. 
+
+As a next example, we consider the case where the treatment is a
+group-level variable but the mediator is at the individual
+level. First, we fit the mediator model where the binary indicator of whether the
+student likes the school (\code{attachment}) is modeled as a function of the binary
+treatment of whether the school is Catholic (\code{catholic}) and pretreatment
+covariates. Then, we fit the outcome model where the binary indicator
+of whether the student had a fight at school is modeled as a function
+of the school-level treatment (\code{catholic}), the student-level mediator (\code{attachment}),
+and pretreatment covariates. Since the dependent
+variables are binary indicators, we use the \code{glmer}
+function for both the mediator and the outcome models. 
+<<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+med.fit <- glmer(attachment ~ catholic + gender + income + pared + white + black + hispanic + asian + (1 + catholic|SCH_ID), family = binomial(link = "probit"), data = student)
+out.fit <- glmer(fight ~ catholic + attachment + gender + income + pared + white + black + hispanic + asian + (1 + catholic + attachment|SCH_ID), family = binomial(link = "probit"), data = student)
+med.out <- mediate(med.fit, out.fit, treat = "catholic", mediator = "attachment", sims = 100)
+summary(med.out)
+@
+
+The estimated mediation, direct, and total effects are all
+significantly different from zero. The results suggest that the
+school-level treatment (\code{catholic}) increases the value of the
+individual-level mediator (\code{attachment}), which
+then decreases the value of the outcome (\code{fight}), and also that the
+treatment decreases the value of the outcome directly or in different causal
+paths. 
+
+Lastly, we examine the case where both the treatment and the mediator
+are group-level variables. In this case, the unit of
+analysis in the mediator model (schools) is different from the one in the
+outcome model (students). Hence, we use different data
+sets for the mediator and the outcome models, respectively. Using the
+school-level data set (\code{school}), we first
+fit the mediator model where the continuous measure of the student
+morale of the school (\code{smorale}) is modeled as a function of the proportion of
+students who receive free lunch (\code{free}) and school-level pretreatment
+covariates (\code{catholic} and \code{coed}). Next, using the
+student-level data set (\code{student}), we fit the outcome
+model where the frequency in which the student is late for school (\code{late}) is
+modeled as a function of the school-level treatment (\code{free}), the
+school-level mediator (\code{smorale}), and school- and student-level
+covariates (\code{catholic}, \code{coed}, \code{gender},
+\code{income}, \code{pared}, \code{white}, \code{black},
+\code{hispanic}, and \code{asian}). Since the treatment and the
+mediator are at the same level, the mediator model does not take
+the form of a multilevel sturucture. Hence, we analyze it with the \code{lm}
+function. On the other hand, the outcome and the
+treatment variables are at different levels. Thus, we use the
+\code{lmer} function for the outcome model. Since the treatment is a
+continuous variable, we estimate the effects by fixing the control value
+at 3 and the treatment value at 4.  
+<<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+med.fit <- lm(smorale ~  free + catholic + coed, data = school) 
+out.fit <- lmer(late ~ free + smorale + catholic + coed + gender + income + pared + white + black + hispanic + asian + (1 + free + smorale|SCH_ID), data = student) 
+med.out <- mediate(med.fit, out.fit, treat = "free", mediator = "smorale", sims = 100, control.value = 3, treat.value = 4)
+summary(med.out)
+@
+
+The estimated mediation effect is significantly different from zero,
+but the direct and total effects are not. The results suggest that the
+school-level treatment (\code{free}) decreases the value of the
+school-level mediator (\code{smorale}), which
+then increases the value of the outcome (\code{late}). 
+
+
+We conclude this section by pointing out some limitations in 
+multilevel mediation analysis by the current \code{mediate} function. First, it only
+allows for one group type for each model. For example, it is not
+possible to let the intercepts (slopes) of the outcome (mediator) model vary not
+only for schools but also for districts or other groups. Second, the
+bootstrap simulation is not allowed. Third, robust standard errors are
+not estimated. Lastly, the assumption of sequential ignorability
+cannot be tested with the sensitivity analysis. 
+
+
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
