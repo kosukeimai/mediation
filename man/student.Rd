@@ -1,12 +1,12 @@
 \name{student}
 \docType{data}
 \alias{student}
-\title{Student-level data (Education Longitudinal Study of 2002)}
+\title{Hypothetical student-level data}
 \description{
-The Education Longitudinal Study of 2002 used a two-stage sample selection process. First, a national sample of schools was selected using stratified probability proportional to size (PPS), and school contacting resulted in 1,221 eligible public, Catholic, and other private schools from a population of approximately 27,000 schools containing 10th grade students. Of the eligible schools, 752 participated in the study. In the second stage of sample selection, a sample of approximately 26 sophomores, from within each of the participating public and private schools was selected. Each school was asked to provide a list of 10th grade students, and quality assurance (QA) checks were performed on each list that was received.}
+The original data source is the Education Longitudinal Study of 2002. To deal with the issue on individually identifiable information, we generated hypothetical student-level data using a multiple imputation method. The Education Longitudinal Study of 2002 used a two-stage sample selection process. First, a national sample of schools was selected using stratified probability proportional to size (PPS), and school contacting resulted in 1,221 eligible public, Catholic, and other private schools from a population of approximately 27,000 schools containing 10th grade students. Of the eligible schools, 752 participated in the study. In the second stage of sample selection, a sample of approximately 26 sophomores, from within each of the participating public and private schools was selected. Each school was asked to provide a list of 10th grade students, and quality assurance (QA) checks were performed on each list that was received.}
 
 \usage{data}
-\format{A data matrix with 9,679 rows and 17 columns, containing no missing values. The data are provided only for illustrative purposes and not for inference about program efficacy, for which the original data source should be consulted.
+\format{A data matrix with 9,679 rows and 17 columns, containing no missing values. The data are provided only for illustrative purposes and not for inference about education effectiveness, for which the original data source should be consulted.
 
 \describe{
 	\item{SCH_ID:}{ School indicator.}
@@ -19,10 +19,6 @@ The Education Longitudinal Study of 2002 used a two-stage sample selection proce
 	\item{smorale:}{ Measure of student morale in the school. 4 levels.}
 	\item{gender:}{ Indicator variable for gender. 1 = female.}
 	\item{income:}{ Total family income. 13 levels.}
-	\item{white:}{ Indicator variable for white. 1 = white.}
-	\item{black:}{ Indicator variable for black. 1 = black.}
-	\item{hispanic:}{ Indicator variable for hispanic. 1 = hispanic.}
-	\item{asian:}{ Indicator variable for asian. 1 = asian.}
 	\item{free:}{ Percent of 10th grade students receiving free lunch. 1 to 7 levels.} 
 	\item{pared:}{ Parents highest level of education. 8 levels}
 	\item{catholic:}{ Indicator variable for catholic school. 1 = catholic school.}	
