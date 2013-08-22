@@ -24,6 +24,8 @@ The original data source is the Education Longitudinal Study of 2002. To deal wi
 	\item{catholic:}{ Indicator variable for catholic school. 1 = catholic school.}	
 }
 
+}
+
 \source{The complete student-level data is available from the data archives at www.icpsr.umich.edu/}
 \references{
 United States Department of Education. National Center for Education Statistics
