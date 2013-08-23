@@ -59,6 +59,7 @@ Note that rows with missing values will be omitted from the calculation of the r
 \item{d1.ci, d0.ci, d.ave.ci}{ confidence intervals for the average causal mediation effects at different values of the sensitivity parameters.}
 \item{tau}{ point estimate of the total treatment effect.}
 \item{tau.ci}{ confidence interval for the total treatment effect.}
+\item{conf.level}{ confidence level used for the calculation of the confidence intervals.}
 }
 
 \references{

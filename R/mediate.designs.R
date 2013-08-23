@@ -10,7 +10,7 @@ mediate.sed <- function(outcome, mediator, treat, data,
         warning("NA's in data. Observations with missing data removed.")
         data <- na.omit(data)
     }
-    data <- sapply(data, function(x) as.numeric(as.character(x)))
+    data <- sapply(data, function(x) if(is.factor(x)) as.numeric(x)-1 else as.numeric(as.character(x)))
 
     if(SI) {
         out <- mediate.np(data[,outcome], data[,mediator], data[,treat],
@@ -562,35 +562,32 @@ print.summary.mediate.design <- function(x, ...){
         if(x$design=="PD"){
             cat("Parallel Design (Interaction Allowed) \n\n")
         }
-        cat("                      Lower   Upper \n")
-        cat("Mediation Effect_0: ", format(x$d0, digits=4), "\n")
-        cat("Mediation Effect_1: ", format(x$d1, digits=4), "\n")
-        cat("Sample Size Used:   ", x$nobs,"\n\n")
+        smat <- rbind(x$d0, x$d1)
+        colnames(smat) <- c("Lower Bound", "Upper Bound")
+        rownames(smat) <- c("ACME (control)", "ACME (treated)")
 
     } else if(x$design=="PD.NINT"){
             clp <- 100 * x$conf.level
             cat("Parallel Design (with No Interaction Assumption) \n\n")
-            cat("Mediation Effect: ", format(x$d0, digits=4), clp, "% CI ",
-                format(x$d0.ci, digits=4), "\n")
-            cat("Sample Size Used: ", x$nobs,"\n\n")
+            smat <- t(as.matrix(c(x$d0, x$d0.ci)))
+            colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
+                          paste(clp, "% CI Upper", sep=""))
+            rownames(smat) <- "ACME"
 
     } else if(x$design=="PED"){
         cat("Parallel Encouragement Design\n\n")
-        cat("                      Lower   Upper \n")
-        cat("Population ACME_0: ", format(x$d0, digits=4), "\n")
-        cat("Complier ACME_0    ", format(x$d0.p, digits=4), "\n")
-        cat("Population ACME_1: ", format(x$d1, digits=4), "\n")
-        cat("Complier ACME_1:   ", format(x$d1.p, digits=4), "\n")
-        cat("Sample Size Used:  ", x$nobs,"\n\n")
+        smat <- rbind(x$d0, x$d0.p, x$d1, x$d1.p)
+        colnames(smat) <- c("Lower Bound", "Upper Bound")
+        rownames(smat) <- c("Population ACME (control)", "Complier ACME (control)",
+                             "Population ACME (treated)", "Complier ACME (treated)")
 
     } else if(x$design=="CED"){
         clp <- 100 * x$conf.level
         cat("Crossover Encouragement Design \n\n")
-        cat("Pliable ACME_0:   ", format(x$d0, digits=4), clp, "% CI ",
-            format(x$d0.ci, digits=4), "\n")
-        cat("Pliable ACME_1:   ", format(x$d1, digits=4), clp, "% CI ",
-            format(x$d1.ci, digits=4), "\n")
-        cat("Sample Size Used: ", x$nobs,"\n\n")
+        smat <- rbind(c(x$d0, x$d0.ci), c(x$d1, x$d1.ci))
+        colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
+                          paste(clp, "% CI Upper", sep=""))
+        rownames(smat) <- c("Pliable ACME (control)", "Pliable ACME (treated)")
 
     } else if(x$design=="SED.NP.SI"){
         clp <- 100 * x$conf.level
@@ -601,13 +598,16 @@ print.summary.mediate.design <- function(x, ...){
         } else {
             cat("Confidence Intervals Based on Asymptotic Variance\n\n")
         }
-
-        cat("Mediation Effect_0: ", format(x$d0, digits=4), clp, "% CI ",
-                format(x$d0.ci, digits=4), "\n")
-        cat("Mediation Effect_1: ", format(x$d1, digits=4), clp, "% CI ",
-                format(x$d1.ci, digits=4), "\n")
-        cat("Sample Size Used:   ", x$nobs,"\n\n")
+        
+        smat <- rbind(c(x$d0, x$d0.ci), c(x$d1, x$d1.ci))
+        colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
+                          paste(clp, "% CI Upper", sep=""))
+        rownames(smat) <- c("ACME (control)", "ACME (treated)")
+        
     }
-
+    
+    printCoefmat(smat, digits=4)
+    cat("\n")
+    cat("Sample Size Used: ", x$nobs,"\n\n")
     invisible(x)
 }

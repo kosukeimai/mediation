@@ -176,7 +176,7 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
   out <- list(sigma = sigma, R2tilde = R2.t, R2star = R2.s, tau = tau.o, tau.ci = tau.CI,
               d1.ci = ACME.1.CI, d0.ci = ACME.0.CI, d.ave.ci = ACME.ave.CI,
               d1.lb = ACME.1.lo.o, d0.lb = ACME.0.lo.o, d.ave.lb = ACME.ave.lo.o,
-              d1.ub = ACME.1.up.o, d0.ub = ACME.0.up.o, d.ave.ub = ACME.ave.up.o)
+              d1.ub = ACME.1.up.o, d0.ub = ACME.0.up.o, d.ave.ub = ACME.ave.up.o, conf.level = conf.level)
   class(out) <- "multimed"
   out
 }
@@ -202,14 +202,16 @@ summary.multimed <- function(object, ...){
 }
 
 print.summary.multimed <- function(x, ...){
+  clp <- 100 * x$conf.level
   cat("\n")
   cat("Causal Mediation Analysis with Confounding by an Alternative Mechanism\n\n")
   cat("Estimates under the Homogeneous Interaction Assumption:\n")
   
   cmat <- c(x$d1.lb[1], x$d0.lb[1], x$d.ave.lb[1], x$tau)
   cmat <- cbind(cmat, rbind(x$d1.ci[,1], x$d0.ci[,1], x$d.ave.ci[,1], x$tau.ci))
-  colnames(cmat) <- c("Estimate", "CI lower", "CI upper")
-  rownames(cmat) <- c("ACME(treated)", "ACME(control)", "ACME(average)", "Total")
+  colnames(cmat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
+                          paste(clp, "% CI Upper", sep=""))
+  rownames(cmat) <- c("ACME (treated)", "ACME (control)", "ACME (average)", "Total Effect")
   printCoefmat(cmat[,1:3], digits=3)
   cat("\n")
   
@@ -228,7 +230,7 @@ print.summary.multimed <- function(x, ...){
   smat <- rbind(smat, c(x$sigma[ind.d.ave.b], x$sigma[ind.d.ave.c], 
                         x$R2star[ind.d.ave.b], x$R2star[ind.d.ave.c], x$R2tilde[ind.d.ave.b], x$R2tilde[ind.d.ave.c]))
   colnames(smat) <- c("sigma(bounds)", "sigma(CI)", "R2s(bounds)", "R2s(CI)", "R2t(bounds)", "R2t(CI)")
-  rownames(smat) <- c("ACME(treated)", "ACME(control)", "ACME(average)")
+  rownames(smat) <- c("ACME (treated)", "ACME (control)", "ACME (average)")
   printCoefmat(smat[,1:6], digits=3)
   cat("\n")
   
