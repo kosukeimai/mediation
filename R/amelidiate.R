@@ -71,8 +71,8 @@ amelidiate<-function(g){
 
 #this just comes out of mediate! with modifications for .sims
 #note, the mediate code has tons of special cases for these outputs.
-#This needs to be checked. For sure the ordered outcome output doesn't work.
-#p-values need to be calculated...currently this is not done. But given p-values are going to be fixed, I haven't done this.
+#This needs to be checked. The ordered outcome output doesn't work.
+#p-values need to be calculated...currently this is not done. 
 
   ########################################################################
     ## Compute Outputs and Put Them Together
