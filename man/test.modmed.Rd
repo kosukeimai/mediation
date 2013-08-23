@@ -2,7 +2,9 @@
 \alias{test.modmed}
 \alias{test.modmed.default}
 \alias{test.modmed.mediate}
+\alias{test.modmed.mediate.order}
 \alias{print.test.modmed.mediate}
+\alias{print.test.modmed.mediate.order}
 \title{Significance Test for Moderated Mediation}
 \description{
 Function to test whether the average causal mediation effects and direct effects are significantly different between two moderator strata.
@@ -23,7 +25,7 @@ Function to test whether the average causal mediation effects and direct effects
 \item{...}{ additional arguments.}
 }
 
-\value{\code{test.modmed} returns an object of class "\code{test.modmed.mediate}", a list composed of "\code{htest}" objects. See \code{\link{t.test}} for more explanations of \code{htest} objects.
+\value{When applied to a \code{mediate} object, \code{test.modmed} returns an object of class "\code{test.modmed.mediate}", a list composed of "\code{htest}" objects. See \code{\link{t.test}} for more explanations of \code{htest} objects. When applied to a \code{mediate.order} object, the function returns an object of class "\code{test.modmed.mediate.order}" which is a list composed of "\code{htest.order}" objects.
 }
 
 \details{The function takes the original call to \code{mediate} and reruns the algorithm twice with the two sets of \code{covariates} values. It assumes that the objects in the environment in which the original mediate call was made also exist in the current environment under the same variable names, i.e., it evaluates the updated call in the current environment.
@@ -37,7 +39,7 @@ Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation Analy
 
 \author{Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}.}
 
-\seealso{\code{\link{mediate}}}
+\seealso{\code{\link{mediate}}, \code{\link{test.TMint}}}
 
 \examples{ 
 

@@ -2,6 +2,8 @@
 \alias{test.TMint}
 \alias{test.TMint.default}
 \alias{test.TMint.mediate}
+\alias{test.TMint.mediate.order}
+\alias{print.htest.order}
 \title{Significance Test for Treatment-Mediator Interaction in Causal Mediation Analysis}
 \description{
 Function to test whether the average causal mediation effects and direct effects are significantly different between the treatment and control contitions.
@@ -16,7 +18,7 @@ Function to test whether the average causal mediation effects and direct effects
 \item{...}{ additional arguments.}
 }
 
-\value{\code{test.TMint} returns an object of class "\code{htest}". See \code{\link{t.test}} for more explanations of the contents.
+\value{\code{test.TMint} returns an object of class "\code{htest}" when applied to a \code{mediate} object. See \code{\link{t.test}} for more explanations of the contents. The function returns an object of class "\code{htest.order}" which has its own \code{print} method included in this package.
 }
 
 \references{Imai, K., Keele, L. and Tingley, D. (2010) A General Approach to Causal Mediation Analysis, Psychological Methods, Vol. 15, No. 4 (December), pp. 309-334.
