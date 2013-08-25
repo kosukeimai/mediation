@@ -640,7 +640,7 @@ print.summary.medsens <- function(x, ...){
             } else {
                 tab.d0 <- tab.d0[x$ind.d0==1, -5]
             }
-            colnames(tab.d0) <-  c("Rho", "Med. Eff.", paste(100*x$conf.level, "% CI Lower", sep=""), 
+            colnames(tab.d0) <-  c("Rho", "ACME(control)", paste(100*x$conf.level, "% CI Lower", sep=""), 
                 paste(100*x$conf.level, "% CI Upper", sep=""), "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.d0) <- NULL
             tab.d1 <- cbind(round(x$rho,4), round(x$d1,4), round(x$lower.d1,4), 
@@ -651,7 +651,7 @@ print.summary.medsens <- function(x, ...){
             } else {
                 tab.d1 <- tab.d1[x$ind.d1==1, -5]
             }
-            colnames(tab.d1) <-  c("Rho", "Med. Eff.", paste(100*x$conf.level, "% CI Lower", sep=""), 
+            colnames(tab.d1) <-  c("Rho", "ACME(treated)", paste(100*x$conf.level, "% CI Lower", sep=""), 
                 paste(100*x$conf.level, "% CI Upper", sep=""), "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.d1) <- NULL
             cat("\nMediation Sensitivity Analysis: Average Mediation Effect\n")
@@ -680,7 +680,7 @@ print.summary.medsens <- function(x, ...){
             } else {
                 tab.z0 <- tab.z0[x$ind.z0==1, -5]
             }
-            colnames(tab.z0) <-  c("Rho", "Dir. Eff.", paste(100*x$conf.level, "% CI Lower", sep=""), 
+            colnames(tab.z0) <-  c("Rho", "ADE(control)", paste(100*x$conf.level, "% CI Lower", sep=""), 
                 paste(100*x$conf.level, "% CI Upper", sep=""), "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.z0) <- NULL
             tab.z1 <- cbind(round(x$rho,4), round(x$z1,4), round(x$lower.z1,4), 
@@ -691,7 +691,7 @@ print.summary.medsens <- function(x, ...){
             } else {
                 tab.z1 <- tab.z1[x$ind.z1==1, -5]
             }
-            colnames(tab.z1) <-  c("Rho", "Dir. Eff.", paste(100*x$conf.level, "% CI Lower", sep=""), 
+            colnames(tab.z1) <-  c("Rho", "ADE(treated)", paste(100*x$conf.level, "% CI Lower", sep=""), 
                 paste(100*x$conf.level, "% CI Upper", sep=""), "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.z1) <- NULL
             cat("\nMediation Sensitivity Analysis: Average Direct Effect\n")
@@ -721,7 +721,7 @@ print.summary.medsens <- function(x, ...){
             } else {
                 tab <- tab[x$ind.d0==1, -5]
             }
-            colnames(tab) <-  c("Rho", "Med. Eff.", paste(100*x$conf.level, "% CI Lower", sep=""), 
+            colnames(tab) <-  c("Rho", "ACME", paste(100*x$conf.level, "% CI Lower", sep=""), 
                 paste(100*x$conf.level, "% CI Upper", sep=""), "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab) <- NULL
             cat("\nMediation Sensitivity Analysis for Average Causal Mediation Effect\n")
@@ -743,7 +743,7 @@ print.summary.medsens <- function(x, ...){
             } else {
                 tab.z <- tab.z[x$ind.z0==1, -5]
             }
-            colnames(tab.z) <- c("Rho", "Dir. Eff.", paste(100*x$conf.level, "% CI Lower", sep=""), 
+            colnames(tab.z) <- c("Rho", "ADE", paste(100*x$conf.level, "% CI Lower", sep=""), 
                 paste(100*x$conf.level, "% CI Upper", sep=""), "R^2_M*R^2_Y*", "R^2_M~R^2_Y~")
             rownames(tab.z) <- NULL
             cat("\nMediation Sensitivity Analysis for Average Direct Effect\n")
