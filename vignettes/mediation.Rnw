@@ -177,8 +177,8 @@
 %% include your article here, just as usual
 %% Note that you should use the \pkg{}, \proglang{} and \code{} commands.
 
-%\SweaveOpts{keep.source=TRUE, echo = TRUE, results = verbatim, eval = TRUE,prompt="R>"}
-\SweaveOpts{keep.source=TRUE, echo = TRUE, results = hide, eval = FALSE}
+\SweaveOpts{keep.source=TRUE, echo = TRUE, results = verbatim, eval = TRUE,prompt="R>"}
+%\SweaveOpts{keep.source=TRUE, echo = TRUE, results = hide, eval = FALSE}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
