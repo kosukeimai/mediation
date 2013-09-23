@@ -75,8 +75,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
   isOrdered.m <- inherits(model.m, "polr")  # Note bayespolr also inherits "polr"
   isSurvreg.y <- inherits(model.y, "survreg")
   isSurvreg.m <- inherits(model.m, "survreg")
-  isMer.y <- inherits(model.y, "mer") # Note lmer and glmer do not inherit "lm" and "glm"
-  isMer.m <- inherits(model.m, "mer") # Note lmer and glmer do not inherit "lm" and "glm"
+  isMer.y <- inherits(model.y, c("lmerMod", "glmerMod")) # Note lmer and glmer do not inherit "lm" and "glm"
+  isMer.m <- inherits(model.m, c("lmerMod", "glmerMod")) # Note lmer and glmer do not inherit "lm" and "glm"
   
   # Record family and link of model.m if glmer 
   if(isMer.m && getCall(model.m)[[1]] == "glmer"){
@@ -444,34 +444,52 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
       
       # Draw model coefficients from normal
       
+      se.ranef.new <- function (object) {
+          se.bygroup <- ranef(object, condVar = TRUE)
+          n.groupings <- length(se.bygroup)
+          for (m in 1:n.groupings) {
+              vars.m <- attr(se.bygroup[[m]], "postVar")
+              K <- dim(vars.m)[1]
+              J <- dim(vars.m)[3]
+              names.full <- dimnames(se.bygroup[[m]])
+              se.bygroup[[m]] <- array(NA, c(J, K))
+              for (j in 1:J) {
+                  se.bygroup[[m]][j, ] <- sqrt(diag(as.matrix(vars.m[, 
+                                                                     , j])))
+              }
+              dimnames(se.bygroup[[m]]) <- list(names.full[[1]], names.full[[2]])
+          }
+          return(se.bygroup)
+      }
+      
       if(isMer.m){
-        MModel.fixef.vcov <- vcov(model.m)
-        MModel.fixef.sim <- mvrnorm(sims,mu=MModel.fixef,Sigma=MModel.fixef.vcov)
-        Nm.ranef <- ncol(ranef(model.m)[[1]]) 
-        MModel.ranef.sim <- vector("list",Nm.ranef)
-        for (d in 1:Nm.ranef){
-          MModel.ranef.sim[[d]] <- matrix(rnorm(sims*nrow(ranef(model.m)[[1]]), mean = ranef(model.m)[[1]][,d], sd = se.ranef(model.m)[[1]][,d]), nrow = sims, byrow = TRUE)
-        }
+          MModel.fixef.vcov <- vcov(model.m)
+          MModel.fixef.sim <- mvrnorm(sims,mu=MModel.fixef,Sigma=MModel.fixef.vcov)
+          Nm.ranef <- ncol(ranef(model.m)[[1]]) 
+          MModel.ranef.sim <- vector("list",Nm.ranef)
+          for (d in 1:Nm.ranef){
+              MModel.ranef.sim[[d]] <- matrix(rnorm(sims*nrow(ranef(model.m)[[1]]), mean = ranef(model.m)[[1]][,d], sd = se.ranef.new(model.m)[[1]][,d]), nrow = sims, byrow = TRUE)
+          }
       } else {
-        if(sum(is.na(MModel.coef)) > 0){
-          stop("NA in model coefficients; rerun models with nonsingular design matrix")
-        }
-        MModel <- mvrnorm(sims, mu=MModel.coef, Sigma=MModel.var.cov)
+          if(sum(is.na(MModel.coef)) > 0){
+              stop("NA in model coefficients; rerun models with nonsingular design matrix")
+          }
+          MModel <- mvrnorm(sims, mu=MModel.coef, Sigma=MModel.var.cov)
       }
       
       if(isMer.y){
-        YModel.fixef.vcov <- vcov(model.y)
-        YModel.fixef.sim <- mvrnorm(sims,mu=YModel.fixef,Sigma=YModel.fixef.vcov)
-        Ny.ranef <- ncol(ranef(model.y)[[1]]) 
-        YModel.ranef.sim <- vector("list",Ny.ranef)
-        for (d in 1:Ny.ranef){
-          YModel.ranef.sim[[d]] <- matrix(rnorm(sims*nrow(ranef(model.y)[[1]]), mean = ranef(model.y)[[1]][,d], sd = se.ranef(model.y)[[1]][,d]), nrow = sims, byrow = TRUE)
-        }
+          YModel.fixef.vcov <- vcov(model.y)
+          YModel.fixef.sim <- mvrnorm(sims,mu=YModel.fixef,Sigma=YModel.fixef.vcov)
+          Ny.ranef <- ncol(ranef(model.y)[[1]]) 
+          YModel.ranef.sim <- vector("list",Ny.ranef)
+          for (d in 1:Ny.ranef){
+              YModel.ranef.sim[[d]] <- matrix(rnorm(sims*nrow(ranef(model.y)[[1]]), mean = ranef(model.y)[[1]][,d], sd = se.ranef.new(model.y)[[1]][,d]), nrow = sims, byrow = TRUE)
+          }
       } else {
-        if(sum(is.na(YModel.coef)) > 0){
-          stop("NA in model coefficients; rerun models with nonsingular design matrix")
-        }
-        YModel <- mvrnorm(sims, mu=YModel.coef, Sigma=YModel.var.cov)
+          if(sum(is.na(YModel.coef)) > 0){
+              stop("NA in model coefficients; rerun models with nonsingular design matrix")
+          }
+          YModel <- mvrnorm(sims, mu=YModel.coef, Sigma=YModel.var.cov)
       } 
       
       if(robustSE && (isSurvreg.m | isSurvreg.y)){
