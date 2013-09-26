@@ -29,7 +29,9 @@ This function is not completely developed. It does not support models for ordere
 \dontrun{
 # Hypothetical example
 
-##To use mediations, must make list of multiple datasets. Then, must also repeat the treatment assignment list as many times as you have data sets.
+## To use mediations, must make list of multiple datasets. Then, 
+## must also repeat the treatment assignment list as many times 
+## as you have data sets.
 # datasets <- list(D1=D1, D2=D2) # list of multiply imputed data sets
 # mediators <- c("M1")
 # outcome <- c("Ycont1")

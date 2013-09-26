@@ -256,10 +256,12 @@ model.y <- glmer(work1 ~ treat + job_dich + econ_hard + (1 + treat | occp),
                 family = binomial(link = "probit"), data = jobs)
 
 # Output based on mediator group ("educ")
-multilevel <- mediate(model.m, model.y, treat = "treat", mediator = "job_dich", sims=50, group.out="educ")
+multilevel <- mediate(model.m, model.y, treat = "treat", 
+              mediator = "job_dich", sims=50, group.out="educ")
 
 # Output based on outcome group ("occp")
-# multilevel <- mediate(model.m, model.y, treat = "treat", mediator = "job_dich", sims=50) 
+# multilevel <- mediate(model.m, model.y, treat = "treat", 
+              mediator = "job_dich", sims=50) 
 
 # Group-average effects  
 summary(multilevel)

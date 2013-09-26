@@ -56,7 +56,8 @@ model.y <- glmer(work1 ~ treat + job_dich + econ_hard + (1 + treat | occp),
                 family = binomial(link = "probit"), data = jobs)
 
 # Output based on mediator group
-multilevel <- mediate(model.m, model.y, treat = "treat", mediator = "job_dich", sims=50, group.out="educ")
+multilevel <- mediate(model.m, model.y, treat = "treat", 
+                      mediator = "job_dich", sims=50, group.out="educ")
 
 #plot(multilevel, group.plots=TRUE)
 }

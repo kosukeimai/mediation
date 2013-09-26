@@ -81,6 +81,7 @@ summary(x)  # tabular summary of results for all model combinations
 plot(x)  # graphical summary of results for all model combinations at once
 
 plot(x$Ycont1.T1vsCont.M1) 
-    # Individual 'mediate' outputs are stored as list elements and can be accessed using the usual "$" operator.
+    # Individual 'mediate' outputs are stored as list elements and can be 
+    # accessed using the usual "$" operator.
 }
 } 
