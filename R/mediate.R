@@ -75,8 +75,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
   isOrdered.m <- inherits(model.m, "polr")  # Note bayespolr also inherits "polr"
   isSurvreg.y <- inherits(model.y, "survreg")
   isSurvreg.m <- inherits(model.m, "survreg")
-  isMer.y <- inherits(model.y, c("lmerMod", "glmerMod")) # Note lmer and glmer do not inherit "lm" and "glm"
-  isMer.m <- inherits(model.m, c("lmerMod", "glmerMod")) # Note lmer and glmer do not inherit "lm" and "glm"
+  isMer.y <- inherits(model.y, "merMod") # Note lmer and glmer do not inherit "lm" and "glm"
+  isMer.m <- inherits(model.m, "merMod") # Note lmer and glmer do not inherit "lm" and "glm"
   
   # Record family and link of model.m if glmer 
   if(isMer.m && getCall(model.m)[[1]] == "glmer"){
@@ -1953,7 +1953,7 @@ print.summary.mediate.mer <- function(x,...){
                        x$model.y$family$link == "identity") ||      # glm normal
                     (inherits(x$model.y, "survreg") &&
                        x$model.y$dist == "gaussian") ||             # surv normal
-                    (inherits(x$model.y, c("lmerMod", "glmerMod")) &&
+                    (inherits(x$model.y, "merMod") &&
                        x$model.y@call[[1]] == "lmer") )          # lmer
   
   printone <- !x$INT && isLinear.y
@@ -2025,7 +2025,7 @@ print.summary.mediate.mer.2 <- function(x,...){
                        x$model.y$family$link == "identity") ||      # glm normal
                     (inherits(x$model.y, "survreg") &&
                        x$model.y$dist == "gaussian") ||             # surv normal
-                    (inherits(x$model.y, c("lmerMod", "glmerMod")) &&
+                    (inherits(x$model.y, "merMod") &&
                        x$model.y@call[[1]] == "lmer") )          # lmer
   
   printone <- !x$INT && isLinear.y
@@ -2175,7 +2175,7 @@ print.summary.mediate.mer.3 <- function(x,...){
                        x$model.y$family$link == "identity") ||      # glm normal
                     (inherits(x$model.y, "survreg") &&
                        x$model.y$dist == "gaussian") ||             # surv normal
-                    (inherits(x$model.y, c("lmerMod", "glmerMod")) &&
+                    (inherits(x$model.y, "merMod") &&
                        x$model.y@call[[1]] == "lmer") )          # lmer
   
   printone <- !x$INT && isLinear.y
@@ -2475,7 +2475,7 @@ plot.mediate.mer <- function(x, treatment = NULL, group.plots = FALSE,
                        x$model.y$family$link == "identity") ||      # glm normal
                     (inherits(x$model.y, "survreg") &&
                        x$model.y$dist == "gaussian") ||             # surv normal
-                    (inherits(x$model.y, c("lmerMod", "glmerMod")) &&
+                    (inherits(x$model.y, "merMod") &&
                        x$model.y@call[[1]] == "lmer") )          # lmer
   
   printone <- !x$INT && isLinear.y
