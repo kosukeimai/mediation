@@ -1,3 +1,5 @@
+%\VignetteIndexEntry{mediation-old}
+
 \documentclass[article]{jss}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
