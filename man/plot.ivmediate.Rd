@@ -1,0 +1,64 @@
+\name{plot.ivmediate}
+\alias{plot.ivmediate}
+\title{Plotting Local Indirect, Direct, and Total Effects from Mediation Analysis with Treatment Noncompliance}
+\description{
+Function to plot results from \code{ivmediate}. The vertical axis lists the local average causal mediation effects, local average natural direct effects and local average treatment effects and the horizontal axis indicates the respective magnitudes. Most standard options for plot function available.
+}
+\usage{
+\method{plot}{ivmediate}(x, treatment = NULL, labels = NULL,
+                         effect.type = c("indirect","direct","total"),
+                         conf.level = x$conf.level[1],
+                         xlim = NULL, ylim = NULL, xlab = "", ylab = "",
+                         main = NULL, lwd = 1.5, cex = .85,
+                         col = "black", ...)
+}
+
+\arguments{
+\item{x}{ object of class \code{ivmediate} as produced by \code{ivmediate}.}
+\item{treatment}{ a character string indicating the baseline treatment value of the estimated local average causal mediation effect and direct effect to plot. Can be either "control", "treated" or "both". If 'NULL' (default), both sets of estimates are plotted.}
+\item{labels}{ a vector of character strings indicating the labels for the estimated effects. The default labels will be used if NULL.}
+\item{effect.type}{ a vector indicating which quantities of interest to plot. Default is to plot all three quantities (indirect, direct and total effects).}
+\item{conf.level}{ a numeric value for the level of the confidence intervals to plot. Must equal one of the confidence levels used to produce the \code{ivmediate} object.}
+\item{xlim}{ range of the horizontal axis.}
+\item{ylim}{ range of the vertical axis.}
+\item{xlab}{ label of the horizontal axis.}
+\item{ylab}{ label of the vertical axis.}
+\item{main}{ main title.}
+\item{lwd}{ width of the horizontal bars for confidence intervals.}
+\item{cex}{ size of the dots for point estimates.}
+\item{col}{ color of the dots and horizontal bars for the estimates.}
+\item{...}{ additional parameters passed to 'plot'.}
+}
+
+
+\references{
+Yamamoto, T. (2013). Identification and Estimation of Causal Mediation Effects with Treatment Noncompliance. Unpublished manuscript.
+} 
+
+\author{Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}.}
+ 
+\seealso{\code{\link{ivmediate}}, \code{\link{summary.ivmediate}}}
+
+\examples{ 
+# Examples with JOBS II Field Experiment
+
+# ** For illustration purposes a small number of simulations are used **
+
+data(jobs)
+
+a <- lm(comply ~ treat + sex + age + marital + nonwhite + educ + income, 
+        data = jobs)
+b <- glm(job_dich ~ comply + treat + sex + age + marital + nonwhite + educ + income, 
+        data = jobs, family = binomial)
+c <- lm(earnings ~ job_dich * (comply + treat) + sex + age + marital + nonwhite + educ + income, 
+        data = jobs)
+
+out <- ivmediate(a, b, c, sims = 50, boot = FALSE,
+                 enc = "treat", treat = "comply", mediator = "job_dich",
+                 mc.cores = min(2, getOption("mc.cores", 2L)))
+                 
+summary(out)
+plot(out)
+
+} 
+

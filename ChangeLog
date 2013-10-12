@@ -17,3 +17,4 @@ version      date  description
 4.2.2    04/18/13  Bug fix for lmer; new option to plotting functions; package now depends on sandwich
 4.2.3    08/25/13  Functions for testing moderated mediation and treatment-mediator interaction; function for applying mediate to multiply imputed datasets
 4.2.4    09/26/13  Compatibility with new version of lme4 (1.0)
+4.3      10/13/13  immediate for mediation analysis with treatment noncompliance

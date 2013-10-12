@@ -14,7 +14,8 @@ export(mediate, summary.mediate, plot.mediate,
        multimed, summary.multimed, plot.multimed,
        mediate.sed, mediate.pd, mediate.ped, mediate.ced,
        summary.mediate.design,
-       test.TMint, test.modmed, amelidiate)
+       test.TMint, test.modmed, amelidiate,
+       ivmediate, summary.ivmediate, plot.ivmediate)
 
 S3method(summary, mediate)
 S3method(summary, mediate.order)
@@ -24,6 +25,7 @@ S3method(summary, mediations)
 S3method(summary, mediations.order)
 S3method(summary, multimed)
 S3method(summary, mediate.design)
+S3method(summary, ivmediate)
 S3method(plot, mediate)
 S3method(plot, mediate.order)
 S3method(plot, mediate.mer)
@@ -31,6 +33,7 @@ S3method(plot, medsens)
 S3method(plot, mediations)
 S3method(plot, mediations.order)
 S3method(plot, multimed)
+S3method(plot, ivmediate)
 S3method(print, summary.mediate)
 S3method(print, summary.mediate.order)
 S3method(print, summary.mediate.mer)
@@ -44,6 +47,7 @@ S3method(print, summary.mediate.design)
 S3method(print, test.modmed.mediate)
 S3method(print, test.modmed.mediate.order)
 S3method(print, htest.order)
+S3method(print, summary.ivmediate)
 S3method(test.TMint, default)
 S3method(test.TMint, mediate)
 S3method(test.TMint, mediate.order)
