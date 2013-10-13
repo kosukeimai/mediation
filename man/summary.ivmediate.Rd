@@ -34,6 +34,9 @@ Yamamoto, T. (2013). Identification and Estimation of Causal Mediation Effects w
 
 # ** For illustration purposes a small number of simulations are used **
 
+require(parallel)
+require(MASS)
+
 data(jobs)
 
 a <- lm(comply ~ treat + sex + age + marital + nonwhite + educ + income, 

@@ -16,7 +16,7 @@ measured; a continuous measure of depressive symptoms based on the Hopkins Sympt
 and a binary variable, representing whether the respondent had become employed.
 }
 \usage{data}
-\format{A data matrix with 899 rows and 16 columns, containing no missing values. The data are provided only for illustrative purposes and not for inference about program efficacy, for which the original data source should be consulted.
+\format{A data matrix with 899 rows and 17 columns, containing no missing values. The data are provided only for illustrative purposes and not for inference about program efficacy, for which the original data source should be consulted.
 
 \describe{
 	\item{econ_hard:}{ Level of economic hardship pre-treatment with values from 1 to 5.}
@@ -33,7 +33,8 @@ and a binary variable, representing whether the respondent had become employed.
 	\item{work1:}{ Indicator variable for employment. 1 = employed.}
 	\item{job_dich:}{ The job_seek measure recoded into two categories of high and low. 1 = high job search self-efficacy.}
 	\item{job_disc:}{ The job_seek measure recoded into four categories from lowest to highest.}
-	\item{treat:}{ Indicator variable for whether participant was randomly selected for the JOBS II training program. 1 = participation.}
+	\item{treat:}{ Indicator variable for whether participant was randomly selected for the JOBS II training program. 1 = assignment to participation.}
+	\item{comply:}{ Indicator variable for whether participant actually participated in the JOBS II program. 1 = participation.}
 	\item{control:}{ Indicator variable for whether participant was randomly selected to not participate in the JOBS II training program. 1 = non-participation.}
 	}
 
