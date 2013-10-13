@@ -4,7 +4,7 @@
 
 \title{Summarizing Output from Mediation Analysis with Treatment Noncompliance}
 \description{
-Function to report results from mediation analysis with treatment noncompliance. Reported categories are local average causal mediation effects, local average natural direct effects andlocal average treatment (total) effect.
+Function to report results from mediation analysis with treatment noncompliance. Reported categories are local average causal mediation effects, local average natural direct effects and local average treatment (total) effect.
 }
 \usage{
 
@@ -43,7 +43,7 @@ a <- lm(comply ~ treat + sex + age + marital + nonwhite + educ + income,
         data = jobs)
 b <- glm(job_dich ~ comply + treat + sex + age + marital + nonwhite + educ + income, 
         data = jobs, family = binomial)
-c <- lm(earnings ~ job_dich * (comply + treat) + sex + age + marital + nonwhite + educ + income, 
+c <- lm(depress2 ~ job_dich * (comply + treat) + sex + age + marital + nonwhite + educ + income, 
         data = jobs)
 
 out <- ivmediate(a, b, c, sims = 50, boot = FALSE,

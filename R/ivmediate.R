@@ -117,7 +117,7 @@ ivmediate.fit.b <- function(x, model.t, model.m, model.y,
                             enc, treat, mediator){
   
   data <- model.frame(model.y)    
-  sb <- sample(1:nrow(data), nrow(data), repl=TRUE)
+  sb <- sample(1:nrow(data), nrow(data), replace=TRUE)
   Data.b <- data[sb,]
   
   model.t.b <- update(model.t, data = Data.b)

@@ -2,7 +2,7 @@
 \alias{ivmediate} 
 \title{Causal Mediation Analysis with Treatment Noncompliance} 
 \description{ 
-'ivmediate' is used to estimate local average causal mediation effects, local average natural direct effects and local averate treatment effects for compliers using the method of Yamamoto (2013).
+'ivmediate' is used to estimate local average causal mediation effects, local average natural direct effects and local average treatment effects for compliers using the method of Yamamoto (2013).
 } 
 
 \usage{
@@ -33,11 +33,11 @@ ivmediate(model.t, model.m, model.y, ci = TRUE, sims = 1000, boot = TRUE,
 
 \details{This is the workhorse function for estimating local causal mediation effects for compliers using the approach of Yamamoto (2013).
 
-Although the method is quite general and accommodate various types of mediator and outcome variables, the current function can only handle binary variables (modelled via \code{glm} with \code{family=binomial}) and continuous variables (modelled via \code{lm}). In addition, when the mediator is continuous and its model contains any predictor other than the encouragement and actual treatment, computation of confidence intervals is extremely slow because it requires numerical integration via \code{\link{integrate}} for each observation in each simulation iteration. Users are advised to use a powerful computer (preferrably equipped with multiple CPU cores) for such calculation, especially if the data contain many rows and/or the desired number of simulations is large.
+Although the method is quite general and accommodate various types of mediator and outcome variables, the current function can only handle binary variables (modeled via \code{glm} with \code{family=binomial}) and continuous variables (modeled via \code{lm}). In addition, when the mediator is continuous and its model contains any predictor other than the encouragement and actual treatment, computation of confidence intervals is extremely slow because it requires numerical integration via \code{\link{integrate}} for each observation in each simulation iteration. Users are advised to use a powerful computer (preferably equipped with multiple CPU cores) for such calculation, especially if the data contain many rows and/or the desired number of simulations is large.
 }
 
 
-\value{\code{ivmediate} returns an object of class "\code{ivmediate}", a list that contains the components listed below.  Some of these elements are not available depending on the values of the 'ci' and 'long' options.
+\value{\code{ivmediate} returns an object of class '\code{ivmediate}', a list that contains the components listed below.  Some of these elements are not available depending on the values of the 'ci' and 'long' options.
 
 The function \code{summary} (i.e., \code{summary.ivmediate}) can be used to obtain a table of the results.  The function \code{plot} (i.e., \code{plot.ivmediate}) can be used to produce a plot of the estimated effects along with their confidence intervals. 
 

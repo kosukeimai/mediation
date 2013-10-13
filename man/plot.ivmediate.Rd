@@ -53,7 +53,7 @@ a <- lm(comply ~ treat + sex + age + marital + nonwhite + educ + income,
         data = jobs)
 b <- glm(job_dich ~ comply + treat + sex + age + marital + nonwhite + educ + income, 
         data = jobs, family = binomial)
-c <- lm(earnings ~ job_dich * (comply + treat) + sex + age + marital + nonwhite + educ + income, 
+c <- lm(depress2 ~ job_dich * (comply + treat) + sex + age + marital + nonwhite + educ + income, 
         data = jobs)
 
 out <- ivmediate(a, b, c, sims = 50, boot = FALSE,
