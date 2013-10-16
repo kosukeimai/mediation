@@ -10,7 +10,7 @@
 ivmediate(model.t, model.m, model.y, ci = TRUE, sims = 1000, boot = TRUE,
           enc = "enc.name", treat = "treat.name", mediator = "med.name",
           conf.level = .95, long = TRUE, dropobs = FALSE,
-          multicore = TRUE, mc.cores = getOption("mc.cores", 2L))
+          multicore = FALSE, mc.cores = getOption("mc.cores", 2L))
 
 } 
 
@@ -27,13 +27,13 @@ ivmediate(model.t, model.m, model.y, ci = TRUE, sims = 1000, boot = TRUE,
 \item{conf.level}{ a numeric vector indicating the levels of the returned two-sided confidence intervals. Default is to return the 2.5 and 97.5 percentiles of the simulated quantities.} 
 \item{long}{ a logical value. If 'TRUE', the output will contain the entire sets of simulation draws of the estimated effects. Default is 'TRUE'.}
 \item{dropobs}{ a logical value indicating the behavior when the model frames of 'model.t', 'model.m' and 'model.y' are composed of different observations. If 'TRUE', models will be re-fitted using common data rows. If 'FALSE', error is returned. Default is 'FALSE'.}
-\item{multicore}{ a logical value indicating whether to parallelize simulations into multiple cores. Default is 'TRUE'.}
+\item{multicore}{ a logical value indicating whether to parallelize simulations into multiple cores. Default is 'FALSE'. Note that this option is currently unavailable on Windows.}
 \item{mc.cores}{ number of cores to be used in the parallelization of bootstrap or Monte Carlo simulations. Default is the value in the 'mc.cores' option (see \code{\link{mclapply}}).}
 }
 
 \details{This is the workhorse function for estimating local causal mediation effects for compliers using the approach of Yamamoto (2013).
 
-Although the method is quite general and accommodate various types of mediator and outcome variables, the current function can only handle binary variables (modeled via \code{glm} with \code{family=binomial}) and continuous variables (modeled via \code{lm}). In addition, when the mediator is continuous and its model contains any predictor other than the encouragement and actual treatment, computation of confidence intervals is extremely slow because it requires numerical integration via \code{\link{integrate}} for each observation in each simulation iteration. Users are advised to use a powerful computer (preferably equipped with multiple CPU cores) for such calculation, especially if the data contain many rows and/or the desired number of simulations is large.
+Although the method is quite general and accommodate various types of mediator and outcome variables, the current function can only handle binary variables (modeled via \code{glm} with \code{family=binomial}) and continuous variables (modeled via \code{lm}). In addition, when the mediator is continuous and its model contains any predictor other than the encouragement and actual treatment, computation of confidence intervals is extremely slow because it requires numerical integration via \code{\link{integrate}} for each observation in each simulation iteration. Users are advised to use a powerful computer (preferably equipped with multiple CPU cores and a non-Windows operating system) for such calculation, especially if the data contain many rows and/or the desired number of simulations is large.
 }
 
 
@@ -89,8 +89,7 @@ c <- lm(depress2 ~ job_dich * (comply + treat) + sex + age + marital + nonwhite 
         data = jobs)
 
 out <- ivmediate(a, b, c, sims = 50, boot = FALSE, 
-                 enc = "treat", treat = "comply", mediator = "job_dich",
-                 mc.cores = min(2, getOption("mc.cores", 2L)))
+                 enc = "treat", treat = "comply", mediator = "job_dich")
                  
 summary(out)
 plot(out)

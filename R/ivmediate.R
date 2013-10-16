@@ -1,7 +1,7 @@
 ivmediate <- function(model.t, model.m, model.y, ci = TRUE, sims = 1000, boot = TRUE,
                       enc = "enc.name", treat = "treat.name", mediator = "med.name",
                       conf.level = .95, long = TRUE, dropobs = FALSE,
-                      multicore = TRUE, mc.cores = getOption("mc.cores", 2L)){
+                      multicore = FALSE, mc.cores = getOption("mc.cores", 2L)){
   
   # Drop observations not common to all three models
   if(dropobs){

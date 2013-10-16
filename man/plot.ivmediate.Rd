@@ -57,8 +57,7 @@ c <- lm(depress2 ~ job_dich * (comply + treat) + sex + age + marital + nonwhite 
         data = jobs)
 
 out <- ivmediate(a, b, c, sims = 50, boot = FALSE,
-                 enc = "treat", treat = "comply", mediator = "job_dich",
-                 mc.cores = min(2, getOption("mc.cores", 2L)))
+                 enc = "treat", treat = "comply", mediator = "job_dich")
                  
 summary(out)
 plot(out)
