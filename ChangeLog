@@ -18,3 +18,4 @@ version      date  description
 4.2.3    08/25/13  Functions for testing moderated mediation and treatment-mediator interaction; function for applying mediate to multiply imputed datasets
 4.2.4    09/26/13  Compatibility with new version of lme4 (1.0)
 4.3      10/13/13  immediate for mediation analysis with treatment noncompliance
+4.3.1    10/16/13  Fixed the compatibility issue with Windows for multicore options
