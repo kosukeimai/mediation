@@ -1,6 +1,6 @@
 %\VignetteIndexEntry{mediation}
 
-\documentclass[article]{jss}
+\documentclass[nojss]{jss}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% declarations for jss.cls %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

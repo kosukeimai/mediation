@@ -10,6 +10,7 @@ ivmediate <- function(model.t, model.m, model.y, ci = TRUE, sims = 1000, boot = 
     odata.y <- model.frame(model.y)
     odata.tm <- merge(odata.t, odata.m, sort=FALSE,
                       by=c("row.names", intersect(names(odata.t), names(odata.m))))
+    rownames(odata.tm) <- odata.tm$Row.names
     newdata <- merge(odata.tm[,-1L], odata.y, sort=FALSE,
                      by=c("row.names", intersect(names(odata.tm), names(odata.y))))
     rownames(newdata) <- newdata$Row.names
