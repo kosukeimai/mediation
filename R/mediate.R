@@ -1337,16 +1337,46 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     
     low <- (1 - conf.level)/2
     high <- 1 - low
-    d0.ci <- quantile(delta.0, c(low,high), na.rm=TRUE)
-    d1.ci <- quantile(delta.1, c(low,high), na.rm=TRUE)
-    tau.ci <- quantile(tau, c(low,high), na.rm=TRUE)
-    z1.ci <- quantile(zeta.1, c(low,high), na.rm=TRUE)
-    z0.ci <- quantile(zeta.0, c(low,high), na.rm=TRUE)
-    n0.ci <- quantile(nu.0, c(low,high), na.rm=TRUE)
-    n1.ci <- quantile(nu.1, c(low,high), na.rm=TRUE)
-    d.avg.ci <- quantile(delta.avg, c(low,high), na.rm=TRUE)
-    z.avg.ci <- quantile(zeta.avg, c(low,high), na.rm=TRUE)
-    n.avg.ci <- quantile(nu.avg, c(low,high), na.rm=TRUE)
+
+    if (boot){
+        BC.CI <- function(theta){
+            z.inv.theta <- length(theta[theta < mean(theta)])/sims
+            z.theta <- qnorm(z.inv.theta)
+            top.theta <- sum((mean(theta) - theta)^3)
+            under.theta <- (1/6) * (sum((mean(theta) - theta)^2))^{3/2}
+            a.theta <- top.theta / under.theta
+            lower.inv <-  pnorm(z.theta + (z.theta + qnorm(low))/(1 - a.theta * (z.theta + qnorm(low))))
+            lower2 <- lower <- quantile(theta, lower.inv)
+            upper.inv <-  pnorm(z.theta + (z.theta + qnorm(high))/(1 - a.theta * (z.theta + qnorm(high))))
+            upper2 <- upper <- quantile(theta, upper.inv)
+            if(upper2 < lower2){
+                upper <- lower2
+                lower <- upper2
+            }
+            return(c(lower, upper))      
+        }
+        d0.ci <- BC.CI(delta.0)
+        d1.ci <- BC.CI(delta.1)
+        tau.ci <- BC.CI(tau)
+        z1.ci <- BC.CI(zeta.1)
+        z0.ci <- BC.CI(zeta.0)
+        n0.ci <- BC.CI(nu.0)
+        n1.ci <- BC.CI(nu.1)
+        d.avg.ci <- BC.CI(delta.avg)
+        z.avg.ci <- BC.CI(zeta.avg)
+        n.avg.ci <- BC.CI(nu.avg)
+    } else {
+        d0.ci <- quantile(delta.0, c(low,high), na.rm=TRUE)
+        d1.ci <- quantile(delta.1, c(low,high), na.rm=TRUE)
+        tau.ci <- quantile(tau, c(low,high), na.rm=TRUE)
+        z1.ci <- quantile(zeta.1, c(low,high), na.rm=TRUE)
+        z0.ci <- quantile(zeta.0, c(low,high), na.rm=TRUE)
+        n0.ci <- quantile(nu.0, c(low,high), na.rm=TRUE)
+        n1.ci <- quantile(nu.1, c(low,high), na.rm=TRUE)
+        d.avg.ci <- quantile(delta.avg, c(low,high), na.rm=TRUE)
+        z.avg.ci <- quantile(zeta.avg, c(low,high), na.rm=TRUE)
+        n.avg.ci <- quantile(nu.avg, c(low,high), na.rm=TRUE)
+    }
     
     # p-values
     d0.p <- pval(delta.0, d0)
@@ -1801,11 +1831,28 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     ########################################################################
     low <- (1 - conf.level)/2
     high <- 1 - low
-    d0.ci <- apply(delta.0, 2, quantile, c(low,high))
-    d1.ci <- apply(delta.1, 2, quantile, c(low,high))
-    tau.ci <- apply(tau, 2, quantile, c(low,high))
-    z1.ci <- apply(zeta.1, 2, quantile, c(low,high))
-    z0.ci <- apply(zeta.0, 2, quantile, c(low,high))
+
+    BC.CI <- function(theta){
+        z.inv.theta <- length(theta[theta < mean(theta)])/sims
+        z.theta <- qnorm(z.inv.theta)
+        top.theta <- sum((mean(theta) - theta)^3)
+        under.theta <- (1/6) * (sum((mean(theta) - theta)^2))^{3/2}
+        a.theta <- top.theta / under.theta
+        lower.inv <-  pnorm(z.theta + (z.theta + qnorm(low))/(1 - a.theta * (z.theta + qnorm(low))))
+        lower2 <- lower <- quantile(theta, lower.inv)
+        upper.inv <-  pnorm(z.theta + (z.theta + qnorm(high))/(1 - a.theta * (z.theta + qnorm(high))))
+        upper2 <- upper <- quantile(theta, upper.inv)
+        if(upper2 < lower2){
+            upper <- lower2
+            lower <- upper2
+        }
+        return(c(lower, upper))      
+    }
+    d0.ci <- BC.CI(delta.0)
+    d1.ci <- BC.CI(delta.1)
+    tau.ci <- BC.CI(tau)
+    z1.ci <- BC.CI(zeta.1)
+    z0.ci <- BC.CI(zeta.0)
     
     # p-values
     d0.p <- d1.p <- z0.p <- z1.p <- tau.p <- rep(NA, n.ycat)
