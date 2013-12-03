@@ -1340,19 +1340,16 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
 
     if (boot){
         BC.CI <- function(theta){
-            z.inv.theta <- length(theta[theta < mean(theta)])/sims
-            z.theta <- qnorm(z.inv.theta)
-            top.theta <- sum((mean(theta) - theta)^3)
-            under.theta <- (1/6) * (sum((mean(theta) - theta)^2))^{3/2}
-            a.theta <- top.theta / under.theta
-            lower.inv <-  pnorm(z.theta + (z.theta + qnorm(low))/(1 - a.theta * (z.theta + qnorm(low))))
+            z.inv <- length(theta[theta < mean(theta)])/sims
+            z <- qnorm(z.inv)
+            U <- (sims - 1) * (mean(theta) - theta)
+            top <- sum(U^3)
+            under <- (1/6) * (sum(U^2))^{3/2}
+            a <- top / under
+            lower.inv <-  pnorm(z + (z + qnorm(low))/(1 - a * (z + qnorm(low))))
             lower2 <- lower <- quantile(theta, lower.inv)
-            upper.inv <-  pnorm(z.theta + (z.theta + qnorm(high))/(1 - a.theta * (z.theta + qnorm(high))))
+            upper.inv <-  pnorm(z + (z + qnorm(high))/(1 - a * (z + qnorm(high))))
             upper2 <- upper <- quantile(theta, upper.inv)
-            if(upper2 < lower2){
-                upper <- lower2
-                lower <- upper2
-            }
             return(c(lower, upper))      
         }
         d0.ci <- BC.CI(delta.0)
@@ -1833,19 +1830,16 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     high <- 1 - low
 
     BC.CI <- function(theta){
-        z.inv.theta <- length(theta[theta < mean(theta)])/sims
-        z.theta <- qnorm(z.inv.theta)
-        top.theta <- sum((mean(theta) - theta)^3)
-        under.theta <- (1/6) * (sum((mean(theta) - theta)^2))^{3/2}
-        a.theta <- top.theta / under.theta
-        lower.inv <-  pnorm(z.theta + (z.theta + qnorm(low))/(1 - a.theta * (z.theta + qnorm(low))))
+        z.inv <- length(theta[theta < mean(theta)])/sims
+        z <- qnorm(z.inv)
+        U <- (sims - 1) * (mean(theta) - theta)
+        top <- sum(U^3)
+        under <- (1/6) * (sum(U^2))^{3/2}
+        a <- top / under
+        lower.inv <-  pnorm(z + (z + qnorm(low))/(1 - a * (z + qnorm(low))))
         lower2 <- lower <- quantile(theta, lower.inv)
-        upper.inv <-  pnorm(z.theta + (z.theta + qnorm(high))/(1 - a.theta * (z.theta + qnorm(high))))
+        upper.inv <-  pnorm(z + (z + qnorm(high))/(1 - a * (z + qnorm(high))))
         upper2 <- upper <- quantile(theta, upper.inv)
-        if(upper2 < lower2){
-            upper <- lower2
-            lower <- upper2
-        }
         return(c(lower, upper))      
     }
     d0.ci <- BC.CI(delta.0)
