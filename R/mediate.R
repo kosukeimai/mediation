@@ -4,7 +4,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                     control = NULL, conf.level = .95,
                     control.value = 0, treat.value = 1,
                     long = TRUE, dropobs = FALSE,
-                    robustSE = FALSE, cluster = NULL, group.out = NULL, ...){
+                    robustSE = FALSE, cluster = NULL, group.out = NULL, boot.ci.type = "bca", ...){
   
   cl <- match.call()
   
@@ -24,6 +24,10 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
   
   if(robustSE & !is.null(cluster)){
     stop("choose either `robustSE' or `cluster' option, not both")
+  }
+
+  if(boot.ci.type != "bca" & boot.ci.type != "perc"){
+      stop("choose either `bca' or `perc' for boot.ci.type")
   }
   
   # Drop observations not common to both mediator and outcome models
@@ -1338,7 +1342,7 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     low <- (1 - conf.level)/2
     high <- 1 - low
 
-    if (boot){
+    if (boot & boot.ci.type == "bca"){
         BC.CI <- function(theta){
             z.inv <- length(theta[theta < mean(theta)])/sims
             z <- qnorm(z.inv)
@@ -1829,24 +1833,32 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
     low <- (1 - conf.level)/2
     high <- 1 - low
 
-    BC.CI <- function(theta){
-        z.inv <- length(theta[theta < mean(theta)])/sims
-        z <- qnorm(z.inv)
-        U <- (sims - 1) * (mean(theta) - theta)
-        top <- sum(U^3)
-        under <- (1/6) * (sum(U^2))^{3/2}
-        a <- top / under
-        lower.inv <-  pnorm(z + (z + qnorm(low))/(1 - a * (z + qnorm(low))))
-        lower2 <- lower <- quantile(theta, lower.inv)
-        upper.inv <-  pnorm(z + (z + qnorm(high))/(1 - a * (z + qnorm(high))))
-        upper2 <- upper <- quantile(theta, upper.inv)
-        return(c(lower, upper))      
+    if(boot.ci.type == "bca"){
+        BC.CI <- function(theta){
+            z.inv <- length(theta[theta < mean(theta)])/sims
+            z <- qnorm(z.inv)
+            U <- (sims - 1) * (mean(theta) - theta)
+            top <- sum(U^3)
+            under <- (1/6) * (sum(U^2))^{3/2}
+            a <- top / under
+            lower.inv <-  pnorm(z + (z + qnorm(low))/(1 - a * (z + qnorm(low))))
+            lower2 <- lower <- quantile(theta, lower.inv)
+            upper.inv <-  pnorm(z + (z + qnorm(high))/(1 - a * (z + qnorm(high))))
+            upper2 <- upper <- quantile(theta, upper.inv)
+            return(c(lower, upper))      
+        }
+        d0.ci <- BC.CI(delta.0)
+        d1.ci <- BC.CI(delta.1)
+        tau.ci <- BC.CI(tau)
+        z1.ci <- BC.CI(zeta.1)
+        z0.ci <- BC.CI(zeta.0)
+    } else {
+        d0.ci <- quantile(delta.0, c(low,high), na.rm=TRUE)
+        d1.ci <- quantile(delta.1, c(low,high), na.rm=TRUE)
+        tau.ci <- quantile(tau, c(low,high), na.rm=TRUE)
+        z1.ci <- quantile(zeta.1, c(low,high), na.rm=TRUE)
+        z0.ci <- quantile(zeta.0, c(low,high), na.rm=TRUE)
     }
-    d0.ci <- BC.CI(delta.0)
-    d1.ci <- BC.CI(delta.1)
-    tau.ci <- BC.CI(tau)
-    z1.ci <- BC.CI(zeta.1)
-    z0.ci <- BC.CI(zeta.0)
     
     # p-values
     d0.p <- d1.p <- z0.p <- z1.p <- tau.p <- rep(NA, n.ycat)
