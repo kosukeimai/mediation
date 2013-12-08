@@ -1,10 +1,11 @@
-mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
+mediate <- function(model.m, model.y, sims = 1000, 
+                    boot = FALSE, boot.ci.type = "perc",
                     treat = "treat.name", mediator = "med.name",
                     covariates = NULL, outcome = NULL,
                     control = NULL, conf.level = .95,
                     control.value = 0, treat.value = 1,
                     long = TRUE, dropobs = FALSE,
-                    robustSE = FALSE, cluster = NULL, group.out = NULL, boot.ci.type = "bca", ...){
+                    robustSE = FALSE, cluster = NULL, group.out = NULL, ...){
   
   cl <- match.call()
   
@@ -1453,7 +1454,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                   d.avg=d.avg, d.avg.p=d.avg.p, d.avg.ci=d.avg.ci, d.avg.sims=delta.avg,
                   z.avg=z.avg, z.avg.p=z.avg.p, z.avg.ci=z.avg.ci, z.avg.sims=zeta.avg,
                   n.avg=n.avg, n.avg.p=n.avg.p, n.avg.ci=n.avg.ci, n.avg.sims=nu.avg,
-                  boot=boot, treat=treat, mediator=mediator,
+                  boot=boot, boot.ci.type=boot.ci.type,
+                  treat=treat, mediator=mediator,
                   covariates=covariates,
                   INT=INT, conf.level=conf.level,
                   model.y=model.y, model.m=model.m,
@@ -1472,7 +1474,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                   d.avg=d.avg, d.avg.p=d.avg.p, d.avg.ci=d.avg.ci,
                   z.avg=z.avg, z.avg.p=z.avg.p, z.avg.ci=z.avg.ci,
                   n.avg=n.avg, n.avg.p=n.avg.p, n.avg.ci=n.avg.ci,
-                  boot=boot, treat=treat, mediator=mediator,
+                  boot=boot, boot.ci.type=boot.ci.type,
+                  treat=treat, mediator=mediator,
                   covariates=covariates,
                   INT=INT, conf.level=conf.level,
                   model.y=model.y, model.m=model.m,
@@ -1509,7 +1512,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                   d.avg.group=d.avg.group, d.avg.p.group=d.avg.p.group, d.avg.ci.group=d.avg.ci.group, d.avg.sims.group=delta.avg.group,
                   z.avg.group=z.avg.group, z.avg.p.group=z.avg.p.group, z.avg.ci.group=z.avg.ci.group, z.avg.sims.group=zeta.avg.group,
                   n.avg.group=n.avg.group, n.avg.p.group=n.avg.p.group, n.avg.ci.group=n.avg.ci.group, n.avg.sims.group=nu.avg.group,
-                  boot=boot, treat=treat, mediator=mediator,
+                  boot=boot, boot.ci.type=boot.ci.type,
+                  treat=treat, mediator=mediator,
                   covariates=covariates,
                   INT=INT, conf.level=conf.level,
                   model.y=model.y, model.m=model.m,
@@ -1540,7 +1544,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                   d.avg.group=d.avg.group, d.avg.p.group=d.avg.p.group, d.avg.ci.group=d.avg.ci.group,
                   z.avg.group=z.avg.group, z.avg.p.group=z.avg.p.group, z.avg.ci.group=z.avg.ci.group,
                   n.avg.group=n.avg.group, n.avg.p.group=n.avg.p.group, n.avg.ci.group=n.avg.ci.group,
-                  boot=boot, treat=treat, mediator=mediator,
+                  boot=boot, boot.ci.type=boot.ci.type,
+                  treat=treat, mediator=mediator,
                   covariates=covariates,
                   INT=INT, conf.level=conf.level,
                   model.y=model.y, model.m=model.m,
@@ -1882,7 +1887,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                   z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci,
                   z0.p=z0.p, z1.p=z1.p,
                   z1.sims=zeta.1, z0.sims=zeta.0, tau.sims=tau,
-                  boot=boot, treat=treat, mediator=mediator,
+                  boot=boot, boot.ci.type=boot.ci.type,
+                  treat=treat, mediator=mediator,
                   covariates=covariates,
                   INT=INT, conf.level=conf.level,
                   model.y=model.y, model.m=model.m,
@@ -1894,7 +1900,8 @@ mediate <- function(model.m, model.y, sims = 1000, boot = FALSE,
                   tau.coef=tau.coef, tau.ci=tau.ci, tau.p=tau.p,
                   z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci,
                   z0.p=z0.p, z1.p=z1.p,
-                  boot=boot, treat=treat, mediator=mediator,
+                  boot=boot, boot.ci.type=boot.ci.type,
+                  treat=treat, mediator=mediator,
                   covariates=covariates,
                   INT=INT, conf.level=conf.level,
                   model.y=model.y, model.m=model.m,
@@ -1916,7 +1923,11 @@ print.summary.mediate <- function(x, ...){
   cat("\n")
   cat("Causal Mediation Analysis \n\n")
   if(x$boot){
-    cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
+    if(x$boot.ci.type == "perc"){
+      cat("Nonparametric Bootstrap Confidence Intervals with the Percentile Method\n\n")
+    } else if(x$boot.ci.type == "bca"){
+      cat("Nonparametric Bootstrap Confidence Intervals with the BCa Method\n\n") 
+    }
   } else {
     cat("Quasi-Bayesian Confidence Intervals\n\n")
   }
@@ -1986,8 +1997,13 @@ print.summary.mediate.mer <- function(x,...){
   clp <- 100 * x$conf.level
   cat("\n")
   cat("Causal Mediation Analysis \n\n")
+
   if(x$boot){
-    cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
+    if(x$boot.ci.type == "perc"){
+      cat("Nonparametric Bootstrap Confidence Intervals with the Percentile Method\n\n")
+    } else if(x$boot.ci.type == "bca"){
+      cat("Nonparametric Bootstrap Confidence Intervals with the BCa Method\n\n") 
+    }
   } else {
     cat("Quasi-Bayesian Confidence Intervals\n\n")
   }
@@ -2052,8 +2068,13 @@ print.summary.mediate.mer.2 <- function(x,...){
   clp <- 100 * x$conf.level
   cat("\n")
   cat("Causal Mediation Analysis \n\n")
+  
   if(x$boot){
-    cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
+    if(x$boot.ci.type == "perc"){
+      cat("Nonparametric Bootstrap Confidence Intervals with the Percentile Method\n\n")
+    } else if(x$boot.ci.type == "bca"){
+      cat("Nonparametric Bootstrap Confidence Intervals with the BCa Method\n\n") 
+    }
   } else {
     cat("Quasi-Bayesian Confidence Intervals\n\n")
   }
@@ -2202,8 +2223,13 @@ print.summary.mediate.mer.3 <- function(x,...){
   clp <- 100 * x$conf.level
   cat("\n")
   cat("Causal Mediation Analysis \n\n")
+
   if(x$boot){
-    cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
+    if(x$boot.ci.type == "perc"){
+      cat("Nonparametric Bootstrap Confidence Intervals with the Percentile Method\n\n")
+    } else if(x$boot.ci.type == "bca"){
+      cat("Nonparametric Bootstrap Confidence Intervals with the BCa Method\n\n") 
+    }
   } else {
     cat("Quasi-Bayesian Confidence Intervals\n\n")
   }
@@ -2328,7 +2354,13 @@ print.summary.mediate.order <- function(x, ...){
   
   cat("\n")
   cat("Causal Mediation Analysis \n\n")
-  cat("Confidence Intervals Based on Nonparametric Bootstrap\n\n")
+
+  if(x$boot.ci.type == "perc"){
+    cat("Nonparametric Bootstrap Confidence Intervals with the Percentile Method\n\n")
+  } else if(x$boot.ci.type == "bca"){
+    cat("Nonparametric Bootstrap Confidence Intervals with the BCa Method\n\n") 
+  }
+  
   if(!is.null(x$covariates)){
     cat("(Inference Conditional on the Covariate Values Specified in `covariates')\n\n")
   }

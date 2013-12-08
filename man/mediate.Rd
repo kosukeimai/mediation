@@ -7,13 +7,14 @@
 
 \usage{
 
-mediate(model.m, model.y, sims = 1000, boot = FALSE, 
+mediate(model.m, model.y, sims = 1000, 
+        boot = FALSE, boot.ci.type = "perc",
         treat = "treat.name", mediator = "med.name", 
         covariates = NULL, outcome = NULL,
         control = NULL, conf.level = .95, 
         control.value = 0, treat.value = 1, 
         long = TRUE, dropobs = FALSE,
-        robustSE = FALSE, cluster = NULL, group.out = NULL, boot.ci.type = "bca", ...)
+        robustSE = FALSE, cluster = NULL, group.out = NULL, ...)
 
 } 
 
@@ -22,7 +23,7 @@ mediate(model.m, model.y, sims = 1000, boot = FALSE,
 \item{model.y}{ a fitted model object for outcome.  Can be of class 'lm', 'polr', 'bayespolr', 'glm', 'bayesglm', 'gam', 'vglm', 'rq', 'survreg', or 'merMod'.} 
 \item{sims}{ number of Monte Carlo draws for nonparametric bootstrap or quasi-Bayesian approximation.} 
 \item{boot}{ a logical value. if 'FALSE' a quasi-Bayesian approximation is used for confidence intervals; if 'TRUE' nonparametric bootstrap will be used. Default is 'FALSE'.}
-\item{boot.ci.type}{ a character string indicating the type of bootstrap confidence intervals. If "bca" and boot = TRUE, bias-corrected confidence intervals will be estimated. If "perc" and boot = TRUE, percentile confidence intervals will be estimated. Default is "bca".}
+\item{boot.ci.type}{ a character string indicating the type of bootstrap confidence intervals. If "bca" and boot = TRUE, bias-corrected and accelerated (BCa) confidence intervals will be estimated. If "perc" and boot = TRUE, percentile confidence intervals will be estimated. Default is "perc".}
 \item{conf.level}{ level of the returned two-sided confidence intervals.  Default is to return
 the 2.5 and 97.5 percentiles of the simulated quantities.} 
 \item{treat}{ a character string indicating the name of the treatment variable used in the models.  The treatment can be either binary (integer or a two-valued factor) or continuous (numeric).}
