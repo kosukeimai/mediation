@@ -508,7 +508,7 @@ Congress. Here, since the outcome is binary all estimated effects are
 expressed as the increase in probability that the subject sent a
 message to his or her Congressperson.
 
-In addition, we can use the bootstrap rather than the Quasi-Bayesian
+In addition, we can use the nonparametric bootstrap rather than the Quasi-Bayesian
 Monte Carlo simulation for variance estimation via the \code{boot =
   TRUE} argument,
 <<keep.source=TRUE, echo = TRUE, results = verbatim>>=
@@ -521,6 +521,13 @@ As expected, the results are largely the same.  In general, so long as
 computing power is not an issue, analysts should estimate confidence
 intervals via the bootstrap with more than 1000 resamples, which is
 the default number of simulations.
+
+Two types of methods for calculating bootstrap-based confidence intervals
+are available via the \code{boot.ci.type} argument. The basic percentile
+intervals are calculated by default or setting the argument to \code{"perc"}.
+The bias-corrected and accelerated (BCa) intervals are computed if the argument
+is set to \code{"bca"} \citep[see][for the definition of the method]{dici:efro:96}.
+The latter has better asymptotic properties and is often recommended for the estimation of mediation effects \citep{prea:haye:08}.
 
 As an alternative to the numerical summary, using the output from the
 \code{mediate} function as the input to the \code{plot} command

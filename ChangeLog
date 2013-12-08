@@ -19,3 +19,4 @@ version      date  description
 4.2.4    09/26/13  Compatibility with new version of lme4 (1.0)
 4.3      10/13/13  immediate for mediation analysis with treatment noncompliance
 4.3.1    10/16/13  Fixed the compatibility issue with Windows for multicore options
+4.4      12/09/13  Added option for the BCa method for bootstrap CIs in mediate
