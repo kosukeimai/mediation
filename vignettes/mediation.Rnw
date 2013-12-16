@@ -37,10 +37,12 @@
   mediation effects and conduct sensitivity analysis under the
   standard research design.  Furthermore, the design-based approach
   provides several analysis tools that are applicable under different
-  experimental designs.  This approach requires weaker assumptions
-  than the model-based approach.  Finally, we also implement a
+  experimental designs. This approach requires weaker assumptions
+  than the model-based approach. We also implement a
   statistical method for dealing with multiple (causally dependent)
-  mediators, which are often encountered in practice.
+  mediators, which are often encountered in practice. Finally, the package
+  also offers a methodology for assessing causal mediation in the presence
+  of treatment noncompliance, a common problem in randomized trials.
 
 }
 \Keywords{causal mechanisms, mediation analysis, \pkg{mediation}, \proglang{R}}
@@ -238,9 +240,10 @@ In the next section, we present an overview of the \pkg{mediation}
 package.  We then describe the functionalities of the package for the
 model-based causal mediation analysis (Section~\ref{sec:mediate}),
 multilevel mediation analysis (Section~\ref{sec:multilevel}),
-the design-based causal mediation analysis (Section~\ref{sec:design}), and
+the design-based causal mediation analysis (Section~\ref{sec:design}),
 the analysis of causally dependent multiple mediators
-(Section~\ref{sec:multimech}). Finally,
+(Section~\ref{sec:multimech}), and causal mediation analysis with
+treatment noncompliance (Section~\ref{sec:ivmediate}). Finally,
 Section~\ref{sec:conclude} concludes.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1408,6 +1411,24 @@ m.med.para <- multimed(outcome = "out", med.main = "med", treat = "ttt",
 summary(m.med.para)
 @
 The \code{plot} function can also be used in the same manner as in the single experiment case. The key differences between the above analysis and Section~\ref{subsec:parallel} are threefold. First, the point estimates in the first summary table here only rely on the homogeneous interaction assumption, not the stronger assumption of no interaction. Second, however, the estimates here depend on the additional assumption of additivity, which is embodied in the varying coefficient structural equations model in equations~\eqref{eq:varsemM}~and~\eqref{eq:varsemY}. The additivity assumption may not be plausible in some applications and needs to be carefully examined. Finally, the second summary table shows the result of the sensitivity analysis where the homogeneous interaction assumption is gradually relaxed until an arbitrary interaction heterogeneity is allowed. This may be preferred to the nonparametric bounds approach in Section~\ref{subsec:parallel}, which offers less nuanced information about how robust the point estimates are to the violation of the identification assumption.
+
+\section{Causal Mediation Analysis with Treatment Noncompliance}
+\label{sec:ivmediate}
+
+A common complication in randomized controlled trials is treatment noncompliance. That is, experimental subjects may not follow the assigned treatment and instead choose to take another treatment. This poses a serious challenge to causal analysis in randomized experiments because, even though the {\it assigned} treatment is randomized by the researcher, the {\it actual} treatment is selected by the subjects themselves, quite possibly depending on certain characteristics unobserved to the researcher. In this section, we provide an overview of the method developed by \citet{yama:13} to cope with the challenge of treatment noncompliance in the context of causal mediation analysis. The estimation method is implemented by the {\tt ivmediate} function in our package, as discussed below.
+
+\subsection{The methodology}
+\label{subsec:ivmethod}
+
+
+
+\subsection{Illustration}
+\label{subsec:ivjobs}
+
+
+
+
+
 
 \section{Concluding remarks}
 \label{sec:conclude}
