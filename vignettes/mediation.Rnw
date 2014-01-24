@@ -179,8 +179,8 @@
 %% include your article here, just as usual
 %% Note that you should use the \pkg{}, \proglang{} and \code{} commands.
 
-\SweaveOpts{keep.source=TRUE, echo = TRUE, results = verbatim, eval = TRUE,prompt="R>"}
-%\SweaveOpts{keep.source=TRUE, echo = TRUE, results = hide, eval = FALSE}
+%\SweaveOpts{keep.source=TRUE, echo = TRUE, results = verbatim, eval = TRUE,prompt="R>"}
+\SweaveOpts{keep.source=TRUE, echo = TRUE, results = hide, eval = FALSE}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
@@ -212,7 +212,7 @@ designs. We focus on the demonstration of the functionalities
 available through the \pkg{mediation} package.  The statistical theory
 that underlies the procedures implemented in the \pkg{mediation}
 package is presented elsewhere along with various empirical examples
-\citep{imai:keel:yama:10,ImaiAPSR,imai:keel:ting:10,ImaiDesign}.
+\citep{imai:keel:yama:10,ImaiAPSR,imai:keel:ting:10,ImaiDesign,yama:13}.
 
 The \pkg{mediation} package is freely available for download via the
 \href{http://cran.r-project.org/web/packages/mediation}{Comprehensive
@@ -254,7 +254,7 @@ The \pkg{mediation} package consists of several main functions as well
 as various methods for summarizing output from these functions
 (e.g., \code{plot} and \code{summary}). The package requires little
 programming knowledge on the user's side. Figure~\ref{fg:structure}
-illustrates the basic structure of the
+illustrates the core structure of the
 \pkg{mediation} package, which distinguishes between
 model-based and design-based inference.
 Model-based inference has been standard practice in the mediation
@@ -279,7 +279,7 @@ methods implemented via the \pkg{mediation} package.
 \begin{center}
 	\includegraphics[width=.95\textwidth]{mediation-chart-new.jpg}
 \end{center}
-\caption{Structure of the \pkg{mediation} package as of version 4.0.}
+\caption{Core Structure of the \pkg{mediation} package as of version 4.0.}
 \label{fg:structure}
 \end{figure}
 
@@ -1420,7 +1420,51 @@ A common complication in randomized controlled trials is treatment noncompliance
 \subsection{The methodology}
 \label{subsec:ivmethod}
 
+Analysis of causal mediation in the presence of treatment noncompliance requires additional notation and assumptions. Let $Z_i\in\{0,1\}$ denote the binary indicator of treatment assignment, or encouragement, for unit $i$. Then, we use $T_i(z) \in \{0,1\}$ to denote the potential treatment which unit $i$ would actually receive when the unit were assigned to the treatment ($z=1$) or control ($z=0$) condition. The observed treatment for unit $i$ can then be written as $T_i = T_i(Z_i)$. Following the standard practice in the analysis of treatment noncompliance \citep[see][]{angr:imbe:rubi:96}, we assume that the treatment assignment itself does not directly affect either the mediator or the outcome. Under these {\it exclusion restrictions}, we can write the potential mediator and outcome as, respecitively, $M_i(t)$ and $Y_i(t,m)$. Likewise, the observed mediator and outcome can respectively be expressed as $M_i = M_i(T_i)$ and $Y_i(T_i, M_i(T_i))$. Another standard assumption we make is the {\it monotonicity} of treatment reception. That is, we assume that there is no unit in the population who would only take the treatment if assigned to the control condition. This assumption is thus often called the ``no defier'' assumption and can be written in our notation as $T_i(0)\leq T_i(1)$ for any $i$.  
 
+The final and key assumption is {\it local sequantial ignorability}, which can be formally written as follows.
+\begin{assumption}[Local Sequential Ignorability
+  \citep{yama:13}] \label{asm:localSI} \spacingset{1.25}
+\begin{eqnarray}
+ \{Y_i(t^\prime,m), M_i(t), T_i(z)\} & \indep & Z_i  \mid X_i = x, \label{eq:localSI1}\\
+ Y_i(t^\prime,m) & \indep & M_i(t) \mid T_i = t, T_i(0)=0, T_i(1)=1, X_i = x, \label{eq:localSI2}
+\end{eqnarray}
+for $t = 0,1$, $z=0,1$, and all $x$ and $m$ in the support of
+$X_i$ and $M_i$, respectively.
+\end{assumption}
+This assumption is closely related to but slightly weaker than the {\it global} sequential ignorability introduced earlier (Assumption~\ref{asm:ignorable}). Equation~\eqref{eq:localSI1} implies that the treatment assignment, $Z_i$, must be either randomized or can be regarded to be ``as-if randomized'' after conditioning on a set of observed pre-encouragement covariates, $X_i$. Equation~\eqref{eq:localSI2}, on the other hand, requires that the observed mediator in each treatment condition be as-if randomized among the {\it compliers}, i.e., those units whose actual treatment would always agree with their assigned treatment ($T_i(0) = 0$ and $T_i(1)=1$). In other words, Assumption~\ref{asm:localSI} implies that sequantial ignorability must hold locally among the compliers.
+
+In the context of treatment noncompliance, researchers typically focus on the estimation of the intent-to-treat (ITT) effect and the local average treatment effect (LATE) among the compliers. The former quantity refers to the average causal effect of the treatment assignment itself (regardless of the actual treatment) on the outcome, whereas the latter represents the average effect of the actual treatment on the outcome among the compliers. Here, we consider the problem of decomposing each of these effects into the direct and indirect portions with respect to the mediator of interest. First, the ITT effect can be written as the sum of these two quantities.
+
+\medskip
+
+{\it Mediated intent-to-treat (ITT) effect:}
+\begin{eqnarray}
+\bar\lambda(z) & \equiv & \E[Y_i(T_i(z),M_i(T_i(1))) - Y_i(T_i(z),M_i(T_i(0)))]. \label{eq:medITT}
+\end{eqnarray}
+
+{\it Unmediated ITT effect:}
+\begin{eqnarray}
+\bar\mu(z) & \equiv & \E[Y_i(T_i(1),M_i(T_i(z))) - Y_i(T_i(0),M_i(T_i(z)))]. \label{eq:unmedITT}
+\end{eqnarray}
+
+Second, the LATE can be decomposed into the following two quantities.
+
+\medskip
+
+{\it Local average causal mediation effect (LACME):}
+\begin{eqnarray}
+\bar\phi(t) & \equiv & \E[Y_i(t,M_i(1)) - Y_i(t,M_i(0))\mid T_i(0)=0,T_i(1)=1]. \label{eq:LACME} 
+\end{eqnarray}
+
+{\it Local average natural direct effect (LANDE):}
+\begin{eqnarray}
+\bar\psi(t) & \equiv & \E[Y_i(1,M_i(t)) - Y_i(0,M_i(t))\mid T_i(0)=0,T_i(1)=1]. \label{eq:LANDE}
+\end{eqnarray}
+
+\medskip 
+
+\citet{yama:13} shows that the above four quantities (each defined for $z=0,1$ or $t=0,1$) can be nonparametrically identified under the set of assumptions introduced thus far in this section. More specifically, each of $\bar\lambda(z)$, $\bar\mu(z)$, $\bar\phi(t)$ and $\bar\psi(t)$ can be expressed in terms of the conditional expectations and distributions of the observed outcome, mediator and treatment variables. These effects of interest can therefore be estimated by fitting regression models to each of those conditionals (i.e. a model for $Y_i$ given $M_i$, $T_i$, $Z_i$ and $X_i$, a model for $M_i$ given $T_i$, $Z_i$ and $X_i$, and a model for $T_i$ given $Z_i$ and $X_i$) and calculating the sample analogues of the identified quantities. Uncertainty estimates can then be obtained via simulation-based methods. The {\tt ivmediate} function in our package implements this procedure for a selection of models, as we illustrate with an empirical example in the next section.
 
 \subsection{Illustration}
 \label{subsec:ivjobs}
