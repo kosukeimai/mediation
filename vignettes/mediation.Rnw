@@ -1415,7 +1415,7 @@ The \code{plot} function can also be used in the same manner as in the single ex
 \section{Causal Mediation Analysis with Treatment Noncompliance}
 \label{sec:ivmediate}
 
-A common complication in randomized controlled trials is treatment noncompliance. That is, experimental subjects may not follow the assigned treatment and instead choose to take another treatment. This poses a serious challenge to causal analysis in randomized experiments because, even though the {\it assigned} treatment is randomized by the researcher, the {\it actual} treatment is selected by the subjects themselves, quite possibly depending on certain characteristics unobserved to the researcher. In this section, we provide an overview of the method developed by \citet{yama:13} to cope with the challenge of treatment noncompliance in the context of causal mediation analysis. The estimation method is implemented by the {\tt ivmediate} function in our package, as discussed below.
+A common complication in randomized controlled trials is treatment noncompliance. That is, experimental subjects may not follow the assigned treatment and instead choose to take another treatment. This poses a serious challenge to causal analysis in randomized experiments because, even though the {\it assigned} treatment is randomized by the researcher, the {\it actual} treatment is selected by the subjects themselves, quite possibly depending on certain characteristics unobserved to the researcher. In this section, we provide an overview of the method developed by \citet{yama:13} to cope with the challenge of treatment noncompliance in the context of causal mediation analysis. The estimation method is implemented by the \code{ivmediate} function in our package, as discussed below.
 
 \subsection{The methodology}
 \label{subsec:ivmethod}
@@ -1464,15 +1464,51 @@ Second, the LATE can be decomposed into the following two quantities.
 
 \medskip 
 
-\citet{yama:13} shows that the above four quantities (each defined for $z=0,1$ or $t=0,1$) can be nonparametrically identified under the set of assumptions introduced thus far in this section. More specifically, each of $\bar\lambda(z)$, $\bar\mu(z)$, $\bar\phi(t)$ and $\bar\psi(t)$ can be expressed in terms of the conditional expectations and distributions of the observed outcome, mediator and treatment variables. These effects of interest can therefore be estimated by fitting regression models to each of those conditionals (i.e. a model for $Y_i$ given $M_i$, $T_i$, $Z_i$ and $X_i$, a model for $M_i$ given $T_i$, $Z_i$ and $X_i$, and a model for $T_i$ given $Z_i$ and $X_i$) and calculating the sample analogues of the identified quantities. Uncertainty estimates can then be obtained via simulation-based methods. The {\tt ivmediate} function in our package implements this procedure for a selection of models, as we illustrate with an empirical example in the next section.
+\citet{yama:13} shows that the above four quantities (each defined for $z=0,1$ or $t=0,1$) can be nonparametrically identified under the set of assumptions introduced thus far in this section. More specifically, each of $\bar\lambda(z)$, $\bar\mu(z)$, $\bar\phi(t)$ and $\bar\psi(t)$ can be expressed in terms of the conditional expectations and distributions of the observed outcome, mediator and treatment variables. These effects of interest can therefore be estimated by fitting regression models to each of those conditionals (i.e. a model for $Y_i$ given $M_i$, $T_i$, $Z_i$ and $X_i$, a model for $M_i$ given $T_i$, $Z_i$ and $X_i$, and a model for $T_i$ given $Z_i$ and $X_i$) and calculating the sample analogues of the identified quantities. Uncertainty estimates can then be obtained via simulation-based methods. The \code{ivmediate} function in our package implements this procedure for a selection of models, as we illustrate with an empirical example in the next section.
 
 \subsection{Illustration}
 \label{subsec:ivjobs}
 
+We illustrate the use of the \code{ivmediate} function through an analysis of data from the Job Search Intervention Study \citep[JOBS II; see][for more information about the study]{Vinokur:1995}. JOBS II was a randomized job training intervention for unemployed workers which aimed at increasing the prospect of reemployment and improving mental health of the job seekers involved in the study. A random subsample of the participants were offered to receive the treatment of job-skills workshops which covered skills for job search and coping with stress, while the remaining participants were assigned to the control group and sent a booklet containing job-search tips. Despite the random assignment of the treatment conditions, some participants failed to comply with their assigned treatment status. Namely, 39\% of those who were offered to participate in job-skills workshops actually did not enroll. None of the workers in the control group, on the other hand, participated in workshops, so noncompliance in this study was strictly one-sided. Several outcome measures were taken after the completion of the program via a survey. Here, we focus on the question of whether participation in the workshops improved the mental health of the unemployed workers (measured with a continuous scale based on the Hopkins Symptom Checklist) by increasing their self-confidence in job search ability (measured by a dichotomous indicator).
 
+The relevant portion of the JOBS II data is included as part of the \pkg{mediation} package.
+<<>>=
+data(jobs)
+@
+We begin by estimating three regression models. First, we model the actual treatment status (\code{comply}) conditional on the assigned treatment (\code{treat}) and observed pre-treatment covariates (\code{sex}, \code{age}, \code{marital}, \code{nonwhite}, \code{educ}, and \code{income}). Here we postulate a linear probability model for the probability of actually participating in the job-skills workshops.
+<<>>=
+a <- lm(comply ~ treat + sex + age + marital + nonwhite + educ + income, 
+        data = jobs)
+@
+Next, we model the mediator (\code{job_dich}) and outcome (\code{depress2}) as functions of causally precedent variables. That is, we fit a logit model for the dichotomous mediator conditional on the actual treatment, assigned treatment, and observed pre-treatment covariates, and a linear regression model for the outcome as a function of the mediator, actual treatment, assigned treatment, and pre-treatment covariates.
+<<>>=
+b <- glm(job_dich ~ comply + treat + sex + age + marital + 
+          nonwhite + educ + income, data = jobs)
+c <- lm(depress2 ~ job_dich * (comply + treat) + sex + age + marital + 
+          nonwhite + educ + income, data = jobs)
+@
+Generally, it is wise to include an interaction term between the actual and assigned treatment in these models in order to allow for the regression functions to vary across treatment conditions. Here, however, the interaction term is not needed because noncompliance is strictly one-sided (i.e. there is no observation for which \code{comply} equals \code{1} and \code{treat} equals \code{0}). These three models can in theory be of any form, as in the case of estimating the ACME via the \code{mediate} function. However, the current version of the \code{ivmediate} function only supports binary outcome models (fitted via \code{glm} with \code{family=binomial}) and linear models (fitted via \code{lm}).
 
+After fitting the three models, the LACME and LANDE can be easily estimated via the \code{ivmediate} function, which takes those three fitted model objects as main inputs.\footnote{Currently, \code{ivmediate} only estimates the complier average effects and is not capable of estimatingthe mediated and unmediated ITT effects. This limitation will be addressed in a future update.}
+<<>>=
+out <- ivmediate(a, b, c, sims = 1000, boot = FALSE, 
+                 enc = "treat", treat = "comply", mediator = "job_dich")
+@
+In the \code{ivmediate} function, the analyst must specify the names of the assigned treatment, actual treatment, and mediator (as they appear in the data frames used to fit the three models) via the \code{enc}, \code{treat}, and \code{mediator} arguments, respectively. The analyst can also set the number of simulations used for the construction of confidence intervals (\code{sims}) as well as whether the nonparametric bootstrap should be used for the confidence intervals (\code{boot}; if \code{FALSE}, the quasi-Bayesian Monte Carlo method will be used). Regardless of this choice, only the intervals for the confidence levels specified by the \code{conf.level} argument (defaults to \code{.95}) will be calculated and retained in the output object (unless the \code{long} option is set to \code{TRUE}, in which case the entire set of simulation draws will be avaialble). 
 
+An important remark is required on the computational demand of the \code{ivmediate} function. The estimation method of \cite{yama:13} involves numerical integration over the support of the mediator for each observation in each simulation iteration. This implies that, if the mediator is continuous (i.e. if \code{model.m} is an \code{lm} object) and the model contains any pre-treatment covariate, the calculation of confidence intervals via \code{ivmediate} is extremely time-consuming. To ameliorate the situation, we have implemented a parallel execution of the simulation routine across multiple CPU cores. To utilize this function, the analyst should set the \code{multicore} option to \code{TRUE} and \code{mc.cores} to the desired number of cores available on his or her machine. Using $N$ cores will approximately decrease the total computation time by the factor of $N$. This option, unfortunately, is implemented via \code{mclapply} and therefore not currently available on Windows machines.
 
+The output of \code{ivmediate} can be summarized using the usual \code{summary} function.
+<<>>=
+summary(out)
+@
+The resulting summary table shows the point estimates of the LACME for the control and treatment baseline conditions ($\bar\phi(0)$ and $\bar\phi(1)$), the LANDE for the control and treatment baselines ($\bar\psi(0)$ and $\bar\psi(1)$), and the total LATE for the compliers in the first column, as well as their confidence intervals in the next two columns (unless the \code{ci} argument in \code{ivmediate} is set to \code{FALSE}, which makes the evaluation much faster). The confidence level is by default set at the first level used in the original \code{ivmediate} run, but can be changed to any level used via the \code{conf.level} option. Here, we observe that the indirect effect of job-skills workshop on depressive symptoms via increase in job-search self-efficacy is on average negative and statistically significant among the compliers, although the overall negative effect of treatment on depression among the compliers misses the conventional level of statistical significance. 
+
+The results can also be represented graphically via the \code{plot} function.
+<<>>=
+plot(out)
+@
+Again, the plotted confidence level can be changed via the \code{conf.level} option to any of the levels used in the original \code{ivmediate} call. The \code{effect.type} option can be used to specify which of the estimated quantities will be plotted (the default plots everything). Most of the standard graphical parameters can be set in the usual manner.
 
 \section{Concluding remarks}
 \label{sec:conclude}
