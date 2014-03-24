@@ -162,6 +162,11 @@ mediate <- function(model.m, model.y, sims = 1000,
   m.data <- model.frame(model.m)  # Call.M$data
   y.data <- model.frame(model.y)  # Call.Y$data
 
+  if(!is.null(cluster)){
+      row.names(m.data) <- 1:nrow(m.data)
+      row.names(y.data) <- 1:nrow(y.data)   
+  }
+  
   # group-level mediator 
   if(isMer.y & !isMer.m){
     m.data <- eval(model.m$call$data, environment(formula(model.m)))  ### add group ID to m.data 
