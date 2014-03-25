@@ -164,9 +164,23 @@ mediate <- function(model.m, model.y, sims = 1000,
 
   if(!is.null(cluster)){
       row.names(m.data) <- 1:nrow(m.data)
-      row.names(y.data) <- 1:nrow(y.data)   
+      row.names(y.data) <- 1:nrow(y.data)
+
+      if(!is.null(model.m$weights)){
+          m.weights <- as.data.frame(model.m$weights)
+          m.name <- as.character(model.m$call$weights)  
+          names(m.weights) <- m.name
+          m.data <- cbind(m.data, m.weights)
+      }
+
+      if(!is.null(model.y$weights)){
+          y.weights <- as.data.frame(model.y$weights)
+          y.name <- as.character(model.y$call$weights)  
+          names(y.weights) <- y.name
+          y.data <- cbind(y.data, y.weights)
+      }
   }
-  
+
   # group-level mediator 
   if(isMer.y & !isMer.m){
     m.data <- eval(model.m$call$data, environment(formula(model.m)))  ### add group ID to m.data 
