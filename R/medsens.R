@@ -26,9 +26,21 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
     Y <- colnames(y.data)[1]
     if(is.factor(y.data[,treat])){
         t.levels <- levels(y.data[,treat])
-        if(length(t.levels) != 2){
-            stop("treatment with more than two categories currently not supported")
+        n.t.levels <- length(t.levels)
+        ## When treatment = more than two categories 
+        ## control.value => 1st factor level (baseline category)
+        ## treat.value => 2nd factor level
+        ## run regression again with this new data set
+        if(n.t.levels != 2){
+            number <- 1:n.t.levels
+            t.levels.mat <- data.frame(number, t.levels)
+            c.num <- t.levels.mat$number[t.levels.mat$t.levels == control.value]
+            t.num <- t.levels.mat$number[t.levels.mat$t.levels == treat.value]            
+            number.new <- c(c.num, t.num, number[-c(c.num, t.num)])
+            y.data[, treat] <- factor(y.data[, treat], levels(y.data[, treat])[number.new])
+            model.y <- update(model.y, data = y.data)     
         }
+        t.levels <- levels(y.data[,treat])
         cat.c <- t.levels[1]
         cat.t <- t.levels[2]
     } else {
@@ -37,6 +49,25 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
     }
     T.out <- paste(treat, cat.t, sep="")
 
+    m.data <- model.frame(model.m)
+    if(is.factor(m.data[,treat])){
+        t.levels <- levels(m.data[,treat])
+        n.t.levels <- length(t.levels)
+        ## When treatment = more than two categories 
+        ## control.value => 1st factor level (baseline category)
+        ## treat.value => 2nd factor level
+        ## run regression again with this new data set 
+        if(n.t.levels != 2){
+            number <- 1:n.t.levels
+            t.levels.mat <- data.frame(number, t.levels)
+            c.num <- t.levels.mat$number[t.levels.mat$t.levels == control.value]
+            t.num <- t.levels.mat$number[t.levels.mat$t.levels == treat.value]            
+            number.new <- c(c.num, t.num, number[-c(c.num, t.num)])
+            m.data[, treat] <- factor(m.data[, treat], levels(m.data[, treat])[number.new])
+            model.m <- update(model.m, data = m.data)     
+        }
+    } 
+    
     if(is.factor(y.data[,mediator])){
         m.levels <- levels(y.data[,mediator])
         if(length(m.levels) != 2){
@@ -112,7 +143,7 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
             b.tmp <- b.ols
 
             while(abs(b.dif) > eps){
-                e.hat <- as.matrix(Y.c - (X %*% b.tmp))
+                e.hat <- as.matrix(Y.c - (X %*% b.tmp)) 
                 e.1 <- e.hat[1:n]
                 e.2 <- e.hat[(n+1):(2*n)]
 
