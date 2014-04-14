@@ -68,6 +68,7 @@ Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation Analy
 \author{Dustin Tingley, Harvard University, \email{dtingley@gov.harvard.edu}; 
 Teppei Yamamoto, Massachusetts Institute of Technology, \email{teppei@mit.edu}; 
 Jaquilyn Waddell-Boie, Princeton University, \email{jwaddell@princeton.edu};
+Kentaro Hirose, Princeton University, \email{hirose@princeton.edu};
 Luke Keele, Penn State University, \email{ljk20@psu.edu}; 
 Kosuke Imai, Princeton University, \email{kimai@princeton.edu}. }
  
@@ -81,6 +82,9 @@ Kosuke Imai, Princeton University, \email{kimai@princeton.edu}. }
 
 data(jobs)
 
+####################################################
+# Example 1: Binary treatment 
+####################################################
 # Fit parametric models
 b <- lm(job_seek ~ treat + econ_hard + sex + age, data=jobs)
 c <- lm(depress2 ~ treat + job_seek + econ_hard + sex + age, data=jobs)
@@ -101,4 +105,16 @@ plot(sens.cont, main="JOBS", ylim=c(-.2,.2))
 # Plot true ACMEs and ADEs as functions of "R square tildes"
 plot(sens.cont, sens.par="R2", r.type="total", sign.prod="positive")
 par(par.orig)
+}
+####################################################
+# Example 2: Categorical treatment 
+####################################################
+\dontrun{
+b <- lm(job_seek ~ educ + sex, data=jobs)
+c <- lm(depress2 ~ educ + job_seek + sex, data=jobs)
+
+# compare two categories of educ --- gradwk and somcol
+med.cont <- mediate(b, c, treat="educ", mediator="job_seek", sims=50, control.value = "gradwk", treat.value = "somcol")
+sens.cont <- medsens(med.cont, rho.by=.1, eps=.01, effect.type="both")
+summary(sens.cont)
 }
