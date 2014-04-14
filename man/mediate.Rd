@@ -195,6 +195,16 @@ contcont.cont <- mediate(b.contT, c.contT, sims=50,
                     treat.value = 4, control.value = -2)
 summary(contcont.cont)
 
+# Categorical treatment 
+\dontrun{
+b <- lm(job_seek ~ educ + sex, data=jobs)
+c <- lm(depress2 ~ educ + job_seek + sex, data=jobs)
+
+# compare two categories of educ --- gradwk and somcol
+model.cat <- mediate(b, c, treat="educ", mediator="job_seek", sims=50, control.value = "gradwk", treat.value = "somcol")
+summary(model.cat)
+}
+
 ######################################################
 # Example 2: Binary Outcome and Ordered Mediator
 ######################################################
