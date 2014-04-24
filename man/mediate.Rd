@@ -201,7 +201,8 @@ b <- lm(job_seek ~ educ + sex, data=jobs)
 c <- lm(depress2 ~ educ + job_seek + sex, data=jobs)
 
 # compare two categories of educ --- gradwk and somcol
-model.cat <- mediate(b, c, treat="educ", mediator="job_seek", sims=50, control.value = "gradwk", treat.value = "somcol")
+model.cat <- mediate(b, c, treat="educ", mediator="job_seek", sims=50, 
+                     control.value = "gradwk", treat.value = "somcol")
 summary(model.cat)
 }
 

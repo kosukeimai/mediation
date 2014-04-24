@@ -105,16 +105,21 @@ plot(sens.cont, main="JOBS", ylim=c(-.2,.2))
 # Plot true ACMEs and ADEs as functions of "R square tildes"
 plot(sens.cont, sens.par="R2", r.type="total", sign.prod="positive")
 par(par.orig)
-}
+
 ####################################################
 # Example 2: Categorical treatment 
 ####################################################
 \dontrun{
+
+# Purely for illustration, think of educ as a ``treatment''
+
 b <- lm(job_seek ~ educ + sex, data=jobs)
 c <- lm(depress2 ~ educ + job_seek + sex, data=jobs)
 
 # compare two categories of educ --- gradwk and somcol
-med.cont <- mediate(b, c, treat="educ", mediator="job_seek", sims=50, control.value = "gradwk", treat.value = "somcol")
+med.cont <- mediate(b, c, treat="educ", mediator="job_seek", sims=50, 
+                    control.value = "gradwk", treat.value = "somcol")
 sens.cont <- medsens(med.cont, rho.by=.1, eps=.01, effect.type="both")
 summary(sens.cont)
+}
 }
