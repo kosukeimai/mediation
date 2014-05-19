@@ -52,6 +52,8 @@ Users should note that computation can take significant time for \code{medsens}.
 \item{conf.level}{the confidence level used.}
 \item{effect.type}{the 'effect.type' argument used.}
 \item{type}{a character string indicating the type of the mediator and outcome models used. Currently either "ct" (linear mediator and outcome models), 'bm' (binary mediator and linear outcome models) or 'bo' (linear mediator and binary outcome models).}
+\item{robustSE}{`TRUE' or `FALSE'.}
+\item{cluster}{the clusters used.}
 }
 
 
@@ -91,6 +93,9 @@ c <- lm(depress2 ~ treat + job_seek + econ_hard + sex + age, data=jobs)
 
 # Pass model objects through mediate function
 med.cont <- mediate(b, c, treat="treat", mediator="job_seek", sims=50)
+# med.cont <- mediate(b, c, treat="treat", mediator="job_seek", sims=50, robustSE = T)
+# jobs$cluster <- rep(1:30, each = 30)[-1]
+# med.cont <- mediate(b, c, treat="treat", mediator="job_seek", sims=50, cluster = jobs$cluster)
 
 # Pass mediate output through medsens function
 sens.cont <- medsens(med.cont, rho.by=.1, eps=.01, effect.type="both")

@@ -127,6 +127,8 @@ The function \code{summary} (i.e., \code{summary.mediate}, \code{summary.mediate
 \item{control.value}{value of the treatment variable used as the control condition.}
 \item{treat.value}{value of the treatment variable used as the treatment condition.}
 \item{nobs}{number of observations in the model frame for 'model.m' and 'model.y'. May differ from the numbers in the original models input to 'mediate' if 'dropobs' was 'TRUE'.}
+\item{robustSE}{`TRUE' or `FALSE'.}
+\item{cluster}{the clusters used.}
 }
 
 \references{

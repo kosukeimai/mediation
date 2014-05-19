@@ -17,6 +17,8 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
     INT <- x$INT
     low <- (1 - x$conf.level)/2
     high <- 1 - low
+    robustSE <- x$robustSE
+    cluster = x$cluster
 
     # Setting Variable labels
     ## Uppercase letters (e.g. T) = labels in the input matrix
@@ -107,6 +109,18 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
     lower.d0 <- lower.d1 <- lower.z0 <- lower.z1 <- lower.nu0 <- lower.nu1 <- lower.tau <-
     ind.d0 <- ind.d1 <- ind.z0 <- ind.z1 <- err.cr.d <- err.cr.z <- 
     R2star.d.thresh <- R2tilde.d.thresh <- R2star.z.thresh <- R2tilde.z.thresh <- NULL
+
+    getvcov <- function(dat, fm, cluster){
+    ## Compute cluster robust standard errors
+    ## fm is the model object
+        cluster <- factor(cluster)  # remove missing levels and NA
+        M <- nlevels(cluster)
+        N <- sum(!is.na(cluster))
+        K <- fm$rank
+        dfc <- (M/(M-1))*((N-1)/(N-K))
+        uj  <- apply(estfun(fm),2, function(x) tapply(x, cluster, sum));
+        dfc*sandwich(fm, meat. = crossprod(uj)/N)
+    }
     
     #########################################################
     ## CASE 1: Continuous Outcome + Continuous Mediator
@@ -163,9 +177,35 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
                 X.sur <- Xv.i %*% X
                 b.sur <- solve(X.sur) %*% Xv.i %*% Y.c
 
-                # Variance-Covariance Matrix
-                v.cov <- solve(X.sur)
-
+                # Variance-Covariance Matrix of SUR 
+                if(robustSE){
+                    meat <- 0
+                    for (ii in 1:n){
+                        Xi.med <- X.1[ii, ]
+                        Xi.out <- X.2[ii, ]
+                        Xi <- rbind(Xi.med, Xi.out)
+                        ui <- as.matrix(c(e.1[ii], e.2[ii]))
+                        meat <- t(Xi) %*% solve(omega) %*% ui %*% t(ui) %*% solve(omega) %*% Xi + meat
+                    }
+                    v.cov <- solve(X.sur) %*% meat %*% solve(X.sur)  
+                } else if(!is.null(cluster)){
+                    meat <- 0
+                    for (mm in unique(cluster)) {
+                        X.med.m <- matrix(X.1[cluster == mm, ],, ncol(X.1))
+                        X.out.m <- matrix(X.2[cluster == mm, ],, ncol(X.2))
+                        e.1.m <- e.1[cluster == mm]
+                        e.2.m <- e.2[cluster == mm]
+                        half.meat <- 0
+                        for (ii in 1:nrow(X.med.m)){
+                            Xm <- rbind(X.med.m[ii, ], X.out.m[ii, ])
+                            half.meat <- t(Xm) %*% solve(omega) %*% as.matrix(c(e.1.m[ii], e.2.m[ii])) + half.meat
+                        }
+                        meat <- half.meat %*% t(half.meat) + meat
+                    }
+                    v.cov <- solve(X.sur) %*% meat %*% solve(X.sur)  
+                } else {
+                    v.cov <- solve(X.sur)
+                }
                 b.old <- b.tmp
                 b.dif <- sum((b.sur - b.old)^2)
                 b.tmp <- b.sur
@@ -320,7 +360,15 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         # Step 1: Pre-loop computations
         # Step 1-1: Sample M model parameters
         Mmodel.coef <- model.m$coef
-        Mmodel.var.cov <- vcov(model.m)
+        if(robustSE){
+            Mmodel.var.cov <- vcovHC(model.m)
+        } else if(!is.null(cluster)) {
+            dta <- merge(m.data, as.data.frame(cluster), sort=FALSE, by="row.names")
+            fm <- update(model.m, data=dta)
+            MModel.var.cov <- getvcov(dta, fm, dta[,ncol(dta)])
+        } else {
+            Mmodel.var.cov <- vcov(model.m)
+        }
         Mmodel.coef.sim <- mvrnorm(sims, mu=Mmodel.coef, Sigma=Mmodel.var.cov)
             # simulate M-model parameters
 
@@ -381,7 +429,15 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
 
             ## Step 2-3: Simulate Y model parameters
             Ymodel.coef <- model.y.update$coef
-            Ymodel.var.cov <- vcov(model.y.update)
+            if(robustSE){
+                Ymodel.var.cov <- vcovHC(model.y.update)
+            } else if(!is.null(cluster)) {
+                dta <- merge(y.data, as.data.frame(cluster), sort=FALSE, by="row.names")
+                fm <- update(model.y.update, data=dta)
+                YModel.var.cov <- getvcov(dta, fm, dta[,ncol(dta)])
+            } else {
+                Ymodel.var.cov <- vcov(model.y.update)
+            }
             Ymodel.coef.sim[k,] <- mvrnorm(1, mu=Ymodel.coef, Sigma=Ymodel.var.cov) 
                 # draw one simulation sample of Y-model parameters for each k
 
@@ -462,7 +518,15 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         # Step 1: Obtain Model Parameters
         ## Step 1-1: Simulate M model parameters
         Mmodel.coef <- model.m$coef
-        Mmodel.var.cov <- vcov(model.m)
+        if(robustSE){
+            Mmodel.var.cov <- vcovHC(model.m)
+        } else if(!is.null(cluster)) {
+            dta <- merge(m.data, as.data.frame(cluster), sort=FALSE, by="row.names")
+            fm <- update(model.m, data=dta)
+            MModel.var.cov <- getvcov(dta, fm, dta[,ncol(dta)])
+        } else {
+            Mmodel.var.cov <- vcov(model.m)
+        }
         m.k <- length(Mmodel.coef)
         Mmodel.coef.sim <- mvrnorm(sims, mu = Mmodel.coef, Sigma = Mmodel.var.cov)
         beta2.sim <- Mmodel.coef.sim[, T.out]
@@ -474,7 +538,15 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
 
         ## Step 1-2: Simulate Y model parameters
         Ymodel.coef <- model.y$coef
-        Ymodel.var.cov <- vcov(model.y)
+        if(robustSE){
+            Ymodel.var.cov <- vcovHC(model.y)
+        } else if(!is.null(cluster)) {
+            dta <- merge(y.data, as.data.frame(cluster), sort=FALSE, by="row.names")
+            fm <- update(model.y, data=dta)
+            YModel.var.cov <- getvcov(dta, fm, dta[,ncol(dta)])
+        } else {
+            Ymodel.var.cov <- vcov(model.y)
+        }
         y.k <- length(Ymodel.coef)
         Ymodel.coef.sim <- mvrnorm(sims, mu = Ymodel.coef, Sigma = Ymodel.var.cov)
         colnames(Ymodel.coef.sim) <- names(Ymodel.coef)
@@ -644,7 +716,8 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         R2star.d.thresh=R2star.d.thresh, R2tilde.d.thresh=R2tilde.d.thresh,
         R2star.z.thresh=R2star.z.thresh, R2tilde.z.thresh=R2tilde.z.thresh,
         r.square.y=r.sq.y, r.square.m=r.sq.m,
-        INT=INT, conf.level = x$conf.level, effect.type=effect.type, type=type)
+        INT=INT, conf.level = x$conf.level, effect.type=effect.type, type=type,
+        robustSE = robustSE, cluster = cluster)
     class(out) <- "medsens"
     out
 }

@@ -1479,7 +1479,8 @@ mediate <- function(model.m, model.y, sims = 1000,
                   INT=INT, conf.level=conf.level,
                   model.y=model.y, model.m=model.m,
                   control.value=control.value, treat.value=treat.value,
-                  nobs=n, sims=sims, call=cl)
+                  nobs=n, sims=sims, call=cl,
+                  robustSE = robustSE, cluster = cluster)
       class(out) <- "mediate"
     } 
     if(!long && !isMer.y && !isMer.m){
@@ -1499,7 +1500,8 @@ mediate <- function(model.m, model.y, sims = 1000,
                   INT=INT, conf.level=conf.level,
                   model.y=model.y, model.m=model.m,
                   control.value=control.value, treat.value=treat.value,
-                  nobs=n, sims=sims, call=cl)
+                  nobs=n, sims=sims, call=cl,
+                  robustSE = robustSE, cluster = cluster)
       class(out) <- "mediate"
     }
     if(long && isMer.y || isMer.m) {
@@ -1539,7 +1541,8 @@ mediate <- function(model.m, model.y, sims = 1000,
                   control.value=control.value, treat.value=treat.value,
                   nobs=n, sims=sims, call=cl,
                   group.m=group.m,group.y=group.y,group.name=group.name,
-                  group.id.m=group.id.m,group.id.y=group.id.y,group.id=group.id)   
+                  group.id.m=group.id.m,group.id.y=group.id.y,group.id=group.id,
+                  robustSE = robustSE, cluster = cluster)  
       class(out) <- "mediate.mer"
     }
     if(!long && isMer.y || isMer.m){
@@ -1571,7 +1574,8 @@ mediate <- function(model.m, model.y, sims = 1000,
                   control.value=control.value, treat.value=treat.value,
                   nobs=n, sims=sims, call=cl,
                   group.m=group.m,group.y=group.y,group.name=group.name,
-                  group.id.m=group.id.m,group.id.y=group.id.y,group.id=group.id)
+                  group.id.m=group.id.m,group.id.y=group.id.y,group.id=group.id,
+                  robustSE = robustSE, cluster = cluster)
       class(out) <- "mediate.mer"
     }
     
@@ -1912,7 +1916,8 @@ mediate <- function(model.m, model.y, sims = 1000,
                   INT=INT, conf.level=conf.level,
                   model.y=model.y, model.m=model.m,
                   control.value=control.value, treat.value=treat.value, 
-                  nobs=n, sims=sims, call=cl)
+                  nobs=n, sims=sims, call=cl,
+                  robustSE = robustSE, cluster = cluster)
     } else {
       out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
                   d0.p=d0.p, d1.p=d1.p,
@@ -1925,7 +1930,8 @@ mediate <- function(model.m, model.y, sims = 1000,
                   INT=INT, conf.level=conf.level,
                   model.y=model.y, model.m=model.m,
                   control.value=control.value, treat.value=treat.value, 
-                  nobs=n, sims=sims, call=cl)
+                  nobs=n, sims=sims, call=cl,
+                  robustSE = robustSE, cluster = cluster)
     }
     class(out) <- "mediate.order"
     out
