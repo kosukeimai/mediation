@@ -352,6 +352,10 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
     #########################################################
     if (class.y == "lm" & class.m == "glm") {
         type <- "bm"
+
+        if(model.m$family$link == "logit"){
+            stop("medsens is only valid for the probit link")
+        }
         
         ## Variable values (LABEL.value)
         Y.value <- y.data[,1]
@@ -511,6 +515,10 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
     if(class.y=="glm" & class.m=="lm") {
         if(INT){
             stop("sensitivity analysis is not available for binary outcome with interactions")
+        }
+
+        if(model.y$family$link == "logit"){
+            stop("medsens is only valid for the probit link")
         }
 
         type <- "bo"

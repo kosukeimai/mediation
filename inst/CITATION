@@ -1,26 +1,24 @@
-citHeader("To cite package 'mediation' in publications please use the following. Other publications related to the package are also listed below.")
+citHeader("To cite 'mediation' in publications use:")
 
-## R >= 2.8.0 passes package metadata to citation().
-if(!exists("meta") || is.null(meta)) meta <- packageDescription("mediation")
-year <- sub("-.*", "", meta$Date)
-note <- sprintf("R package version %s", meta$Version)
+citEntry(entry = "Article",
+  title        = "{mediation}: {R} Package for Causal Mediation Analysis",
+  author       = personList(as.person("Dustin Tingley"),
+                   as.person("Teppei Yamamoto"),
+                   as.person("Kentaro Hirose"),
+                   as.person("Luke Keele"),
+                   as.person("Kosuke Imai")),
+  journal      = "Journal of Statistical Software",
+  year         = "2014",
+  volume       = "59",
+  number       = "5",
+  pages        = "1--38",
+  url          = "http://www.jstatsoft.org/v59/i05/",
 
-citEntry(entry = "Manual",
-         title = "mediation: R Package for Causal Mediation Analysis",
-         author = personList(as.person("Dustin Tingley"),
-                             as.person("Teppei Yamamoto"),
-                             as.person("Luke Keele"),
-                             as.person("Kosuke Imai")),
-         year = year,
-         note = note,
-         url = "http://CRAN.R-project.org/package=mediation",
-
-         textVersion =
-         paste("Dustin Tingley, Teppei Yamamoto, Luke Keele and Kosuke Imai",
-           sprintf("(%s).", year),	 
-               "mediation: R Package for Causal Mediation Analysis.",
-         paste(note, ".", sep = ""),
-               "URL http://CRAN.R-project.org/package=mediation")
+  textVersion  =
+  paste("Dustin Tingley, Teppei Yamamoto, Kentaro Hirose, Luke Keele, Kosuke Imai (2014).",
+        "mediation: R Package for Causal Mediation Analysis.",
+        "Journal of Statistical Software, 59(5), 1-38.",
+        "URL http://www.jstatsoft.org/v59/i05/.")
 )
 
 citEntry(entry = "Article",
@@ -38,7 +36,9 @@ citEntry(entry = "Article",
   textVersion  =
   paste("Kosuke Imai, Luke Keele and Teppei Yamamoto (2010).",
         "Identification, Inference and Sensitivity Analysis for Causal Mediation Effects.",
-        "Statistical Science, 25(1), 51-71.")
+        "Statistical Science, 25(1), 51-71."),
+	
+  header       = "For the underlying methods please cite the following papers:"
 )
 
 citEntry(entry = "Article",
@@ -86,12 +86,13 @@ citEntry(entry = "Article",
   year         = "2013",
   volume       = "21",
   number       = "2",
+  pages        = "141--171",
   url          = "http://imai.princeton.edu/research/medsens.html",
 
   textVersion  =
   paste("Kosuke Imai and Teppei Yamamoto (2013).",
         "Identification and Sensitivity Analysis for Multiple Causal Mechanisms: Revisiting Evidence from Framing Experiments.",
-        "Political Analysis, 21(2), forthcoming.")
+        "Political Analysis, 21(2), 141-171.")
 )
 
 citEntry(entry = "InCollection",
@@ -101,17 +102,14 @@ citEntry(entry = "InCollection",
                             as.person("Dustin Tingley"),
                             as.person("Teppei Yamamoto")),
   booktitle    = "Advances in Social Science Research Using R",
-  year         = "2009",
-  editor       = personList(as.person("H.D. Vinod")),
-  publisher    = "Springer",
+  year         = "2010",
+  editor       = personList(as.person("H. D. Vinod")),
+  publisher    = "Springer-Verlag",
   address      = "New York",
   
   textVersion  =
-  paste("Kosuke Imai, Luke Keele, Dustin Tingley and Teppei Yamamoto (2009).",
+  paste("Kosuke Imai, Luke Keele, Dustin Tingley and Teppei Yamamoto (2010).",
         "Causal Mediation Analysis Using R.",
         "In Advances in Social Science Research Using R, ed. H. D. Vinod,",
-        "New York: Springer.")
+        "New York: Springer-Verlag.")
 )
-
-
-
