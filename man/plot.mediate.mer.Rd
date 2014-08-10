@@ -31,6 +31,9 @@ Function to plot group-specific effects derived from causal mediation analysis o
 \item{...}{ additional parameters passed to 'plot'.}
 }
 
+\references{
+Tingley, D., Yamamoto, T., Hirose, K., Imai, K. and Keele, L. (2014). "mediation: R package for Causal Mediation Analysis", Journal of Statistical Software, Vol. 59, No. 5, pp. 1-38.}
+
 \author{Kentaro Hirose, Princeton University, \email{hirose@princeton.edu}.}
  
 \seealso{\code{\link{mediate}}, \code{\link{summary.mediate.mer}}.}
