@@ -51,12 +51,12 @@
 
 %% publication information
 %% NOTE: Typically, this can be left commented and will be filled out by the technical editor
-%% \Volume{13}
-%% \Issue{9}
-%% \Month{September}
-%% \Year{2004}
-%% \Submitdate{2004-09-29}
-%% \Acceptdate{2004-09-29}
+\Volume{59}
+\Issue{5}
+\Month{August}
+\Year{2014}
+\Submitdate{2012-06-04}
+\Acceptdate{2014-04-17}
 
 %% The address of (at least) one author should be given
 %% in the following format:
@@ -64,37 +64,33 @@
   Dustin Tingley\\
   Department of Government\\
   Harvard University\\
-  1737 Cambridge St, Cambridge, MA, USA\\
+  1737 Cambridge St\\
+  Cambridge, MA, United States of America\\
   E-mail: \email{dtingley@gov.harvard.edu}\\
   URL: \url{http://scholar.harvard.edu/dtingley}\\
-  \\
+
   Teppei Yamamoto\\
   Department of Political Science\\
   Massachusetts Institute of Technology\\
-  77 Massachusetts Avenue, E53-463, Cambridge, MA, USA\\
+  77 Massachusetts Avenue, E53-463\\
+  Cambridge, MA, United States of America\\
   E-mail: \email{teppei@mit.edu}\\
-  URL: \url{http://web.mit.edu/teppei/www}\\
-  \\
-  Kentaro Hirose\\
+  URL: \url{http://web.mit.edu/teppei/www/}\\
+
+  Kentaro Hirose, Kosuke Imai\\
   Department of Politics \\
   Princeton University\\
-  Princeton, NJ, USA\\
-  E-mail: \email{hirose@princeton.edu} \\
-    \\
+  Princeton, NJ, United States of America\\
+  E-mail: \email{hirose@princeton.edu}, \email{kimai@princeton.edu} \\
+  URL: \url{http://imai.princeton.edu.}\\
+
   Luke Keele\\
   Department of Political Science\\
   Pennsylvania State University\\
   211 Pond Lab\\
-  University Park, PA, USA\\
+  University Park, PA, United States of America\\
   Email: \email{ljk20@psu.edu}\\
-  URL: \url{http://www.personal.psu.edu/ljk20}\\
-  \\
-  Kosuke Imai\\
-  Department of Politics \\
-  Princeton University\\
-  Princeton, NJ, USA\\
-  E-mail: \email{kimai@Princeton.Edu} \\
-  URL: \url{http://imai.princeton.edu}\\
+  URL: \url{http://www.personal.psu.edu/ljk20}
 }
 
 %% It is also possible to add a telephone and fax number
@@ -178,6 +174,7 @@
 %% include your article here, just as usual
 %% Note that you should use the \pkg{}, \proglang{} and \code{} commands.
 
+\SweaveOpts{keep.source=TRUE, echo = TRUE, results = verbatim, eval = TRUE}
 %\SweaveOpts{keep.source=TRUE, echo = TRUE, results = hide, eval = FALSE}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
@@ -435,7 +432,7 @@ empirical example based on the \code{framing} data of
 library and can be loaded via the following syntax,
 <<>>=
 library("mediation")
-data("framing")
+data("framing", package = "mediation")
 @
 A brief description of each variable in the data can be obtained
 through a help file,
@@ -463,6 +460,7 @@ subjects more likely to send a letter to his or her member of
 Congress.  We use the linear regression fit with least squares and the probit
 regression for the mediator and outcome models, respectively.
 <<>>=
+set.seed(2014)
 med.fit <- lm(emo ~ treat + age + educ + gender + income, data = framing)
 out.fit <- glm(cong_mesg ~ emo + treat + age + educ + gender + income,
                data = framing, family = binomial("probit"))
@@ -495,6 +493,7 @@ results is desired, users can set a specific randomness seed (\code{set.seed}) b
 calling the \code{mediate} function.}  The syntax is now given as,
 <<keep.source=TRUE, echo = TRUE, results = verbatim>>=
 library("sandwich")
+set.seed(2014) 
 med.out <- mediate(med.fit, out.fit, treat = "treat", mediator = "emo",
                    robustSE = TRUE, sims = 100)
 summary(med.out)
@@ -515,6 +514,7 @@ In addition, we can use the nonparametric bootstrap rather than the Quasi-Bayesi
 Monte Carlo simulation for variance estimation via the \code{boot =
   TRUE} argument,
 <<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+set.seed(2000)
 med.out <- mediate(med.fit, out.fit, boot = TRUE, treat = "treat",
                    mediator = "emo", sims = 100)
 summary(med.out)
@@ -563,6 +563,7 @@ The \code{summary} output in such cases includes average values of these two
 estimates to ease interpretation of the results.}
 In the output given below, the estimated ACME now varies with treatment status.
 <<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+set.seed(2000)
 med.fit <- lm(emo ~ treat + age + educ + gender + income, data=framing)
 out.fit <- glm(cong_mesg ~ emo * treat + age + educ + gender + income,
                data = framing, family = binomial("probit"))
@@ -600,6 +601,7 @@ moderator and its interaction terms with respect to the treatment and
 mediating variables that are theoretically justified.  For example, we may modify the previous models
 as follows,
 <<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+set.seed(2000)
 med.fit <- lm(emo ~ treat * age + educ + gender + income, data=framing)
 out.fit <- glm(cong_mesg ~ emo + treat * age + emo * age + educ + gender
                + income, data = framing, family = binomial("probit"))
@@ -614,6 +616,7 @@ mediation effects to be moderated by age, we set the value of
 moderated mediation involving multiple moderators could be specified
 by expanding the list of the covariates.
 <<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+set.seed(2000)
 med.age20 <- mediate(med.fit, out.fit, treat = "treat",
                      mediator = "emo", covariates = list(age = 20), sims = 100)
 med.age60 <- mediate(med.fit, out.fit, treat = "treat",
@@ -633,6 +636,7 @@ levels of pre-treatment covariates. This analysis is conducted via the
 used to test whether the ACME and ADE significantly differ between the subjects
 who are 20 years old and those who are 60 years old.
 <<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+set.seed(2000)
 med.init <- mediate(med.fit, out.fit, treat = "treat", mediator = "emo", sims=2)
 test.modmed(med.init, covariates.1 = list(age = 20),
                       covariates.2 = list(age = 60), sims = 100)
@@ -665,6 +669,7 @@ and \code{treat.value} options, the user can calculate the specific
 contrast of interest.  For example, the comparison between the second
 and third conditions can be done with the following code.
 <<keep.source=TRUE, echo = TRUE, results = hide>>=
+set.seed(2000)
 med.fit <- lm(emo ~ cond + age + educ + gender + income, data = framing)
 out.fit <- glm(cong_mesg ~ emo + cond + age + educ + gender + income,
                data = framing, family = binomial("probit"))
@@ -676,6 +681,7 @@ summary(med23.out)
 Similarly, the researcher can compare the first and fourth
 experimental conditions via the following syntax,
 <<keep.source=TRUE, echo = TRUE, results = hide>>=
+set.seed(2000)
 med14.out <- mediate(med.fit, out.fit, treat = "cond", mediator = "emo",
                      control.value = 1, treat.value = 4, sims = 100)
 summary(med14.out)
@@ -747,6 +753,7 @@ analysis is conducted by varying the value of $\rho$ and examining how
 the estimated ACME changes.  The following syntax can be used to
 conduct this analysis,
 <<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+set.seed(2000)
 med.fit <- lm(emo ~ treat + age + educ + gender + income, data = framing)
 out.fit <- glm(cong_mesg ~ emo + treat + age + educ + gender + income,
                data = framing, family = binomial("probit"))
@@ -839,7 +846,23 @@ plot(sens.out, sens.par = "R2", r.type = "total", sign.prod = "positive")
 \label{sec:multilevel}
 As of version 4.2, the \pkg{mediation} package supports causal mediation analysis of multilevel data via the \code{lmer} and \code{glmer} functions in the \pkg{lme4} package. Researchers are often interested in analyzing data where individual observations such as students, patients, and employees are clustered within groups such as schools, hospitals, and companies. Data on individuals may be correlated within groups, but also different groups may have different data generating processes. Multilevel models take into account such heterogeneity within and between groups simultaneously.
 
-Mediation analysis of multilevel data can be categorized into various types depending on whether the treatment, mediator and outcome variables are each measured at the individual or group level \citep[see][]{Krull:2001,Zhang:2009}. Regardless of these types, researchers can use the \code{mediate} function to analyze multilevel data by choosing appropriate statistical models for the mediator and outcome variables. In this section, we illustrate the use of our package for multilevel data by focusing on two types of data structure: (1) the treatment is assigned at the group level whereas the mediator and outcome are measured at the individual level, and (2) both the treatment and mediator are group-level variables while the outcome is recorded at the individial level. Other combinations of data levels can be handled via straightforward modifications to the syntax used in these examples.
+Mediation analysis of multilevel data can be categorized into various
+types depending on whether the treatment, mediator and outcome
+variables are each measured at the individual or group level
+\citep[see][]{Krull:2001,Zhang:2009}. Regardless of these types,
+researchers can use the \code{mediate} function to analyze multilevel
+data by choosing appropriate statistical models for the mediator and
+outcome variables. In this section, we illustrate the use of our
+package for multilevel data by focusing on two types of data
+structure: (1) the treatment is assigned at the group level whereas
+the mediator and outcome are measured at the individual level, and (2)
+both the treatment and mediator are group-level variables while the
+outcome is recorded at the individual level. Other combinations of
+data levels can also 
+be handled via straightforward modifications to the syntax used in
+these two types of data structure, and the vignette of the \pkg{mediation} package
+contains some examples of the individual-level treatment and mediator with
+group-level random effects.  
 
 To illustrate the usage, we analyze data from the Education Logitudinal Study
 (2002)\footnote{To protect the anonymity of the individuals involved in the study,
@@ -858,7 +881,7 @@ First, consider the case where the treatment is a group-level variable but
 the mediator and outcome variables are measured at the individual level. In this
 case, we only need the student-level data set,
 <<>>=
-data(student)
+data("student", package = "mediation")
 @
 Here, we analyze as an example whether a school is Catholic or not (\code{catholic})
 affects a student's likelihood of fighting (\code{fight}) at the school, and
@@ -885,15 +908,17 @@ and
 $$ \Pr(Y_{ij}=1) \ = \ \logit^{-1}\l((\lambda+\upsilon_j) + \psi T_j + (\phi+\nu_j)M_{ij} + \theta T_jM_{ij} + \zeta^\top X_{ij}\r),$$
 which can both be estimated via the \code{glmer} function,
 <<keep.source=TRUE, echo = TRUE, results = verbatim>>=
-library(arm)  # also loads lme4
+library(lme4)  
+set.seed(2000)
 med.fit <- glmer(attachment ~ catholic + gender + income + pared + (1|SCH_ID),
                  family = binomial(link = "logit"), data = student)
 out.fit <- glmer(fight ~ catholic*attachment +
                          gender + income + pared + (1 + attachment|SCH_ID),
                  family = binomial(link = "logit"), data = student)
 @
-These fitted objects can then be fed into the \code{mediate} function in the usual manner.\footnote{The \code{mediate} function uses several functions from the \pkg{arm} package for the processing of \code{mer} objects, so the package must be loaded into workspace in addition to \pkg{lme4}.}
+These fitted objects can then be fed into the \code{mediate} function in the usual manner.
 <<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+set.seed(2000)
 med.out <- mediate(med.fit, out.fit, treat = "catholic", mediator = "attachment",
                    sims = 100)
 summary(med.out)
@@ -910,7 +935,7 @@ paths.
 
 Next, consider the case where both the treatment and mediator are group-level variables while the outcome is measured at the individual level. In this case, we need the second data set containing only the group-level variables,
 <<>>=
-data(school)
+data("school", package = "mediation")
 @
 Note that the group-level data set must also contain the group indicator used in the individual-level data set under the same variable name (\code{SCH_ID} in our running example). The current version of \code{mediate} also requires that the model frames of the mediator and outcome models contain the exact same set of groups, which becomes important when each model contains different covariates and some groups drop out of the model frames due to missingness.
 
@@ -924,6 +949,7 @@ where $V_j$ is the vector of school-level covariates (\code{catholic} and \code{
 
 In this case, the mediator model is solely composed of the school-level variables and fixed coefficients. Hence the mediator model can be fit via the \code{lm} function using the school-level data set,
 <<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+set.seed(2000)
 med.fit <- lm(smorale ~  free + catholic + coed, data = school)
 @
 and the outcome model, which can be equivalently written as,
@@ -931,6 +957,7 @@ $$ Y_{ij} \ = \ (\lambda + \upsilon_j) + \theta T_j + \phi M_j +
 (\gamma^\top + \kappa^\top) V_j + \zeta^\top X_{ij} + \upsilon_{ij}, $$
 can be estimated with the \code{lmer} function and the student-level data set,
 <<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+set.seed(2000)
 out.fit <- lmer(late ~ free + smorale + catholic + coed +
                        gender + income + pared + (1|SCH_ID),
                 data = student)
@@ -940,6 +967,7 @@ Since the treatment variable is a continuous variable, we use the values of $3$ 
 as the control and treatment values, respectively, and estimate the quantities of interest
 in terms of these values.
 <<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+set.seed(2000)
 med.out <- mediate(med.fit, out.fit, treat = "free", mediator = "smorale",
                    control.value = 3, treat.value = 4, sims = 100)
 summary(med.out)
@@ -1019,6 +1047,7 @@ must be converted to numeric variables as we show below.
 <<keep.source=TRUE, echo = TRUE, results = verbatim>>=
 framing$english <- as.numeric(framing$english)
 framing$anx <- as.numeric(framing$anx)
+set.seed(2000)
 sed.est <- mediate.sed("english", "anx", "treat", data = framing, SI = TRUE,
                        boot = TRUE, sims = 100)
 summary(sed.est)
@@ -1080,10 +1109,12 @@ assumption is dropped and the sharp bounds are calculated to span
 $[-0.3, 0.3]$ for the control condition and $[0.2, 0.77]$ for the
 treatment condition.
 <<keep.source=TRUE, echo = TRUE, results = verbatim>>=
-data("boundsdata")
+data("boundsdata", package = "mediation")
+set.seed(2000)
 pd <- mediate.pd("out", "med", "ttt", "manip", boundsdata,
                  NINT = TRUE, sims = 100, conf.level = 0.95)
 summary(pd)
+set.seed(2000)
 pd1 <- mediate.pd("out", "med", "ttt", "manip", boundsdata,
                   NINT = FALSE)
 summary(pd1)
@@ -1122,7 +1153,8 @@ of the mediator (\code{med.enc}) and outcome (\code{out.enc}) are
 determined. Using this simulated data we can then pass it to the
 \code{mediate.ped} function for the parallel encouragement design.
 <<keep.source=TRUE, echo = TRUE, results = verbatim>>=
-data("boundsdata")
+data("boundsdata", package = "mediation")
+set.seed(2000)
 ped <- mediate.ped("out.enc", "med.enc", "ttt", "enc", boundsdata)
 summary(ped)
 @
@@ -1158,7 +1190,8 @@ indicates whether the subject's mediator value in the second
 experiment is encouraged to take on the value opposite to that observed
 in the first experiment. All variables are binary.
 <<keep.source=TRUE, echo = TRUE, results = verbatim>>=
-data("CEDdata")
+data("CEDdata", package = "mediation")
+set.seed(2000)
 ced <- mediate.ced("Y2", "M1", "M2", "T1", "Z", CEDdata, sims = 100)
 summary(ced)
 @
@@ -1326,6 +1359,7 @@ confound the mediator-outcome relationship.
 
 <<keep.source=TRUE, echo = TRUE, results = verbatim>>=
 Xnames <- c("age", "educ", "gender", "income")
+set.seed(2000)
 m.med <- multimed(outcome = "immigr", med.main = "emo", med.alt = "p_harm",
                   treat = "treat", covariates = Xnames,
                   data = framing, sims = 100)
@@ -1405,6 +1439,7 @@ Unlike the single experiment design, one need not assume any kind of sequential 
 
 To apply the framework for the parallel design, one can use the \code{multimed} function with slightly modified inputs. First, the \code{med.alt} is no longer needed because the estimation framework is agnostic about what particular alternative mechanisms are confounding the mediator-outcome relationship. Second, one need to supply an additional variable (\code{experiment}) indicating whether units are assigned to the experiment with (\code{1}) or without (\code{0}) mediator manipulations. Finally, the \code{design} argument must be set to \code{"parallel"}, as opposed to the default value of \code{"single"}. For illustration, we again use the simulated data introduced in Section~\ref{subsec:parallel} and apply the varying coefficient linear structural equations framework.
 <<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+set.seed(2000)
 m.med.para <- multimed(outcome = "out", med.main = "med", treat = "ttt",
                        experiment = "manip", design = "parallel",
                        data = boundsdata, sims = 100)
@@ -1473,15 +1508,17 @@ We illustrate the use of the \code{ivmediate} function through an analysis of da
 
 The relevant portion of the JOBS II data is included as part of the \pkg{mediation} package.
 <<keep.source=TRUE, echo = TRUE, results = verbatim>>=
-data(jobs)
+data("jobs", package = "mediation")
 @
 We begin by estimating three regression models. First, we model the actual treatment status (\code{comply}) conditional on the assigned treatment (\code{treat}) and observed pre-encouragement covariates (\code{sex}, \code{age}, \code{marital}, \code{nonwhite}, \code{educ}, and \code{income}). Here we postulate a linear probability model for the probability of actually participating in the job-skills workshops.
 <<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+set.seed(2000)
 a <- lm(comply ~ treat + sex + age + marital + nonwhite + educ + income, 
         data = jobs)
 @
 Next, we model the mediator (\code{job_dich}) and outcome (\code{depress2}) as functions of causally precedent variables. That is, we fit a logit model for the dichotomous mediator conditional on the actual treatment, assigned treatment, and observed pre-encouragement covariates, and a linear regression model for the outcome as a function of the mediator, actual treatment, assigned treatment, and pre-encouragement covariates.
 <<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+set.seed(2000)
 b <- glm(job_dich ~ comply + treat + sex + age + marital + 
           nonwhite + educ + income, data = jobs, family = binomial)
 c <- lm(depress2 ~ job_dich * (comply + treat) + sex + age + marital + 
@@ -1491,6 +1528,7 @@ Generally, it is wise to include an interaction term between the actual and assi
 
 After fitting the three models, the LACME and LANDE can be easily estimated via the \code{ivmediate} function, which takes those three fitted model objects as main inputs.\footnote{Currently, \code{ivmediate} only estimates the complier average effects and is not capable of estimatingthe mediated and unmediated ITT effects. This limitation will be addressed in a future update.}
 <<keep.source=TRUE, echo = TRUE, results = verbatim>>=
+set.seed(2000)
 out <- ivmediate(a, b, c, sims = 100, boot = FALSE, 
                  enc = "treat", treat = "comply", mediator = "job_dich")
 @
