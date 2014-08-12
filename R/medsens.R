@@ -18,7 +18,9 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
     low <- (1 - x$conf.level)/2
     high <- 1 - low
     robustSE <- x$robustSE
-    cluster = x$cluster
+    cluster <- x$cluster
+    control.value <- x$control.value
+    treat.value <- x$treat.value
 
     # Setting Variable labels
     ## Uppercase letters (e.g. T) = labels in the input matrix
