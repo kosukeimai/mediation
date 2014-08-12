@@ -547,10 +547,13 @@ object.\footnote{Users may make further modifications to the plot via
 standard \code{plot} options, including changes to the labels.}
 
 \begin{figure}[t!]
-\centering
-\includegraphics[width=0.65\textwidth, trim = 0 30 0 55, clip]{mediation-008}
+\begin{center}
+<<fig=TRUE,echo=FALSE>>=
+plot(med.out)
+@
 \caption{Graphical display of results from the \code{mediate} function.}
 \label{fig:mediate}
+\end{center}
 \end{figure}
 
 \subsubsection{Treatment and mediator interaction}
@@ -817,10 +820,15 @@ when the product of the original variance explained by the omitted
 confounding is $.049$ the point estimate for ACME would be $0$.
 
 \begin{figure}[t!]
-\centering
-\includegraphics[width=\textwidth, trim=0 15 0 10, clip]{mediation-018}
+\begin{center}
+<<fig=TRUE,echo=FALSE>>=
+par(mfrow = c(2,2))
+plot(sens.out, sens.par = "rho", main = "Anxiety", ylim = c(-.2,.2))
+@
+\vspace{-2.5in}
 \caption{Graphical display of results from the \code{medsens} function. Results as a function of $\rho$.}
 \label{fig:medsens}
+\end{center}
 \end{figure}
 
 A graphical display is often more intuitive and useful for the
@@ -833,19 +841,6 @@ statistics (\code{sens.par = "R2"}).
 <<eval=FALSE,fig=FALSE,echo=TRUE>>=
 plot(sens.out, sens.par = "rho", main = "Anxiety", ylim = c(-0.2, 0.2))
 @
-
-\begin{figure}[t!]
-\begin{center}
-<<fig=TRUE,echo=FALSE>>=
-par(mfrow = c(2,2))
-plot(sens.out, sens.par = "rho", main = "Anxiety", ylim = c(-.2,.2))
-@
-\vspace{-2.5in}
-\caption{Graphical Display of Results from the \code{medsens} Function. Results as a Function of $\rho$.}
-\label{fig:medsens}
-\end{center}
-\end{figure}
-
 
 When using the $R^2$ statistic version of sensitivity analysis the
 user must specify whether the hypothesized confounder affects the
@@ -864,6 +859,7 @@ $R^2$ statistics.
 plot(sens.out, sens.par = "R2", r.type = "total", sign.prod = "positive")
 @
 
+
 \begin{figure}[t!]
 \begin{center}
 <<fig=TRUE,echo=FALSE>>=
@@ -876,8 +872,6 @@ plot(sens.out, sens.par = "R2", r.type = "total", sign.prod = "positive")
 \label{fig:medsens2}
 \end{center}
 \end{figure}
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Causal mediation analysis of multilevel data}
 \label{sec:multilevel}
@@ -1506,8 +1500,8 @@ plot(m.med, type = "point")
 <<fig=TRUE,echo=FALSE>>=
 plot(m.med, type = "point")
 @
-\caption{Graphical Summary of the Results from the \code{multimed} Function
-under the Homogeneous Interaction Assumption.}
+\caption{Graphical summary of the results from the \code{multimed} function
+under the homogeneous interaction assumption.}
 \label{fig:multimedpoint}
 \end{center}
 \end{figure}
@@ -1854,7 +1848,7 @@ plot(out)
 <<fig=TRUE,echo=FALSE>>=
 plot(out)
 @
-\caption{Graphical Display of Results from the \code{ivmediate} Function.}
+\caption{Graphical display of results from the \code{ivmediate} function.}
 \label{fig:ivmediate}
 \end{center}
 \end{figure}
