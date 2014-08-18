@@ -1853,11 +1853,14 @@ mediate <- function(model.m, model.y, sims = 1000,
         z1.ci <- BC.CI(zeta.1)
         z0.ci <- BC.CI(zeta.0)
     } else {
-        d0.ci <- quantile(delta.0, c(low,high), na.rm=TRUE)
-        d1.ci <- quantile(delta.1, c(low,high), na.rm=TRUE)
-        tau.ci <- quantile(tau, c(low,high), na.rm=TRUE)
-        z1.ci <- quantile(zeta.1, c(low,high), na.rm=TRUE)
-        z0.ci <- quantile(zeta.0, c(low,high), na.rm=TRUE)
+        CI <- function(theta){
+            return(quantile(theta, c(low, high), na.rm = TRUE))
+        }
+        d0.ci <- apply(delta.0, 2, CI)
+        d1.ci <- apply(delta.1, 2, CI)
+        tau.ci <- apply(tau, 2, CI)
+        z1.ci <- apply(zeta.1, 2, CI)
+        z0.ci <- apply(zeta.0, 2, CI)
     }
     
     # p-values
