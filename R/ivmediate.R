@@ -158,9 +158,9 @@ ivmediate.fit <- function(x, model.t, model.m, model.y,
     vcov.t <- vcov(model.t)
     vcov.m <- vcov(model.m)
     vcov.y <- vcov(model.y)
-    coef.t <- mvrnorm(1, coef.t, vcov.t)
-    coef.m <- mvrnorm(1, coef.m, vcov.m)
-    coef.y <- mvrnorm(1, coef.y, vcov.y)
+    coef.t <- rmvnorm(1, coef.t, vcov.t)
+    coef.m <- rmvnorm(1, coef.m, vcov.m)
+    coef.y <- rmvnorm(1, coef.y, vcov.y)
   }
   
   mf.T.1 <- mf.T.0 <- mf.T <- model.frame(model.t)

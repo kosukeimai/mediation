@@ -375,7 +375,7 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
         } else {
             Mmodel.var.cov <- vcov(model.m)
         }
-        Mmodel.coef.sim <- mvrnorm(sims, mu=Mmodel.coef, Sigma=Mmodel.var.cov)
+        Mmodel.coef.sim <- rmvnorm(sims, mean=Mmodel.coef, sigma=Mmodel.var.cov)
             # simulate M-model parameters
 
         # Step 1-2: Sample lambda_0 and lambda_1; lambdas are (n x sims) matrix
@@ -444,7 +444,7 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
             } else {
                 Ymodel.var.cov <- vcov(model.y.update)
             }
-            Ymodel.coef.sim[k,] <- mvrnorm(1, mu=Ymodel.coef, Sigma=Ymodel.var.cov) 
+            Ymodel.coef.sim[k,] <- rmvnorm(1, mean=Ymodel.coef, sigma=Ymodel.var.cov) 
                 # draw one simulation sample of Y-model parameters for each k
 
             ## Step 2-4: Simulate ACMEs; means are over observations
@@ -538,7 +538,7 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
             Mmodel.var.cov <- vcov(model.m)
         }
         m.k <- length(Mmodel.coef)
-        Mmodel.coef.sim <- mvrnorm(sims, mu = Mmodel.coef, Sigma = Mmodel.var.cov)
+        Mmodel.coef.sim <- rmvnorm(sims, mean = Mmodel.coef, sigma = Mmodel.var.cov)
         beta2.sim <- Mmodel.coef.sim[, T.out]
         
         sigma.2 <- summary(model.m)$sigma
@@ -558,7 +558,7 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
             Ymodel.var.cov <- vcov(model.y)
         }
         y.k <- length(Ymodel.coef)
-        Ymodel.coef.sim <- mvrnorm(sims, mu = Ymodel.coef, Sigma = Ymodel.var.cov)
+        Ymodel.coef.sim <- rmvnorm(sims, mean = Ymodel.coef, sigma = Ymodel.var.cov)
         colnames(Ymodel.coef.sim) <- names(Ymodel.coef)
         gamma.tilde <- Ymodel.coef.sim[, M.out]
 
