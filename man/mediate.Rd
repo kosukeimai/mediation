@@ -258,7 +258,7 @@ summary(contgam.int)
 # Example 5: Multilevel Outcome and Mediator Models
 ######################################################
 \dontrun{
-require(arm)
+require(lme4)
  
 # educ: mediator group
 # occp: outcome group

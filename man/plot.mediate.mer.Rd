@@ -45,7 +45,7 @@ Tingley, D., Yamamoto, T., Hirose, K., Imai, K. and Keele, L. (2014). "mediation
 # **For illustration purposes a small number of simulations are used**
 \dontrun{
 data(jobs)
-require(arm)
+require(lme4)
 
 # educ: mediator group
 # occp: outcome group

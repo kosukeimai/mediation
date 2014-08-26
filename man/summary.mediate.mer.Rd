@@ -47,7 +47,7 @@ Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation Analy
 # **For illustration purposes a small number of simulations are used**
 \dontrun{
 data(jobs)
-require(arm)
+require(lme4)
 
 # educ: mediator group
 # occp: outcome group

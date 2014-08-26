@@ -498,7 +498,6 @@ direct, indirect, and total effects.\footnote{Note that the results
   specific randomness seed (\code{set.seed}) before calling the
   \code{mediate} function.}  The syntax is now given as,
 <<keep.source=TRUE, echo = TRUE, results = verbatim>>=
-library("sandwich")
 med.out <- mediate(med.fit, out.fit, treat = "treat", mediator = "emo",
                    robustSE = TRUE, sims = 100)
 summary(med.out)

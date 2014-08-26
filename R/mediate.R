@@ -472,7 +472,7 @@ mediate <- function(model.m, model.y, sims = 1000,
       
       if(isMer.m){
           MModel.fixef.vcov <- vcov(model.m)
-          MModel.fixef.sim <- mvrnorm(sims,mu=MModel.fixef,Sigma=MModel.fixef.vcov)
+          MModel.fixef.sim <- rmvnorm(sims,mean=MModel.fixef,sigma=MModel.fixef.vcov)
           Nm.ranef <- ncol(ranef(model.m)[[1]]) 
           MModel.ranef.sim <- vector("list",Nm.ranef)
           for (d in 1:Nm.ranef){
@@ -482,12 +482,12 @@ mediate <- function(model.m, model.y, sims = 1000,
           if(sum(is.na(MModel.coef)) > 0){
               stop("NA in model coefficients; rerun models with nonsingular design matrix")
           }
-          MModel <- mvrnorm(sims, mu=MModel.coef, Sigma=MModel.var.cov)
+          MModel <- rmvnorm(sims, mean=MModel.coef, sigma=MModel.var.cov)
       }
       
       if(isMer.y){
           YModel.fixef.vcov <- vcov(model.y)
-          YModel.fixef.sim <- mvrnorm(sims,mu=YModel.fixef,Sigma=YModel.fixef.vcov)
+          YModel.fixef.sim <- rmvnorm(sims,mean=YModel.fixef,sigma=YModel.fixef.vcov)
           Ny.ranef <- ncol(ranef(model.y)[[1]]) 
           YModel.ranef.sim <- vector("list",Ny.ranef)
           for (d in 1:Ny.ranef){
@@ -497,7 +497,7 @@ mediate <- function(model.m, model.y, sims = 1000,
           if(sum(is.na(YModel.coef)) > 0){
               stop("NA in model coefficients; rerun models with nonsingular design matrix")
           }
-          YModel <- mvrnorm(sims, mu=YModel.coef, Sigma=YModel.var.cov)
+          YModel <- rmvnorm(sims, mean=YModel.coef, sigma=YModel.var.cov)
       } 
       
       if(robustSE && (isSurvreg.m | isSurvreg.y)){

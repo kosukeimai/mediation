@@ -3,6 +3,7 @@ importFrom(Matrix, Diagonal)
 importMethodsFrom(Matrix, kronecker)
 importFrom(lpSolve, lp)
 importFrom(sandwich, vcovHC)
+importFrom(mvtnorm, rmvnorm)
 
 
 export(mediate, summary.mediate, plot.mediate,
