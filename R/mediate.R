@@ -471,7 +471,7 @@ mediate <- function(model.m, model.y, sims = 1000,
       }
       
       if(isMer.m){
-          MModel.fixef.vcov <- vcov(model.m)
+          MModel.fixef.vcov <- as.matrix(vcov(model.m))
           MModel.fixef.sim <- rmvnorm(sims,mean=MModel.fixef,sigma=MModel.fixef.vcov)
           Nm.ranef <- ncol(ranef(model.m)[[1]]) 
           MModel.ranef.sim <- vector("list",Nm.ranef)
@@ -486,7 +486,7 @@ mediate <- function(model.m, model.y, sims = 1000,
       }
       
       if(isMer.y){
-          YModel.fixef.vcov <- vcov(model.y)
+          YModel.fixef.vcov <- as.matrix(vcov(model.y))
           YModel.fixef.sim <- rmvnorm(sims,mean=YModel.fixef,sigma=YModel.fixef.vcov)
           Ny.ranef <- ncol(ranef(model.y)[[1]]) 
           YModel.ranef.sim <- vector("list",Ny.ranef)

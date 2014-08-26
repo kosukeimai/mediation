@@ -151,16 +151,19 @@ ivmediate.fit <- function(x, model.t, model.m, model.y,
   #  isMer.m <- inherits(model.m, "merMod") # Note lmer and glmer do not inherit "lm" and "glm"
   
   # Extract or simulate coefs
-  coef.t <- coef(model.t)
-  coef.m <- coef(model.m)
-  coef.y <- coef(model.y)
+  name.coef.t <- names(coef(model.t))
+  name.coef.m <- names(coef(model.m))	
+  name.coef.y <- names(coef(model.y))	
+  coef.t <- as.matrix(coef(model.t))
+  coef.m <- as.matrix(coef(model.m))
+  coef.y <- as.matrix(coef(model.y))
   if(sim){
-    vcov.t <- vcov(model.t)
-    vcov.m <- vcov(model.m)
-    vcov.y <- vcov(model.y)
-    coef.t <- rmvnorm(1, coef.t, vcov.t)
-    coef.m <- rmvnorm(1, coef.m, vcov.m)
-    coef.y <- rmvnorm(1, coef.y, vcov.y)
+    vcov.t <- as.matrix(vcov(model.t))
+    vcov.m <- as.matrix(vcov(model.m))
+    vcov.y <- as.matrix(vcov(model.y))
+    coef.t <- t(as.matrix(rmvnorm(1, coef.t, vcov.t)))
+    coef.m <- t(as.matrix(rmvnorm(1, coef.m, vcov.m)))
+    coef.y <- t(as.matrix(rmvnorm(1, coef.y, vcov.y)))
   }
   
   mf.T.1 <- mf.T.0 <- mf.T <- model.frame(model.t)
@@ -220,8 +223,8 @@ ivmediate.fit <- function(x, model.t, model.m, model.y,
   mm.Y.01.b <- model.matrix(form.y.b, mf.Y.01)
   mm.Y.00.a <- model.matrix(form.y.a, mf.Y.00)
   mm.Y.00.b <- model.matrix(form.y.b, mf.Y.00)
-  
-  mu.Y.ind <- sapply(strsplit(names(coef.y), ":"), function(x) mediator %in% x)
+
+  mu.Y.ind <- sapply(strsplit(name.coef.y , ":"), function(x) mediator %in% x)
   mu.Y.11.a <- tcrossprod(mm.Y.11.a, t(coef.y[!mu.Y.ind]))
   mu.Y.11.b <- tcrossprod(mm.Y.11.b, t(coef.y[mu.Y.ind]))
   mu.Y.10.a <- tcrossprod(mm.Y.10.a, t(coef.y[!mu.Y.ind]))
