@@ -21,3 +21,4 @@ version      date  description
 4.3.1    10/16/13  Fixed the compatibility issue with Windows for multicore options
 4.4      12/09/13  Added option for the BCa method for bootstrap CIs in mediate
 4.4.1    08/12/14  Vignette updated to the JSS paper; categorical treatment for medsens
+4.4.2    08/26/14  Switched mvrnorm to rmvnorm; fixed bug in print.summary.order
