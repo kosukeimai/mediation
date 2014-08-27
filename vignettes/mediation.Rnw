@@ -13,12 +13,12 @@
   \hspace{.25in}Luke Keele\\\hspace{.25in}Penn State \And
   Kosuke Imai\\Princeton        
 }
-\title{\pkg{mediation}: \proglang{R} Package for Causal Mediation Analysis}
+\title{\pkg{mediation}: Causal Mediation Analysis}
 
 %% for pretty printing and a nice hypersummary also set:
 \Plainauthor{Dustin Tingley, Teppei Yamamoto, Kentaro Hirose, Luke
   Keele, Kosuke Imai} %% comma-separated
-\Plaintitle{mediation: R Package for Causal Mediation Analysis} %% without formatting
+\Plaintitle{mediation: Causal Mediation Analysis} %% without formatting
 \Shorttitle{Causal Mediation Analysis}  %% a short title (if necessary)
 
 %% an abstract and keywords
