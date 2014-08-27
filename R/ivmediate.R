@@ -43,7 +43,7 @@ ivmediate <- function(model.t, model.m, model.y, ci = TRUE, sims = 1000, boot = 
   if(ci){
     if(boot){
       if(multicore){
-        out.sim.full <- mclapply(1:sims, ivmediate.fit.b, 
+        out.sim.full <- multicore::mclapply(1:sims, ivmediate.fit.b, 
                                  model.t = model.t, model.m = model.m, model.y = model.y,
                                  enc = enc, treat = treat, mediator = mediator,
                                  mc.cores = mc.cores)
@@ -54,7 +54,7 @@ ivmediate <- function(model.t, model.m, model.y, ci = TRUE, sims = 1000, boot = 
       }
     } else {
       if(multicore){
-        out.sim.full <- mclapply(1:sims, ivmediate.fit, 
+        out.sim.full <- multicore::mclapply(1:sims, ivmediate.fit, 
                                  model.t = model.t, model.m = model.m, model.y = model.y,
                                  enc = enc, treat = treat, mediator = mediator, sim = TRUE,
                                  mc.cores = mc.cores)

@@ -47,7 +47,7 @@ mediations <- function(datasets, treatment, mediators, outcome,
                     if(!is.null(weights)) {
                         stop("Weights not supported with quantile regression")
                     } else {
-                        result1 <- rq(f1, data=dataarg, tau=tau.m)
+                        result1 <- quantreg::rq(f1, data=dataarg, tau=tau.m)
                     }
                 } else if(families[1] == "oprobit") {
                     result1 <- polr(f1, method = "probit", weights=weight, data=dataarg, Hess=TRUE)
@@ -65,10 +65,10 @@ mediations <- function(datasets, treatment, mediators, outcome,
                     if(!is.null(weights)) {
                         stop("Weights not supported with quantile regression")
                     } else {
-                        result2 <- rq(f2, data=dataarg, tau=tau.y)
+                        result2 <- quantreg::rq(f2, data=dataarg, tau=tau.y)
                     }
                 } else if(families[2] == "tobit") {
-                    result2 <- vglm(f2, tobit(Lower=LowerY,Upper=UpperY), weights=weight,
+                    result2 <- VGAM::vglm(f2, VGAM::tobit(Lower=LowerY,Upper=UpperY), weights=weight,
                                     data=dataarg, model=TRUE)
                 } else if(families[2]== "oprobit"){
                     result2 <- polr(f2, method = "probit", weights=weight, data=dataarg, Hess=TRUE)

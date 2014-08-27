@@ -1,8 +1,8 @@
-importFrom(MASS, mvrnorm, gamma.shape)
+importFrom(MASS, mvrnorm, gamma.shape, polr)
 importFrom(Matrix, Diagonal)
 importMethodsFrom(Matrix, kronecker)
 importFrom(lpSolve, lp)
-importFrom(sandwich, vcovHC)
+importFrom(sandwich, vcovHC, sandwich, estfun)
 importFrom(mvtnorm, rmvnorm)
 
 
