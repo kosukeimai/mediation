@@ -13,12 +13,12 @@
   \hspace{.25in}Luke Keele\\\hspace{.25in}Penn State \And
   Kosuke Imai\\Princeton        
 }
-\title{\pkg{mediation}: Causal Mediation Analysis}
+\title{\pkg{mediation}: \proglang{R} Package for Causal Mediation Analysis}
 
 %% for pretty printing and a nice hypersummary also set:
 \Plainauthor{Dustin Tingley, Teppei Yamamoto, Kentaro Hirose, Luke
   Keele, Kosuke Imai} %% comma-separated
-\Plaintitle{mediation: Causal Mediation Analysis} %% without formatting
+\Plaintitle{mediation: R Package for Causal Mediation Analysis} %% without formatting
 \Shorttitle{Causal Mediation Analysis}  %% a short title (if necessary)
 
 %% an abstract and keywords
@@ -888,8 +888,8 @@ for multilevel data by focusing on two types of data structure: (1) the
 treatment is assigned at the group level whereas the mediator and
 outcome are measured at the individual level, and (2) both the treatment
 and mediator are group-level variables while the outcome is recorded at
-the individial level. Other combinations of data levels can be handled
-via straightforward modifications to the syntax used in these examples.  
+the individual level. Other combinations of data levels can be handled
+via straightforward modifications to the syntax used in these examples.\footnote{We note that as of the writing of this article the lme4 package is known to generate slightly different random number draws across computing platforms (Windows, Mac, etc.) for a given seed which given the simulation method used can generate small numerical differences in some cases.}  
 
 To illustrate the usage, we analyze data from the Education
 Longitudinal Study (2002)\footnote{To protect the anonymity of the
