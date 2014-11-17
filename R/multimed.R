@@ -5,14 +5,17 @@
 multimed <- function(outcome, med.main, med.alt = NULL, treat, 
                      covariates = NULL, experiment = NULL, 
                      data, design = c("single", "parallel"),
-                     sims = 1000, R2.by = 0.01, conf.level = 0.95){
-  
-  varnames <- c(outcome, treat, med.main, med.alt, experiment, covariates)
-  n.w <- length(med.alt)
-  data <- na.omit(data[,varnames])
-  
-  design <- match.arg(design)
-  
+                     sims = 1000, R2.by = 0.01, conf.level = 0.95, weight = NULL){
+
+    if(!is.null(weight) & !is.character(weight)){
+        stop("weight must be the name of the weights in 'data'")
+    } else {
+        varnames <- c(outcome, treat, med.main, med.alt, experiment, covariates, weight)
+    }
+    n.w <- length(med.alt)
+    data <- na.omit(data[,varnames])
+    design <- match.arg(design)
+    
   if(design == "single"){
     if (is.null(covariates)){
       f.y <- as.formula(paste(outcome, "~", treat, "+", med.main, "+",
@@ -68,14 +71,14 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
   # Bootstrap ACME values
   
   ACME.1.lo <- ACME.0.lo <- ACME.1.up <- ACME.0.up <- 
-    ACME.ave.lo <- ACME.ave.up <- matrix(NA, nrow=length(sigma), ncol=sims)
+      ACME.ave.lo <- ACME.ave.up <- matrix(NA, nrow=length(sigma), ncol=sims)
   tau <- rep(NA, length = sims)
   for(b in 1:(sims+1)){
-    # Resample
-    data.b <- data[sample(1:nrow(data), nrow(data), replace=TRUE),]
-    if(b == sims + 1){
-      data.b <- data
-    }
+      ## Resample
+      data.b <- data[sample(1:nrow(data), nrow(data), replace=TRUE),]
+      if(b == sims + 1){
+          data.b <- data
+      }
     
     # Subset data for parallel design
     data.b.0 <- switch(design,
@@ -85,16 +88,33 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
                        single = data.b,
                        parallel = subset(data.b, data.b[[experiment]] == 1))
     
-    # Fit models
-    model.y <- lm(f.y, data=data.b.1)
-    model.ytot <- lm(f.ytot, data=data.b.0)
-    model.m <- lm(f.m, data=data.b.0)
-    if(design == "single"){
-      model.w <- as.list(rep(NA, n.w))
-      for(k in 1:n.w){
-        model.w[[k]] <- lm(f.w[[k]], data=data.b)
+      ## Fit models
+      if(is.null(weight)){
+          model.y <- lm(f.y, data=data.b.1)
+          model.ytot <- lm(f.ytot, data=data.b.0)
+          model.m <- lm(f.m, data=data.b.0)
+          if(design == "single"){
+              model.w <- as.list(rep(NA, n.w))
+              for(k in 1:n.w){
+                  model.w[[k]] <- lm(f.w[[k]], data=data.b)
+              }
+          }
+      } else {
+          wgt <- data.b[, weight]
+          wgt0 <- data.b.0[, weight]
+          wgt1 <- data.b.1[, weight]
+          
+          model.y <- lm(f.y, weights = wgt1, data=data.b.1)
+          model.ytot <- lm(f.ytot, weights = wgt0, data=data.b.0)
+          model.m <- lm(f.m, weights = wgt0, data=data.b.0)
+          if(design == "single"){
+              model.w <- as.list(rep(NA, n.w))
+              for(k in 1:n.w){
+                  model.w[[k]] <- lm(f.w[[k]], weights = wgt, data=data.b)
+              }
+          }
+
       }
-    }
     
     beta3 <- coef(model.y)[treat]
     kappa <- coef(model.y)[paste(treat, med.main, sep=":")]

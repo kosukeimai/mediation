@@ -18,7 +18,7 @@ parallel design.
 multimed(outcome, med.main, med.alt = NULL, treat, 
          covariates = NULL, experiment = NULL,
          data, design = c("single", "parallel"),
-         sims = 1000, R2.by = 0.01, conf.level = 0.95)
+         sims = 1000, R2.by = 0.01, conf.level = 0.95, weight = NULL)
 
 }
 
@@ -34,6 +34,7 @@ multimed(outcome, med.main, med.alt = NULL, treat,
 \item{sims}{ number of bootstrap samples used for the calculation of confidence intervals.}
 \item{R2.by}{ increment for the "R square tilde" parameter, i.e. the sensitivity parameter representing the proportion of residual outcome variance explained by heterogeneity in treatment-mediator interactions. Must be a numeric value between 0 and 1.}
 \item{conf.level}{ level to be used for confidence intervals.}
+\item{weight}{ name of the weights in 'data'.}
 }
 
 \details{This function implements the framework proposed by Imai and Yamamoto (2012) for the estimation and sensitivity analysis for multiple causal mechanisms. It estimates the average causal mediation effects with respect to the mediator of interest ('med.main'), i.e., the portion of the treatment effect on the outcome that is transmitted through that mediator. Unlike the "standard" causal mediation analysis implemented by \code{\link{mediate}} and \code{\link{medsens}}, this framework allows the existence of post-treatment covariates that confound the relationship between the main mediator and the outcome, or equivalently, alternative mediators ('med.alt') that causally precede the main mediator.
