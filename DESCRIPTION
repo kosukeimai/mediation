@@ -8,7 +8,7 @@ Author: Dustin Tingley <dtingley@gov.harvard.edu>,
         Luke Keele <ljk20@psu.edu>,
         Kosuke Imai <kimai@princeton.edu>
 Maintainer: Teppei Yamamoto <teppei@mit.edu>
-Depends: R (>= 2.15.1), MASS, Matrix, lpSolve, sandwich, mvtnorm
+Depends: R (>= 2.15.1), MASS, Matrix, lpSolve, sandwich, mvtnorm, SDMTools
 Suggests: mgcv, quantreg, VGAM, SuppDists, lme4 (>= 1.0), survival, parallel
 Description: mediation allows both parametric and nonparametric causal mediation analysis.  It implements the methods and suggestions in Imai, Keele and Yamamoto (2010), Imai, Keele and Tingley (2010), Imai, Tingley and Yamamoto (2013), Imai and Yamamoto (2013) and Yamamoto (2013). In addition to the estimation of causal mediation effects, the software also allows researchers to conduct sensitivity analysis for certain parametric models.
 LazyLoad: yes

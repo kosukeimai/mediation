@@ -60,13 +60,19 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
   data.1 <- switch(design,
                    single = data,
                    parallel = subset(data, data[[experiment]] == 1))
-  
-  ETM2 <- mean(data.1[,treat] * data.1[,med.main]^2)
-  model.y <- lm(f.y, data=data.1)
-  sigma <- summary(model.y)$sigma * sqrt(R2.s/ETM2)
-  
-  VY <- var(data.1[,outcome])
-  R2.t <- ETM2 * sigma^2/VY
+
+    if(is.null(weight)){
+        ETM2 <- mean(data.1[,treat] * data.1[,med.main]^2)
+        model.y <- lm(f.y, data=data.1)
+        VY <- var(data.1[,outcome])
+    } else {
+        ETM2 <- weighted.mean(data.1[,treat] * data.1[,med.main]^2, w = data.1[, weight])
+        model.y <- lm(f.y, data=data.1, weights = data.1[, weight])
+        VY <- SDMTools::wt.var(data.1[, outcome], wt = data.1[, weight])
+    }
+    sigma <- summary(model.y)$sigma * sqrt(R2.s/ETM2)
+    
+    R2.t <- ETM2 * sigma^2/VY
   
   # Bootstrap ACME values
   
@@ -101,8 +107,8 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
           }
       } else {
           wgt <- data.b[, weight]
-          wgt0 <- data.b.0[, weight]
           wgt1 <- data.b.1[, weight]
+          wgt0 <- data.b.0[, weight]
           
           model.y <- lm(f.y, weights = wgt1, data=data.b.1)
           model.ytot <- lm(f.ytot, weights = wgt0, data=data.b.0)
@@ -113,7 +119,6 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
                   model.w[[k]] <- lm(f.w[[k]], weights = wgt, data=data.b)
               }
           }
-
       }
     
     beta3 <- coef(model.y)[treat]
@@ -124,15 +129,25 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
     }
     
     # E(M|T=t)
-    mf.m1 <- mf.m0 <- mf.m <- model.frame(model.m)
-    mf.m1[,treat] <- 1
-    mf.m0[,treat] <- 0
-    EM.1 <- mean(predict(model.m, mf.m1))
-    EM.0 <- mean(predict(model.m, mf.m0))
-    
-    # V(M|T=t)
-    VM.1 <- sum(model.m$residuals[mf.m[,treat]==1]^2)/(sum(mf.m[,treat]) - length(coef(model.m)))
-    VM.0 <- sum(model.m$residuals[mf.m[,treat]==0]^2)/(sum(1-mf.m[,treat]) - length(coef(model.m)))
+      mf.m1 <- mf.m0 <- mf.m <- model.frame(model.m)
+      mf.m1[,treat] <- 1
+      mf.m0[,treat] <- 0
+      if(is.null(weight)){
+          EM.1 <- mean(predict(model.m, mf.m1))
+          EM.0 <- mean(predict(model.m, mf.m0))
+      } else { ### model.m from data.b.0 -> wgt0
+          EM.1 <- weighted.mean(predict(model.m, mf.m1), w = wgt0)
+          EM.0 <- weighted.mean(predict(model.m, mf.m0), w = wgt0)
+      }
+      
+     # V(M|T=t)
+      if(is.null(weight)){
+          VM.1 <- sum(model.m$residuals[mf.m[,treat]==1]^2)/(sum(mf.m[,treat]) - length(coef(model.m)))
+          VM.0 <- sum(model.m$residuals[mf.m[,treat]==0]^2)/(sum(1-mf.m[,treat]) - length(coef(model.m)))
+      } else { ### mf.m from model.m, which is from data.b.0 -> wgt0
+          VM.1 <- SDMTools::wt.var(model.m$residuals[mf.m[,treat]==1], wt = wgt0[mf.m[, treat] == 1])
+          VM.0 <- SDMTools::wt.var(model.m$residuals[mf.m[,treat]==0], wt = wgt0[mf.m[, treat] == 0])
+      }
     
     # E(W|T=t)
     if(design == "single"){
@@ -142,8 +157,13 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
         mf.w1[[k]] <- mf.w0[[k]] <- model.frame(model.w[[k]])
         mf.w1[[k]][,treat] <- 1
         mf.w0[[k]][,treat] <- 0
-        EW.1[k] <- mean(predict(model.w[[k]], mf.w1[[k]]))
-        EW.0[k] <- mean(predict(model.w[[k]], mf.w0[[k]]))
+        if(is.null(weight)){
+            EW.1[k] <- mean(predict(model.w[[k]], mf.w1[[k]]))
+            EW.0[k] <- mean(predict(model.w[[k]], mf.w0[[k]]))
+        } else { ### model.w from data.b -> wgt
+            EW.1[k] <- weighted.mean(predict(model.w[[k]], mf.w1[[k]]), w = wgt)
+            EW.0[k] <- weighted.mean(predict(model.w[[k]], mf.w0[[k]]), w = wgt)
+        }
       }
     }
     
@@ -158,7 +178,11 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
       ACME.0.lo.o <- tau.o - beta3 - kappa*EM.1 - sigma*sqrt(VM.1) - WXterms
       ACME.1.up.o <- tau.o - beta3 - kappa*EM.0 + sigma*sqrt(VM.0) - WXterms
       ACME.0.up.o <- tau.o - beta3 - kappa*EM.1 + sigma*sqrt(VM.1) - WXterms
-      P <- mean(data.b[,treat])
+      if(is.null(weight)){
+          P <- mean(data.b[,treat])
+      } else { ### data.b -> wgt 
+          P <- weighted.mean(data.b[,treat], w = wgt)
+      }
       ACME.ave.lo.o <- P * ACME.1.lo.o + (1-P) * ACME.0.lo.o
       ACME.ave.up.o <- P * ACME.1.up.o + (1-P) * ACME.0.up.o
     } else {
@@ -170,7 +194,11 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
       ACME.0.lo[,b] <- tau[b] - beta3 - kappa*EM.1 - sigma*sqrt(VM.1) - WXterms
       ACME.1.up[,b] <- tau[b] - beta3 - kappa*EM.0 + sigma*sqrt(VM.0) - WXterms
       ACME.0.up[,b] <- tau[b] - beta3 - kappa*EM.1 + sigma*sqrt(VM.1) - WXterms
-      P <- mean(data.b[,treat])
+      if(is.null(weight)){
+          P <- mean(data.b[,treat])
+      } else { ### data.b -> wgt
+          P <- weighted.mean(data.b[,treat], w = wgt)  
+      }
       ACME.ave.lo[,b] <- P * ACME.1.lo[,b] + (1-P) * ACME.0.lo[,b]
       ACME.ave.up[,b] <- P * ACME.1.up[,b] + (1-P) * ACME.0.up[,b]
     }
