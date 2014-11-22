@@ -4,7 +4,7 @@ importMethodsFrom(Matrix, kronecker)
 importFrom(lpSolve, lp)
 importFrom(sandwich, vcovHC, sandwich, estfun)
 importFrom(mvtnorm, rmvnorm)
-importFrom(SDMTools, wt.var)
+importFrom(Hmisc, wtd.var)
 
 
 export(mediate, summary.mediate, plot.mediate,

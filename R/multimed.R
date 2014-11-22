@@ -2,24 +2,24 @@
 # Sensitivity Analysis for Multiple Mediators
 ##################################################################
 
-multimed <- function(outcome, med.main, med.alt = NULL, treat, 
-                     covariates = NULL, experiment = NULL, 
+multimed <- function(outcome, med.main, med.alt = NULL, treat,
+                     covariates = NULL, experiment = NULL,
                      data, design = c("single", "parallel"),
                      sims = 1000, R2.by = 0.01, conf.level = 0.95, weight = NULL){
 
     if(!is.null(weight) & !is.character(weight)){
-        stop("weight must be the name of the weights in 'data'")
+        stop("weight must be character string for weights in 'data'")
     } else {
         varnames <- c(outcome, treat, med.main, med.alt, experiment, covariates, weight)
     }
     n.w <- length(med.alt)
     data <- na.omit(data[,varnames])
     design <- match.arg(design)
-    
+
   if(design == "single"){
     if (is.null(covariates)){
       f.y <- as.formula(paste(outcome, "~", treat, "+", med.main, "+",
-                              paste(treat, med.main, sep=":"), "+", 
+                              paste(treat, med.main, sep=":"), "+",
                               paste(med.alt, collapse=" + "), "+",
                               paste(treat, med.alt, sep=":", collapse=" + ")))
       f.ytot <- as.formula(paste(outcome, "~", treat))
@@ -30,11 +30,11 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
       }
     } else {
       f.y <- as.formula(paste(outcome, "~", treat, "+", med.main, "+",
-                              paste(treat, med.main, sep=":"), "+", 
+                              paste(treat, med.main, sep=":"), "+",
                               paste(med.alt, collapse=" + "), "+",
                               paste(treat, med.alt, sep=":", collapse=" + "), "+",
                               paste(covariates, collapse = " + ")))
-      f.ytot <- as.formula(paste(outcome, "~", treat, "+", 
+      f.ytot <- as.formula(paste(outcome, "~", treat, "+",
                                  paste(covariates, collapse = " + ")))
       f.m <- as.formula(paste(med.main, "~", treat, "+", paste(covariates, collapse = " + ")))
       f.w <- as.list(rep(NA, n.w))
@@ -53,10 +53,10 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
   } else {
     stop("design unsupported by the multimed procedure")
   }
-  
+
   # Compute sensitivity parameters
   R2.s <- seq(0, 1, by = R2.by)
-  
+
   data.1 <- switch(design,
                    single = data,
                    parallel = subset(data, data[[experiment]] == 1))
@@ -68,24 +68,24 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
     } else {
         ETM2 <- weighted.mean(data.1[,treat] * data.1[,med.main]^2, w = data.1[, weight])
         model.y <- lm(f.y, data=data.1, weights = data.1[, weight])
-        VY <- SDMTools::wt.var(data.1[, outcome], wt = data.1[, weight])
+        VY <- Hmisc::wtd.var(data.1[, outcome], weights = data.1[, weight])
     }
     sigma <- summary(model.y)$sigma * sqrt(R2.s/ETM2)
-    
+
     R2.t <- ETM2 * sigma^2/VY
-  
+
   # Bootstrap ACME values
-  
-  ACME.1.lo <- ACME.0.lo <- ACME.1.up <- ACME.0.up <- 
+
+  ACME.1.lo <- ACME.0.lo <- ACME.1.up <- ACME.0.up <-
       ACME.ave.lo <- ACME.ave.up <- matrix(NA, nrow=length(sigma), ncol=sims)
   tau <- rep(NA, length = sims)
   for(b in 1:(sims+1)){
       ## Resample
       data.b <- data[sample(1:nrow(data), nrow(data), replace=TRUE),]
-      if(b == sims + 1){
+      if(b == sims + 1){  # final iteration is original data
           data.b <- data
       }
-    
+
     # Subset data for parallel design
     data.b.0 <- switch(design,
                        single = data.b,
@@ -93,7 +93,7 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
     data.b.1 <- switch(design,
                        single = data.b,
                        parallel = subset(data.b, data.b[[experiment]] == 1))
-    
+
       ## Fit models
       if(is.null(weight)){
           model.y <- lm(f.y, data=data.b.1)
@@ -109,7 +109,7 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
           wgt <- data.b[, weight]
           wgt1 <- data.b.1[, weight]
           wgt0 <- data.b.0[, weight]
-          
+
           model.y <- lm(f.y, weights = wgt1, data=data.b.1)
           model.ytot <- lm(f.ytot, weights = wgt0, data=data.b.0)
           model.m <- lm(f.m, weights = wgt0, data=data.b.0)
@@ -120,14 +120,14 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
               }
           }
       }
-    
+
     beta3 <- coef(model.y)[treat]
     kappa <- coef(model.y)[paste(treat, med.main, sep=":")]
     if(design == "single"){
       xi3 <- coef(model.y)[med.alt]
       mu3 <- coef(model.y)[paste(treat, med.alt, sep=":")]
     }
-    
+
     # E(M|T=t)
       mf.m1 <- mf.m0 <- mf.m <- model.frame(model.m)
       mf.m1[,treat] <- 1
@@ -139,16 +139,16 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
           EM.1 <- weighted.mean(predict(model.m, mf.m1), w = wgt0)
           EM.0 <- weighted.mean(predict(model.m, mf.m0), w = wgt0)
       }
-      
+
      # V(M|T=t)
       if(is.null(weight)){
           VM.1 <- sum(model.m$residuals[mf.m[,treat]==1]^2)/(sum(mf.m[,treat]) - length(coef(model.m)))
           VM.0 <- sum(model.m$residuals[mf.m[,treat]==0]^2)/(sum(1-mf.m[,treat]) - length(coef(model.m)))
       } else { ### mf.m from model.m, which is from data.b.0 -> wgt0
-          VM.1 <- SDMTools::wt.var(model.m$residuals[mf.m[,treat]==1], wt = wgt0[mf.m[, treat] == 1])
-          VM.0 <- SDMTools::wt.var(model.m$residuals[mf.m[,treat]==0], wt = wgt0[mf.m[, treat] == 0])
+          VM.1 <- Hmisc::wtd.var(model.m$residuals[mf.m[,treat]==1], weights = wgt0[mf.m[, treat] == 1])
+          VM.0 <- Hmisc::wtd.var(model.m$residuals[mf.m[,treat]==0], weights = wgt0[mf.m[, treat] == 0])
       }
-    
+
     # E(W|T=t)
     if(design == "single"){
       mf.w1 <- mf.w0 <- as.list(rep(NA, n.w))
@@ -166,7 +166,7 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
         }
       }
     }
-    
+
     ## Bounds
     # ACME
     if(b == sims + 1){
@@ -180,7 +180,7 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
       ACME.0.up.o <- tau.o - beta3 - kappa*EM.1 + sigma*sqrt(VM.1) - WXterms
       if(is.null(weight)){
           P <- mean(data.b[,treat])
-      } else { ### data.b -> wgt 
+      } else { ### data.b -> wgt
           P <- weighted.mean(data.b[,treat], w = wgt)
       }
       ACME.ave.lo.o <- P * ACME.1.lo.o + (1-P) * ACME.0.lo.o
@@ -197,27 +197,27 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
       if(is.null(weight)){
           P <- mean(data.b[,treat])
       } else { ### data.b -> wgt
-          P <- weighted.mean(data.b[,treat], w = wgt)  
+          P <- weighted.mean(data.b[,treat], w = wgt)
       }
       ACME.ave.lo[,b] <- P * ACME.1.lo[,b] + (1-P) * ACME.0.lo[,b]
       ACME.ave.up[,b] <- P * ACME.1.up[,b] + (1-P) * ACME.0.up[,b]
     }
   }
-  
+
   ACME.ave.lo.var <- apply(ACME.ave.lo, 1, var)
   ACME.1.lo.var <- apply(ACME.1.lo, 1, var)
   ACME.0.lo.var <- apply(ACME.0.lo, 1, var)
   ACME.ave.up.var <- apply(ACME.ave.up, 1, var)
   ACME.1.up.var <- apply(ACME.1.up, 1, var)
   ACME.0.up.var <- apply(ACME.0.up, 1, var)
-  
+
   ACME.ave.CI <- ACME.1.CI <- ACME.0.CI <- matrix(NA, nrow=2, ncol=length(sigma))
   for(i in 1:length(sigma)){
-    ACME.ave.CI[,i] <- IMCI(ACME.ave.up.o[i], ACME.ave.lo.o[i], 
+    ACME.ave.CI[,i] <- IMCI(ACME.ave.up.o[i], ACME.ave.lo.o[i],
                             ACME.ave.up.var[i], ACME.ave.lo.var[i], conf.level = conf.level)$ci
-    ACME.1.CI[,i] <- IMCI(ACME.1.up.o[i], ACME.1.lo.o[i], 
+    ACME.1.CI[,i] <- IMCI(ACME.1.up.o[i], ACME.1.lo.o[i],
                           ACME.1.up.var[i], ACME.1.lo.var[i], conf.level = conf.level)$ci
-    ACME.0.CI[,i] <- IMCI(ACME.0.up.o[i], ACME.0.lo.o[i], 
+    ACME.0.CI[,i] <- IMCI(ACME.0.up.o[i], ACME.0.lo.o[i],
                           ACME.0.up.var[i], ACME.0.lo.var[i], conf.level = conf.level)$ci
   }
   tau.CI <- quantile(tau, probs = c((1-conf.level)/2, (1+conf.level)/2), na.rm = TRUE)
@@ -231,7 +231,7 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
 
 
 ## Calculates Imbens-Manski confidence set for nonparametric bounds
-IMCI <- function(upper, lower, var.upper, var.lower, 
+IMCI <- function(upper, lower, var.upper, var.lower,
                  conf.level){
   A <- (upper-lower)/sqrt(max(var.upper,var.lower))
   C <- seq(0,10,by=.001)
@@ -254,7 +254,7 @@ print.summary.multimed <- function(x, ...){
   cat("\n")
   cat("Causal Mediation Analysis with Confounding by an Alternative Mechanism\n\n")
   cat("Estimates under the Homogeneous Interaction Assumption:\n")
-  
+
   cmat <- c(x$d1.lb[1], x$d0.lb[1], x$d.ave.lb[1], x$tau)
   cmat <- cbind(cmat, rbind(x$d1.ci[,1], x$d0.ci[,1], x$d.ave.ci[,1], x$tau.ci))
   colnames(cmat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
@@ -262,7 +262,7 @@ print.summary.multimed <- function(x, ...){
   rownames(cmat) <- c("ACME (treated)", "ACME (control)", "ACME (average)", "Total Effect")
   printCoefmat(cmat[,1:3], digits=3)
   cat("\n")
-  
+
   cat("Sensitivity Analysis: \n")
   cat("Values of the sensitivity parameters at which ACME first crosses zero:\n")
   ind.d1.b <- sum(sign(x$d1.lb) * sign(x$d1.ub) > 0) + 1
@@ -271,17 +271,17 @@ print.summary.multimed <- function(x, ...){
   ind.d0.c <- sum(sign(x$d0.ci[1,]) * sign(x$d0.ci[2,]) > 0) + 1
   ind.d.ave.b <- sum(sign(x$d.ave.lb) * sign(x$d.ave.ub) > 0) + 1
   ind.d.ave.c <- sum(sign(x$d.ave.ci[1,]) * sign(x$d.ave.ci[2,]) > 0) + 1
-  smat <- c(x$sigma[ind.d1.b], x$sigma[ind.d1.c], 
+  smat <- c(x$sigma[ind.d1.b], x$sigma[ind.d1.c],
             x$R2star[ind.d1.b], x$R2star[ind.d1.c], x$R2tilde[ind.d1.b], x$R2tilde[ind.d1.c])
-  smat <- rbind(smat, c(x$sigma[ind.d0.b], x$sigma[ind.d0.c], 
+  smat <- rbind(smat, c(x$sigma[ind.d0.b], x$sigma[ind.d0.c],
                         x$R2star[ind.d0.b], x$R2star[ind.d0.c], x$R2tilde[ind.d0.b], x$R2tilde[ind.d0.c]))
-  smat <- rbind(smat, c(x$sigma[ind.d.ave.b], x$sigma[ind.d.ave.c], 
+  smat <- rbind(smat, c(x$sigma[ind.d.ave.b], x$sigma[ind.d.ave.c],
                         x$R2star[ind.d.ave.b], x$R2star[ind.d.ave.c], x$R2tilde[ind.d.ave.b], x$R2tilde[ind.d.ave.c]))
   colnames(smat) <- c("sigma(bounds)", "sigma(CI)", "R2s(bounds)", "R2s(CI)", "R2t(bounds)", "R2t(CI)")
   rownames(smat) <- c("ACME (treated)", "ACME (control)", "ACME (average)")
   printCoefmat(smat[,1:6], digits=3)
   cat("\n")
-  
+
   invisible(x)
 }
 
@@ -294,25 +294,25 @@ plot.multimed <- function(x, type = c("point", "sigma", "R2-residual", "R2-total
                           xlab = NULL, ylab = NULL, xlim = NULL, ylim = NULL, main = NULL,
                           lwd = par("lwd"), pch = par("pch"), cex = par("cex"), las = par("las"),
                           col.eff = "black", col.cbar = "black", col.creg = "gray", ...){
-  
+
   type <- match.arg(type, several.ok = TRUE)
   tgroup <- match.arg(tgroup, several.ok = TRUE)
   effect.type <- match.arg(effect.type, several.ok=TRUE)
-  
+
   IND <- "indirect" %in% effect.type
   TOT <- "total" %in% effect.type
-  
+
   if(!IND && TOT) {
     stop("No support for only plotting total effect.")
   }
-  
+
   show.point <- "point" %in% type
   nplots <- show.point + (length(type) - show.point) * length(tgroup)
   if(ask){
     oask <- devAskNewPage(TRUE)
     on.exit(devAskNewPage(oask))
   }
-  
+
   eff.up <- eff.lo <- ci.up <- ci.lo <- c()
   if("control" %in% tgroup){
     eff.lo <- cbind(eff.lo, x$d0.lb)
@@ -332,8 +332,8 @@ plot.multimed <- function(x, type = c("point", "sigma", "R2-residual", "R2-total
     ci.lo <- cbind(ci.lo, x$d.ave.ci[1,])
     ci.up <- cbind(ci.up, x$d.ave.ci[2,])
   }
-  
-  ## 1. Point Estimate under Homogeneous Interaction Assumption	  	
+
+  ## 1. Point Estimate under Homogeneous Interaction Assumption
   if(show.point){
     if(is.null(main)){
       ma <- "Point Estimate"
@@ -356,7 +356,7 @@ plot.multimed <- function(x, type = c("point", "sigma", "R2-residual", "R2-total
         yla <- yla[-1]
       }
     } else yla <- ylab
-    
+
     if(IND && TOT) {
       eff <- c(x$tau, eff.lo[1,])
       ci <- cbind(x$tau.ci, rbind(ci.lo[1,], ci.up[1,]))
@@ -364,14 +364,14 @@ plot.multimed <- function(x, type = c("point", "sigma", "R2-residual", "R2-total
       eff <- c(eff.lo[1,])
       ci <- rbind(ci.lo[1,], ci.up[1,])
     }
-    
+
     if(is.null(xlim)){
       xli <- c(min(ci), max(ci))
     } else xli <- xlim
     if(is.null(ylim)){
       yli <- c(0, length(eff)) + 0.5
     } else yli <- ylim
-    
+
     plot(0, 0, type = "n", main = ma, xlab = xla, ylab = "",
          xlim = xli, ylim = yli, yaxt = "n", ...)
     for(i in 1:length(eff)){
@@ -381,9 +381,9 @@ plot.multimed <- function(x, type = c("point", "sigma", "R2-residual", "R2-total
     abline(v = 0)
     axis(side = 2, labels = yla, at = 1:length(eff), las = las)
   }
-  
+
   ## 2. Sensitivity analysis
-  
+
   if(is.null(ylab)){
     yla <- as.list(rep(NA, 3))
     if("control" %in% tgroup){
@@ -403,9 +403,9 @@ plot.multimed <- function(x, type = c("point", "sigma", "R2-residual", "R2-total
     }
     yla <- yla[!is.na(yla)]
   } else yla <- ylab
-  
+
   wh <- c("sigma", "R2-residual", "R2-total") %in% type
-  
+
   for(j in 1:length(wh)){
     if(!wh[j]) next
     if(is.null(main)){
@@ -423,9 +423,9 @@ plot.multimed <- function(x, type = c("point", "sigma", "R2-residual", "R2-total
     if(is.null(ylim)){
       yli <- c(min(ci.lo), max(ci.up))
     } else yli <- ylim
-    
+
     spar <- switch(j, x$sigma, x$R2star, x$R2tilde)
-    
+
     for(i in 1:ncol(eff.lo)){
       plot(0, 0, type = "n", main = ma, xlab = xla, ylab = yla[[i]][j],
            xlim = xli, ylim = yli, ...)
