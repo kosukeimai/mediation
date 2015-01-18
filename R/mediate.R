@@ -126,6 +126,11 @@ mediate <- function(model.m, model.y, sims = 1000,
   # Record family of model.m if glm
   if(isGlm.m){
     FamilyM <- model.m$family$family
+}
+
+  # Record family of model.m if glmer
+  if(isMer.m){
+    FamilyM <- M.fun$family
   }
   
   # Record vfamily of model.y if vglm (currently only tobit)
