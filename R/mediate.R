@@ -129,7 +129,7 @@ mediate <- function(model.m, model.y, sims = 1000,
 }
 
   # Record family of model.m if glmer
-  if(isMer.m){
+  if(isMer.m && getCall(model.m)[[1]] == "glmer"){
     FamilyM <- M.fun$family
   }
   
