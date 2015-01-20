@@ -285,7 +285,7 @@ mediate <- function(model.m, model.y, sims = 1000,
   if(!is.null(weights.m) && isGlm.m && FamilyM == "binomial"){
     message("weights taken as sampling weights, not total number of trials")
   }
-  if(!is.null(weights.m) && isMer.m && FamilyM == "binomial"){
+  if(!is.null(weights.m) && isMer.m && getCall(model.m)[[1]] == "glmer" && FamilyM == "binomial"){
     message("weights taken as sampling weights, not total number of trials")
   }
   if(is.null(weights.m)){
