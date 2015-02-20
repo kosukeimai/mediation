@@ -374,6 +374,9 @@ plot.multimed <- function(x, type = c("point", "sigma", "R2-residual", "R2-total
   }
 
   eff.up <- eff.lo <- ci.up <- ci.lo <- c()
+  d.eff.lo <- d.eff.up <- d.ci.lo <- d.ci.up <- c()
+  z.eff.lo <- z.eff.up <- z.ci.lo <- z.ci.up <- c()
+  
   if("control" %in% tgroup){
       d.eff.lo <- cbind(eff.lo, x$d0.lb)
       d.eff.up <- cbind(eff.up, x$d0.ub)
@@ -519,7 +522,6 @@ plot.multimed <- function(x, type = c("point", "sigma", "R2-residual", "R2-total
                     expression(paste(bar(bar(zeta)), "(", R^{2}, "*)")),
                     expression(paste(bar(bar(zeta)), "(", tilde(R)^{2}, ")")))
     }
-    yla <- yla[!is.na(yla)]
   } else yla <- ylab
 
   wh <- c("sigma", "R2-residual", "R2-total") %in% type
@@ -541,13 +543,43 @@ plot.multimed <- function(x, type = c("point", "sigma", "R2-residual", "R2-total
     if(is.null(ylim)){
         if(IND && DIR){
             yli <- c(min(c(d.ci.lo, z.ci.lo)), max(c(d.ci.up, z.ci.up)))
-            slides <- 1:6
+            slides <- NULL
+            if("control" %in% tgroup){
+                slides <- c(1, 4)
+            }
+            if("treated" %in% tgroup){
+                slides <- c(slides, 2, 5)
+            }
+            if("average" %in% tgroup){
+                slides <- c(slides, 3, 6)
+            }
+            slides <- sort(slides)  
         } else if (!IND && DIR){
             yli <- c(min(z.ci.lo), max(z.ci.up))
-            slides <- 4:6
+            slides <- NULL
+            if("control" %in% tgroup){
+                slides <- c(4)
+            }
+            if("treated" %in% tgroup){
+                slides <- c(slides, 5)
+            }
+            if("average" %in% tgroup){
+                slides <- c(slides, 6)
+            }
+            slides <- sort(slides)            
         } else if (IND && !DIR){
             yli <- c(min(d.ci.lo), max(d.ci.up))
-            slides <- 1:3
+            slides <- NULL
+            if("control" %in% tgroup){
+                slides <- c(1)
+            }
+            if("treated" %in% tgroup){
+                slides <- c(slides, 2)
+            }
+            if("average" %in% tgroup){
+                slides <- c(slides, 3)
+            }
+            slides <- sort(slides)   
         }
     } else yli <- ylim
 
@@ -557,16 +589,19 @@ plot.multimed <- function(x, type = c("point", "sigma", "R2-residual", "R2-total
     ci.up <- cbind(d.ci.up, z.ci.up)
     eff.lo <- cbind(d.eff.lo, z.eff.lo)
     eff.up <- cbind(d.eff.up, z.eff.up)
-    
+
+    index <- 1:length(slides)
     for(i in slides){
       plot(0, 0, type = "n", main = ma, xlab = xla, ylab = yla[[i]][j],
            xlim = xli, ylim = yli, ...)
-      polygon(c(spar, rev(spar)), c(ci.lo[,i], rev(ci.up[,i])),
+      
+      ii <- index[i == slides]
+      polygon(c(spar, rev(spar)), c(ci.lo[,ii], rev(ci.up[,ii])),
               border = FALSE, col = col.creg)
-      lines(spar, eff.lo[,i], lwd = lwd, col = col.eff)
-      lines(spar, eff.up[,i], lwd = lwd, col = col.eff)
+      lines(spar, eff.lo[,ii], lwd = lwd, col = col.eff)
+      lines(spar, eff.up[,ii], lwd = lwd, col = col.eff)
       abline(h = 0)
-      abline(h = eff.lo[1,i], lty = "dashed")
+      abline(h = eff.lo[1,ii], lty = "dashed")
     }
   }
 }
