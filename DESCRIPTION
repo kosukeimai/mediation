@@ -1,6 +1,6 @@
 Package: mediation
 Version: 4.4.4
-Date: 2015-2-20
+Date: 2015-3-1
 Title: Causal Mediation Analysis
 Author: Dustin Tingley <dtingley@gov.harvard.edu>,
         Teppei Yamamoto <teppei@mit.edu>,
@@ -11,7 +11,7 @@ Maintainer: Teppei Yamamoto <teppei@mit.edu>
 Depends: R (>= 2.15.1), MASS, Matrix, mvtnorm, sandwich
 Imports: lpSolve, Hmisc
 Suggests: mgcv, quantreg, VGAM, SuppDists, lme4 (>= 1.0), survival, parallel
-Description: Both parametric and nonparametric causal mediation analyses are allowed in this package. It implements the methods and suggestions in Imai, Keele and Yamamoto (2010), Imai, Keele and Tingley (2010), Imai, Tingley and Yamamoto (2013), Imai and Yamamoto (2013) and Yamamoto (2013). In addition to the estimation of causal mediation effects, the software also allows researchers to conduct sensitivity analysis for certain parametric models.
+Description: We implement parametric and non parametric mediation analysis. This package performs the methods and suggestions in Imai, Keele and Yamamoto (2010), Imai, Keele and Tingley (2010), Imai, Tingley and Yamamoto (2013), Imai and Yamamoto (2013) and Yamamoto (2013). In addition to the estimation of causal mediation effects, the software also allows researchers to conduct sensitivity analysis for certain parametric models.
 LazyLoad: yes
 LazyData: yes
 License: GPL (>= 2)
