@@ -1487,7 +1487,7 @@ mediate <- function(model.m, model.y, sims = 1000,
                   robustSE = robustSE, cluster = cluster)
       class(out) <- "mediate"
     }
-    if(long && isMer.y || isMer.m) {
+    if(long && (isMer.y || isMer.m)) {
       out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
                   d0.p=d0.p, d1.p=d1.p,
                   d0.sims=delta.0, d1.sims=delta.1,
@@ -1528,7 +1528,7 @@ mediate <- function(model.m, model.y, sims = 1000,
                   robustSE = robustSE, cluster = cluster)  
       class(out) <- "mediate.mer"
     }
-    if(!long && isMer.y || isMer.m){
+    if(!long && (isMer.y || isMer.m)){
       out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
                   d0.p=d0.p, d1.p=d1.p,
                   z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci,
