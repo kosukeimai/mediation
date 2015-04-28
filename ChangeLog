@@ -25,3 +25,5 @@ version      date  description
 4.4.3    11/22/14  Weights for multimed; Moved some packages from Depends
 	to Imports
 4.4.4    02/18/14  Direct effects for multimed; Bug fix for an error message which appears when a glmer is used with weights
+4.4.5                      Bug fix for bias-corrected bootstrap confidence
+	intervals   
