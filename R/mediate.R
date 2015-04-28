@@ -1369,6 +1369,9 @@ mediate <- function(model.m, model.y, sims = 1000,
         d.avg.ci <- BC.CI(delta.avg)
         z.avg.ci <- BC.CI(zeta.avg)
         n.avg.ci <- BC.CI(nu.avg)
+        if(d0.ci[1] > d0.ci[2] | d1.ci[1] > d1.ci[2] | z0.ci[1] > z0.ci[2] | z1.ci[1] > z1.ci[2]){
+            stop("number of simulations (sims) too small")
+        }
     } else {
         d0.ci <- quantile(delta.0, c(low,high), na.rm=TRUE)
         d1.ci <- quantile(delta.1, c(low,high), na.rm=TRUE)
@@ -1863,6 +1866,9 @@ mediate <- function(model.m, model.y, sims = 1000,
         tau.ci <- BC.CI(tau)
         z1.ci <- BC.CI(zeta.1)
         z0.ci <- BC.CI(zeta.0)
+        if(d0.ci[1] > d0.ci[2] | d1.ci[1] > d1.ci[2] | z0.ci[1] > z0.ci[2] | z1.ci[1] > z1.ci[2]){
+            stop("number of simulations (sims) too small")
+        }
     } else {
         CI <- function(theta){
             return(quantile(theta, c(low, high), na.rm = TRUE))
