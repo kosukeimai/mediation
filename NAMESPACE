@@ -5,7 +5,7 @@ importFrom(lpSolve, lp)
 importFrom(sandwich, vcovHC, sandwich, estfun)
 importFrom(mvtnorm, rmvnorm)
 importFrom(Hmisc, wtd.var)
-
+importFrom(lme4, VarCorr)
 
 export(mediate, summary.mediate, plot.mediate,
        summary.mediate.order, plot.mediate.order,
