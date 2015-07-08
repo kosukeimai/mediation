@@ -9,6 +9,7 @@ importFrom(lme4, VarCorr)
 importFrom("graphics", "abline", "axis", "contour", "lines", "par", "plot", "plot.default", "points", "polygon", "segments", "text", "title")
 importFrom("grDevices", "dev.interactive", "devAskNewPage")
 importFrom("stats", "approx", "as.formula", "coef", "dnorm", "family", "formula", "getCall", "glm", "integrate", "lm", "lowess", "model.frame", "model.matrix", "model.response", "model.weights", "na.omit", "pnorm", "predict", "printCoefmat", "qnorm", "quantile", "rgamma", "sd", "terms", "update", "var", "vcov", "weighted.mean")
+importFrom("stats", "binomial", "delete.response", "median", "plogis", "poisson", "rbinom", "rlogis", "rmultinom", "rnorm", "rpois", "rt", "runif", "rweibull")
 importFrom("utils", "packageDescription")
 
 export(mediate, summary.mediate, plot.mediate,
