@@ -42,9 +42,6 @@ pdfstartview=FitH, breaklinks=true, urlbordercolor={0 1 0}, citebordercolor={0 0
 % ==== rotating package ===
 \usepackage{rotating}
 
-% ==== dotted lines in tables ===
-\usepackage{arydshln}
-
 % == spacing between sections and subsections
 \usepackage[compact]{titlesec}
 
