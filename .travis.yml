@@ -1,6 +1,10 @@
 language: r
 cache: packages
 
+# Install survival directly, to get the latest version and avoid
+# a build error from using an older version.
+r_packages: survival
+
 notifications:
   email:
     on_success: change
