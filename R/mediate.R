@@ -252,6 +252,9 @@ mediate <- function(model.m, model.y, sims = 1000,
       group.name <- group.y
       Y.ID<- sort(unique(group.id))
       M.ID <- sort(as.vector(data.matrix(m.data[group.y])))
+      if(!is.numeric(Y.ID)){
+          stop("use numeric values for group IDs when a group-level mediator is used")
+      }
       if(length(Y.ID) != length(M.ID)){
         stop("groups do not match between mediator and outcome models")
       } else {
