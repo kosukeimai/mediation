@@ -213,6 +213,7 @@ summary(model.cat)
 # Example 2: Binary Outcome and Ordered Mediator
 ######################################################
 \dontrun{
+jobs$job_disc <- as.factor(jobs$job_disc)
 b.ord <- polr(job_disc ~ treat + econ_hard + sex + age, data=jobs,
             method="probit", Hess=TRUE)
 d.bin <- glm(work1 ~ treat * job_disc + econ_hard + sex + age, data=jobs,
