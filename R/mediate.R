@@ -251,9 +251,10 @@ mediate <- function(model.m, model.y, sims = 1000,
       group.id <- y.data[,group.y]
       group.name <- group.y
       Y.ID<- sort(unique(group.id))
-      M.ID <- sort(as.vector(data.matrix(m.data[group.y])))
-      if(!is.numeric(Y.ID)){
-          stop("use numeric values for group IDs when a group-level mediator is used")
+      if(is.character(m.data[,group.y])){
+          M.ID <- sort(as.factor(m.data[,group.y]))
+      } else {
+          M.ID <- sort(as.vector(data.matrix(m.data[group.y])))
       }
       if(length(Y.ID) != length(M.ID)){
         stop("groups do not match between mediator and outcome models")
@@ -267,7 +268,7 @@ mediate <- function(model.m, model.y, sims = 1000,
     group.id <- NULL
     group.name <- NULL
   }
-  
+
   
   # Numbers of observations and categories
   n.m <- nrow(m.data)
@@ -769,8 +770,12 @@ mediate <- function(model.m, model.y, sims = 1000,
 
       ### group-level mediator : J -> NJ
       if(isMer.y & !isMer.m){
-        J <- nrow(m.data)
-        group.id.m <- as.vector(data.matrix(m.data[group.y]))
+          J <- nrow(m.data)
+          if(is.character(m.data[,group.y])){
+              group.id.m <- as.factor(m.data[,group.y])
+          } else {
+              group.id.m <- as.vector(data.matrix(m.data[group.y]))
+          }
         v1 <- v0 <- matrix(NA, sims, length(group.id.y))
         num.m <- 1:J
         num.y <- 1:length(group.id.y)
@@ -798,25 +803,34 @@ mediate <- function(model.m, model.y, sims = 1000,
       effects.tmp <- array(NA, dim = c(n, sims, 4))
 
       if(isMer.y){
-        Y.RANEF1 <- Y.RANEF2 <- Y.RANEF3 <- Y.RANEF4 <- 0
-        ### 1=RE for Y(1,M(1)); 2=RE for Y(1,M(0)); 3=RE for Y(0,M(1)); 4=RE for Y(0,M(0))
-        for (d in 1:Ny.ranef){
-          name <- colnames(lme4::ranef(model.y)[[1]])[d]
-          if(name == "(Intercept)"){
-            var1 <- var2 <- var3 <- var4 <- matrix(1,sims,n)
-          } else if(name == treat){
-            var1 <- matrix(1,sims,n)
-            var2 <- matrix(1,sims,n)
-            var3 <- matrix(0,sims,n)
-            var4 <- matrix(0,sims,n)
-          } else if(name == mediator){
-            var1 <- PredictM1
-            var2 <- PredictM0
-            var3 <- PredictM1
-            var4 <- PredictM0
-          } else {
-            var1 <- var2 <- var3 <- var4 <- matrix(data.matrix(y.data[name]),sims,n,byrow=T)
-          }    
+          Y.RANEF1 <- Y.RANEF2 <- Y.RANEF3 <- Y.RANEF4 <- 0
+### 1=RE for Y(1,M(1)); 2=RE for Y(1,M(0)); 3=RE for Y(0,M(1)); 4=RE for Y(0,M(0))
+          for (d in 1:Ny.ranef){
+              name <- colnames(lme4::ranef(model.y)[[1]])[d]
+              if(name == "(Intercept)"){
+                  var1 <- var2 <- var3 <- var4 <- matrix(1,sims,n)
+              } else if(name == treat){
+                  var1 <- matrix(1,sims,n)
+                  var2 <- matrix(1,sims,n)
+                  var3 <- matrix(0,sims,n)
+                  var4 <- matrix(0,sims,n)
+              } else if(name == mediator){
+                  var1 <- PredictM1
+                  var2 <- PredictM0
+                  var3 <- PredictM1
+                  var4 <- PredictM0
+              } else {
+                  if(name %in% colnames(y.data)){
+                      var1 <- var2 <- var3 <- var4 <- matrix(data.matrix(y.data[name]),sims,n,byrow=T)
+                  } else {
+                      int.term.name <- strsplit(name, ":")[[1]]
+                      int.term <- rep(1, nrow(y.data))
+                      for (p in 1:length(int.term.name)){
+                          int.term <- y.data[int.term.name[p]][[1]] * int.term
+                      }
+                      var1 <- var2 <- var3 <- var4 <- matrix(int.term,sims,n,byrow=T)   
+                  }
+              } 
           Y.ranef<-matrix(NA,sims,n)
           YModel.ranef.sim.d <- YModel.ranef.sim[[d]]
           Z <- data.frame(YModel.ranef.sim.d)
