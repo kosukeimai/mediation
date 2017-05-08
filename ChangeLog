@@ -27,4 +27,4 @@ version      date  description
 4.4.4    02/18/14  Direct effects for multimed; Bug fix for an error message which appears when a glmer is used with weights
 4.4.5                      Bug fix for bias-corrected bootstrap confidence
 	intervals
-4.4.6    05/04/17   Bug fix for multilevel; Bug fix for mediate-example 2
+4.4.6    05/08/17   Bug fix for multilevel; Bug fix for mediate-example 2
