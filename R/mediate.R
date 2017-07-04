@@ -84,7 +84,7 @@ mediate <- function(model.m, model.y, sims = 1000,
   isMer.m <- inherits(model.m, "merMod") # Note lmer and glmer do not inherit "lm" and "glm"
   
   # Record family and link of model.m if glmer 
-  if(isMer.m && getCall(model.m)[[1]] == "glmer"){
+  if(isMer.m && class(model.m)[[1]] == "glmerMod"){
     m.family <- as.character(model.m@call$family)
     if(m.family[1] == "binomial" && (is.na(m.family[2]) || m.family[2] == "logit")){
       M.fun <- binomial(link = "logit")
@@ -104,7 +104,7 @@ mediate <- function(model.m, model.y, sims = 1000,
   }
   
   # Record family and link of model.y if glmer 
-  if(isMer.y && getCall(model.y)[[1]] == "glmer"){
+  if(isMer.y && class(model.y)[[1]] == "glmerMod"){
     y.family <- as.character(model.y@call$family)
     if(y.family[1] == "binomial" && (is.na(y.family[2]) || y.family[2] == "logit")){
       Y.fun <- binomial(link = "logit")
@@ -129,7 +129,7 @@ mediate <- function(model.m, model.y, sims = 1000,
 }
 
   # Record family of model.m if glmer
-  if(isMer.m && getCall(model.m)[[1]] == "glmer"){
+  if(isMer.m && class(model.m)[[1]] == "glmerMod"){
     FamilyM <- M.fun$family
   }
   
@@ -289,7 +289,7 @@ mediate <- function(model.m, model.y, sims = 1000,
   if(!is.null(weights.m) && isGlm.m && FamilyM == "binomial"){
     message("weights taken as sampling weights, not total number of trials")
   }
-  if(!is.null(weights.m) && isMer.m && getCall(model.m)[[1]] == "glmer" && FamilyM == "binomial"){
+  if(!is.null(weights.m) && isMer.m && class(model.m)[[1]] == "glmerMod" && FamilyM == "binomial"){
     message("weights taken as sampling weights, not total number of trials")
   }
   if(is.null(weights.m)){
@@ -684,7 +684,7 @@ mediate <- function(model.m, model.y, sims = 1000,
         rm(error)
         
         ### Case I-1-e: Linear Mixed Effect			
-      } else if(isMer.m && getCall(model.m)[[1]]=="lmer"){
+      } else if(isMer.m && class(model.m)[[1]]=="lmerMod"){
         M.RANEF1 <- M.RANEF0 <- 0
         for (d in 1:Nm.ranef){
           name <- colnames(lme4::ranef(model.m)[[1]])[d]
@@ -723,7 +723,7 @@ mediate <- function(model.m, model.y, sims = 1000,
         rm(error)          	
         
         ### Case I-1-f: Generalized Linear Mixed Effect                  	
-      } else if(isMer.m && getCall(model.m)[[1]]=="glmer"){
+      } else if(isMer.m && class(model.m)[[1]]=="glmerMod"){
         M.RANEF1 <-M.RANEF0 <- 0 ### 1=RE for M(1); 0=RE for M(0)
         for (d in 1:Nm.ranef){
           name <- colnames(lme4::ranef(model.m)[[1]])[d]
@@ -954,7 +954,7 @@ mediate <- function(model.m, model.y, sims = 1000,
           }
           Pr1 <- apply(Pr1, 2, itrans)
           Pr0 <- apply(Pr0, 2, itrans)
-        } else if(isMer.y && getCall(model.y)[[1]] == "glmer"){
+        } else if(isMer.y && class(model.y)[[1]] == "glmerMod"){
           Pr1 <- apply(Pr1, 2, Y.fun$linkinv)
           Pr0 <- apply(Pr0, 2, Y.fun$linkinv)                	
         }
