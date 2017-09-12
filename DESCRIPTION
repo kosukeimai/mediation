@@ -9,7 +9,7 @@ Author: Dustin Tingley <dtingley@gov.harvard.edu>,
         Kosuke Imai <kimai@princeton.edu>
 Maintainer: Teppei Yamamoto <teppei@mit.edu>
 Depends: R (>= 2.15.1), MASS, Matrix, mvtnorm, sandwich
-Imports: lpSolve, Hmisc, lme4 (>= 1.0), stats, graphics, grDevices, utils, boot
+Imports: lpSolve, Hmisc, lme4 (>= 1.0), stats, graphics, grDevices, utils
 Suggests: mgcv, quantreg, VGAM, SuppDists, survival, parallel
 Description: We implement parametric and non parametric mediation analysis. This package performs the methods and suggestions in Imai, Keele and Yamamoto (2010) <DOI:10.1214/10-STS321>, Imai, Keele and Tingley (2010) <DOI:10.1037/a0020761>, Imai, Tingley and Yamamoto (2013) <DOI:10.1111/j.1467-985X.2012.01032.x>, Imai and Yamamoto (2013) <DOI:10.1093/pan/mps040> and Yamamoto (2013) <http://web.mit.edu/teppei/www/research/IVmediate.pdf>. In addition to the estimation of causal mediation effects, the software also allows researchers to conduct sensitivity analysis for certain parametric models.
 LazyLoad: yes
