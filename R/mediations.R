@@ -1,7 +1,8 @@
 mediations <- function(datasets, treatment, mediators, outcome, 
-                    covariates=NULL, families=c("gaussian", "gaussian"),
-                    tau.m=.5, tau.y=.5, LowerY=NULL, UpperY=NULL, interaction=FALSE,
-                    conf.level=.95, sims=500, boot=FALSE, weights=NULL, ...) {
+                       covariates=NULL, families=c("gaussian", "gaussian"),
+                       tau.m=.5, tau.y=.5, LowerY=NULL, UpperY=NULL, 
+                       interaction=FALSE, conf.level=.95, sims=500, 
+                       boot=FALSE, weights=NULL, ...) {
     data <- names(datasets)
     labels <- c()
     out <- list()
