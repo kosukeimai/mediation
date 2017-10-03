@@ -268,7 +268,6 @@ mediate <- function(model.m, model.y, sims = 1000,
     group.id <- NULL
     group.name <- NULL
   }
-
   
   # Numbers of observations and categories
   n.m <- nrow(m.data)
@@ -355,11 +354,6 @@ mediate <- function(model.m, model.y, sims = 1000,
   #####################################
   ## Define functions
   #####################################
-  
-  indexmax <- function(x){
-    ## Return position of largest element in vector x
-    order(x)[length(x)]
-  }
   
   getvcov <- function(dat, fm, cluster){
     ## Compute cluster robust standard errors
@@ -639,8 +633,8 @@ mediate <- function(model.m, model.y, sims = 1000,
             draws_m0[ii,] <- t(rmultinom(1, 1, prob = probs_m0[ii,]))
           }
           
-          PredictM1[i,] <- apply(draws_m1, 1, indexmax)
-          PredictM0[i,] <- apply(draws_m0, 1, indexmax)
+          PredictM1[i,] <- apply(draws_m1, 1, which.max)
+          PredictM0[i,] <- apply(draws_m0, 1, which.max)
         }
         
         ### Case I-1-c: Linear
@@ -1601,8 +1595,8 @@ med.fun <- function(y.data, index, m.data) {
       draws_m1[ii,] <- t(rmultinom(1, 1, prob = probs_m1[ii,]))
       draws_m0[ii,] <- t(rmultinom(1, 1, prob = probs_m0[ii,]))
     }
-    PredictM1 <- apply(draws_m1, 1, indexmax)
-    PredictM0 <- apply(draws_m0, 1, indexmax)
+    PredictM1 <- apply(draws_m1, 1, which.max)
+    PredictM0 <- apply(draws_m0, 1, which.max)
     
     ### Case I-2-c: Quantile Regression for Mediator
   } else if(isRq.m){
@@ -1847,8 +1841,8 @@ med.fun.ordered <- function(y.data, index, m.data) {
       draws_m1[ii,] <- t(rmultinom(1, 1, prob = probs_m1[ii,]))
       draws_m0[ii,] <- t(rmultinom(1, 1, prob = probs_m0[ii,]))
     }
-    PredictM1 <- apply(draws_m1, 1, indexmax)
-    PredictM0 <- apply(draws_m0, 1, indexmax)
+    PredictM1 <- apply(draws_m1, 1, which.max)
+    PredictM0 <- apply(draws_m0, 1, which.max)
     
     ### Case II-c: Quantile Regression for Mediator
   } else if(isRq.m){
