@@ -417,7 +417,7 @@ mediate <- function(model.m, model.y, sims = 1000,
               dta <- merge(m.data, as.data.frame(cluster), sort=FALSE,
                            by="row.names")
               fm <- update(model.m, data=dta)
-              MModel.var.cov <- sandwich::vcovCL(fm, dta[, -1])
+              MModel.var.cov <- getvcov(dta, fm, dta[,ncol(dta)])
           } else {
               MModel.var.cov <- vcov(model.m)
           }
@@ -453,7 +453,7 @@ mediate <- function(model.m, model.y, sims = 1000,
               dta <- merge(y.data, as.data.frame(cluster), sort=FALSE,
                            by="row.names")
               fm <- update(model.y, data=dta)
-              YModel.var.cov <- sandwich::vcovCL(fm, dta[, -1])
+              YModel.var.cov <- getvcov(dta, fm, dta[,ncol(dta)])
           } else {
               YModel.var.cov <- vcov(model.y)
           }
