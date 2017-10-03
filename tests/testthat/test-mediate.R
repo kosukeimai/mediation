@@ -1,7 +1,7 @@
 context("Compare new outputs to outputs from original `mediation` code")
 
-if (isTRUE(unname(Sys.info()["user"])=="weihuang")) {
 # Only run tests on my local machine
+if (isTRUE(unname(Sys.info()["user"])=="weihuang")) {
 
 ## ----------------------------------------------------------------------------
 ## Parameters
@@ -161,6 +161,38 @@ test_that("moderated mediators returns equal output as reference", {
     rep(0, length(unlist(med23.out[elems]))),
     tolerance = tol)
 })
+
+## ----------------------------------------------------------------------------
+## Binary outcome and ordered mediator (from example)
+## ----------------------------------------------------------------------------
+
+cat("\nDoing Binary outcome and ordered mediator...\n")
+
+data("jobs", package = "mediation")
+jobs$job_disc <- as.factor(jobs$job_disc)
+
+med.fit <- polr(job_disc ~ treat + econ_hard + sex + age, data = jobs,
+                method = "probit", Hess = TRUE)
+out.fit <- glm(work1 ~ treat * job_disc + econ_hard + sex + age, data = jobs,
+               family = binomial(link = "probit"))
+new.med.polr <- mediate(med.fit, out.fit, 
+                        treat = "treat", mediator = "job_disc",
+                        boot = TRUE, sims = s, long = FALSE)
+
+elems <- getelems(med.polr)
+test_that("binary y/ordered mediator returns equal output as reference", {
+  expect_equal(
+    lapply(new.med.polr[elems], class), 
+    lapply(med.polr[elems], class)
+  )
+  expect_equal(
+    unname(
+      mapply(reldiff, unlist(new.med.polr[elems]), unlist(med.polr[elems]))
+    ), 
+    rep(0, length(unlist(med.polr[elems]))),
+    tolerance = tol)
+})
+
 
 ## ----------------------------------------------------------------------------
 ## Multilevel example -- no bootstrap methods implemented
