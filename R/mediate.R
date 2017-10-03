@@ -350,23 +350,7 @@ mediate <- function(model.m, model.y, sims = 1000,
   if(isFactorM){
     m.levels <- levels(y.data[,mediator])
   }
-  
-  #####################################
-  ## Define functions
-  #####################################
-  
-  getvcov <- function(dat, fm, cluster){
-    ## Compute cluster robust standard errors
-    ## fm is the model object
-    cluster <- factor(cluster)  # remove missing levels and NA
-    M <- nlevels(cluster)
-    N <- sum(!is.na(cluster))
-    K <- fm$rank
-    dfc <- (M/(M-1))*((N-1)/(N-K))
-    uj  <- apply(estfun(fm),2, function(x) tapply(x, cluster, sum));
-    dfc*sandwich(fm, meat. = crossprod(uj)/N)
-  }
-  
+   
   ############################################################################
   ############################################################################
   ### CASE I: EVERYTHING EXCEPT ORDERED OUTCOME
@@ -417,7 +401,7 @@ mediate <- function(model.m, model.y, sims = 1000,
               dta <- merge(m.data, as.data.frame(cluster), sort=FALSE,
                            by="row.names")
               fm <- update(model.m, data=dta)
-              MModel.var.cov <- getvcov(dta, fm, dta[,ncol(dta)])
+              MModel.var.cov <- sandwich::vcovCL(fm, dta[,ncol(dta)])
           } else {
               MModel.var.cov <- vcov(model.m)
           }
@@ -453,7 +437,7 @@ mediate <- function(model.m, model.y, sims = 1000,
               dta <- merge(y.data, as.data.frame(cluster), sort=FALSE,
                            by="row.names")
               fm <- update(model.y, data=dta)
-              YModel.var.cov <- getvcov(dta, fm, dta[,ncol(dta)])
+              YModel.var.cov <- sandwich::vcovCL(fm, dta[,ncol(dta)])
           } else {
               YModel.var.cov <- vcov(model.y)
           }
