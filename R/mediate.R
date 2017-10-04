@@ -350,6 +350,11 @@ mediate <- function(model.m, model.y, sims = 1000,
   if(isFactorM){
     m.levels <- levels(y.data[,mediator])
   }
+
+  # Eventually, we want to use only objects collected in K,
+  # passing K into intermediate functions, and clean up all stray objects.
+  K <- as.list(environment())
+  # rm(list = ls())
    
   ############################################################################
   ############################################################################
@@ -1033,6 +1038,24 @@ mediate <- function(model.m, model.y, sims = 1000,
       
       Call.M <- getCall(model.m)
       Call.Y <- getCall(model.y)
+
+      if (isSurvreg.m){
+        if (ncol(model.m$y) > 2)
+          stop("unsupported censoring type")
+        mname <- names(m.data)[1]
+        if (substr(mname, 1, 4) != "Surv")
+          stop("refit the survival model with `Surv' used directly in model formula")        
+      }
+  
+      if (isSurvreg.y){
+        if (ncol(model.y$y) > 2)
+          stop("unsupported censoring type")
+        yname <- names(y.data)[1]
+        if (substr(yname, 1, 4) != "Surv")
+          stop("refit the survival model with `Surv' used directly in model formula")    
+        if (is.null(outcome))
+          stop("`outcome' must be supplied for survreg outcome with boot")    
+      }
            
       # Bootstrap QoI
       message("Running nonparametric bootstrap\n")
@@ -1453,13 +1476,7 @@ mediate <- function(model.m, model.y, sims = 1000,
 med.fun <- function(y.data, index, m.data) {
           
   if(isSurvreg.m){
-    if(ncol(model.m$y) > 2){
-      stop("unsupported censoring type")
-    }
     mname <- names(m.data)[1]
-    if(substr(mname, 1, 4) != "Surv"){
-      stop("refit the survival model with `Surv' used directly in model formula")
-    }
     nc <- nchar(mediator)
     eventname <- substr(mname, 5 + nc + 3, nchar(mname) - 1)
     if(nchar(eventname) == 0){
@@ -1478,16 +1495,7 @@ med.fun <- function(y.data, index, m.data) {
   }
   
   if(isSurvreg.y){
-    if(ncol(model.y$y) > 2){
-      stop("unsupported censoring type")
-    }
     yname <- names(y.data)[1]
-    if(substr(yname, 1, 4) != "Surv"){
-      stop("refit the survival model with `Surv' used directly in model formula")
-    }
-    if(is.null(outcome)){
-      stop("`outcome' must be supplied for survreg outcome with boot")
-    }
     nc <- nchar(outcome)
     eventname <- substr(yname, 5 + nc + 3, nchar(yname) - 1)
     if(nchar(eventname) == 0){
