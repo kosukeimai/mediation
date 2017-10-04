@@ -14,7 +14,8 @@ mediate(model.m, model.y, sims = 1000,
         control = NULL, conf.level = .95, 
         control.value = 0, treat.value = 1, 
         long = TRUE, dropobs = FALSE,
-        robustSE = FALSE, cluster = NULL, group.out = NULL, ...)
+        robustSE = FALSE, cluster = NULL, group.out = NULL, 
+        use_speed = FALSE, ...)
 
 } 
 
@@ -37,8 +38,9 @@ the 2.5 and 97.5 percentiles of the simulated quantities.}
 \item{dropobs}{ a logical value indicating the behavior when the model frames of 'model.m' and 'model.y' (and the 'cluster' variable if included) are composed of different observations. If 'TRUE', models will be re-fitted using common data rows. If 'FALSE', error is returned. Default is 'FALSE'.}
 \item{robustSE}{ a logical value. If 'TRUE', heteroskedasticity-consistent standard errors will be used in quasi-Bayesian simulations. Ignored if 'boot' is 'TRUE' or neither 'model.m' nor 'model.y' has a method for \code{vcovHC} in the \code{sandwich} package. Default is 'FALSE'.}
 \item{cluster}{ a variable indicating clusters for standard errors. Note that this should be a vector of cluster indicators itself, not a character string for the name of the variable.}
-\item{group.out}{ a character string indicating the name of the lmer/glmer group on which the mediate output is based. Can be used even when a merMod function is applied to only one of the mediator or the outcome. If merMod functions are applied to both the mediator and the outcome, default is the group name used in the outcome model; if the mediator group and the outcome group are different and the user is interested in the mediate output based on the mediator group, then set group.out to the group name used in the mediator merMod model. If a merMod function is applied to only one of the mediator or the outcome, group.out is automatically set to the group name used in the merMod model.}  
-\item{...}{ other arguments passed to \code{vcovHC} in the \code{sandwich} package: typically the 'type' argument. Ignored if 'robustSE' is 'FALSE'.}
+\item{group.out}{ a character string indicating the name of the lmer/glmer group on which the mediate output is based. Can be used even when a merMod function is applied to only one of the mediator or the outcome. If merMod functions are applied to both the mediator and the outcome, default is the group name used in the outcome model; if the mediator group and the outcome group are different and the user is interested in the mediate output based on the mediator group, then set group.out to the group name used in the mediator merMod model. If a merMod function is applied to only one of the mediator or the outcome, group.out is automatically set to the group name used in the merMod model.}
+\item{use_speed}{ a logical value indicating whether, if nonparametric bootstrap is used, \code{lm} and \code{glm} models should be re-fit using functions from the \code{speedglm} package. Ignored if 'boot' is 'FALSE' or if neither 'model.m' nor 'model.y' is of class 'lm' or 'glm'. Default is 'FALSE'.}
+\item{...}{ other arguments passed to \code{vcovHC} in the \code{sandwich} package: typically the 'type' argument, which is ignored if 'robustSE' is 'FALSE'. Arguments to the \code{boot} in the \code{boot} package may also be passed, e.g. 'parallel' and 'ncpus'.}
 }
 
 \details{This is the workhorse function for estimating causal mediation effects for a variety of data types. The average causal mediation effect (ACME) represents the expected difference in the potential outcome when the mediator took the value that would realize under the treatment condition as opposed to the control condition, while the treatment status itself is held constant. That is,

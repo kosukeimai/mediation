@@ -28,7 +28,7 @@ reldiff <- function(x, y, tolerance = tol) {
 getelems <- function(x) {
   setdiff(
     names(x)[sapply(x, is.numeric)], 
-    c(grep("^.*\\.sims|\\.ci|model*$", names(x), value = TRUE), "call")
+    c(grep("^.*\\.sims|\\.ci|model*$", names(x), value = TRUE))
   )
 }
 
@@ -49,7 +49,7 @@ out.fit <- glm(cong_mesg ~ emo + treat + age + educ + gender + income,
                data = framing, family = binomial("probit"))
 new.med.out <- mediate(med.fit, out.fit, treat = "treat", mediator = "emo",
                        boot = TRUE, sims = s, 
-                       parallel = "multicore", ncpus = 3)
+                       use_speed = TRUE)
 
 elems <- getelems(med.out)
 test_that("standard case returns equal output as reference", {
@@ -73,7 +73,7 @@ med.fit <- lm(emo ~ treat + age + educ + gender + income, data = framing)
 out.fit <- glm(cong_mesg ~ emo * treat + age + educ + gender + income,
                data = framing, family = binomial("probit"))
 new.med.out.i <- mediate(med.fit, out.fit, treat = "treat", mediator = "emo",
-                         boot = TRUE, parallel = "multicore", ncpus = 3,
+                         boot = TRUE, use_speed = TRUE,
                          sims = s)
 
 elems <- getelems(med.out.i)
@@ -102,11 +102,11 @@ out.fit <- glm(cong_mesg ~ emo + treat * age + emo * age + educ + gender
                + income, data = framing, family = binomial("probit"))
 new.med.age20 <- mediate(med.fit, out.fit, treat = "treat",
                          mediator = "emo", covariates = list(age = 20), 
-                         boot = TRUE, parallel = "multicore", ncpus = 3,
+                         boot = TRUE, use_speed = TRUE,
                          sims = s)
 new.med.age60 <- mediate(med.fit, out.fit, treat = "treat",
                          mediator = "emo", covariates = list(age = 60), 
-                         boot = TRUE, parallel = "multicore", ncpus = 3,
+                         boot = TRUE, use_speed = TRUE,
                          sims = s)
 
 elems <- getelems(med.age20)
@@ -145,7 +145,7 @@ out.fit <- glm(cong_mesg ~ emo + cond + age + educ + gender + income,
                data = framing, family = binomial("probit"))
 new.med23.out <- mediate(med.fit, out.fit, treat = "cond", mediator = "emo",
                         control.value = 2, treat.value = 3, 
-                        boot = TRUE, parallel = "multicore", ncpus = 3,
+                        boot = TRUE, use_speed = TRUE,
                         sims = s)
 
 elems <- getelems(med23.out)
@@ -241,7 +241,7 @@ test_that("binary y/ordered mediator returns equal output as reference", {
 # new.med.iv.out <- ivmediate(a, b, c, 
 #                             enc = "treat", treat = "comply", 
 #                             mediator = "job_dich",
-#                             boot = TRUE, parallel = "multicore", ncpus = 3,
+#                             boot = TRUE, use_speed = TRUE,
 #                             sims = s)
 
 }

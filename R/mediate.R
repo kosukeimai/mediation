@@ -5,7 +5,8 @@ mediate <- function(model.m, model.y, sims = 1000,
                     control = NULL, conf.level = .95,
                     control.value = 0, treat.value = 1,
                     long = TRUE, dropobs = FALSE,
-                    robustSE = FALSE, cluster = NULL, group.out = NULL, ...){
+                    robustSE = FALSE, cluster = NULL, group.out = NULL, 
+                    use_speed = FALSE, ...){
   
   cl <- match.call()
   
@@ -1521,8 +1522,38 @@ med.fun <- function(y.data, index, m.data) {
   }
   
   # Refit Models with Resampled Data
-  new.fit.M <- eval.parent(Call.M)
-  new.fit.Y <- eval.parent(Call.Y)
+  new.fit.M <- NULL
+  new.fit.Y <- NULL
+
+  if (use_speed) {
+    if (isGlm.m) 
+      new.fit.M <- fit_speedglm(Call.M)
+    else if (isLm.m) {
+      formula <- Call.M$formula 
+      # ^^ to circumvent eval(call[[2]], parent.frame()) problem.
+      new.fit.M <- speedglm::speedlm(formula = formula, 
+                                     data = Call.M$data, 
+                                     weights = Call.M$weights)
+    }
+
+    if (isGlm.y) 
+      new.fit.Y <- fit_speedglm(Call.Y)
+    else if (isLm.y) {
+      formula <- Call.Y$formula
+      # ^^ See above.
+      new.fit.Y <- speedglm::speedlm(formula = formula, 
+                                     data = Call.Y$data, 
+                                     weights = Call.Y$weights)
+    }
+
+  }
+
+  if (is.null(new.fit.M))
+    new.fit.M <- eval.parent(Call.M)
+
+  if (is.null(new.fit.Y))
+    new.fit.Y <- eval.parent(Call.Y)  
+ 
   
   #####################################
   #  Mediator Predictions
@@ -1608,7 +1639,10 @@ med.fun <- function(y.data, index, m.data) {
     
     ### Case I-2-d: Linear
   } else if(isLm.m){
-    sigma <- summary(new.fit.M)$sigma
+    if (class(new.fit.M) == "speedlm")
+      sigma <- sqrt(summary(new.fit.M)$var.res)
+    else
+      sigma <- summary(new.fit.M)$sigma
     error <- rnorm(n, mean=0, sd=sigma)
     PredictM1 <- predict(new.fit.M, type="response",
                          newdata=pred.data.t) + error
