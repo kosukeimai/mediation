@@ -1,0 +1,115 @@
+citHeader("To cite 'mediation' in publications use:")
+
+citEntry(entry = "Article",
+  title        = "{mediation}: {R} Package for Causal Mediation Analysis",
+  author       = personList(as.person("Dustin Tingley"),
+                   as.person("Teppei Yamamoto"),
+                   as.person("Kentaro Hirose"),
+                   as.person("Luke Keele"),
+                   as.person("Kosuke Imai")),
+  journal      = "Journal of Statistical Software",
+  year         = "2014",
+  volume       = "59",
+  number       = "5",
+  pages        = "1--38",
+  url          = "http://www.jstatsoft.org/v59/i05/",
+
+  textVersion  =
+  paste("Dustin Tingley, Teppei Yamamoto, Kentaro Hirose, Luke Keele, Kosuke Imai (2014).",
+        "mediation: R Package for Causal Mediation Analysis.",
+        "Journal of Statistical Software, 59(5), 1-38.",
+        "URL http://www.jstatsoft.org/v59/i05/.")
+)
+
+citEntry(entry = "Article",
+  title        = "Identification, Inference, and Sensitivity Analysis for Causal Mediation Effects",
+  author       = personList(as.person("Kosuke Imai"),
+                            as.person("Luke Keele"),
+                            as.person("Teppei Yamamoto")),
+  journal      = "Statistical Science",
+  year         = "2010",
+  volume       = "25",
+  number       = "1",
+  pages        = "51--71",
+  url          = "http://imai.princeton.edu/research/mediation.html",
+
+  textVersion  =
+  paste("Kosuke Imai, Luke Keele and Teppei Yamamoto (2010).",
+        "Identification, Inference and Sensitivity Analysis for Causal Mediation Effects.",
+        "Statistical Science, 25(1), 51-71."),
+	
+  header       = "For the underlying methods please cite the following papers:"
+)
+
+citEntry(entry = "Article",
+  title        = "A General Approach to Causal Mediation Analysis",
+  author       = personList(as.person("Kosuke Imai"),
+                            as.person("Luke Keele"),
+                            as.person("Dustin Tingley")),
+  journal      = "Psychological Methods",
+  year         = "2010",
+  volume       = "15",
+  number       = "4",
+  pages        = "309--334",
+  url          = "http://imai.princeton.edu/research/BaronKenny.html",
+
+  textVersion  =
+  paste("Kosuke Imai, Luke Keele and Dustin Tingley (2010).",
+        "A General Approach to Causal Mediation Analysis.",
+        "Psychological Methods, 15(4), 309-334.")
+)
+
+citEntry(entry = "Article",
+  title        = "Unpacking the Black Box of Causality: Learning about Causal Mechanisms from Experimental and Observational Studies",
+  author       = personList(as.person("Kosuke Imai"),
+                            as.person("Luke Keele"),
+                            as.person("Dustin Tingley"),
+                            as.person("Teppei Yamamoto")),
+  journal      = "American Political Science Review",
+  year         = "2011",
+  volume       = "105",
+  number       = "4",
+  pages        = "765--789",
+  url          = "http://imai.princeton.edu/research/mediationP.html",
+
+  textVersion  =
+  paste("Kosuke Imai, Luke Keele, Dustin Tingley and Teppei Yamamoto (2011).",
+        "Unpacking the Black Box of Causality: Learning about Causal Mechanisms from Experimental and Observational Studies.",
+        "American Political Science Review, 105(4), 765-789.")
+)
+
+citEntry(entry = "Article",
+  title        = "Identification and Sensitivity Analysis for Multiple Causal Mechanisms: Revisiting Evidence from Framing Experiments",
+  author       = personList(as.person("Kosuke Imai"),
+                            as.person("Teppei Yamamoto")),
+  journal      = "Political Analysis",
+  year         = "2013",
+  volume       = "21",
+  number       = "2",
+  pages        = "141--171",
+  url          = "http://imai.princeton.edu/research/medsens.html",
+
+  textVersion  =
+  paste("Kosuke Imai and Teppei Yamamoto (2013).",
+        "Identification and Sensitivity Analysis for Multiple Causal Mechanisms: Revisiting Evidence from Framing Experiments.",
+        "Political Analysis, 21(2), 141-171.")
+)
+
+citEntry(entry = "InCollection",
+  title        = "Causal Mediation Analysis Using R",
+  author       = personList(as.person("Kosuke Imai"),
+                            as.person("Luke Keele"),
+                            as.person("Dustin Tingley"),
+                            as.person("Teppei Yamamoto")),
+  booktitle    = "Advances in Social Science Research Using R",
+  year         = "2010",
+  editor       = personList(as.person("H. D. Vinod")),
+  publisher    = "Springer-Verlag",
+  address      = "New York",
+  
+  textVersion  =
+  paste("Kosuke Imai, Luke Keele, Dustin Tingley and Teppei Yamamoto (2010).",
+        "Causal Mediation Analysis Using R.",
+        "In Advances in Social Science Research Using R, ed. H. D. Vinod,",
+        "New York: Springer-Verlag.")
+)
