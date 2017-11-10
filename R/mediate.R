@@ -18,7 +18,11 @@
 #'   direct effect (ADE) is defined similarly as,
 #'   \deqn{\zeta(t) \ = \ E\{Y(t_1, M(t)) - Y(t_0, M(t))\},}{%
 #'         \zeta(t) = E[Y(t1, M(t)) - Y(t0, M(t))],}
-#'   which represents the expected difference in the potential outcome when the treatment is changed but the mediator is held constant at the value that would realize if the treatment equals \eqn{t}. The two quantities on average add up to the total effect of the treatment on the outcome, \eqn{\tau}. See the references for more details.
+#'   which represents the expected difference in the potential outcome when the 
+#'   treatment is changed but the mediator is held constant at the value that 
+#'   would realize if the treatment equals \eqn{t}. The two quantities on
+#'   average add up to the total effect of the treatment on the outcome,
+#'   \eqn{\tau}. See the references for more details.
 #'   
 #'   When both the mediator model ('model.m') and outcome model ('model.y') are 
 #'   normal linear regressions, the results will be identical to the usual LSEM 
@@ -179,50 +183,86 @@
 #'   can be used to produce a plot of the estimated average causal mediation, 
 #'   average direct, and total effects along with their confidence intervals.
 #'   
-#'   \item{d0, d1}{point estimates for average causal mediation effects under the control and treatment conditions.}
-#'   \item{d0.ci, d1.ci}{confidence intervals for average causal mediation effects. The confidence level is set at the value specified in 'conf.level'.}
+#'   \item{d0, d1}{point estimates for average causal mediation effects under 
+#'   the control and treatment conditions.}
+#'   \item{d0.ci, d1.ci}{confidence intervals for average causal mediation 
+#'   effects. The confidence level is set at the value specified in 
+#'   'conf.level'.}
 #'   \item{d0.p, d1.p}{two-sided p-values for average causal mediation effects.}
-#'   \item{d0.sims, d1.sims}{vectors of length 'sims' containing simulation draws of average causal mediation effects.}
-#'   \item{z0, z1}{point estimates for average direct effect under the control and treatment conditions.}
+#'   \item{d0.sims, d1.sims}{vectors of length 'sims' containing simulation 
+#'   draws of average causal mediation effects.}
+#'   \item{z0, z1}{point estimates for average direct effect under the control 
+#'   and treatment conditions.}
 #'   \item{z0.ci, z1.ci}{confidence intervals for average direct effects.}
 #'   \item{z0.p, z1.p}{two-sided p-values for average causal direct effects.}
-#'   \item{z0.sims, z1.sims}{vectors of length 'sims' containing simulation draws of average direct effects.}
-#'   \item{n0, n1}{the "proportions mediated", or the size of the average causal mediation effects relative to the total effect.}
+#'   \item{z0.sims, z1.sims}{vectors of length 'sims' containing simulation 
+#'   draws of average direct effects.}
+#'   \item{n0, n1}{the "proportions mediated", or the size of the average causal 
+#'   mediation effects relative to the total effect.}
 #'   \item{n0.ci, n1.ci}{confidence intervals for the proportions mediated.}
 #'   \item{n0.p, n1.p}{two-sided p-values for proportions mediated.}
-#'   \item{n0.sims, n1.sims}{vectors of length 'sims' containing simulation draws of the proportions mediated.}
+#'   \item{n0.sims, n1.sims}{vectors of length 'sims' containing simulation 
+#'   draws of the proportions mediated.}
 #'   \item{tau.coef}{point estimate for total effect.}
 #'   \item{tau.ci}{confidence interval for total effect.}
 #'   \item{tau.p}{two-sided p-values for total effect.}
-#'   \item{tau.sims}{a vector of length 'sims' containing simulation draws of the total effect.}
-#'   \item{d.avg, z.avg, n.avg}{simple averages of d0 and d1, z0 and z1, n0 and n1, respectively, which users may want to use as summary values when those quantities differ.}
+#'   \item{tau.sims}{a vector of length 'sims' containing simulation draws of 
+#'   the total effect.}
+#'   \item{d.avg, z.avg, n.avg}{simple averages of d0 and d1, z0 and z1, n0 and 
+#'   n1, respectively, which users may want to use as summary values when those 
+#'   quantities differ.}
 #'   \item{d.avg.ci, z.avg.ci, n.avg.ci}{confidence intervals for the above.}
 #'   \item{d.avg.p, z.avg.p, n.avg.p}{two-sided p-values for the above.}
-#'   \item{d.avg.sims, z.avg.sims, n.avg.sims}{vectors of length 'sims' containing simulation draws of d.avg, z.avg and n.avg, respectively.}
-#'   \item{d0.group, d1.group}{group-specific point estimates for average causal mediation effects under the control and treatment conditions.}
-#'   \item{d0.ci.group, d1.ci.group}{group-specific confidence intervals for average causal mediation effects. The confidence level is set at the value specified in 'conf.level'.}
-#'   \item{d0.p.group, d1.p.group}{group-specific two-sided p-values for average causal mediation effects.}
-#'   \item{d0.sims.group, d1.sims.group}{group-specific vectors of length 'sims' containing simulation draws of average causal mediation effects.}
-#'   \item{z0.group, z1.group}{group-specific point estimates for average direct effect under the control and treatment conditions.}
-#'   \item{z0.ci.group, z1.ci.group}{group-specific confidence intervals for average direct effects.}
-#'   \item{z0.p.group, z1.p.group}{group-specific two-sided p-values for average causal direct effects.}
-#'   \item{z0.sims.group, z1.sims.group}{group-specific vectors of length 'sims' containing simulation draws of average direct effects.}
-#'   \item{n0.group, n1.group}{the group-specific "proportions mediated", or the size of the group-specific average causal mediation effects relative to the total effect.}
-#'   \item{n0.ci.group, n1.ci.group}{group-specific confidence intervals for the proportions mediated.}
-#'   \item{n0.p.group, n1.p.group}{group-specific two-sided p-values for proportions mediated.}
-#'   \item{n0.sims.group, n1.sims.group}{group-specific vectors of length 'sims' containing simulation draws of the proportions mediated.}
+#'   \item{d.avg.sims, z.avg.sims, n.avg.sims}{vectors of length 'sims' 
+#'   containing simulation draws of d.avg, z.avg and n.avg, respectively.}
+#'   \item{d0.group, d1.group}{group-specific point estimates for average 
+#'   causal mediation effects under the control and treatment conditions.}
+#'   \item{d0.ci.group, d1.ci.group}{group-specific confidence intervals for 
+#'   average causal mediation effects. The confidence level is set at the value 
+#'   specified in 'conf.level'.}
+#'   \item{d0.p.group, d1.p.group}{group-specific two-sided p-values for average 
+#'   causal mediation effects.}
+#'   \item{d0.sims.group, d1.sims.group}{group-specific vectors of length 'sims' 
+#'   containing simulation draws of average causal mediation effects.}
+#'   \item{z0.group, z1.group}{group-specific point estimates for average direct 
+#'   effect under the control and treatment conditions.}
+#'   \item{z0.ci.group, z1.ci.group}{group-specific confidence intervals for 
+#'   average direct effects.}
+#'   \item{z0.p.group, z1.p.group}{group-specific two-sided p-values for average 
+#'   causal direct effects.}
+#'   \item{z0.sims.group, z1.sims.group}{group-specific vectors of length 'sims' 
+#'   containing simulation draws of average direct effects.}
+#'   \item{n0.group, n1.group}{the group-specific "proportions mediated", or the 
+#'   size of the group-specific average causal mediation effects relative to the 
+#'   total effect.}
+#'   \item{n0.ci.group, n1.ci.group}{group-specific confidence intervals for the 
+#'   proportions mediated.}
+#'   \item{n0.p.group, n1.p.group}{group-specific two-sided p-values for 
+#'   proportions mediated.}
+#'   \item{n0.sims.group, n1.sims.group}{group-specific vectors of length 'sims' 
+#'   containing simulation draws of the proportions mediated.}
 #'   \item{tau.coef.group}{group-specific point estimate for total effect.}
 #'   \item{tau.ci.group}{group-specific confidence interval for total effect.}
 #'   \item{tau.p.group}{group-specific two-sided p-values for total effect.}
-#'   \item{tau.sims.group}{a group-specific vector of length 'sims' containing simulation draws of the total effect.}
-#'   \item{d.avg.group, z.avg.group, n.avg.group}{group-specific simple averages of d0 and d1, z0 and z1, n0 and n1, respectively, which users may want to use as summary values when those quantities differ.}
-#'   \item{d.avg.ci.group, z.avg.ci.group, n.avg.ci.group}{group-specific confidence intervals for the above.}
-#'   \item{d.avg.p.group, z.avg.p.group, n.avg.p.group}{group-specific two-sided p-values for the above.}
-#'   \item{d.avg.sims.group, z.avg.sims.group, n.avg.sims.group}{group-specific vectors of length 'sims' containing simulation draws of d.avg, z.avg and n.avg, respectively.}
+#'   \item{tau.sims.group}{a group-specific vector of length 'sims' containing 
+#'   simulation draws of the total effect.}
+#'   \item{d.avg.group, z.avg.group, n.avg.group}{group-specific simple averages 
+#'   of d0 and d1, z0 and z1, n0 and n1, respectively, which users may want to 
+#'   use as summary values when those quantities differ.}
+#'   \item{d.avg.ci.group, z.avg.ci.group, n.avg.ci.group}{group-specific 
+#'   confidence intervals for the above.}
+#'   \item{d.avg.p.group, z.avg.p.group, n.avg.p.group}{group-specific two-sided 
+#'   p-values for the above.}
+#'   \item{d.avg.sims.group, z.avg.sims.group, n.avg.sims.group}{group-specific 
+#'   vectors of length 'sims' containing simulation draws of d.avg, z.avg and 
+#'   n.avg, respectively.}
 #'   \item{boot}{logical, the 'boot' argument used.}
-#'   \item{treat}{a character string indicating the name of the 'treat' variable used.}
-#'   \item{mediator}{a character string indicating the name of the 'mediator' variable used.}
-#'   \item{INT}{a logical value indicating whether the model specification allows the effects to differ between the treatment and control conditions.}
+#'   \item{treat}{a character string indicating the name of the 'treat' variable 
+#'   used.}
+#'   \item{mediator}{a character string indicating the name of the 'mediator' 
+#'   variable used.}
+#'   \item{INT}{a logical value indicating whether the model specification 
+#'   allows the effects to differ between the treatment and control conditions.}
 #'   \item{conf.level}{the confidence level used. }
 #'   \item{model.y}{the outcome model used.}
 #'   \item{model.m}{the mediator model used.}
@@ -232,9 +272,13 @@
 #'   \item{group.id.m}{the data on the mediator group.}
 #'   \item{group.id.y}{the data on the outcome group.}
 #'   \item{group.id}{the data on the group on which the output is based.}
-#'   \item{control.value}{value of the treatment variable used as the control condition.}
-#'   \item{treat.value}{value of the treatment variable used as the treatment condition.}
-#'   \item{nobs}{number of observations in the model frame for 'model.m' and 'model.y'. May differ from the numbers in the original models input to 'mediate' if 'dropobs' was 'TRUE'.}
+#'   \item{control.value}{value of the treatment variable used as the control 
+#'   condition.}
+#'   \item{treat.value}{value of the treatment variable used as the treatment 
+#'   condition.}
+#'   \item{nobs}{number of observations in the model frame for 'model.m' and 
+#'   'model.y'. May differ from the numbers in the original models input to 
+#'   'mediate' if 'dropobs' was 'TRUE'.}
 #'   \item{robustSE}{`TRUE' or `FALSE'.}
 #'   \item{cluster}{the clusters used.}
 #'   
@@ -2475,7 +2519,12 @@ print.summary.mediate <- function(x, ...){
       cat("Nonparametric Bootstrap Confidence Intervals with the BCa Method\n\n") 
     }
   } else {
-    cat("Quasi-Bayesian Confidence Intervals\n\n")
+    if (inherits(x, "mediate.tsls")) {
+      cat("Two-Stage Least Squares Confidence Intervals\n\n")
+    } else {
+      cat("Quasi-Bayesian Confidence Intervals\n\n")  
+    }
+    
   }
   
   if(!is.null(x$covariates)){

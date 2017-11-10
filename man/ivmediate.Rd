@@ -69,25 +69,46 @@ bootstrap or Monte Carlo simulations. Default is the value in the
   \code{plot.ivmediate}) can be used to produce a plot of the estimated 
   effects along with their confidence intervals.
   
-  \item{dc0, dc1}{point estimates for the local average causal mediation effects under the control and treatment conditions.}
-  \item{dc0.ci, dc1.ci}{confidence intervals for the local average causal mediation effects. The confidence levels are set at the value specified in 'conf.level'.}
-  \item{dc0.issue, dc1.issue}{number of observations for which the numerical integration via \code{\link{integrate}} encountered computational problems when calculating dc0 and dc1, respectively.}
-  \item{dc0.inf, dc1.inf}{number of observations for which the numerical integration produced non-finite values when calculating dc0 and dc1, respectively. (Such values are excluded from the calculation of average effects.)}
-  \item{dc0.sims, dc1.sims}{vectors of length 'sims' containing simulation draws of local average causal mediation effects.}
-  \item{zc0, zc1}{point estimates for the local average natural direct effects under the control and treatment conditions.}
-  \item{zc0.ci, zc1.ci}{confidence intervals for the local average natural direct effects.}
-  \item{zc0.issue, zc1.issue}{number of observations for which the numerical integration encountered computational problems when calculating zc0 and zc1, respectively.}
-  \item{zc0.inf, zc1.inf}{number of observations for which the numerical integration produced non-finite values for zc0 and zc1.}
-  \item{zc0.sims, zc1.sims}{vectors of length 'sims' containing simulation draws of local average natural direct effects.}
+  \item{dc0, dc1}{point estimates for the local average causal mediation 
+  effects under the control and treatment conditions.}
+  \item{dc0.ci, dc1.ci}{confidence intervals for the local average causal 
+  mediation effects. The confidence levels are set at the value specified in 
+  'conf.level'.}
+  \item{dc0.issue, dc1.issue}{number of observations for which the numerical 
+  integration via \code{\link{integrate}} encountered computational problems 
+  when calculating dc0 and dc1, respectively.}
+  \item{dc0.inf, dc1.inf}{number of observations for which the numerical 
+  integration produced non-finite values when calculating dc0 and dc1, 
+  respectively. (Such values are excluded from the calculation of average 
+  effects.)}
+  \item{dc0.sims, dc1.sims}{vectors of length 'sims' containing simulation 
+  draws of local average causal mediation effects.}
+  \item{zc0, zc1}{point estimates for the local average natural direct 
+  effects under the control and treatment conditions.}
+  \item{zc0.ci, zc1.ci}{confidence intervals for the local average natural 
+  direct effects.}
+  \item{zc0.issue, zc1.issue}{number of observations for which the numerical 
+  integration encountered computational problems when calculating zc0 and 
+  zc1, respectively.}
+  \item{zc0.inf, zc1.inf}{number of observations for which the numerical 
+  integration produced non-finite values for zc0 and zc1.}
+  \item{zc0.sims, zc1.sims}{vectors of length 'sims' containing simulation 
+  draws of local average natural direct effects.}
   \item{tauc}{point estimate for the local average treatment effect.}
   \item{tauc.ci}{confidence interval for the local average treatment effect.}
-  \item{tauc.sims}{a vector of length 'sims' containing simulation draws of the local average treatment effect.}
+  \item{tauc.sims}{a vector of length 'sims' containing simulation draws of 
+  the local average treatment effect.}
   \item{boot}{logical, the 'boot' argument used.}
-  \item{enc}{a character string indicating the name of the 'enc' variable used.}
-  \item{treat}{a character string indicating the name of the 'treat' variable used.}
-  \item{mediator}{a character string indicating the name of the 'mediator' variable used.}
+  \item{enc}{a character string indicating the name of the 'enc' variable 
+  used.}
+  \item{treat}{a character string indicating the name of the 'treat' variable 
+  used.}
+  \item{mediator}{a character string indicating the name of the 'mediator' 
+  variable used.}
   \item{conf.level}{the confidence levels used. }
-  \item{nobs}{number of observations in the model frame for 'model.t', 'model.m' and 'model.y'. May differ from the numbers in the original models input to 'ivmediate' if 'dropobs' was 'TRUE'.}
+  \item{nobs}{number of observations in the model frame for 'model.t', 
+  'model.m' and 'model.y'. May differ from the numbers in the original models 
+  input to 'ivmediate' if 'dropobs' was 'TRUE'.}
   \item{sims}{number of simulation draws used.}
 }
 \description{
