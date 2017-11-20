@@ -140,11 +140,11 @@ mediate_tsls <- function(model.m, model.y, treat = "treat.name",
   qq <- (1 - conf.level) / 2
   qq <- setNames(c(qq, 1 - qq), c("low", "high"))
   d.ci <- d + qnorm(qq) * se_d
-  d.p <- pnorm(-d, sd = se_d)
+  d.p <- pnorm(-abs(d), sd = se_d)
   z.ci <- z + qnorm(qq) * se_z
-  z.p <- pnorm(-z, sd = se_z)
+  z.p <- pnorm(-abs(z), sd = se_z)
   tau.ci <- tau.coef + qnorm(qq) * se_tau
-  tau.p <- pnorm(-tau.coef, sd = se_tau)
+  tau.p <- pnorm(-abs(tau.coef), sd = se_tau)
   n.ci <- nu + qnorm(qq) * se_n
   n.p <- pnorm(-nu, sd = se_n)
   
