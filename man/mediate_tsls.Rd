@@ -5,7 +5,8 @@
 \title{Two-stage Least Squares Estimation of the Average Causal Mediation Effects}
 \usage{
 mediate_tsls(model.m, model.y, treat = "treat.name", conf.level = 0.95,
-  robustSE = FALSE, cluster = NULL, ...)
+  dropObs = FALSE, robustSE = FALSE, cluster = NULL, boot = FALSE,
+  sims = 1000, ...)
 }
 \arguments{
 \item{model.m}{a fitted model object for mediator, of class \code{lm}.}
@@ -19,12 +20,24 @@ used in the models.}
 Default is to return the 2.5 and 97.5 percentiles of the simulated 
 quantities.}
 
+\item{dropObs}{a logical value indicating the behavior when the model frames 
+of \code{model.m} and \code{model.y} (and the \code{cluster} variable if
+included) are composed of different observations. If \code{TRUE}, models
+will be re-fitted using common data rows. If \code{FALSE}, error is
+returned. Default is \code{FALSE}.}
+
 \item{robustSE}{a logical value. If 'TRUE', heteroskedasticity-consistent 
 standard errors will be used. Default is 'FALSE'.}
 
 \item{cluster}{a variable indicating clusters for standard errors. Note that 
 this should be a vector of cluster indicators itself, not a character 
 string for the name of the variable.}
+
+\item{boot}{a logical value. if \code{FALSE} analytic confidence intervals
+based on Aroian (1947) will be used; if 'TRUE' nonparametric
+bootstrap will be used. Default is 'FALSE'.}
+
+\item{sims}{number of Monte Carlo draws for nonparametric bootstrap.}
 
 \item{...}{other arguments passed to vcovCL in the sandwich package:
 typically the \code{type} argument for heteroskedasticity-consistent 
@@ -85,4 +98,9 @@ model.y <- lm(y ~ t + m + x, data = dat)
 cluster <- factor(sample(1:3, sims, replace = TRUE))
 med <- mediate_tsls(model.m, model.y, cluster = NULL, treat = "t")
 summary(med) 
+}
+\references{
+Aroian, L. A. (1947). The probability function of the product of
+  two normally distributed variables. *Annals of Mathematical Statistics,*
+  18, 265-271.
 }

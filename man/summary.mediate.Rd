@@ -13,7 +13,7 @@
 \method{print}{summary.mediate}(x, ...)
 }
 \arguments{
-\item{object}{output from mediate function.}
+\item{object}{output from mediate or mediate_tsls function.}
 
 \item{...}{additional arguments affecting the summary produced.}
 
@@ -51,8 +51,8 @@ Tingley, D., Yamamoto, T., Hirose, K., Imai, K. and Keele, L.
   Vinod New York: Springer.
 }
 \seealso{
-\code{\link{mediate}}, \code{\link{plot.mediate}}, 
-  \code{\link{summary}}.
+\code{\link{mediate}}, \code{\link{mediate_tsls}},
+  \code{\link{plot.mediate}}, \code{\link{summary}}.
 }
 \author{
 Dustin Tingley, Harvard University, 

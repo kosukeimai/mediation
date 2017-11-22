@@ -2466,7 +2466,7 @@ med.fun.ordered <- function(y.data, index, m.data) {
 #' @aliases summary.mediate summary.mediate.order print.summary.mediate 
 #'   print.summary.mediate.order
 #'   
-#' @param object output from mediate function.
+#' @param object output from mediate or mediate_tsls function.
 #' @param x output from summary.mediate function.
 #' @param ...  additional arguments affecting the summary produced.
 #' 
@@ -2476,8 +2476,8 @@ med.fun.ordered <- function(y.data, index, m.data) {
 #'   \email{ljk20@@psu.edu}; Kosuke Imai, Princeton University, 
 #'   \email{kimai@@princeton.edu}.
 #'   
-#' @seealso \code{\link{mediate}}, \code{\link{plot.mediate}}, 
-#'   \code{\link{summary}}.
+#' @seealso \code{\link{mediate}}, \code{\link{mediate_tsls}},
+#'   \code{\link{plot.mediate}}, \code{\link{summary}}.
 #'   
 #' @references Tingley, D., Yamamoto, T., Hirose, K., Imai, K. and Keele, L. 
 #'   (2014). "mediation: R package for Causal Mediation Analysis", Journal of 
@@ -2511,20 +2511,27 @@ summary.mediate <- function(object, ...){
 print.summary.mediate <- function(x, ...){
   clp <- 100 * x$conf.level
   cat("\n")
-  cat("Causal Mediation Analysis \n\n")
-  if(x$boot){
-    if(x$boot.ci.type == "perc"){
-      cat("Nonparametric Bootstrap Confidence Intervals with the Percentile Method\n\n")
-    } else if(x$boot.ci.type == "bca"){
-      cat("Nonparametric Bootstrap Confidence Intervals with the BCa Method\n\n") 
-    }
+  cat(
+    sprintf(
+      "Causal Mediation Analysis %s\n\n",
+      ifelse(inherits(x, "mediate.tsls"), "using Two-Stage Least Squares", "")
+    )
+  )
+  if(x$boot) {    
+    cat(
+      sprintf(
+        "Nonparametric Bootstrap Confidence Intervals with the %s Method\n\n",
+        ifelse(x$boot.ci.type == "perc", "Percentile", "BCa")
+      )
+    )
   } else {
-    if (inherits(x, "mediate.tsls")) {
-      cat("Two-Stage Least Squares Confidence Intervals\n\n")
-    } else {
-      cat("Quasi-Bayesian Confidence Intervals\n\n")  
-    }
-    
+    cat(
+      sprintf(
+        "%s Confidence Intervals\n\n",
+        ifelse(inherits(x, "mediate.tsls"), "Two-Stage Least Squares", 
+          "Quasi-Bayesian")
+      )
+    )   
   }
   
   if(!is.null(x$covariates)){
