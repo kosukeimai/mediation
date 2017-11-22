@@ -100,7 +100,7 @@ med <- mediate_tsls(model.m, model.y, cluster = NULL, treat = "t")
 summary(med) 
 }
 \references{
-Aroian, L. A. (1947). The probability function of the product of
+Aroian, L. A. 1947. The probability function of the product of
   two normally distributed variables. *Annals of Mathematical Statistics,*
   18, 265-271.
 }

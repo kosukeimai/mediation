@@ -65,7 +65,7 @@
 #'   'mediate' if 'dropobs' was 'TRUE'.}
 #'   \item{cluster}{the clusters used.}
 #'
-#' @references Aroian, L. A. (1947). The probability function of the product of
+#' @references Aroian, L. A. 1947. The probability function of the product of
 #'   two normally distributed variables. *Annals of Mathematical Statistics,*
 #'   18, 265-271.
 #' @export
