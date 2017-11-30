@@ -89,12 +89,11 @@ set.seed(123)
 sims <- 10000
 dat <- data.frame(z = sample(0:1, sims, replace = TRUE), 
                   t = sample(0:1, sims, replace = TRUE))
-dat$m <- rbinom(sims, size = 1, prob = .1 + dat$z * .3 + dat$t * .2)
-dat$x <- rnorm(sims, mean = 1)
-dat$y <- 5 + dat$x + 2 * dat$t + 3 * dat$m + rnorm(sims)
-
+dat$n <- rnorm(sims, mean = 1)
+dat$m <- rnorm(sims, mean = dat$z * 0.3 + dat$t * 0.2 + dat$n * 0.7, sd = 0.2)
+dat$y <- rnorm(sims, mean = 5 + dat$t + dat$m * (-3) + dat$n, sd = 1)
 model.m <- lm(m ~ t + z, data = dat)
-model.y <- lm(y ~ t + m + x, data = dat)
+model.y <- lm(y ~ t + m , data = dat)
 cluster <- factor(sample(1:3, sims, replace = TRUE))
 med <- mediate_tsls(model.m, model.y, cluster = NULL, treat = "t")
 summary(med) 

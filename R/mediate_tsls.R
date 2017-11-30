@@ -76,12 +76,11 @@
 #' sims <- 10000
 #' dat <- data.frame(z = sample(0:1, sims, replace = TRUE), 
 #'                   t = sample(0:1, sims, replace = TRUE))
-#' dat$m <- rbinom(sims, size = 1, prob = .1 + dat$z * .3 + dat$t * .2)
-#' dat$x <- rnorm(sims, mean = 1)
-#' dat$y <- 5 + dat$x + 2 * dat$t + 3 * dat$m + rnorm(sims)
-#' 
+#' dat$n <- rnorm(sims, mean = 1)
+#' dat$m <- rnorm(sims, mean = dat$z * 0.3 + dat$t * 0.2 + dat$n * 0.7, sd = 0.2)
+#' dat$y <- rnorm(sims, mean = 5 + dat$t + dat$m * (-3) + dat$n, sd = 1)
 #' model.m <- lm(m ~ t + z, data = dat)
-#' model.y <- lm(y ~ t + m + x, data = dat)
+#' model.y <- lm(y ~ t + m , data = dat)
 #' cluster <- factor(sample(1:3, sims, replace = TRUE))
 #' med <- mediate_tsls(model.m, model.y, cluster = NULL, treat = "t")
 #' summary(med) 
@@ -108,17 +107,19 @@ mediate_tsls <- function(model.m, model.y, treat = "treat.name",
   
   n_y <- NROW(model.y$residuals)
   n_m <- NROW(model.m$residuals)  
+  if (n_y != n_m)
+    stop("number of observations in both models must be identical.")
   if (!is.null(cluster)) {
-    if (NROW(cluster) != n_y | NROW(cluster) != n_m) {
-      stop("length of `cluster' must be equal to ", 
-           "number of observations in models.")
-    }
-  } else if (boot) {
-    if (n_y != n_m)
-      stop("number of observations in both models must be identical.")
-    else 
-      cluster <- seq(n_y)
+    if (NROW(cluster) != n_y) 
+      stop("length of `cluster' must be equal to number of observations in models.")
+  } else {
+    cluster <- seq(n_y)
   }
+
+  # Update y-model using predicted values of mediator
+  .dat <- model.frame(model.y)
+  .dat[[m_var]] <- predict(model.m)
+  model.y <- update(model.y, data = .dat)
   
   # Point estimates
   d <- coef(model.y)[m_var] * coef(model.m)[t_var] # mediation effect  
