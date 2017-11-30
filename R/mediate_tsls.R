@@ -18,15 +18,11 @@
 #' @param ... other arguments passed to vcovCL in the sandwich package:
 #'   typically the \code{type} argument for heteroskedasticity-consistent 
 #'   standard errors.
-#' @param dropObs a logical value indicating the behavior when the model frames 
-#'   of \code{model.m} and \code{model.y} (and the \code{cluster} variable if
-#'   included) are composed of different observations. If \code{TRUE}, models
-#'   will be re-fitted using common data rows. If \code{FALSE}, error is
-#'   returned. Default is \code{FALSE}.
 #' @param boot a logical value. if \code{FALSE} analytic confidence intervals
-#'   based on Aroian (1947) will be used; if 'TRUE' nonparametric
-#'   bootstrap will be used. Default is 'FALSE'.
+#'   based on Aroian (1947) will be used; if \code{TRUE} nonparametric
+#'   bootstrap will be used. Default is \code{FALSE}.
 #' @param sims number of Monte Carlo draws for nonparametric bootstrap.
+#' @param est_se estimate standard errors. Primarily for internal use. Default is \code{TRUE}.
 #'   
 #' @importFrom stats deriv nobs setNames
 #'   
@@ -82,13 +78,13 @@
 #' model.m <- lm(m ~ t + z, data = dat)
 #' model.y <- lm(y ~ t + m , data = dat)
 #' cluster <- factor(sample(1:3, sims, replace = TRUE))
-#' med <- mediate_tsls(model.m, model.y, cluster = NULL, treat = "t")
+#' med <- mediate_tsls(model.m, model.y, cluster = cluster, treat = "t")
 #' summary(med) 
 
 mediate_tsls <- function(model.m, model.y, treat = "treat.name",
-                         conf.level = .95, dropObs = FALSE,
+                         conf.level = .95, 
                          robustSE = FALSE, cluster = NULL,
-                         boot = FALSE, sims = 1000,
+                         boot = FALSE, sims = 1000, est_se = TRUE,
                          ...){
   
   if (!inherits(model.m, "lm") | !inherits(model.y, "lm"))
@@ -101,12 +97,9 @@ mediate_tsls <- function(model.m, model.y, treat = "treat.name",
   if (length(y_var) > 1L || length(m_var) > 1L)
     stop("Left-hand side of model must only have one variable.")
   
-  if (dropObs) {
-    list2env(drop_obs(model.y, model.m, cluster), envir = environment())
-  }
-  
   n_y <- NROW(model.y$residuals)
   n_m <- NROW(model.m$residuals)  
+  
   if (n_y != n_m)
     stop("number of observations in both models must be identical.")
   if (!is.null(cluster)) {
@@ -127,105 +120,116 @@ mediate_tsls <- function(model.m, model.y, treat = "treat.name",
   tau.coef <- d + z                                # total effect
   nu <- d / tau.coef                               # proportion mediated
   
-  if (!boot) {
-    sims <- NA
-    # Analytic CI
+  if (!est_se) {
     
-    if (!is.null(cluster)) {
-      vcv_y <- sandwich::vcovCL(model.y, cluster = cluster, ...)
-      vcv_m <- sandwich::vcovCL(model.m, cluster = cluster, ...)    
-    } else if (robustSE) {
-      vcv_y <- sandwich::vcovHC(model.y, ...)
-      vcv_m <- sandwich::vcovHC(model.m, ...)    
-    } else {
-      vcv_y <- vcov(model.y)
-      vcv_m <- vcov(model.m)
-    }
-    
-    se_d <- sqrt(
-      coef(model.y)[m_var]^2 * vcv_m[t_var, t_var] +
-        coef(model.m)[t_var]^2 * vcv_y[m_var, m_var] +
-        vcv_m[t_var, t_var] * vcv_y[m_var, m_var]
-    )
-    se_z <- sqrt(vcv_y[t_var, t_var])
-    se_tau <- sqrt(
-      vcv_y[t_var, t_var] + 
-        (se_d)^2 + 
-        2 * vcv_y[t_var, m_var] * coef(model.m)[t_var]
-    )
-    
-    # Proportion
-    delta <- function(f, B, Sigma) {
-      ff <- deriv(f, names(B), func = TRUE)
-      x <- do.call(ff, as.list(B))
-      grad <- as.matrix(attr(x, "gradient"), nr = 1)
-      sqrt(grad %*% Sigma %*% t(grad))
-    }
-    Coefs <- c(coef(model.m)[t_var], coef(model.y)[t_var], coef(model.y)[m_var])
-    Coefs <- setNames(Coefs, c("b2", "b3", "gamma"))
-    Sigma <- diag(c(vcv_m[t_var, t_var], diag(vcv_y)[c(t_var, m_var)]))
-    Sigma[3,2] <- Sigma[2,3] <- vcv_y[t_var, m_var]
-    f <- ~b2 * gamma / (b2 * gamma + b3)
-    se_n <- as.vector(delta(f, Coefs, Sigma))
-    
-    # CI and p-values
-    qq <- (1 - conf.level) / 2
-    qq <- setNames(c(qq, 1 - qq), c("low", "high"))
-    d.ci <- d + qnorm(qq) * se_d
-    z.ci <- z + qnorm(qq) * se_z
-    tau.ci <- tau.coef + qnorm(qq) * se_tau
-    n.ci <- nu + qnorm(qq) * se_n
-    d.p <- pnorm(-abs(d), sd = se_d)
-    z.p <- pnorm(-abs(z), sd = se_z)
-    tau.p <- pnorm(-abs(tau.coef), sd = se_tau)
-    n.p <- pnorm(-abs(nu), sd = se_n)
+    se_d <- se_z <- se_tau <- se_n <- NA
+    d.ci <- z.ci <- tau.ci <- n.ci <- NA
+    d.p <- z.p <- tau.p <- n.p <- NA
     
   } else {
-    
-    # clusters
-    # taken from sandwich::vcovBS
-    cl <- split(seq_along(cluster), cluster)
-    
-    # matrix for bootstrap estimates
-    cf <- matrix(rep.int(0, 4 * sims), ncol = 4,
-                 dimnames = list(NULL, c("delta", "zeta", "tau", "nu")))
-    
-    # test statistics
-    t_cf <- matrix(rep.int(0, 4 * sims), ncol = 4,
+
+    if (!boot) {
+      sims <- NA
+      # Analytic CI
+      
+      if (!is.null(cluster)) {
+        vcv_y <- sandwich::vcovCL(model.y, cluster = cluster, ...)
+        vcv_m <- sandwich::vcovCL(model.m, cluster = cluster, ...)    
+      } else if (robustSE) {
+        vcv_y <- sandwich::vcovHC(model.y, ...)
+        vcv_m <- sandwich::vcovHC(model.m, ...)    
+      } else {
+        vcv_y <- vcov(model.y)
+        vcv_m <- vcov(model.m)
+      }
+      
+      se_d <- sqrt(
+        coef(model.y)[m_var]^2 * vcv_m[t_var, t_var] +
+          coef(model.m)[t_var]^2 * vcv_y[m_var, m_var] +
+          vcv_m[t_var, t_var] * vcv_y[m_var, m_var]
+      )
+      se_z <- sqrt(vcv_y[t_var, t_var])
+      se_tau <- sqrt(
+        vcv_y[t_var, t_var] + 
+          (se_d)^2 + 
+          2 * vcv_y[t_var, m_var] * coef(model.m)[t_var]
+      )
+      
+      # Proportion
+      delta <- function(f, B, Sigma) {
+        ff <- deriv(f, names(B), func = TRUE)
+        x <- do.call(ff, as.list(B))
+        grad <- as.matrix(attr(x, "gradient"), nr = 1)
+        sqrt(grad %*% Sigma %*% t(grad))
+      }
+      Coefs <- c(coef(model.m)[t_var], coef(model.y)[t_var], coef(model.y)[m_var])
+      Coefs <- setNames(Coefs, c("b2", "b3", "gamma"))
+      Sigma <- diag(c(vcv_m[t_var, t_var], diag(vcv_y)[c(t_var, m_var)]))
+      Sigma[3,2] <- Sigma[2,3] <- vcv_y[t_var, m_var]
+      f <- ~b2 * gamma / (b2 * gamma + b3)
+      se_n <- as.vector(delta(f, Coefs, Sigma))
+      
+      # CI and p-values
+      qq <- (1 - conf.level) / 2
+      qq <- setNames(c(qq, 1 - qq), c("low", "high"))
+      d.ci <- d + qnorm(qq) * se_d
+      z.ci <- z + qnorm(qq) * se_z
+      tau.ci <- tau.coef + qnorm(qq) * se_tau
+      n.ci <- nu + qnorm(qq) * se_n
+      d.p <- pnorm(-abs(d), sd = se_d)
+      z.p <- pnorm(-abs(z), sd = se_z)
+      tau.p <- pnorm(-abs(tau.coef), sd = se_tau)
+      n.p <- pnorm(-abs(nu), sd = se_n)
+      
+    } else {
+      
+      # clusters
+      # taken from sandwich::vcovBS
+      cl <- split(seq_along(cluster), cluster)
+      
+      # matrix for bootstrap estimates
+      cf <- matrix(rep.int(0, 4 * sims), ncol = 4,
                    dimnames = list(NULL, c("delta", "zeta", "tau", "nu")))
-    
-    ## update on bootstrap samples
-    for(i in 1:sims) {
-      .subset <- unlist(cl[sample(names(cl), length(cl), replace = TRUE)])
-      out <- tryCatch({
-        up_y <- update(model.y, subset = .subset)
-        up_m <- update(model.m, subset = .subset)
-        mediate_tsls(up_m, up_y, treat)[c("d1", "z0", "tau.coef", "n0")]
-      }, error = function(e) {
-        setNames(rep(list(NA), 4), c("d1", "z0", "tau.coef", "n0"))
-      })
-      cf[i, ] <- unlist(out)
+      
+      # test statistics
+      t_cf <- matrix(rep.int(0, 4 * sims), ncol = 4,
+                     dimnames = list(NULL, c("delta", "zeta", "tau", "nu")))
+      
+      ## update on bootstrap samples
+      for(i in 1:sims) {
+        .subset <- unlist(cl[sample(names(cl), length(cl), replace = TRUE)])
+        out <- tryCatch({
+          up_y <- update(model.y, subset = .subset)
+          up_m <- update(model.m, subset = .subset)
+          mediate_tsls(up_m, up_y, treat, cluster = NULL, est_se = FALSE)[c("d1", "z0", "tau.coef", "n0")]
+        }, error = function(e) {
+          stop(e)
+          setNames(rep(list(NA), 4), c("d1", "z0", "tau.coef", "n0"))
+        })
+        cf[i, ] <- unlist(out)
+      }
+      
+      se_d <- sd(cf[, "delta"], na.rm = TRUE)
+      se_z <- sd(cf[, "zeta"], na.rm = TRUE)
+      se_tau <- sd(cf[, "tau"], na.rm = TRUE)
+      se_n <- sd(cf[, "nu"], na.rm = TRUE)
+      
+      qq <- (1 - conf.level) / 2
+      qq <- setNames(c(qq, 1 - qq), c("low", "high"))    
+      d.ci <- quantile(cf[, "delta"], qq, na.rm = TRUE)
+      z.ci <- quantile(cf[, "zeta"], qq, na.rm = TRUE)
+      tau.ci <- quantile(cf[, "tau"], qq, na.rm = TRUE)
+      n.ci <- quantile(cf[, "nu"], qq, na.rm = TRUE)
+      
+      d.p <- pval(cf[, "delta"], d)
+      z.p <- pval(cf[, "zeta"], z)
+      tau.p <- pval(cf[, "tau"], tau.coef)
+      n.p <- pval(cf[, "nu"], nu)
+      
     }
-    
-    se_d <- sd(cf[, "delta"], na.rm = TRUE)
-    se_z <- sd(cf[, "zeta"], na.rm = TRUE)
-    se_tau <- sd(cf[, "tau"], na.rm = TRUE)
-    se_n <- sd(cf[, "nu"], na.rm = TRUE)
-    
-    qq <- (1 - conf.level) / 2
-    qq <- setNames(c(qq, 1 - qq), c("low", "high"))    
-    d.ci <- quantile(cf[, "delta"], qq, na.rm = TRUE)
-    z.ci <- quantile(cf[, "zeta"], qq, na.rm = TRUE)
-    tau.ci <- quantile(cf[, "tau"], qq, na.rm = TRUE)
-    n.ci <- quantile(cf[, "nu"], qq, na.rm = TRUE)
-    
-    d.p <- pval(cf[, "delta"], d)
-    z.p <- pval(cf[, "zeta"], z)
-    tau.p <- pval(cf[, "tau"], tau.coef)
-    n.p <- pval(cf[, "nu"], nu)
-    
+        
   }
-  
+
   # Output
   out <- list(d1 = unname(d), d1.se = se_d, d1.p = d.p, d1.ci = d.ci,
               z0 = unname(z), z0.se = se_z, z0.p = z.p, z0.ci = z.ci,
