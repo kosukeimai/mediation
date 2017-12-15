@@ -81,7 +81,7 @@
 #' med <- mediate_tsls(model.m, model.y, cluster = cluster, treat = "t")
 #' summary(med) 
 
-mediate_tsls <- function(model.m, model.y, data, treat = "treat.name",
+mediate_tsls <- function(model.m, model.y, treat = "treat.name",
                          conf.level = .95, 
                          robustSE = FALSE, cluster = NULL,
                          boot = FALSE, sims = 1000, est_se = TRUE,
