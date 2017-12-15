@@ -67,21 +67,21 @@
 #' @export
 #' 
 #' @examples
-#' # Generate data
+#' # Generate data. We use TSLS to address unobserved confounding (n).
 #' set.seed(123)
-#' sims <- 10000
+#' sims <- 1000
 #' dat <- data.frame(z = sample(0:1, sims, replace = TRUE), 
 #'                   t = sample(0:1, sims, replace = TRUE))
 #' dat$n <- rnorm(sims, mean = 1)
 #' dat$m <- rnorm(sims, mean = dat$z * 0.3 + dat$t * 0.2 + dat$n * 0.7, sd = 0.2)
 #' dat$y <- rnorm(sims, mean = 5 + dat$t + dat$m * (-3) + dat$n, sd = 1)
 #' model.m <- lm(m ~ t + z, data = dat)
-#' model.y <- lm(y ~ t + m , data = dat)
+#' model.y <- lm(y ~ t + m, data = dat)
 #' cluster <- factor(sample(1:3, sims, replace = TRUE))
 #' med <- mediate_tsls(model.m, model.y, cluster = cluster, treat = "t")
 #' summary(med) 
 
-mediate_tsls <- function(model.m, model.y, treat = "treat.name",
+mediate_tsls <- function(model.m, model.y, data, treat = "treat.name",
                          conf.level = .95, 
                          robustSE = FALSE, cluster = NULL,
                          boot = FALSE, sims = 1000, est_se = TRUE,
@@ -90,15 +90,15 @@ mediate_tsls <- function(model.m, model.y, treat = "treat.name",
   if (!inherits(model.m, "lm") | !inherits(model.y, "lm"))
     stop("both mediator and outcome models must be of class `lm'.")
   
-  m_var <- setdiff(all.vars(formula(model.m)), labels(terms(model.m)))
-  y_var <- setdiff(all.vars(formula(model.y)), labels(terms(model.y)))
+  m_var <- all.vars(formula(model.m)[[2]])
+  y_var <- all.vars(formula(model.y)[[2]])
   t_var <- treat
-  
+
   if (length(y_var) > 1L || length(m_var) > 1L)
     stop("Left-hand side of model must only have one variable.")
   
-  n_y <- NROW(model.y$residuals)
-  n_m <- NROW(model.m$residuals)  
+  n_y <- nobs(model.y)
+  n_m <- nobs(model.m)  
   
   if (n_y != n_m)
     stop("number of observations in both models must be identical.")
@@ -110,16 +110,18 @@ mediate_tsls <- function(model.m, model.y, treat = "treat.name",
   }
 
   # Update y-model using predicted values of mediator
-  .dat <- model.frame(model.y)
+  .dat <- eval(getCall(model.y)$data)
+  .dat <- .dat[names(model.m$fitted.values), ]
+  # .dat <- model.frame(model.y)
   .dat[[m_var]] <- predict(model.m)
-  model.y <- update(model.y, data = .dat)
-  
+  mod.y <- my_update(model.y, data = .dat)
+
   # Point estimates
-  d <- coef(model.y)[m_var] * coef(model.m)[t_var] # mediation effect  
-  z <- coef(model.y)[t_var]                        # direct effect
+  d <- coef(mod.y)[m_var] * coef(model.m)[t_var]   # mediation effect
+  z <- coef(mod.y)[t_var]                          # direct effect
   tau.coef <- d + z                                # total effect
   nu <- d / tau.coef                               # proportion mediated
-  
+
   if (!est_se) {
     
     se_d <- se_z <- se_tau <- se_n <- NA
@@ -133,18 +135,18 @@ mediate_tsls <- function(model.m, model.y, treat = "treat.name",
       # Analytic CI
       
       if (!is.null(cluster)) {
-        vcv_y <- sandwich::vcovCL(model.y, cluster = cluster, ...)
+        vcv_y <- sandwich::vcovCL(mod.y, cluster = cluster, ...)
         vcv_m <- sandwich::vcovCL(model.m, cluster = cluster, ...)    
       } else if (robustSE) {
-        vcv_y <- sandwich::vcovHC(model.y, ...)
+        vcv_y <- sandwich::vcovHC(mod.y, ...)
         vcv_m <- sandwich::vcovHC(model.m, ...)    
       } else {
-        vcv_y <- vcov(model.y)
+        vcv_y <- vcov(mod.y)
         vcv_m <- vcov(model.m)
       }
       
       se_d <- sqrt(
-        coef(model.y)[m_var]^2 * vcv_m[t_var, t_var] +
+        coef(mod.y)[m_var]^2 * vcv_m[t_var, t_var] +
           coef(model.m)[t_var]^2 * vcv_y[m_var, m_var] +
           vcv_m[t_var, t_var] * vcv_y[m_var, m_var]
       )
@@ -162,7 +164,7 @@ mediate_tsls <- function(model.m, model.y, treat = "treat.name",
         grad <- as.matrix(attr(x, "gradient"), nr = 1)
         sqrt(grad %*% Sigma %*% t(grad))
       }
-      Coefs <- c(coef(model.m)[t_var], coef(model.y)[t_var], coef(model.y)[m_var])
+      Coefs <- c(coef(model.m)[t_var], coef(mod.y)[t_var], coef(mod.y)[m_var])
       Coefs <- setNames(Coefs, c("b2", "b3", "gamma"))
       Sigma <- diag(c(vcv_m[t_var, t_var], diag(vcv_y)[c(t_var, m_var)]))
       Sigma[3,2] <- Sigma[2,3] <- vcv_y[t_var, m_var]
@@ -182,7 +184,7 @@ mediate_tsls <- function(model.m, model.y, treat = "treat.name",
       n.p <- pnorm(-abs(nu), sd = se_n)
       
     } else {
-      
+
       # clusters
       # taken from sandwich::vcovBS
       cl <- split(seq_along(cluster), cluster)
@@ -191,24 +193,22 @@ mediate_tsls <- function(model.m, model.y, treat = "treat.name",
       cf <- matrix(rep.int(0, 4 * sims), ncol = 4,
                    dimnames = list(NULL, c("delta", "zeta", "tau", "nu")))
       
-      # test statistics
-      t_cf <- matrix(rep.int(0, 4 * sims), ncol = 4,
-                     dimnames = list(NULL, c("delta", "zeta", "tau", "nu")))
-      
       ## update on bootstrap samples
       for(i in 1:sims) {
         .subset <- unlist(cl[sample(names(cl), length(cl), replace = TRUE)])
+        .dat_y <- eval(getCall(model.y)$data)[.subset, ]
+        .dat_m <- eval(getCall(model.m)$data)[.subset, ]
         out <- tryCatch({
-          up_y <- update(model.y, subset = .subset)
-          up_m <- update(model.m, subset = .subset)
-          mediate_tsls(up_m, up_y, treat, cluster = NULL, est_se = FALSE)[c("d1", "z0", "tau.coef", "n0")]
+          up_y <- my_update(model.y, data = .dat_y)
+          up_m <- my_update(model.m, data = .dat_m)
+          mediate_tsls(up_m, up_y, treat = treat, cluster = NULL, est_se = FALSE)[c("d1", "z0", "tau.coef", "n0")]
         }, error = function(e) {
           stop(e)
           setNames(rep(list(NA), 4), c("d1", "z0", "tau.coef", "n0"))
         })
         cf[i, ] <- unlist(out)
       }
-      
+  
       se_d <- sd(cf[, "delta"], na.rm = TRUE)
       se_z <- sd(cf[, "zeta"], na.rm = TRUE)
       se_tau <- sd(cf[, "tau"], na.rm = TRUE)
@@ -232,6 +232,8 @@ mediate_tsls <- function(model.m, model.y, treat = "treat.name",
 
   # Output
   out <- list(d1 = unname(d), d1.se = se_d, d1.p = d.p, d1.ci = d.ci,
+              d0 = unname(d), d0.se = se_d, d0.p = d.p, d0.ci = d.ci,
+              z1 = unname(z), z1.se = se_z, z1.p = z.p, z1.ci = z.ci,
               z0 = unname(z), z0.se = se_z, z0.p = z.p, z0.ci = z.ci,
               tau.coef = unname(tau.coef), tau.se = se_tau, 
               tau.ci = tau.ci, tau.p = tau.p,
@@ -244,4 +246,23 @@ mediate_tsls <- function(model.m, model.y, treat = "treat.name",
   )
   class(out) <- c("mediate", "mediate.tsls")
   return(out)
+}
+
+# From https://stackoverflow.com/a/13690928/6455166
+# This function addresses issues when `update` is called within a function.
+my_update <- function(mod, formula = NULL, data = NULL) {
+  call <- getCall(mod)
+  if (is.null(call)) {
+    stop("Model object does not support updating (no call)", call. = FALSE)
+  }
+  term <- terms(mod)
+  if (is.null(term)) {
+    stop("Model object does not support updating (no terms)", call. = FALSE)
+  }
+  
+  if (!is.null(data)) call$data <- data
+  if (!is.null(formula)) call$formula <- update.formula(call$formula, formula)
+  env <- attr(term, ".Environment")
+
+  eval(call, env, parent.frame())
 }

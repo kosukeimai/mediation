@@ -80,16 +80,16 @@ Estimate quantities for causal mediation analysis using an instrumental
 variable estimator.
 }
 \examples{
-# Generate data
+# Generate data. We use TSLS to address unobserved confounding (n).
 set.seed(123)
-sims <- 10000
+sims <- 1000
 dat <- data.frame(z = sample(0:1, sims, replace = TRUE), 
                   t = sample(0:1, sims, replace = TRUE))
 dat$n <- rnorm(sims, mean = 1)
 dat$m <- rnorm(sims, mean = dat$z * 0.3 + dat$t * 0.2 + dat$n * 0.7, sd = 0.2)
 dat$y <- rnorm(sims, mean = 5 + dat$t + dat$m * (-3) + dat$n, sd = 1)
 model.m <- lm(m ~ t + z, data = dat)
-model.y <- lm(y ~ t + m , data = dat)
+model.y <- lm(y ~ t + m, data = dat)
 cluster <- factor(sample(1:3, sims, replace = TRUE))
 med <- mediate_tsls(model.m, model.y, cluster = cluster, treat = "t")
 summary(med) 
