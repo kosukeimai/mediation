@@ -7,14 +7,12 @@
 \alias{print.summary.mediate.order}
 \title{Summarizing Output from Mediation Analysis}
 \usage{
-summary.mediate(object, ...)
+\method{summary}{mediate}(object, ...)
 }
 \arguments{
 \item{object}{output from mediate function.}
 
 \item{...}{additional arguments affecting the summary produced.}
-
-\item{x}{output from summary.mediate function.}
 }
 \description{
 Function to report results from mediation analysis. Reported categories are

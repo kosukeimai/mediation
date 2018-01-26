@@ -9,9 +9,6 @@
 #' @aliases test.TMint test.TMint.default test.TMint.mediate
 #' test.TMint.mediate.order print.htest.order
 #' @param x output from \code{mediate} function.
-#' @param conf.level level of the returned two-sided confidence intervals for
-#' the effect differences. By default it is set to the value used in the
-#' original mediate call.
 #' @param ...  additional arguments.
 #' @return \code{test.TMint} returns an object of class "\code{htest}" when
 #' applied to a \code{mediate} object. See \code{\link{t.test}} for more
@@ -54,7 +51,7 @@
 #' test.TMint(fit)
 #' 
 #' 
-#' @export test.TMint
+#' @export 
 test.TMint <- function(x, ...){
   UseMethod("test.TMint")
 }
@@ -108,17 +105,6 @@ test.TMint.mediate <- function(x, conf.level = x$conf.level, ...){
 #' test.modmed.mediate.order print.test.modmed.mediate
 #' print.test.modmed.mediate.order
 #' @param object output from \code{mediate} function.
-#' @param covariates.1 first set of value(s) of covariates (moderators)
-#' included in the mediator and outcome models. See documentation for the
-#' \code{covariates} argument for the \code{\link{mediate}} function.
-#' @param covariates.2 second set of value(s) of covariates (moderators)
-#' included in the mediator and outcome models.
-#' @param sims number of simulation draws the test will be based on. Defaults
-#' to the number used in the original mediate fit.
-#' @param conf.level level of the returned two-sided confidence intervals for
-#' the effect differences. By default it is set to the value used in the
-#' original mediate call.
-#' @param x output from \code{test.modmed} function.
 #' @param ...  additional arguments.
 #' @return When applied to a \code{mediate} object, \code{test.modmed} returns
 #' an object of class "\code{test.modmed.mediate}", a list composed of

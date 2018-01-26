@@ -7,7 +7,8 @@
 \alias{print.summary.mediate.mer.3}
 \title{Summarizing Output from Mediation Analysis of Multilevel Models}
 \usage{
-summary.mediate.mer(object, output = c("default", "byeffect", "bygroup"), ...)
+\method{summary}{mediate.mer}(object, output = c("default", "byeffect",
+  "bygroup"), ...)
 }
 \arguments{
 \item{object}{output from mediate function.}
@@ -17,8 +18,6 @@ summary.mediate.mer(object, output = c("default", "byeffect", "bygroup"), ...)
 group-average effects reported as default.}
 
 \item{...}{additional arguments affecting the summary produced.}
-
-\item{x}{output from summary.mediate.mer function.}
 }
 \description{
 Function to report results from mediation analysis of multilevel models.

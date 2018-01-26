@@ -15,10 +15,6 @@ test.TMint(x, ...)
 \item{x}{output from \code{mediate} function.}
 
 \item{...}{additional arguments.}
-
-\item{conf.level}{level of the returned two-sided confidence intervals for
-the effect differences. By default it is set to the value used in the
-original mediate call.}
 }
 \value{
 \code{test.TMint} returns an object of class "\code{htest}" when

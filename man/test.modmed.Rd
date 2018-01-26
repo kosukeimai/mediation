@@ -15,22 +15,6 @@ test.modmed(object, ...)
 \item{object}{output from \code{mediate} function.}
 
 \item{...}{additional arguments.}
-
-\item{covariates.1}{first set of value(s) of covariates (moderators)
-included in the mediator and outcome models. See documentation for the
-\code{covariates} argument for the \code{\link{mediate}} function.}
-
-\item{covariates.2}{second set of value(s) of covariates (moderators)
-included in the mediator and outcome models.}
-
-\item{sims}{number of simulation draws the test will be based on. Defaults
-to the number used in the original mediate fit.}
-
-\item{conf.level}{level of the returned two-sided confidence intervals for
-the effect differences. By default it is set to the value used in the
-original mediate call.}
-
-\item{x}{output from \code{test.modmed} function.}
 }
 \value{
 When applied to a \code{mediate} object, \code{test.modmed} returns

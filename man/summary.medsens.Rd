@@ -5,14 +5,12 @@
 \alias{print.summary.medsens}
 \title{Summarizing Results from Sensitivity Analysis for Causal Mediation Effects}
 \usage{
-summary.medsens(object, ...)
+\method{summary}{medsens}(object, ...)
 }
 \arguments{
 \item{object}{output from medsens function.}
 
 \item{...}{additional arguments affecting the summary produced.}
-
-\item{x}{output from summary.medsens function.}
 }
 \description{
 Functions to report results from the sensitivity analysis for causal

@@ -7,14 +7,12 @@
 \alias{print.summary.mediations.order}
 \title{Summarizing Output from Multiple Mediation Analyses}
 \usage{
-summary.mediations(object, ...)
+\method{summary}{mediations}(object, ...)
 }
 \arguments{
 \item{object}{output from mediations function.}
 
 \item{...}{additional arguments affecting the summary produced.}
-
-\item{x}{output from summary.mediations function.}
 }
 \description{
 The 'summary.mediations' function produces a summary of results from

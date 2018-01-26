@@ -5,15 +5,13 @@
 \alias{print.summary.multimed}
 \title{Summarizing Output from Mediation Analysis with Multiple Mechanisms}
 \usage{
-summary.multimed(object, ...)
+\method{summary}{multimed}(object, ...)
 }
 \arguments{
 \item{object}{object of class \code{multimed}, typically output from the
 \code{multimed} funciton.}
 
 \item{...}{additional arguments affecting the summary produced.}
-
-\item{x}{output from the summary function.}
 }
 \description{
 Function to report results from the \code{\link{multimed}} function.

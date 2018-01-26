@@ -511,9 +511,7 @@ ivmediate.fit <- function(x, model.t, model.m, model.y,
 #' 
 #' @aliases summary.ivmediate print.summary.ivmediate
 #' @param object output from mediate function.
-#' @param conf.level confidence level for the intervals reported in the summary
-#' table.
-#' @param x output from summary.mediate function.
+#' @param conf.level confidence level for the intervals reported in the summary table.
 #' @param ...  additional arguments affecting the summary produced.
 #' @author Teppei Yamamoto, Massachusetts Institute of Technology,
 #' \email{teppei@@mit.edu}.
@@ -549,7 +547,7 @@ ivmediate.fit <- function(x, model.t, model.m, model.y,
 #' plot(out)
 #' 
 #' 
-#' @export summary.ivmediate
+#' @export
 summary.ivmediate <- function(object, conf.level = object$conf.level[1], ...){
   if(!is.null(object$dc1.ci)){
       cl.ind <- match(conf.level, object$conf.level)

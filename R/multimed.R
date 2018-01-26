@@ -451,7 +451,6 @@ IMCI <- function(upper, lower, var.upper, var.lower,
 #' @aliases summary.multimed print.summary.multimed
 #' @param object object of class \code{multimed}, typically output from the
 #' \code{multimed} funciton.
-#' @param x output from the summary function.
 #' @param ...  additional arguments affecting the summary produced.
 #' @author Teppei Yamamoto, Massachusetts Institute of Technology,
 #' \email{teppei@@mit.edu}.
@@ -482,7 +481,7 @@ IMCI <- function(upper, lower, var.upper, var.lower,
 #' }
 #' 
 #' 
-#' @export summary.multimed
+#' @export 
 summary.multimed <- function(object, ...){
   structure(object, class = c("summary.multimed", class(object)))
 }

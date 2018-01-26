@@ -931,7 +931,6 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
 #' 
 #' @aliases summary.medsens print.summary.medsens
 #' @param object output from medsens function.
-#' @param x output from summary.medsens function.
 #' @param ...  additional arguments affecting the summary produced.
 #' @author Dustin Tingley, Harvard University,
 #' \email{dtingley@@gov.harvard.edu}; Teppei Yamamoto, Massachusetts Institute
@@ -960,7 +959,7 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
 #' Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation
 #' Analysis Using R" in Advances in Social Science Research Using R, ed. H. D.
 #' Vinod New York: Springer.
-#' @export summary.medsens
+#' @export
 summary.medsens <- function(object, ...)
     structure(object, class = c("summary.medsens", class(object)))
 

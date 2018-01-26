@@ -331,14 +331,13 @@ plot.mediations.order <- function(x, which = names(x),
 #' @aliases summary.mediations summary.mediations.order
 #' print.summary.mediations print.summary.mediations.order
 #' @param object output from mediations function.
-#' @param x output from summary.mediations function.
 #' @param ...  additional arguments affecting the summary produced.
 #' @author Dustin Tingley, Harvard University,
 #' \email{dtingley@@gov.harvard.edu}; Teppei Yamamoto, Massachusetts Institute
 #' of Technology, \email{teppei@@mit.edu}.
 #' @seealso \code{\link{mediations}}, \code{\link{summary.mediate}},
 #' \code{\link{summary}}.
-#' @export summary.mediations
+#' @export
 summary.mediations <- function(object, ...){
     structure(object, class = c("summary.mediations", class(object)))
 }

@@ -900,7 +900,6 @@ mechanism.bounds <- function(outcome, mediator, treatment, DorZ, design) {
 #' @param object object of class \code{mediate.design}, typically output from a
 #' function for design-based mediation analysis (such as
 #' \code{\link{mediate.sed}}).
-#' @param x output from the summary function.
 #' @param ...  additional arguments affecting the summary produced.
 #' @author Dustin Tingley, Harvard University,
 #' \email{dtingley@@gov.harvard.edu}; Teppei Yamamoto, Massachusetts Institute
@@ -927,7 +926,7 @@ mechanism.bounds <- function(outcome, mediator, treatment, DorZ, design) {
 #' Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation
 #' Analysis Using R" in Advances in Social Science Research Using R, ed. H. D.
 #' Vinod New York: Springer.
-#' @export summary.mediate.design
+#' @export 
 summary.mediate.design <- function(object, ...){
     structure(object, class = c("summary.mediate.design", class(object)))
 }

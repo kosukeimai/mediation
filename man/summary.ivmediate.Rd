@@ -5,17 +5,14 @@
 \alias{print.summary.ivmediate}
 \title{Summarizing Output from Mediation Analysis with Treatment Noncompliance}
 \usage{
-summary.ivmediate(object, conf.level = object$conf.level[1], ...)
+\method{summary}{ivmediate}(object, conf.level = object$conf.level[1], ...)
 }
 \arguments{
 \item{object}{output from mediate function.}
 
-\item{conf.level}{confidence level for the intervals reported in the summary
-table.}
+\item{conf.level}{confidence level for the intervals reported in the summary table.}
 
 \item{...}{additional arguments affecting the summary produced.}
-
-\item{x}{output from summary.mediate function.}
 }
 \description{
 Function to report results from mediation analysis with treatment

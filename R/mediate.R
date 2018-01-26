@@ -2385,7 +2385,6 @@ mediate <- function(model.m, model.y, sims = 1000,
 #' @aliases summary.mediate summary.mediate.order print.summary.mediate
 #' print.summary.mediate.order
 #' @param object output from mediate function.
-#' @param x output from summary.mediate function.
 #' @param ...  additional arguments affecting the summary produced.
 #' @author Dustin Tingley, Harvard University,
 #' \email{dtingley@@gov.harvard.edu}; Teppei Yamamoto, Massachusetts Institute
@@ -2414,7 +2413,7 @@ mediate <- function(model.m, model.y, sims = 1000,
 #' Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation
 #' Analysis Using R" in Advances in Social Science Research Using R, ed. H. D.
 #' Vinod New York: Springer.
-#' @export summary.mediate
+#' @export
 summary.mediate <- function(object, ...){
   structure(object, class = c("summary.mediate", class(object)))
 }
@@ -2503,7 +2502,6 @@ print.summary.mediate <- function(x, ...){
 #' @param output group-specific effects organized by effect if output =
 #' "byeffect"; group-specific effects organized by group if output = "bygroup";
 #' group-average effects reported as default.
-#' @param x output from summary.mediate.mer function.
 #' @param ...  additional arguments affecting the summary produced.
 #' @author Kentaro Hirose, Princeton University, \email{hirose@@princeton.edu}.
 #' @seealso \code{\link{mediate}}, \code{\link{plot.mediate.mer}}.
@@ -2561,7 +2559,7 @@ print.summary.mediate <- function(x, ...){
 #' summary(multilevel, output="bygroup")
 #' }
 #' 
-#' @export summary.mediate.mer
+#' @export
 summary.mediate.mer <- function(object, output=c("default","byeffect","bygroup"),...){
   output <- match.arg(output)
   switch(output,

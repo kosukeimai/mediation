@@ -5,7 +5,7 @@
 \alias{print.summary.mediate.design}
 \title{Summarizing Output from Design Based Mediation Analysis}
 \usage{
-summary.mediate.design(object, ...)
+\method{summary}{mediate.design}(object, ...)
 }
 \arguments{
 \item{object}{object of class \code{mediate.design}, typically output from a
@@ -13,8 +13,6 @@ function for design-based mediation analysis (such as
 \code{\link{mediate.sed}}).}
 
 \item{...}{additional arguments affecting the summary produced.}
-
-\item{x}{output from the summary function.}
 }
 \description{
 Function to report results from design based mediation analysis. Reported
