@@ -97,6 +97,22 @@
 #' \eqn{t} in the above expressions is set to \eqn{t_0}{t0} for 'd0', 'z0',
 #' etc. and to \eqn{t_1}{t1} for 'd1', 'z1', etc.
 #' 
+#' @importFrom MASS mvrnorm gamma.shape polr
+#' @importFrom Matrix Diagonal
+#' @importMethodsFrom Matrix kronecker
+#' @importFrom lpSolve lp
+#' @importFrom sandwich vcovHC sandwich estfun
+#' @importFrom mvtnorm rmvnorm
+#' @importFrom Hmisc wtd.var
+#' @importFrom lme4 VarCorr
+#' @importFrom graphics abline axis contour lines par plot plot.default points polygon segments text title
+#' @importFrom grDevices dev.interactive devAskNewPage
+#' @importFrom stats approx as.formula coef dnorm family formula getCall glm integrate lm lowess model.frame 
+#' @importFrom stats model.matrix model.response model.weights na.omit pnorm predict printCoefmat qnorm
+#' @importFrom stats rgamma sd terms update var vcov weighted.mean rpois rt runif rweibull quantile
+#' @importFrom stats binomial delete.response median plogis poisson rbinom rlogis rmultinom rnorm
+#' @importFrom utils packageDescription
+#'  
 #' @param model.m a fitted model object for mediator.  Can be of class 'lm',
 #' 'polr', 'bayespolr', 'glm', 'bayesglm', 'gam', 'rq', 'survreg', or 'merMod'.
 #' @param model.y a fitted model object for outcome.  Can be of class 'lm',
@@ -2418,6 +2434,7 @@ summary.mediate <- function(object, ...){
   structure(object, class = c("summary.mediate", class(object)))
 }
 
+#' @export
 print.summary.mediate <- function(x, ...){
   clp <- 100 * x$conf.level
   cat("\n")
@@ -2569,6 +2586,7 @@ summary.mediate.mer <- function(object, output=c("default","byeffect","bygroup")
 }
 
 #########################################################################
+#' @export
 print.summary.mediate.mer <- function(x,...){  
   clp <- 100 * x$conf.level
   cat("\n")
@@ -2639,7 +2657,9 @@ print.summary.mediate.mer <- function(x,...){
   cat("Simulations:", x$sims,"\n\n")
   invisible(x)
 }
+
 #########################################################################
+#' @export
 print.summary.mediate.mer.2 <- function(x,...){
   clp <- 100 * x$conf.level
   cat("\n")
@@ -2794,7 +2814,9 @@ print.summary.mediate.mer.2 <- function(x,...){
     invisible(x)
   }
 }
+
 #########################################################################
+#' @export
 print.summary.mediate.mer.3 <- function(x,...){
   clp <- 100 * x$conf.level
   cat("\n")
@@ -2889,13 +2911,14 @@ print.summary.mediate.mer.3 <- function(x,...){
     invisible(x)
   }
 }
+
 #########################################################################
+#' @export
 summary.mediate.order <- function(object, ...){
   structure(object, class = c("summary.mediate.order", class(object)))
 }
 
-
-
+#' @export 
 print.summary.mediate.order <- function(x, ...){
   tab.d0 <- rbind(x$d0, x$d0.ci, x$d0.p)
   tab.d1 <- rbind(x$d1, x$d1.ci, x$d1.p)
@@ -2955,6 +2978,7 @@ print.summary.mediate.order <- function(x, ...){
   cat("Simulations:", x$sims,"\n\n")
   invisible(x)
 }
+
 #########################################################################
 plot.process <- function(model) {
   coef.vec.1 <- c(model$d1, model$z1)
@@ -3029,7 +3053,7 @@ plot.process <- function(model) {
 #' Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation
 #' Analysis Using R" in Advances in Social Science Research Using R, ed. H. D.
 #' Vinod New York: Springer.
-#' @export plot.mediate
+#' @export
 plot.mediate <- function(x, treatment = NULL, labels = NULL,
                          effect.type = c("indirect","direct","total"),
                          xlim = NULL, ylim = NULL, xlab = "", ylab = "",
@@ -3235,7 +3259,7 @@ plot.process.mer <- function(model) {
 #' #plot(multilevel, group.plots=TRUE)
 #' }
 #' 
-#' @export plot.mediate.mer
+#' @export 
 plot.mediate.mer <- function(x, treatment = NULL, group.plots = FALSE,
                              ask = prod(par("mfcol")) < nplots, 
                              xlim = NULL, ylim = NULL, xlab = "", ylab = "",
@@ -3474,6 +3498,7 @@ plot.process.order <- function(model){
 }
 
 #########################################################################
+#' @export
 plot.mediate.order <- function(x, treatment = NULL,
                                labels = c("ACME","ADE","Total\nEffect"),
                                xlim = NULL, ylim = NULL, xlab = "", ylab = "",

@@ -965,6 +965,7 @@ summary.medsens <- function(object, ...)
 
 
 
+#' @export
 print.summary.medsens <- function(x, ...){
     etype.vec <- x$effect.type
     if(etype.vec == "both"){
@@ -1214,7 +1215,7 @@ print.summary.medsens <- function(x, ...){
 #' Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation
 #' Analysis Using R" in Advances in Social Science Research Using R, ed. H. D.
 #' Vinod New York: Springer.
-#' @export plot.medsens
+#' @export 
 plot.medsens <- function(x, sens.par = c("rho", "R2"), 
         r.type = c("residual", "total"), sign.prod = c("positive", "negative"),
         pr.plot = FALSE, smooth.effect = FALSE, smooth.ci = FALSE, 

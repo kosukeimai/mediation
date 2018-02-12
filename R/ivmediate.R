@@ -564,7 +564,7 @@ summary.ivmediate <- function(object, conf.level = object$conf.level[1], ...){
   structure(object, class = c("summary.ivmediate", class(object)))
 }
 
-
+#' @export
 print.summary.ivmediate <- function(x, ...){
   cat("\n")
   cat("Causal Mediation Analysis with Treatment Noncompliance\n\n")
@@ -673,7 +673,7 @@ print.summary.ivmediate <- function(x, ...){
 #' plot(out)
 #' 
 #' 
-#' @export plot.ivmediate
+#' @export
 plot.ivmediate <- function(x, treatment = NULL, labels = NULL,
                          effect.type = c("indirect","direct","total"),
                          conf.level = x$conf.level[1],

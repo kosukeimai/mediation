@@ -51,15 +51,17 @@
 #' test.TMint(fit)
 #' 
 #' 
-#' @export 
+#' @export test.TMint
 test.TMint <- function(x, ...){
   UseMethod("test.TMint")
 }
 
+#' @export
 test.TMint.default <- function(x, ...){
   stop("currently no test.TMint method exists for the input object.")
 }
 
+#' @export
 test.TMint.mediate <- function(x, conf.level = x$conf.level, ...){
   if(is.null(x$d0.sims) || is.null(x$d1.sims) || is.null(x$z0.sims) || is.null(x$z1.sims)){
     stop("simulation draws missing; rerun mediate with 'long' set to TRUE")
@@ -155,11 +157,13 @@ test.modmed <- function(object, ...){
   UseMethod("test.modmed")
 }
 
+#' @export
 test.modmed.default <- function(object, ...){
   stop("currently no test.modmed method exists for the input object.")
 }
 
 
+#' @export
 test.modmed.mediate <- function(object, covariates.1, covariates.2,
                                 sims = object$sims, conf.level = object$conf.level, ...){
   
@@ -266,6 +270,7 @@ test.modmed.mediate <- function(object, covariates.1, covariates.2,
   
 }
 
+#' @export
 print.test.modmed.mediate <- function(x, ...){
   for(i in 1:length(x)){
     print(x[[i]], ...)
@@ -275,6 +280,7 @@ print.test.modmed.mediate <- function(x, ...){
 
 ##############################Order Functions##################################
 
+#' @export
 test.TMint.mediate.order <- function(x, conf.level = x$conf.level, ...){
   if(is.null(x$d0.sims) || is.null(x$d1.sims) || is.null(x$z0.sims) || is.null(x$z1.sims)){
     stop("simulation draws missing; rerun mediate with 'long' set to TRUE")
@@ -330,6 +336,7 @@ print.htest.order <- function(x, ...){
 }
 
 
+#' @export
 test.modmed.mediate.order <- function(object, covariates.1, covariates.2,
                                 sims = object$sims, conf.level = object$conf.level, ...){
   
@@ -460,6 +467,7 @@ test.modmed.mediate.order <- function(object, covariates.1, covariates.2,
   return(res)
 }
 
+#' @export
 print.test.modmed.mediate.order <- function(x, ...){
   for(i in 1:length(x)){
     print(x[[i]], ...)

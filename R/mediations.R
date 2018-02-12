@@ -290,7 +290,7 @@ mediations <- function(datasets, treatment, mediators, outcome,
 #' of Technology, \email{teppei@@mit.edu}.
 #' @seealso \code{\link{mediations}}, \code{\link{plot.mediate}},
 #' \code{\link{plot}}.
-#' @export plot.mediations
+#' @export 
 plot.mediations <- function(x, which = names(x),
             ask = prod(par("mfcol")) < length(which) && dev.interactive(), ...){
     if (ask) {
@@ -302,8 +302,7 @@ plot.mediations <- function(x, which = names(x),
     }
 }
 
-
-
+#' @export
 plot.mediations.order <- function(x, which = names(x),
             ask = prod(par("mfcol")) < length(which) && dev.interactive(), ...){
     if (ask) {
@@ -342,8 +341,7 @@ summary.mediations <- function(object, ...){
     structure(object, class = c("summary.mediations", class(object)))
 }
 
-
-
+#' @export
 print.summary.mediations <- function(x, ...){
     name.list <- names(x)
     for(i in 1:length(name.list)){
@@ -352,14 +350,12 @@ print.summary.mediations <- function(x, ...){
     }
 }
 
-
-
+#' @export
 summary.mediations.order <- function(object, ...){
     structure(object, class = c("summary.mediations.order", class(object)))
 }
 
-
-
+#' @export
 print.summary.mediations.order <- function(x, ...){
     name.list <- names(x)
     for(i in 1:length(name.list)){

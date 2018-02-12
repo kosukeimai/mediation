@@ -486,6 +486,7 @@ summary.multimed <- function(object, ...){
   structure(object, class = c("summary.multimed", class(object)))
 }
 
+#' @export 
 print.summary.multimed <- function(x, ...){
   clp <- 100 * x$conf.level
   cat("\n")
@@ -613,7 +614,7 @@ print.summary.multimed <- function(x, ...){
 #' }
 #' 
 #' 
-#' @export plot.multimed
+#' @export 
 plot.multimed <- function(x, type = c("point", "sigma", "R2-residual", "R2-total"),
                           tgroup = c("average", "treated", "control"),
                           effect.type = c("indirect", "direct", "total"),

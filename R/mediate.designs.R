@@ -932,7 +932,7 @@ summary.mediate.design <- function(object, ...){
 }
 
 
-
+#' @export
 print.summary.mediate.design <- function(x, ...){
     cat("\n")
     cat("Design-Based Causal Mediation Analysis\n\n")
