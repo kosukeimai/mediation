@@ -202,7 +202,6 @@ mediate_tsls <- function(model.m, model.y, treat = "treat.name",
           up_m <- my_update(model.m, data = .dat_m)
           mediate_tsls(up_m, up_y, treat = treat, cluster = NULL, est_se = FALSE)[c("d1", "z0", "tau.coef", "n0")]
         }, error = function(e) {
-          stop(e)
           setNames(rep(list(NA), 4), c("d1", "z0", "tau.coef", "n0"))
         })
         cf[i, ] <- unlist(out)
