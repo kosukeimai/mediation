@@ -45,8 +45,7 @@
 #'   \item{tau.coef}{point estimate for total effect.}
 #'   \item{tau.ci}{confidence interval for total effect.}
 #'   \item{tau.p}{two-sided p-values for total effect.}
-#'   \item{boot}{logical, the \code{boot} argument used. Defaults to false, as 
-#'   bootstrap is not yet implemented for this function.}
+#'   \item{boot}{logical, the \code{boot} argument used.}
 #'   \item{treat}{a character string indicating the name of the 'treat' variable 
 #'   used.}
 #'   \item{mediator}{a character string indicating the name of the 'mediator' 
