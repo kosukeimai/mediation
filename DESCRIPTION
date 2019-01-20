@@ -6,7 +6,7 @@ Author: Dustin Tingley <dtingley@gov.harvard.edu>,
         Teppei Yamamoto <teppei@mit.edu>,
         Kentaro Hirose <hirose@princeton.edu>,
         Luke Keele <ljk20@psu.edu>,
-        Kosuke Imai <imai@fas.harvard.edu>
+        Kosuke Imai <imai@harvard.edu>
 Maintainer: Teppei Yamamoto <teppei@mit.edu>
 Depends: R (>= 2.15.1), MASS, Matrix, mvtnorm, sandwich
 Imports: lpSolve, Hmisc, lme4 (>= 1.0), stats, graphics, grDevices, utils
