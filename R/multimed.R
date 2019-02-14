@@ -177,10 +177,10 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
                         single = (xi3 + mu3) %*% EW.1 - xi3 %*% EW.0,
                         parallel = 0)
 
-      ADE.0.up.o <- beta3 + kappa*EM.0 + sigma*sqrt(VM.0) + WXterms
-      ADE.1.up.o <- beta3 + kappa*EM.1 + sigma*sqrt(VM.1) + WXterms
-      ADE.0.lo.o <- beta3 + kappa*EM.0 - sigma*sqrt(VM.0) + WXterms
-      ADE.1.lo.o <- beta3 + kappa*EM.1 - sigma*sqrt(VM.1) + WXterms
+      ADE.0.up.o <- beta3 + kappa*EM.0 + sigma*sqrt(VM.0) + as.vector(WXterms)
+      ADE.1.up.o <- beta3 + kappa*EM.1 + sigma*sqrt(VM.1) + as.vector(WXterms)
+      ADE.0.lo.o <- beta3 + kappa*EM.0 - sigma*sqrt(VM.0) + as.vector(WXterms)
+      ADE.1.lo.o <- beta3 + kappa*EM.1 - sigma*sqrt(VM.1) + as.vector(WXterms)
       
       ACME.1.lo.o <- tau.o - ADE.0.up.o
       ACME.0.lo.o <- tau.o - ADE.1.up.o
@@ -203,10 +203,10 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
       WXterms <- switch(design,
                         single = (xi3 + mu3) %*% EW.1 - xi3 %*% EW.0,
                         parallel = 0)
-      ADE.0.up[,b] <- beta3 + kappa*EM.0 + sigma*sqrt(VM.0) + WXterms
-      ADE.1.up[,b] <- beta3 + kappa*EM.1 + sigma*sqrt(VM.1) + WXterms
-      ADE.0.lo[,b] <- beta3 + kappa*EM.0 - sigma*sqrt(VM.0) + WXterms
-      ADE.1.lo[,b] <- beta3 + kappa*EM.1 - sigma*sqrt(VM.1) + WXterms
+      ADE.0.up[,b] <- beta3 + kappa*EM.0 + sigma*sqrt(VM.0) + as.vector(WXterms)
+      ADE.1.up[,b] <- beta3 + kappa*EM.1 + sigma*sqrt(VM.1) + as.vector(WXterms)
+      ADE.0.lo[,b] <- beta3 + kappa*EM.0 - sigma*sqrt(VM.0) + as.vector(WXterms)
+      ADE.1.lo[,b] <- beta3 + kappa*EM.1 - sigma*sqrt(VM.1) + as.vector(WXterms)
       
       ACME.1.lo[,b] <- tau[b] - ADE.0.up[,b]
       ACME.0.lo[,b] <- tau[b] - ADE.1.up[,b]
