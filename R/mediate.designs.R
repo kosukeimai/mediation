@@ -41,7 +41,7 @@ mediate.pd <- function(outcome, mediator, treat, manipulated, data,
         data <- na.omit(data)
     }
     data <- sapply(data, function(x) as.numeric(as.character(x)))
-    
+
     check <- apply(data, 2, function(x) identical(sort(unique(x)), c(0,1)))
     if(sum(check) != ncol(data)) {
         stop("Invalid values in variables.")
@@ -68,7 +68,7 @@ mediate.ped <- function(outcome, mediator, treat, encourage, data) {
         data <- na.omit(data)
     }
     data <- sapply(data, function(x) as.numeric(as.character(x)))
-    		
+
 	check.1 <- apply(data[,1:3], 2, function(x) identical(sort(unique(x)), c(0,1)))
 	check.2 <- identical(sort(unique(data[,4])), c(-1,0,1))
     if(sum(check.1, check.2) != ncol(data)) {
@@ -93,7 +93,7 @@ mediate.ced <- function(outcome, med.1, med.2, treat, encourage, data,
     }
     data <- sapply(data, function(x) as.numeric(as.character(x)))
     data <- as.data.frame(data)
-    		
+
 	check <- apply(data, 2, function(x) identical(sort(unique(x)), c(0,1)))
     if(sum(check) != ncol(data)) {
         stop("Invalid values in variables.")
@@ -166,7 +166,7 @@ mediate.ced <- function(outcome, med.1, med.2, treat, encourage, data,
                             (A010*G0110 + (1-A010)*G0100 - A011*G0111 - (1-A011)*G0101) * B01
 		}
     }#bootstraploop
-    
+
     if(is.nan(d.p.c.mu) | is.nan(d.p.t.mu)){
     	warning("NaN produced; distribution of observed variables may be too sparse")
     }
@@ -332,15 +332,16 @@ boot.pd <- function(outcome, mediator, treatment, manipulated,
         	index <- 1:n
         }
         d <- data[index,]
-        d0.temp <- mean(d$Y[d$T==1 & d$D==0]) - mean(d$Y[d$T==0 & d$D==0])
+        tau <- mean(d$Y[d$T==1 & d$D==0]) - mean(d$Y[d$T==0 & d$D==0])
         weight.m1 <- sum(d$M==1 & d$D==1 )/sum(d$D==1)
         weight.m0 <- sum(d$M==0 & d$D==1 )/sum(d$D==1)
         m1 <- mean(d$Y[d$T==1 & d$M==1 & d$D==1]) - mean(d$Y[d$T==0 & d$M==1 & d$D==1])
         m0 <- mean(d$Y[d$T==1 & d$M==0 & d$D==1]) - mean(d$Y[d$T==0 & d$M==0 & d$D==1])
+        z <- weight.m1*m1 + weight.m0*m0
         if(b == sims + 1){
-	        acme.mu <- weight.m1*m1 + weight.m0*m0
+	        acme.mu <- tau - z
         } else {
-	        acme[b] <- weight.m1*m1 + weight.m0*m0
+	        acme[b] <- tau - z
     	}
     }
 
@@ -598,14 +599,14 @@ print.summary.mediate.design <- function(x, ...){
         } else {
             cat("Confidence Intervals Based on Asymptotic Variance\n\n")
         }
-        
+
         smat <- rbind(c(x$d0, x$d0.ci), c(x$d1, x$d1.ci))
         colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
                           paste(clp, "% CI Upper", sep=""))
         rownames(smat) <- c("ACME (control)", "ACME (treated)")
-        
+
     }
-    
+
     printCoefmat(smat, digits=4)
     cat("\n")
     cat("Sample Size Used: ", x$nobs,"\n\n")
