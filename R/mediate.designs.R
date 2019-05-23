@@ -665,45 +665,50 @@ mediate.np <- function(Y, M, T, sims, conf.level, boot){
 #parallel design under no interaction assumption
 boot.pd <- function(outcome, mediator, treatment, manipulated,
                     sims, conf.level) {
-    n <- length(outcome)
-    data <- matrix(, nrow = n, ncol = 4)
-    data[,1] <- outcome
-    data[,2] <- treatment
-    data[,3] <- mediator
-    data[,4] <- manipulated
-    data <- as.data.frame(data)
-    names(data) <- c("Y","T","M","D")
-
-    acme <- matrix(NA, sims, 1)
-    for(b in 1:(sims+1)){  # bootstrap
-        index <- sample(1:n, n, replace = TRUE)
-        if(b == sims + 1){
-        	index <- 1:n
-        }
-        d <- data[index,]
-        d0.temp <- mean(d$Y[d$T==1 & d$D==0]) - mean(d$Y[d$T==0 & d$D==0])
-        weight.m1 <- sum(d$M==1 & d$D==1 )/sum(d$D==1)
-        weight.m0 <- sum(d$M==0 & d$D==1 )/sum(d$D==1)
-        m1 <- mean(d$Y[d$T==1 & d$M==1 & d$D==1]) - mean(d$Y[d$T==0 & d$M==1 & d$D==1])
-        m0 <- mean(d$Y[d$T==1 & d$M==0 & d$D==1]) - mean(d$Y[d$T==0 & d$M==0 & d$D==1])
-        if(b == sims + 1){
-	        acme.mu <- weight.m1*m1 + weight.m0*m0
-        } else {
-	        acme[b] <- weight.m1*m1 + weight.m0*m0
-    	}
+  n <- length(outcome)
+  data <- matrix(, nrow = n, ncol = 4)
+  data[,1] <- outcome
+  data[,2] <- treatment
+  data[,3] <- mediator
+  data[,4] <- manipulated
+  data <- as.data.frame(data)
+  names(data) <- c("Y","T","M","D")
+  
+  acme <- matrix(NA, sims, 1)
+  for(b in 1:(sims+1)){  # bootstrap
+    index <- sample(1:n, n, replace = TRUE)
+    if(b == sims + 1){
+      index <- 1:n
     }
-
-    acme[acme==-Inf] <- NA
-    acme[acme==Inf] <- NA
-
-    low <- (1 - conf.level)/2
-    high <- 1 - low
-    acme.ci <- quantile(acme, c(low,high), na.rm=TRUE)
-    out <- list(d0 = acme.mu, d1 = acme.mu, d0.ci = acme.ci, d1.ci = acme.ci,
-                nobs = n, conf.level = conf.level, sims = sims, design = "PD.NINT")
-    class(out) <- "mediate.design"
-    out
-
+    d <- data[index,]
+    tau <- mean(d$Y[d$T==1 & d$D==0]) - mean(d$Y[d$T==0 & d$D==0])
+    weight.m1 <- sum(d$M==1 & d$D==1 )/sum(d$D==1)
+    weight.m0 <- sum(d$M==0 & d$D==1 )/sum(d$D==1)
+    m1 <- mean(d$Y[d$T==1 & d$M==1 & d$D==1]) - mean(d$Y[d$T==0 & 
+                                                           d$M==1 & d$D==1])
+    m0 <- mean(d$Y[d$T==1 & d$M==0 & d$D==1]) - mean(d$Y[d$T==0 & 
+                                                           d$M==0 & d$D==1])
+    z <- weight.m1*m1 + weight.m0*m0
+    if(b == sims + 1){
+      acme.mu <- tau - z
+    } else {
+      acme[b] <- tau - z
+    }
+  }
+  
+  acme[acme==-Inf] <- NA
+  acme[acme==Inf] <- NA
+  
+  low <- (1 - conf.level)/2
+  high <- 1 - low
+  acme.ci <- quantile(acme, c(low,high), na.rm=TRUE)
+  out <- list(d0 = acme.mu, d1 = acme.mu, d0.ci = acme.ci, d1.ci = 
+                acme.ci,
+              nobs = n, conf.level = conf.level, sims = sims, design 
+              = "PD.NINT")
+  class(out) <- "mediate.design"
+  out
+  
 }
 
 
