@@ -16,7 +16,7 @@
 #' @importFrom stats approx as.formula coef dnorm family formula getCall glm 
 #'   integrate lm lowess model.frame model.matrix model.response model.weights 
 #'   na.omit pnorm predict printCoefmat qnorm quantile rgamma sd terms update 
-#'   var vcov weighted.mean binomial delete.response median plogis poisson 
-#'   rbinom rlogis rmultinom rnorm rpois rt runif rweibull weights
+#'   update.formula var vcov weighted.mean binomial delete.response median  
+#'   plogis poisson rbinom rlogis rmultinom rnorm rpois rt runif rweibull weights
 #' @importFrom utils packageDescription
 NULL
