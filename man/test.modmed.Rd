@@ -7,8 +7,6 @@
 \alias{test.modmed.mediate.order}
 \alias{print.test.modmed.mediate}
 \alias{print.test.modmed.mediate.order}
-\alias{test.modmed.mediate}
-\alias{print.test.modmed.mediate}
 \title{Significance Test for Moderated Mediation}
 \usage{
 test.modmed(object, ...)

@@ -6,10 +6,10 @@
 \usage{
 mediate(model.m, model.y, sims = 1000, boot = FALSE,
   boot.ci.type = "perc", treat = "treat.name", mediator = "med.name",
-  covariates = NULL, outcome = NULL, control = NULL, conf.level = 0.95,
-  control.value = 0, treat.value = 1, long = TRUE, dropobs = FALSE,
-  robustSE = FALSE, cluster = NULL, group.out = NULL, use_speed = FALSE,
-  ...)
+  covariates = NULL, outcome = NULL, control = NULL,
+  conf.level = 0.95, control.value = 0, treat.value = 1,
+  long = TRUE, dropobs = FALSE, robustSE = FALSE, cluster = NULL,
+  group.out = NULL, use_speed = FALSE, ...)
 }
 \arguments{
 \item{model.m}{a fitted model object for mediator.  Can be of class 'lm', 

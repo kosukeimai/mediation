@@ -3,7 +3,6 @@
 \name{summary.multimed}
 \alias{summary.multimed}
 \alias{print.summary.multimed}
-\alias{print.summary.multimed}
 \title{Summarizing Output from Mediation Analysis with Multiple Mechanisms}
 \usage{
 \method{summary}{multimed}(object, ...)

@@ -3,7 +3,6 @@
 \name{summary.medsens}
 \alias{summary.medsens}
 \alias{print.summary.medsens}
-\alias{print.summary.medsens}
 \title{Summarizing Results from Sensitivity Analysis for Causal Mediation Effects}
 \usage{
 \method{summary}{medsens}(object, ...)

@@ -3,7 +3,6 @@
 \name{summary.mediate.design}
 \alias{summary.mediate.design}
 \alias{print.summary.mediate.design}
-\alias{print.summary.mediate.design}
 \title{Summarizing Output from Design Based Mediation Analysis}
 \usage{
 \method{summary}{mediate.design}(object, ...)

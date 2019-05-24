@@ -6,7 +6,6 @@
 \alias{test.TMint.mediate}
 \alias{test.TMint.mediate.order}
 \alias{print.htest.order}
-\alias{test.TMint.mediate}
 \title{Significance Test for Treatment-Mediator Interaction in Causal Mediation 
 Analysis}
 \usage{

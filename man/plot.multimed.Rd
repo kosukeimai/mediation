@@ -6,11 +6,11 @@
 \usage{
 \method{plot}{multimed}(x, type = c("point", "sigma", "R2-residual",
   "R2-total"), tgroup = c("average", "treated", "control"),
-  effect.type = c("indirect", "direct", "total"), ask = prod(par("mfcol")) <
-  nplots, xlab = NULL, ylab = NULL, xlim = NULL, ylim = NULL,
-  main = NULL, lwd = par("lwd"), pch = par("pch"), cex = par("cex"),
-  las = par("las"), col.eff = "black", col.cbar = "black",
-  col.creg = "gray", ...)
+  effect.type = c("indirect", "direct", "total"),
+  ask = prod(par("mfcol")) < nplots, xlab = NULL, ylab = NULL,
+  xlim = NULL, ylim = NULL, main = NULL, lwd = par("lwd"),
+  pch = par("pch"), cex = par("cex"), las = par("las"),
+  col.eff = "black", col.cbar = "black", col.creg = "gray", ...)
 }
 \arguments{
 \item{x}{object of class \code{multimed}, typically output from the 

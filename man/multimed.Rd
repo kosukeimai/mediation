@@ -5,8 +5,8 @@
 \title{Estimation and Sensitivity Analysis for Multiple Causal Mechanisms}
 \usage{
 multimed(outcome, med.main, med.alt = NULL, treat, covariates = NULL,
-  experiment = NULL, data, design = c("single", "parallel"), sims = 1000,
-  R2.by = 0.01, conf.level = 0.95, weight = NULL)
+  experiment = NULL, data, design = c("single", "parallel"),
+  sims = 1000, R2.by = 0.01, conf.level = 0.95, weight = NULL)
 }
 \arguments{
 \item{outcome}{name of the outcome variable in 'data'.}

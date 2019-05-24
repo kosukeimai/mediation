@@ -5,7 +5,6 @@
 \alias{summary.mediate.order}
 \alias{print.summary.mediate}
 \alias{print.summary.mediate.order}
-\alias{print.summary.mediate}
 \title{Summarizing Output from Mediation Analysis}
 \usage{
 \method{summary}{mediate}(object, ...)
