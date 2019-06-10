@@ -391,6 +391,11 @@
 #' ordbin.rb <- mediate(b.ord, d.bin, sims=50, treat="treat", mediator="job_disc",
 #'             robustSE=TRUE)
 #' summary(ordbin.rb)
+#' 
+#' # Using non-parametric bootstrap
+#' ordbin.boot <- mediate(b.ord, d.bin, sims=50, treat="treat", mediator="job_disc",
+#'             boot=TRUE)
+#' summary(ordbin.boot)
 #' }
 #' 
 #' ######################################################

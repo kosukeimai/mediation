@@ -157,6 +157,13 @@ out <- ivmediate(a, b, c, sims = 50, boot = FALSE,
 summary(out)
 plot(out)
 
+# Using non-parametric bootstrap
+out.boot <- ivmediate(a, b, c, sims = 50, boot = TRUE, 
+                 enc = "treat", treat = "comply", mediator = "job_dich")
+                 
+summary(out.boot)
+plot(out.boot)
+
 
 }
 \references{

@@ -143,6 +143,13 @@
 #' summary(out)
 #' plot(out)
 #' 
+#' # Using non-parametric bootstrap
+#' out.boot <- ivmediate(a, b, c, sims = 50, boot = TRUE, 
+#'                  enc = "treat", treat = "comply", mediator = "job_dich")
+#'                  
+#' summary(out.boot)
+#' plot(out.boot)
+#' 
 #' 
 ivmediate <- function(model.t, model.m, model.y, ci = TRUE, sims = 1000, boot = TRUE,
                       enc = "enc.name", treat = "treat.name", mediator = "med.name",
