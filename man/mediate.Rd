@@ -387,12 +387,6 @@ d.bin <- glm(work1 ~ treat * job_disc + econ_hard + sex + age, data=jobs,
 ordbin <- mediate(b.ord, d.bin, sims=50, treat="treat", mediator="job_disc")
 summary(ordbin)
 
-# Using heteroskedasticity-consistent standard errors
-require(sandwich)
-ordbin.rb <- mediate(b.ord, d.bin, sims=50, treat="treat", mediator="job_disc",
-            robustSE=TRUE)
-summary(ordbin.rb)
-
 # Using non-parametric bootstrap
 ordbin.boot <- mediate(b.ord, d.bin, sims=50, treat="treat", mediator="job_disc",
             boot=TRUE)
