@@ -27,4 +27,4 @@ version      date  description
 4.4.5    07/18/15  Bug fix for bias-corrected bootstrap confidence intervals
 4.4.6    07/09/17  Bug fix for multilevel; Bug fix for mediate-example 2
 4.4.7    03/16/19  Bug fix for parallel design bootstrap
-4.5.0    06/10/19  ivmediate for mediation analysis with instrumental variables, speedglm implementation; nonparametric bootstrap using boot; update documentation
+4.5.0    06/10/19  mediate_tsls for mediation analysis using instrumental variable estimator, speedglm implementation; nonparametric bootstrap using boot; update documentation
