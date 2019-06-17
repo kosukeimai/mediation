@@ -1,4 +1,4 @@
-# mediate 4.5.0 (Release date: 2019-06-10)
+# mediation 4.5.0
 ==============
 
 A minor update that introduces a number of additional features.
