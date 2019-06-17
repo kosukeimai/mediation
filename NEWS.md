@@ -1,5 +1,4 @@
 # mediation 4.5.0
-==============
 
 A minor update that introduces a number of additional features.
 
