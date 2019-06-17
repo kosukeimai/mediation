@@ -1,5 +1,4 @@
 # mediation 4.5.0
-==============
 
 A minor update that introduces a number of additional features.
 
@@ -10,5 +9,3 @@ A minor update that introduces a number of additional features.
 
 ## Bug fixes
 - Fixed a bug that may cause the package to fail to load when the `system.file()` function from `base` is written over by other packages e.g. `pkgload`.
-
-
