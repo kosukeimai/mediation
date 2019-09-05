@@ -382,10 +382,15 @@ summary(model.cat)
 jobs$job_disc <- as.factor(jobs$job_disc)
 b.ord <- polr(job_disc ~ treat + econ_hard + sex + age, data=jobs,
             method="probit", Hess=TRUE)
-d.bin <- glm(work1 ~ treat * job_disc + econ_hard + sex + age, data=jobs,
+d.bin <- glm(work1 ~ treat + job_disc + econ_hard + sex + age, data=jobs,
             family=binomial(link="probit"))
 ordbin <- mediate(b.ord, d.bin, sims=50, treat="treat", mediator="job_disc")
 summary(ordbin)
+
+# Using heteroskedasticity-consistent standard errors
+ordbin.rb <- mediate(b.ord, d.bin, sims=50, treat="treat", mediator="job_disc",
+            robustSE=TRUE)
+summary(ordbin.rb)
 
 # Using non-parametric bootstrap
 ordbin.boot <- mediate(b.ord, d.bin, sims=50, treat="treat", mediator="job_disc",
