@@ -17,5 +17,5 @@ Description: We implement parametric and non parametric mediation analysis. This
 LazyLoad: yes
 LazyData: yes
 License: GPL (>= 2)
-URL: http://imai.princeton.edu/projects/mechanisms.html
+URL: https://imai.princeton.edu/projects/mechanisms.html
 RoxygenNote: 6.1.1
