@@ -999,7 +999,7 @@ print.summary.mediate.design <- function(x, ...){
         colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
                           paste(clp, "% CI Upper", sep=""))
         rownames(smat) <- c("ACME (control)", "ACME (treated)")
-    
+
     }
     
     printCoefmat(smat, digits=4)
