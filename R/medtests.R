@@ -191,11 +191,11 @@ test.modmed.mediate <- function(object, covariates.1, covariates.2,
   
   seed <- .Random.seed
   cl$covariates <- covariates.1
-  out.1 <- eval(cl)
+  out.1 <- eval(cl, envir = parent.frame())
   
   .Random.seed <- seed
   cl$covariates <- covariates.2
-  out.2 <- eval(cl)
+  out.2 <- eval(cl, envir = parent.frame())
   
   d1.diff <- out.1$d1 - out.2$d1
   d1.diff.sims <- out.1$d1.sims - out.2$d1.sims
