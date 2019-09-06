@@ -1,3 +1,466 @@
+#' Causal Mediation Analysis
+#' 
+#' 'mediate' is used to estimate various quantities for causal mediation 
+#' analysis, including average causal mediation effects (indirect effect), 
+#' average direct effects, proportions mediated, and total effect.
+#' 
+#' @details This is the workhorse function for estimating causal mediation 
+#'   effects for a variety of data types. The average causal mediation effect 
+#'   (ACME) represents the expected difference in the potential outcome when the
+#'   mediator took the value that would realize under the treatment condition as
+#'   opposed to the control condition, while the treatment status itself is held
+#'   constant. That is, 
+#'   \deqn{\delta(t) \ = \ E\{Y(t, M(t_1)) - Y(t, M(t_0))\},}{% 
+#'         \delta(t) = E[Y(t, M(t1)) - Y(t, M(t0))],} 
+#'   where \eqn{t, t_1, t_0}{t, t1, t0} are particular values of the treatment 
+#'   \eqn{T} such that \eqn{t_1 \neq t_0}{t1 != t0}, \eqn{M(t)} is the potential
+#'   mediator, and \eqn{Y(t,m)} is the potential outcome variable. The average 
+#'   direct effect (ADE) is defined similarly as,
+#'   \deqn{\zeta(t) \ = \ E\{Y(t_1, M(t)) - Y(t_0, M(t))\},}{%
+#'         \zeta(t) = E[Y(t1, M(t)) - Y(t0, M(t))],}
+#'   which represents the expected difference in the potential outcome when the 
+#'   treatment is changed but the mediator is held constant at the value that 
+#'   would realize if the treatment equals \eqn{t}. The two quantities on
+#'   average add up to the total effect of the treatment on the outcome,
+#'   \eqn{\tau}. See the references for more details.
+#'   
+#'   When both the mediator model ('model.m') and outcome model ('model.y') are 
+#'   normal linear regressions, the results will be identical to the usual LSEM 
+#'   method by Baron and Kenny (1986).  The function can, however, accommodate 
+#'   other data types including binary, ordered and count outcomes and mediators
+#'   as well as censored outcomes.  Variables can also be modeled 
+#'   nonparametrically, semiparametrically, or using quantile regression.
+#'   
+#'   If it is desired that inference be made conditional on specific values of 
+#'   the pre-treatment covariates included in the model, the `covariates' 
+#'   argument can be used to set those values as a list or data frame. The list 
+#'   may contain either the entire set or any strict subset of the covariates in
+#'   the model; in the latter case, the effects will be averaged over the other 
+#'   covariates. The `covariates' argument will be particularly useful when the 
+#'   models contain interactions between the covariates and the treatment and/or
+#'   mediator (known as ``moderated mediation'').
+#'   
+#'   The prior weights in the mediator and outcome models are taken as sampling 
+#'   weights and the estimated effects will be weighted averages when non-NULL 
+#'   weights are used in fitting 'model.m' and 'model.y'. This will be useful 
+#'   when data does not come from a simple random sample, for example.
+#'   
+#'   As of version 4.0, the mediator model can be of either 'lm', 'glm' (or 
+#'   `bayesglm'), 'polr' (or `bayespolr'), 'gam', 'rq', `survreg', or `merMod' 
+#'   class, corresponding respectively to the linear regression models, 
+#'   generalized linear models, ordered response models, generalized additive 
+#'   models, quantile regression models, parametric duration models, or 
+#'   multilevel models.. For binary response models, the 'mediator' must be a 
+#'   numeric variable with values 0 or 1 as opposed to a factor. 
+#'   Quasi-likelihood-based inferences are not allowed for the mediator model 
+#'   because the functional form must be exactly specified for the estimation 
+#'   algorithm to work.  The 'binomial' family can only be used for binary 
+#'   response mediators and cannot be used for multiple-trial responses.  This
+#'   is due to conflicts between how the latter type of models are implemented
+#'   in \code{\link{glm}} and how 'mediate' is currently written.
+#'   
+#'   For the outcome model, the censored regression model fitted via package 
+#'   \code{VGAM} (of class 'vglm' with 'family@vfamily' equal to "tobit") can be
+#'   used in addition to the models listed above for the mediator.  The
+#'   'mediate' function is not compatible with censored regression models fitted
+#'   via other packages.  When the quantile regression is used for the outcome
+#'   model ('rq'), the estimated quantities are quantile causal mediation
+#'   effects, quantile direct effects and etc., instead of the average effects.
+#'   If the outcome model is of class 'survreg', the name of the outcome
+#'   variable must be explicitly supplied in the `outcome' argument. This is due
+#'   to the fact that 'survreg' objects do not contain that information in an
+#'   easily extractable form. It should also be noted that for
+#'   \code{\link{survreg}} models, the \code{\link{Surv}} function must be
+#'   directly used in the model formula in the call to the survreg function, and
+#'   that censoring types requiring more than two arguments to Surv (e.g.,
+#'   interval censoring) are not currently supported by 'mediate'.
+#'   
+#'   The quasi-Bayesian approximation (King et al. 2000) cannot be used if 
+#'   'model.m' is of class 'rq' or 'gam', or if 'model.y' is of class 'gam', 
+#'   'polr' or 'bayespolr'. In these cases, either an error message is returned 
+#'   or use of the nonparametric bootstrap is forced. Users should note that use
+#'   of the nonparametric bootstrap often requires significant computing time, 
+#'   especially when 'sims' is set to a large value.
+#'   
+#'   The 'control' argument must be provided when 'gam' is used for the outcome 
+#'   model and user wants to allow ACME and ADE to vary as functions of the 
+#'   treatment (i.e., to relax the "no interaction" assumption). Note that the 
+#'   outcome model must be fitted via package \code{\link{mgcv}} with
+#'   appropriate formula using \code{\link{s}} constructs (see Imai et al. 2009
+#'   in the references). For other model types, the interaction can be allowed
+#'   by including an interaction term between \eqn{T} and \eqn{M} in the linear 
+#'   predictor of the outcome model. As of version 3.0, the 'INT' argument is 
+#'   deprecated and the existence of the interaction term is automatically 
+#'   detected (except for 'gam' outcome models).
+#'   
+#'   When the treatment variable is continuous or a factor with multiple levels,
+#'   user must specify the values of \eqn{t_1}{t1} and \eqn{t_0}{t0} using the 
+#'   'treat.value' and 'control.value' arguments, respectively.  The value of 
+#'   \eqn{t} in the above expressions is set to \eqn{t_0}{t0} for 'd0', 'z0', 
+#'   etc. and to \eqn{t_1}{t1} for 'd1', 'z1', etc.
+#'   
+#' @param model.m a fitted model object for mediator.  Can be of class 'lm', 
+#'   'polr', 'bayespolr', 'glm', 'bayesglm', 'gam', 'rq', 'survreg', or
+#'   'merMod'.
+#' @param model.y a fitted model object for outcome.  Can be of class 'lm', 
+#'   'polr', 'bayespolr', 'glm', 'bayesglm', 'gam', 'vglm', 'rq', 'survreg', or 
+#'   'merMod'.
+#' @param sims number of Monte Carlo draws for nonparametric bootstrap or 
+#'   quasi-Bayesian approximation.
+#' @param boot a logical value. if 'FALSE' a quasi-Bayesian approximation is 
+#'   used for confidence intervals; if 'TRUE' nonparametric bootstrap will be 
+#'   used. Default is 'FALSE'.
+#' @param boot.ci.type a character string indicating the type of bootstrap 
+#'   confidence intervals. If "bca" and boot = TRUE, bias-corrected and 
+#'   accelerated (BCa) confidence intervals will be estimated. If "perc" and
+#'   boot = TRUE, percentile confidence intervals will be estimated. Default is 
+#'   "perc".
+#' @param conf.level level of the returned two-sided confidence intervals. 
+#'   Default is to return the 2.5 and 97.5 percentiles of the simulated 
+#'   quantities.
+#' @param treat a character string indicating the name of the treatment variable
+#'   used in the models.  The treatment can be either binary (integer or a
+#'   two-valued factor) or continuous (numeric).
+#' @param mediator a character string indicating the name of the mediator 
+#'   variable used in the models.
+#' @param covariates a list or data frame containing values for a subset of the 
+#'   pre-treatment covariates in 'model.m' and 'model.y'. If provided, the 
+#'   function will return the estimates conditional on those covariate values.
+#' @param outcome a character string indicating the name of the outcome variable
+#'   in `model.y'. Only necessary if 'model.y' is of class 'survreg'; otherwise
+#'   ignored.
+#' @param control a character string indicating the name of the control group 
+#'   indicator. Only relevant if 'model.y' is of class 'gam'. If provided, 'd0',
+#'   'z0' and 'n0' are allowed to differ from 'd1', 'z1' and 'n1', respectively.
+#' @param control.value value of the treatment variable used as the control 
+#'   condition. Default is 0.
+#' @param treat.value value of the treatment variable used as the treatment 
+#'   condition. Default is 1.
+#' @param long a logical value. If 'TRUE', the output will contain the entire 
+#'   sets of simulation draws of the the average causal mediation effects,
+#'   direct effects, proportions mediated, and total effect. Default is 'TRUE'.
+#' @param dropobs a logical value indicating the behavior when the model frames 
+#'   of 'model.m' and 'model.y' (and the 'cluster' variable if included) are 
+#'   composed of different observations. If 'TRUE', models will be re-fitted 
+#'   using common data rows. If 'FALSE', error is returned. Default is 'FALSE'.
+#' @param robustSE a logical value. If 'TRUE', heteroskedasticity-consistent 
+#'   standard errors will be used in quasi-Bayesian simulations. Ignored if 
+#'   'boot' is 'TRUE' or neither 'model.m' nor 'model.y' has a method for 
+#'   \code{vcovHC} in the \code{sandwich} package. Default is 'FALSE'.
+#' @param cluster a variable indicating clusters for standard errors. Note that 
+#'   this should be a vector of cluster indicators itself, not a character
+#'   string for the name of the variable.
+#' @param group.out a character string indicating the name of the lmer/glmer 
+#'   group on which the mediate output is based. Can be used even when a merMod 
+#'   function is applied to only one of the mediator or the outcome. If merMod 
+#'   functions are applied to both the mediator and the outcome, default is the 
+#'   group name used in the outcome model; if the mediator group and the outcome
+#'   group are different and the user is interested in the mediate output based 
+#'   on the mediator group, then set group.out to the group name used in the 
+#'   mediator merMod model. If a merMod function is applied to only one of the 
+#'   mediator or the outcome, group.out is automatically set to the group name 
+#'   used in the merMod model.
+#' @param use_speed a logical value indicating whether, if nonparametric 
+#'   bootstrap is used, \code{lm} and \code{glm} models should be re-fit using 
+#'   functions from the \code{speedglm} package. Ignored if 'boot' is 'FALSE' or
+#'   if neither 'model.m' nor 'model.y' is of class 'lm' or 'glm'. Default is 
+#'   'FALSE'.
+#' @param ...  other arguments passed to \code{vcovHC} in the \code{sandwich} 
+#'   package: typically the 'type' argument, which is ignored if 'robustSE' is 
+#'   'FALSE'. Arguments to the \code{boot} in the \code{boot} package may also
+#'   be passed, e.g. 'parallel' and 'ncpus'.
+#'   
+#' @return \code{mediate} returns an object of class "\code{mediate}", 
+#'   "\code{mediate.order}" if the outcome model used is 'polr' or 'bayespolr', 
+#'   or "\code{mediate.mer}" if 'lmer' or 'glmer' is used for the outcome or the
+#'   mediator model, a list that contains the components listed below.  Some of 
+#'   these elements are not available if 'long' is set to 'FALSE' by the user.
+#'   
+#'   The function \code{summary} (i.e., \code{summary.mediate}, 
+#'   \code{summary.mediate.order}, or \code{summary.mediate.mer}) can be used to
+#'   obtain a table of the results.  The function \code{plot} (i.e., 
+#'   \code{plot.mediate}, \code{plot.mediate.order}, or \code{plot.mediate.mer})
+#'   can be used to produce a plot of the estimated average causal mediation, 
+#'   average direct, and total effects along with their confidence intervals.
+#'   
+#'   \item{d0, d1}{point estimates for average causal mediation effects under 
+#'   the control and treatment conditions.}
+#'   \item{d0.ci, d1.ci}{confidence intervals for average causal mediation 
+#'   effects. The confidence level is set at the value specified in 
+#'   'conf.level'.}
+#'   \item{d0.p, d1.p}{two-sided p-values for average causal mediation effects.}
+#'   \item{d0.sims, d1.sims}{vectors of length 'sims' containing simulation 
+#'   draws of average causal mediation effects.}
+#'   \item{z0, z1}{point estimates for average direct effect under the control 
+#'   and treatment conditions.}
+#'   \item{z0.ci, z1.ci}{confidence intervals for average direct effects.}
+#'   \item{z0.p, z1.p}{two-sided p-values for average causal direct effects.}
+#'   \item{z0.sims, z1.sims}{vectors of length 'sims' containing simulation 
+#'   draws of average direct effects.}
+#'   \item{n0, n1}{the "proportions mediated", or the size of the average causal 
+#'   mediation effects relative to the total effect.}
+#'   \item{n0.ci, n1.ci}{confidence intervals for the proportions mediated.}
+#'   \item{n0.p, n1.p}{two-sided p-values for proportions mediated.}
+#'   \item{n0.sims, n1.sims}{vectors of length 'sims' containing simulation 
+#'   draws of the proportions mediated.}
+#'   \item{tau.coef}{point estimate for total effect.}
+#'   \item{tau.ci}{confidence interval for total effect.}
+#'   \item{tau.p}{two-sided p-values for total effect.}
+#'   \item{tau.sims}{a vector of length 'sims' containing simulation draws of 
+#'   the total effect.}
+#'   \item{d.avg, z.avg, n.avg}{simple averages of d0 and d1, z0 and z1, n0 and 
+#'   n1, respectively, which users may want to use as summary values when those 
+#'   quantities differ.}
+#'   \item{d.avg.ci, z.avg.ci, n.avg.ci}{confidence intervals for the above.}
+#'   \item{d.avg.p, z.avg.p, n.avg.p}{two-sided p-values for the above.}
+#'   \item{d.avg.sims, z.avg.sims, n.avg.sims}{vectors of length 'sims' 
+#'   containing simulation draws of d.avg, z.avg and n.avg, respectively.}
+#'   \item{d0.group, d1.group}{group-specific point estimates for average 
+#'   causal mediation effects under the control and treatment conditions.}
+#'   \item{d0.ci.group, d1.ci.group}{group-specific confidence intervals for 
+#'   average causal mediation effects. The confidence level is set at the value 
+#'   specified in 'conf.level'.}
+#'   \item{d0.p.group, d1.p.group}{group-specific two-sided p-values for average 
+#'   causal mediation effects.}
+#'   \item{d0.sims.group, d1.sims.group}{group-specific vectors of length 'sims' 
+#'   containing simulation draws of average causal mediation effects.}
+#'   \item{z0.group, z1.group}{group-specific point estimates for average direct 
+#'   effect under the control and treatment conditions.}
+#'   \item{z0.ci.group, z1.ci.group}{group-specific confidence intervals for 
+#'   average direct effects.}
+#'   \item{z0.p.group, z1.p.group}{group-specific two-sided p-values for average 
+#'   causal direct effects.}
+#'   \item{z0.sims.group, z1.sims.group}{group-specific vectors of length 'sims' 
+#'   containing simulation draws of average direct effects.}
+#'   \item{n0.group, n1.group}{the group-specific "proportions mediated", or the 
+#'   size of the group-specific average causal mediation effects relative to the 
+#'   total effect.}
+#'   \item{n0.ci.group, n1.ci.group}{group-specific confidence intervals for the 
+#'   proportions mediated.}
+#'   \item{n0.p.group, n1.p.group}{group-specific two-sided p-values for 
+#'   proportions mediated.}
+#'   \item{n0.sims.group, n1.sims.group}{group-specific vectors of length 'sims' 
+#'   containing simulation draws of the proportions mediated.}
+#'   \item{tau.coef.group}{group-specific point estimate for total effect.}
+#'   \item{tau.ci.group}{group-specific confidence interval for total effect.}
+#'   \item{tau.p.group}{group-specific two-sided p-values for total effect.}
+#'   \item{tau.sims.group}{a group-specific vector of length 'sims' containing 
+#'   simulation draws of the total effect.}
+#'   \item{d.avg.group, z.avg.group, n.avg.group}{group-specific simple averages 
+#'   of d0 and d1, z0 and z1, n0 and n1, respectively, which users may want to 
+#'   use as summary values when those quantities differ.}
+#'   \item{d.avg.ci.group, z.avg.ci.group, n.avg.ci.group}{group-specific 
+#'   confidence intervals for the above.}
+#'   \item{d.avg.p.group, z.avg.p.group, n.avg.p.group}{group-specific two-sided 
+#'   p-values for the above.}
+#'   \item{d.avg.sims.group, z.avg.sims.group, n.avg.sims.group}{group-specific 
+#'   vectors of length 'sims' containing simulation draws of d.avg, z.avg and 
+#'   n.avg, respectively.}
+#'   \item{boot}{logical, the 'boot' argument used.}
+#'   \item{treat}{a character string indicating the name of the 'treat' variable 
+#'   used.}
+#'   \item{mediator}{a character string indicating the name of the 'mediator' 
+#'   variable used.}
+#'   \item{INT}{a logical value indicating whether the model specification 
+#'   allows the effects to differ between the treatment and control conditions.}
+#'   \item{conf.level}{the confidence level used. }
+#'   \item{model.y}{the outcome model used.}
+#'   \item{model.m}{the mediator model used.}
+#'   \item{group.m}{the name of the mediator group used.}
+#'   \item{group.y}{the name of the outcome group used.}
+#'   \item{group.name}{the name of the group on which the output is based.}
+#'   \item{group.id.m}{the data on the mediator group.}
+#'   \item{group.id.y}{the data on the outcome group.}
+#'   \item{group.id}{the data on the group on which the output is based.}
+#'   \item{control.value}{value of the treatment variable used as the control 
+#'   condition.}
+#'   \item{treat.value}{value of the treatment variable used as the treatment 
+#'   condition.}
+#'   \item{nobs}{number of observations in the model frame for 'model.m' and 
+#'   'model.y'. May differ from the numbers in the original models input to 
+#'   'mediate' if 'dropobs' was 'TRUE'.}
+#'   \item{robustSE}{`TRUE' or `FALSE'.}
+#'   \item{cluster}{the clusters used.}
+#'   
+#' @author Dustin Tingley, Harvard University, 
+#'   \email{dtingley@@gov.harvard.edu}; Teppei Yamamoto, Massachusetts Institute
+#'   of Technology, \email{teppei@@mit.edu}; Luke Keele, Penn State University, 
+#'   \email{ljk20@@psu.edu}; Kosuke Imai, Princeton University, 
+#'   \email{kimai@@princeton.edu}; Kentaro Hirose, Princeton University, 
+#'   \email{hirose@@princeton.edu}.
+#'   
+#' @seealso \code{\link{medsens}}, \code{\link{plot.mediate}}, 
+#'   \code{\link{summary.mediate}}, \code{\link{summary.mediate.mer}}, 
+#'   \code{\link{plot.mediate.mer}}, \code{\link{mediations}}, \code{vcovHC}
+#'   
+#' @references Tingley, D., Yamamoto, T., Hirose, K., Imai, K. and Keele, L. 
+#'   (2014). "mediation: R package for Causal Mediation Analysis", Journal of 
+#'   Statistical Software, Vol. 59, No. 5, pp. 1-38.
+#'   
+#'   Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2011). Unpacking the 
+#'   Black Box of Causality: Learning about Causal Mechanisms from Experimental 
+#'   and Observational Studies, American Political Science Review, Vol. 105, No.
+#'   4 (November), pp. 765-789.
+#'   
+#'   Imai, K., Keele, L. and Tingley, D. (2010) A General Approach to Causal 
+#'   Mediation Analysis, Psychological Methods, Vol. 15, No. 4 (December), pp. 
+#'   309-334.
+#'   
+#'   Imai, K., Keele, L. and Yamamoto, T. (2010) Identification, Inference, and 
+#'   Sensitivity Analysis for Causal Mediation Effects, Statistical Science,
+#'   Vol. 25, No. 1 (February), pp. 51-71.
+#'   
+#'   Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation 
+#'   Analysis Using R" in Advances in Social Science Research Using R, ed. H. D.
+#'   Vinod New York: Springer.
+#'   
+#' @export
+#' @examples
+#' # Examples with JOBS II Field Experiment
+#' 
+#' # **For illustration purposes a small number of simulations are used**
+#' 
+#' data(jobs)
+#' 
+#' ####################################################
+#' # Example 1: Linear Outcome and Mediator Models
+#' ####################################################
+#' b <- lm(job_seek ~ treat + econ_hard + sex + age, data=jobs)
+#' c <- lm(depress2 ~ treat + job_seek + econ_hard + sex + age, data=jobs)
+#' 
+#' # Estimation via quasi-Bayesian approximation
+#' contcont <- mediate(b, c, sims=50, treat="treat", mediator="job_seek")
+#' summary(contcont)
+#' plot(contcont)
+#' 
+#' \dontrun{
+#' # Estimation via nonparametric bootstrap
+#' contcont.boot <- mediate(b, c, boot=TRUE, sims=50, treat="treat", mediator="job_seek")
+#' summary(contcont.boot)
+#' }
+#' 
+#' # Allowing treatment-mediator interaction
+#' d <- lm(depress2 ~ treat + job_seek + treat:job_seek + econ_hard + sex + age, data=jobs)
+#' contcont.int <- mediate(b, d, sims=50, treat="treat", mediator="job_seek")
+#' summary(contcont.int)
+#' 
+#' # Allowing ``moderated mediation'' with respect to age
+#' b.int <- lm(job_seek ~ treat*age + econ_hard + sex, data=jobs)
+#' d.int <- lm(depress2 ~ treat*job_seek*age + econ_hard + sex, data=jobs)
+#' contcont.age20 <- mediate(b.int, d.int, sims=50, treat="treat", mediator="job_seek",
+#' 			covariates = list(age = 20))
+#' contcont.age70 <- mediate(b.int, d.int, sims=50, treat="treat", mediator="job_seek",
+#' 			covariates = list(age = 70))
+#' summary(contcont.age20)
+#' summary(contcont.age70)
+#' 
+#' # Continuous treatment
+#' jobs$treat_cont <- jobs$treat + rnorm(nrow(jobs))  # (hypothetical) continuous treatment
+#' b.contT <- lm(job_seek ~ treat_cont + econ_hard + sex + age, data=jobs)
+#' c.contT <- lm(depress2 ~ treat_cont + job_seek + econ_hard + sex + age, data=jobs)
+#' contcont.cont <- mediate(b.contT, c.contT, sims=50, 
+#'                     treat="treat_cont", mediator="job_seek",
+#'                     treat.value = 4, control.value = -2)
+#' summary(contcont.cont)
+#' 
+#' # Categorical treatment 
+#' \dontrun{
+#' b <- lm(job_seek ~ educ + sex, data=jobs)
+#' c <- lm(depress2 ~ educ + job_seek + sex, data=jobs)
+#' 
+#' # compare two categories of educ --- gradwk and somcol
+#' model.cat <- mediate(b, c, treat="educ", mediator="job_seek", sims=50, 
+#'                      control.value = "gradwk", treat.value = "somcol")
+#' summary(model.cat)
+#' }
+#' 
+#' ######################################################
+#' # Example 2: Binary Outcome and Ordered Mediator
+#' ######################################################
+#' \dontrun{
+#' jobs$job_disc <- as.factor(jobs$job_disc)
+#' b.ord <- polr(job_disc ~ treat + econ_hard + sex + age, data=jobs,
+#'             method="probit", Hess=TRUE)
+#' d.bin <- glm(work1 ~ treat + job_disc + econ_hard + sex + age, data=jobs,
+#'             family=binomial(link="probit"))
+#' ordbin <- mediate(b.ord, d.bin, sims=50, treat="treat", mediator="job_disc")
+#' summary(ordbin)
+#' 
+#' # Using heteroskedasticity-consistent standard errors
+#' ordbin.rb <- mediate(b.ord, d.bin, sims=50, treat="treat", mediator="job_disc",
+#'             robustSE=TRUE)
+#' summary(ordbin.rb)
+#' 
+#' # Using non-parametric bootstrap
+#' ordbin.boot <- mediate(b.ord, d.bin, sims=50, treat="treat", mediator="job_disc",
+#'             boot=TRUE)
+#' summary(ordbin.boot)
+#' }
+#' 
+#' ######################################################
+#' # Example 3: Quantile Causal Mediation Effect
+#' ######################################################
+#' require(quantreg)
+#' c.quan <- rq(depress2 ~ treat + job_seek + econ_hard + sex + age, data=jobs,
+#'             tau = 0.5)  # median
+#' contquan <- mediate(b, c.quan, sims=50, treat="treat", mediator="job_seek")
+#' summary(contquan)
+#' 
+#' ######################################################
+#' # Example 4: GAM Outcome
+#' ######################################################
+#' \dontrun{
+#' require(mgcv)
+#' c.gam <- gam(depress2 ~ treat + s(job_seek, bs="cr") + 
+#'             econ_hard + sex + age, data=jobs)
+#' contgam <- mediate(b, c.gam, sims=10, treat="treat", 
+#'                 mediator="job_seek", boot=TRUE)
+#' summary(contgam)
+#' 
+#' # With interaction
+#' d.gam <- gam(depress2 ~ treat + s(job_seek, by = treat) + 
+#'     s(job_seek, by = control) + econ_hard + sex + age, data=jobs)
+#' contgam.int <- mediate(b, d.gam, sims=10, treat="treat", mediator="job_seek",
+#'     control = "control", boot=TRUE)
+#' summary(contgam.int)
+#' }
+#' ######################################################
+#' # Example 5: Multilevel Outcome and Mediator Models
+#' ######################################################
+#' \dontrun{
+#' require(lme4)
+#'  
+#' # educ: mediator group
+#' # occp: outcome group
+#' 
+#' # Varying intercept for mediator 
+#' model.m <- glmer(job_dich ~ treat + econ_hard + (1 | educ), 
+#'              		     family = binomial(link = "probit"), data = jobs)
+#' 
+#' # Varying intercept and slope for outcome
+#' model.y <- glmer(work1 ~ treat + job_dich + econ_hard + (1 + treat | occp), 
+#'                 family = binomial(link = "probit"), data = jobs)
+#' 
+#' # Output based on mediator group ("educ")
+#' multilevel <- mediate(model.m, model.y, treat = "treat", 
+#'               mediator = "job_dich", sims=50, group.out="educ")
+#' 
+#' # Output based on outcome group ("occp")
+#' # multilevel <- mediate(model.m, model.y, treat = "treat", 
+#'               mediator = "job_dich", sims=50) 
+#' 
+#' # Group-average effects  
+#' summary(multilevel)
+#' 
+#' # Group-specific effects organized by effect
+#' summary(multilevel, output="byeffect")
+#' # plot(multilevel, group.plots=TRUE)
+#' # See summary.mediate.mer and plot.mediate.mer for detailed explanations 
+#' 
+#' # Group-specific effects organized by group
+#' summary(multilevel, output="bygroup")
+#' # See summary.mediate.mer for detailed explanations 
+#' }
 mediate <- function(model.m, model.y, sims = 1000, 
                     boot = FALSE, boot.ci.type = "perc",
                     treat = "treat.name", mediator = "med.name",
@@ -5,7 +468,8 @@ mediate <- function(model.m, model.y, sims = 1000,
                     control = NULL, conf.level = .95,
                     control.value = 0, treat.value = 1,
                     long = TRUE, dropobs = FALSE,
-                    robustSE = FALSE, cluster = NULL, group.out = NULL, ...){
+                    robustSE = FALSE, cluster = NULL, group.out = NULL, 
+                    use_speed = FALSE, ...){
   
   cl <- match.call()
   
@@ -126,7 +590,7 @@ mediate <- function(model.m, model.y, sims = 1000,
   # Record family of model.m if glm
   if(isGlm.m){
     FamilyM <- model.m$family$family
-}
+  }
 
   # Record family of model.m if glmer
   if(isMer.m && class(model.m)[[1]] == "glmerMod"){
@@ -268,7 +732,6 @@ mediate <- function(model.m, model.y, sims = 1000,
     group.id <- NULL
     group.name <- NULL
   }
-
   
   # Numbers of observations and categories
   n.m <- nrow(m.data)
@@ -351,28 +814,12 @@ mediate <- function(model.m, model.y, sims = 1000,
   if(isFactorM){
     m.levels <- levels(y.data[,mediator])
   }
-  
-  #####################################
-  ## Define functions
-  #####################################
-  
-  indexmax <- function(x){
-    ## Return position of largest element in vector x
-    order(x)[length(x)]
-  }
-  
-  getvcov <- function(dat, fm, cluster){
-    ## Compute cluster robust standard errors
-    ## fm is the model object
-    cluster <- factor(cluster)  # remove missing levels and NA
-    M <- nlevels(cluster)
-    N <- sum(!is.na(cluster))
-    K <- fm$rank
-    dfc <- (M/(M-1))*((N-1)/(N-K))
-    uj  <- apply(estfun(fm),2, function(x) tapply(x, cluster, sum));
-    dfc*sandwich(fm, meat. = crossprod(uj)/N)
-  }
-  
+
+  # Eventually, we want to use only objects collected in K,
+  # passing K into intermediate functions, and clean up all stray objects.
+  K <- as.list(environment())
+  # rm(list = ls())
+   
   ############################################################################
   ############################################################################
   ### CASE I: EVERYTHING EXCEPT ORDERED OUTCOME
@@ -423,7 +870,7 @@ mediate <- function(model.m, model.y, sims = 1000,
               dta <- merge(m.data, as.data.frame(cluster), sort=FALSE,
                            by="row.names")
               fm <- update(model.m, data=dta)
-              MModel.var.cov <- getvcov(dta, fm, dta[,ncol(dta)])
+              MModel.var.cov <- sandwich::vcovCL(fm, dta[,ncol(dta)])
           } else {
               MModel.var.cov <- vcov(model.m)
           }
@@ -459,7 +906,7 @@ mediate <- function(model.m, model.y, sims = 1000,
               dta <- merge(y.data, as.data.frame(cluster), sort=FALSE,
                            by="row.names")
               fm <- update(model.y, data=dta)
-              YModel.var.cov <- getvcov(dta, fm, dta[,ncol(dta)])
+              YModel.var.cov <- sandwich::vcovCL(fm, dta[,ncol(dta)])
           } else {
               YModel.var.cov <- vcov(model.y)
           }
@@ -609,7 +1056,7 @@ mediate <- function(model.m, model.y, sims = 1000,
         
         PredictM1 <- matrix(,nrow=sims, ncol=n)
         PredictM0 <- matrix(,nrow=sims, ncol=n)
-        
+
         for(i in 1:sims){
           cprobs_m1 <- matrix(NA,n,m)
           cprobs_m0 <- matrix(NA,n,m)
@@ -639,8 +1086,8 @@ mediate <- function(model.m, model.y, sims = 1000,
             draws_m0[ii,] <- t(rmultinom(1, 1, prob = probs_m0[ii,]))
           }
           
-          PredictM1[i,] <- apply(draws_m1, 1, indexmax)
-          PredictM0[i,] <- apply(draws_m0, 1, indexmax)
+          PredictM1[i,] <- apply(draws_m1, 1, which.max)
+          PredictM0[i,] <- apply(draws_m0, 1, which.max)
         }
         
         ### Case I-1-c: Linear
@@ -804,7 +1251,7 @@ mediate <- function(model.m, model.y, sims = 1000,
 
       if(isMer.y){
           Y.RANEF1 <- Y.RANEF2 <- Y.RANEF3 <- Y.RANEF4 <- 0
-### 1=RE for Y(1,M(1)); 2=RE for Y(1,M(0)); 3=RE for Y(0,M(1)); 4=RE for Y(0,M(0))
+          ### 1=RE for Y(1,M(1)); 2=RE for Y(1,M(0)); 3=RE for Y(0,M(1)); 4=RE for Y(0,M(0))
           for (d in 1:Ny.ranef){
               name <- colnames(lme4::ranef(model.y)[[1]])[d]
               if(name == "(Intercept)"){
@@ -1007,11 +1454,11 @@ mediate <- function(model.m, model.y, sims = 1000,
           delta.0.group<-matrix(NA,G,sims)
           zeta.1.group<-matrix(NA,G,sims)
           zeta.0.group<-matrix(NA,G,sims)
-          for (g in 1:G){0
-                         delta.1.group[g,] <- t(apply(matrix(et1[group.id.m==unique(group.id.m)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]]))
-                         delta.0.group[g,] <- t(apply(matrix(et2[group.id.m==unique(group.id.m)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]]))
-                         zeta.1.group[g,] <- t(apply(matrix(et3[group.id.m==unique(group.id.m)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]]))
-                         zeta.0.group[g,] <- t(apply(matrix(et4[group.id.m==unique(group.id.m)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]]))
+          for (g in 1:G){
+           delta.1.group[g,] <- t(apply(matrix(et1[group.id.m==unique(group.id.m)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]]))
+           delta.0.group[g,] <- t(apply(matrix(et2[group.id.m==unique(group.id.m)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]]))
+           zeta.1.group[g,] <- t(apply(matrix(et3[group.id.m==unique(group.id.m)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]]))
+           zeta.0.group[g,] <- t(apply(matrix(et4[group.id.m==unique(group.id.m)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]]))
           }
         } else {
           G<-length(unique(group.id.y))
@@ -1055,290 +1502,60 @@ mediate <- function(model.m, model.y, sims = 1000,
       
       Call.M <- getCall(model.m)
       Call.Y <- getCall(model.y)
-      
-      # Storage
-      delta.1 <- matrix(NA, sims, 1)
-      delta.0 <- matrix(NA, sims, 1)
-      zeta.1 <- matrix(NA, sims, 1)
-      zeta.0 <- matrix(NA, sims, 1)
-      tau <- matrix(NA, sims, 1)
-      
-      # Bootstrap loop begins
-      for(b in 1:(sims+1)){
-        index <- sample(1:n, n, replace = TRUE)
-        
-        if(b == sims+1){  # in the final run, use the original data
-          index <- 1:n
-        }
-        
-        if(isSurvreg.m){
-          if(ncol(model.m$y) > 2){
-            stop("unsupported censoring type")
-          }
-          mname <- names(m.data)[1]
-          if(substr(mname, 1, 4) != "Surv"){
-            stop("refit the survival model with `Surv' used directly in model formula")
-          }
-          nc <- nchar(mediator)
-          eventname <- substr(mname, 5 + nc + 3, nchar(mname) - 1)
-          if(nchar(eventname) == 0){
-            m.data.tmp <- data.frame(m.data,
-                                     as.numeric(m.data[,1L][,1L]))
-            names(m.data.tmp)[c(1L, ncol(m.data)+1)] <- c(mname, mediator)
-          } else {
-            m.data.tmp <- data.frame(m.data,
-                                     as.numeric(m.data[,1L][,1L]),
-                                     as.numeric(model.m$y[,2]))
-            names(m.data.tmp)[c(1L, ncol(m.data)+(1:2))] <- c(mname, mediator, eventname)
-          }
-          Call.M$data <- m.data.tmp[index,]
-        } else {
-          Call.M$data <- m.data[index,]
-        }
-        
-        if(isSurvreg.y){
-          if(ncol(model.y$y) > 2){
-            stop("unsupported censoring type")
-          }
-          yname <- names(y.data)[1]
-          if(substr(yname, 1, 4) != "Surv"){
-            stop("refit the survival model with `Surv' used directly in model formula")
-          }
-          if(is.null(outcome)){
-            stop("`outcome' must be supplied for survreg outcome with boot")
-          }
-          nc <- nchar(outcome)
-          eventname <- substr(yname, 5 + nc + 3, nchar(yname) - 1)
-          if(nchar(eventname) == 0){
-            y.data.tmp <- data.frame(y.data,
-                                     as.numeric(y.data[,1L][,1L]))
-            names(y.data.tmp)[c(1L, ncol(y.data)+1)] <- c(yname, outcome)
-          } else {
-            y.data.tmp <- data.frame(y.data,
-                                     as.numeric(y.data[,1L][,1L]),
-                                     as.numeric(model.y$y[,2]))
-            names(y.data.tmp)[c(1L, ncol(y.data)+(1:2))] <- c(yname, outcome, eventname)
-          }
-          Call.Y$data <- y.data.tmp[index,]
-        } else {
-          Call.Y$data <- y.data[index,]
-        }
-        
-        Call.M$weights <- m.data[index,"(weights)"]
-        Call.Y$weights  <- y.data[index,"(weights)"]
-        
-        if(isOrdered.m && length(unique(y.data[index,mediator]))!=m){
-          stop("insufficient variation on mediator")
-        }
-        
-        # Refit Models with Resampled Data
-        new.fit.M <- eval.parent(Call.M)
-        new.fit.Y <- eval.parent(Call.Y)
-        
-        #####################################
-        #  Mediator Predictions
-        #####################################
-        pred.data.t <- pred.data.c <- m.data
-        
-        if(isFactorT){
-          pred.data.t[,treat] <- factor(cat.1, levels = t.levels)
-          pred.data.c[,treat] <- factor(cat.0, levels = t.levels)
-        } else {
-          pred.data.t[,treat] <- cat.1
-          pred.data.c[,treat] <- cat.0
-        }
-        
-        if(!is.null(covariates)){
-          for(p in 1:length(covariates)){
-            vl <- names(covariates[p])
-            if(is.factor(pred.data.t[,vl])){
-              pred.data.t[,vl] <- pred.data.c[,vl] <- factor(covariates[[p]], levels = levels(m.data[,vl]))
-            } else {
-              pred.data.t[,vl] <- pred.data.c[,vl] <- covariates[[p]]
-            }
-          }
-        }
-        
-        ### Case I-2-a: GLM Mediator (including GAMs)
-        if(isGlm.m){
-          
-          muM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
-          muM0 <- predict(new.fit.M, type="response", newdata=pred.data.c)
-          
-          if(FamilyM == "poisson"){
-            PredictM1 <- rpois(n, lambda = muM1)
-            PredictM0 <- rpois(n, lambda = muM0)
-          } else if (FamilyM == "Gamma") {
-            shape <- gamma.shape(new.fit.M)$alpha
-            PredictM1 <- rgamma(n, shape = shape, scale = muM1/shape)
-            PredictM0 <- rgamma(n, shape = shape, scale = muM0/shape)
-          } else if (FamilyM == "binomial"){
-            PredictM1 <- rbinom(n, size = 1, prob = muM1)
-            PredictM0 <- rbinom(n, size = 1, prob = muM0)
-          } else if (FamilyM == "gaussian"){
-            sigma <- sqrt(summary(new.fit.M)$dispersion)
-            error <- rnorm(n, mean=0, sd=sigma)
-            PredictM1 <- muM1 + error
-            PredictM0 <- muM0 + error
-          } else if (FamilyM == "inverse.gaussian"){
-            disp <- summary(new.fit.M)$dispersion
-            PredictM1 <- SuppDists::rinvGauss(n, nu = muM1, lambda = 1/disp)
-            PredictM0 <- SuppDists::rinvGauss(n, nu = muM0, lambda = 1/disp)
-          } else {
-            stop("unsupported glm family")
-          }
-          
-          ### Case I-2-b: Ordered Mediator
-        } else if(isOrdered.m) {
-          probs_m1 <- predict(new.fit.M, newdata=pred.data.t, type="probs")
-          probs_m0 <- predict(new.fit.M, newdata=pred.data.c, type="probs")
-          draws_m1 <- matrix(NA, n, m)
-          draws_m0 <- matrix(NA, n, m)
-          for(ii in 1:n){
-            draws_m1[ii,] <- t(rmultinom(1, 1, prob = probs_m1[ii,]))
-            draws_m0[ii,] <- t(rmultinom(1, 1, prob = probs_m0[ii,]))
-          }
-          PredictM1 <- apply(draws_m1, 1, indexmax)
-          PredictM0 <- apply(draws_m0, 1, indexmax)
-          
-          ### Case I-2-c: Quantile Regression for Mediator
-        } else if(isRq.m){
-          # Use inverse transform sampling to predict M
-          call.new <- new.fit.M$call
-          call.new$tau <- runif(n)
-          newfits <- eval.parent(call.new)
-          tt <- delete.response(terms(new.fit.M))
-          m.t <- model.frame(tt, pred.data.t, xlev = new.fit.M$xlevels)
-          m.c <- model.frame(tt, pred.data.c, xlev = new.fit.M$xlevels)
-          X.t <- model.matrix(tt, m.t, contrasts = new.fit.M$contrasts)
-          X.c <- model.matrix(tt, m.c, contrasts = new.fit.M$contrasts)
-          rm(tt, m.t, m.c)
-          PredictM1 <- rowSums(X.t * t(newfits$coefficients))
-          PredictM0 <- rowSums(X.c * t(newfits$coefficients))
-          rm(newfits, X.t, X.c)
-          
-          ### Case I-2-d: Linear
-        } else if(isLm.m){
-          sigma <- summary(new.fit.M)$sigma
-          error <- rnorm(n, mean=0, sd=sigma)
-          PredictM1 <- predict(new.fit.M, type="response",
-                               newdata=pred.data.t) + error
-          PredictM0 <- predict(new.fit.M, type="response",
-                               newdata=pred.data.c) + error
-          rm(error)
-          
-          ### Case I-2-e: Survreg
-        } else if(isSurvreg.m){
-          dd <- survival::survreg.distributions[[new.fit.M$dist]]
-          if (is.null(dd$itrans)){
-            itrans <- function(x) x
-          } else {
-            itrans <- dd$itrans
-          }
-          dname <- dd$dist
-          if(is.null(dname)){
-            dname <- new.fit.M$dist
-          }
-          scale <- new.fit.M$scale
-          lpM1 <- predict(new.fit.M, newdata=pred.data.t, type="linear")
-          lpM0 <- predict(new.fit.M, newdata=pred.data.c, type="linear")
-          error <- switch(dname,
-                          extreme = log(rweibull(n, shape=1, scale=1)),
-                          gaussian = rnorm(n),
-                          logistic = rlogis(n),
-                          t = rt(n, df=dd$parms))
-          PredictM1 <- as.numeric(itrans(lpM1 + scale * error))
-          PredictM0 <- as.numeric(itrans(lpM0 + scale * error))
-          rm(error)
-          
-        } else {
-          stop("mediator model is not yet implemented")
-        }
-        
-        #####################################
-        #  Outcome Predictions
-        #####################################
-        effects.tmp <- matrix(NA, nrow = n, ncol = 4)
-        for(e in 1:4){
-          tt <- switch(e, c(1,1,1,0), c(0,0,1,0), c(1,0,1,1), c(1,0,0,0))
-          pred.data.t <- pred.data.c <- y.data
-          
-          if(!is.null(covariates)){
-            for(p in 1:length(covariates)){
-              vl <- names(covariates[p])
-              if(is.factor(pred.data.t[,vl])){
-                pred.data.t[,vl] <- pred.data.c[,vl] <- factor(covariates[[p]], levels = levels(y.data[,vl]))
-              } else {
-                pred.data.t[,vl] <- pred.data.c[,vl] <- covariates[[p]]
-              }
-            }
-          }
-          
-          # Set treatment values
-          cat.t <- ifelse(tt[1], cat.1, cat.0)
-          cat.c <- ifelse(tt[2], cat.1, cat.0)
-          cat.t.ctrl <- ifelse(tt[1], cat.0, cat.1)
-          cat.c.ctrl <- ifelse(tt[2], cat.0, cat.1)
-          if(isFactorT){
-            pred.data.t[,treat] <- factor(cat.t, levels = t.levels)
-            pred.data.c[,treat] <- factor(cat.c, levels = t.levels)
-            if(!is.null(control)){
-              pred.data.t[,control] <- factor(cat.t.ctrl, levels = t.levels)
-              pred.data.c[,control] <- factor(cat.c.ctrl, levels = t.levels)
-            }
-          } else {
-            pred.data.t[,treat] <- cat.t
-            pred.data.c[,treat] <- cat.c
-            if(!is.null(control)){
-              pred.data.t[,control] <- cat.t.ctrl
-              pred.data.c[,control] <- cat.c.ctrl
-            }
-          }
-          
-          # Set mediator values
-          PredictM1.tmp <- PredictM1
-          PredictM0.tmp <- PredictM0
-          PredictMt <- PredictM1 * tt[3] + PredictM0 * (1 - tt[3])
-          PredictMc <- PredictM1 * tt[4] + PredictM0 * (1 - tt[4])
-          if(isFactorM) {
-            pred.data.t[,mediator] <- factor(PredictMt, levels=1:m, labels=m.levels)
-            pred.data.c[,mediator] <- factor(PredictMc, levels=1:m, labels=m.levels)
-          } else {
-            pred.data.t[,mediator] <- PredictMt
-            pred.data.c[,mediator] <- PredictMc
-          }
-          
-          if(isRq.y){
-            pr.1 <- predict(new.fit.Y, type="response",
-                            newdata=pred.data.t, interval="none")
-            pr.0 <- predict(new.fit.Y, type="response",
-                            newdata=pred.data.c, interval="none")
-          } else {
-            pr.1 <- predict(new.fit.Y, type="response",
-                            newdata=pred.data.t)
-            pr.0 <- predict(new.fit.Y, type="response",
-                            newdata=pred.data.c)
-          }
-          pr.mat <- as.matrix(cbind(pr.1, pr.0))
-          effects.tmp[,e] <- pr.mat[,1] - pr.mat[,2]
-          
-          rm(pred.data.t, pred.data.c, pr.1, pr.0, pr.mat)
-        }
-        
-        # Compute all QoIs
-        if(b == sims+1){
-          d1 <- weighted.mean(effects.tmp[,1], weights)
-          d0 <- weighted.mean(effects.tmp[,2], weights)
-          z1 <- weighted.mean(effects.tmp[,3], weights)
-          z0 <- weighted.mean(effects.tmp[,4], weights)
-        } else {
-          delta.1[b] <- weighted.mean(effects.tmp[,1], weights)
-          delta.0[b] <- weighted.mean(effects.tmp[,2], weights)
-          zeta.1[b] <- weighted.mean(effects.tmp[,3], weights)
-          zeta.0[b] <- weighted.mean(effects.tmp[,4], weights)
-        }
-      }  # bootstrap loop ends
-      
+
+      if (isSurvreg.m){
+        if (ncol(model.m$y) > 2)
+          stop("unsupported censoring type")
+        mname <- names(m.data)[1]
+        if (substr(mname, 1, 4) != "Surv")
+          stop("refit the survival model with `Surv' used directly in model formula")        
+      }
+  
+      if (isSurvreg.y){
+        if (ncol(model.y$y) > 2)
+          stop("unsupported censoring type")
+        yname <- names(y.data)[1]
+        if (substr(yname, 1, 4) != "Surv")
+          stop("refit the survival model with `Surv' used directly in model formula")    
+        if (is.null(outcome))
+          stop("`outcome' must be supplied for survreg outcome with boot")    
+      }
+           
+      # Bootstrap QoI
+      message("Running nonparametric bootstrap\n")
+
+      # Make objects available to med.fun
+      environment(med.fun) <- environment()
+
+      D <- boot::boot(data = y.data, 
+                      statistic = med.fun, 
+                      R = sims,
+                      sim = "ordinary",
+                      m.data = m.data,
+                      ...)
+
+      # drop = F to maintain column as matrix for backward-compatibility
+      delta.1 <- D$t[, 1, drop = FALSE] 
+      delta.0 <- D$t[, 2, drop = FALSE] 
+      zeta.1 <- D$t[, 3, drop = FALSE] 
+      zeta.0 <- D$t[, 4, drop = FALSE] 
+
+      # Generate QoIs for actual sample
+      D <- med.fun(y.data = y.data, m.data = m.data, index = 1:n)
+      d1 <- D["d1"]
+      d0 <- D["d0"]
+      z1 <- D["z1"]
+      z0 <- D["z0"]
+
+      # Unname objects for backward-compatibility
+      list2env(
+        lapply(list(d1 = d1, d0 = d0, z1 = z1, z0 = z0,
+                    delta.1 = delta.1, delta.0 = delta.0, 
+                    zeta.1 = zeta.1, zeta.0 = zeta.0), 
+               unname),
+        envir = environment()
+      )
+
       tau.coef <- (d1 + d0 + z1 + z0)/2
       n0 <- d0/tau.coef
       n1 <- d1/tau.coef
@@ -1459,28 +1676,30 @@ mediate <- function(model.m, model.y, sims = 1000,
     }
     
     if(long && !isMer.y && !isMer.m) {
-      out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
-                  d0.p=d0.p, d1.p=d1.p,
-                  d0.sims=delta.0, d1.sims=delta.1,
-                  z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci,
-                  z0.p=z0.p, z1.p=z1.p,
-                  z0.sims=zeta.0, z1.sims=zeta.1,
-                  n0=n0, n1=n1, n0.ci=n0.ci, n1.ci=n1.ci,
-                  n0.p=n0.p, n1.p=n1.p,
-                  n0.sims=nu.0, n1.sims=nu.1,
-                  tau.coef=tau.coef, tau.ci=tau.ci, tau.p=tau.p,
-                  tau.sims=tau,
-                  d.avg=d.avg, d.avg.p=d.avg.p, d.avg.ci=d.avg.ci, d.avg.sims=delta.avg,
-                  z.avg=z.avg, z.avg.p=z.avg.p, z.avg.ci=z.avg.ci, z.avg.sims=zeta.avg,
-                  n.avg=n.avg, n.avg.p=n.avg.p, n.avg.ci=n.avg.ci, n.avg.sims=nu.avg,
-                  boot=boot, boot.ci.type=boot.ci.type,
-                  treat=treat, mediator=mediator,
-                  covariates=covariates,
-                  INT=INT, conf.level=conf.level,
-                  model.y=model.y, model.m=model.m,
-                  control.value=control.value, treat.value=treat.value,
-                  nobs=n, sims=sims, call=cl,
-                  robustSE = robustSE, cluster = cluster)
+      out <- list(
+        d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
+        d0.p=d0.p, d1.p=d1.p,
+        d0.sims=delta.0, d1.sims=delta.1,
+        z0=z0, z1=z1, z0.ci=z0.ci, z1.ci=z1.ci,
+        z0.p=z0.p, z1.p=z1.p,
+        z0.sims=zeta.0, z1.sims=zeta.1,
+        n0=n0, n1=n1, n0.ci=n0.ci, n1.ci=n1.ci,
+        n0.p=n0.p, n1.p=n1.p,
+        n0.sims=nu.0, n1.sims=nu.1,
+        tau.coef=tau.coef, tau.ci=tau.ci, tau.p=tau.p,
+        tau.sims=tau,
+        d.avg=d.avg, d.avg.p=d.avg.p, d.avg.ci=d.avg.ci, d.avg.sims=delta.avg,
+        z.avg=z.avg, z.avg.p=z.avg.p, z.avg.ci=z.avg.ci, z.avg.sims=zeta.avg,
+        n.avg=n.avg, n.avg.p=n.avg.p, n.avg.ci=n.avg.ci, n.avg.sims=nu.avg,
+        boot=boot, boot.ci.type=boot.ci.type,
+        treat=treat, mediator=mediator,
+        covariates=covariates,
+        INT=INT, conf.level=conf.level,
+        model.y=model.y, model.m=model.m,
+        control.value=control.value, treat.value=treat.value,
+        nobs=n, sims=sims, call=cl,
+        robustSE = robustSE, cluster = cluster
+      )
       class(out) <- "mediate"
     } 
     if(!long && !isMer.y && !isMer.m){
@@ -1597,260 +1816,36 @@ mediate <- function(model.m, model.y, sims = 1000,
     }
     
     n.ycat <- length(unique(model.response(y.data)))
-    
-    # Storage
-    delta.1 <- matrix(NA, sims, n.ycat)
-    delta.0 <- matrix(NA, sims, n.ycat)
-    zeta.1 <- matrix(NA, sims, n.ycat)
-    zeta.0 <- matrix(NA, sims, n.ycat)
-    tau <- matrix(NA, sims, n.ycat)
-    
-    # Bootstrap loop begins
-    for(b in 1:(sims+1)){
-      
-      # Resampling Step
-      index <- sample(1:n, n, replace = TRUE)
-      if(b == sims + 1){  # use original data for the last iteration
-        index <- 1:n
-      }
-      
-      Call.M <- model.m$call
-      Call.Y <- model.y$call
-      
-      if(isSurvreg.m){
-        if(ncol(model.m$y) > 2){
-          stop("unsupported censoring type")
-        }
-        mname <- names(m.data)[1]
-        if(substr(mname, 1, 4) != "Surv"){
-          stop("refit the survival model with `Surv' used directly in model formula")
-        }
-        nc <- nchar(mediator)
-        eventname <- substr(mname, 5 + nc + 3, nchar(mname) - 1)
-        if(nchar(eventname) == 0){
-          m.data.tmp <- data.frame(m.data,
-                                   as.numeric(m.data[,1L][,1L]))
-          names(m.data.tmp)[c(1L, ncol(m.data)+1)] <- c(mname, mediator)
-        } else {
-          m.data.tmp <- data.frame(m.data,
-                                   as.numeric(m.data[,1L][,1L]),
-                                   as.numeric(model.m$y[,2]))
-          names(m.data.tmp)[c(1L, ncol(m.data)+(1:2))] <- c(mname, mediator, eventname)
-        }
-        Call.M$data <- m.data.tmp[index,]
-      } else {
-        Call.M$data <- m.data[index,]
-      }
-      
-      Call.Y$data <- y.data[index,]
-      Call.M$weights <- m.data[index,"(weights)"]
-      Call.Y$weights  <- y.data[index,"(weights)"]
-      new.fit.M <- eval.parent(Call.M)
-      new.fit.Y <- eval.parent(Call.Y)
-      
-      if(isOrdered.m && length(unique(y.data[index,mediator]))!=m){
-        # Modify the coefficients when mediator has empty cells
-        coefnames.y <- names(model.y$coefficients)
-        coefnames.new.y <- names(new.fit.Y$coefficients)
-        new.fit.Y.coef <- rep(0, length(coefnames.y))
-        names(new.fit.Y.coef) <- coefnames.y
-        new.fit.Y.coef[coefnames.new.y] <- new.fit.Y$coefficients
-        new.fit.Y$coefficients <- new.fit.Y.coef
-      }
-      
-      #####################################
-      # Mediator Predictions
-      #####################################
-      pred.data.t <- pred.data.c <- m.data
-      
-      if(isFactorT){
-        pred.data.t[,treat] <- factor(cat.1, levels = t.levels)
-        pred.data.c[,treat] <- factor(cat.0, levels = t.levels)
-      } else {
-        pred.data.t[,treat] <- cat.1
-        pred.data.c[,treat] <- cat.0
-      }
-      
-      if(!is.null(covariates)){
-        for(p in 1:length(covariates)){
-          vl <- names(covariates[p])
-          if(is.factor(pred.data.t[,vl])){
-            pred.data.t[,vl] <- pred.data.c[,vl] <- factor(covariates[[p]], levels = levels(m.data[,vl]))
-          } else {
-            pred.data.t[,vl] <- pred.data.c[,vl] <- covariates[[p]]
-          }
-        }
-      }
-      
-      ### Case II-a: GLM Mediator (including GAMs)
-      if(isGlm.m){
-        
-        muM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
-        muM0 <- predict(new.fit.M, type="response", newdata=pred.data.c)
-        
-        if(FamilyM == "poisson"){
-          PredictM1 <- rpois(n, lambda = muM1)
-          PredictM0 <- rpois(n, lambda = muM0)
-        } else if (FamilyM == "Gamma") {
-          shape <- gamma.shape(model.m)$alpha
-          PredictM1 <- rgamma(n, shape = shape, scale = muM1/shape)
-          PredictM0 <- rgamma(n, shape = shape, scale = muM0/shape)
-        } else if (FamilyM == "binomial"){
-          PredictM1 <- rbinom(n, size = 1, prob = muM1)
-          PredictM0 <- rbinom(n, size = 1, prob = muM0)
-        } else if (FamilyM == "gaussian"){
-          sigma <- sqrt(summary(model.m)$dispersion)
-          error <- rnorm(n, mean=0, sd=sigma)
-          PredictM1 <- muM1 + error
-          PredictM0 <- muM0 + error
-        } else if (FamilyM == "inverse.gaussian"){
-          disp <- summary(model.m)$dispersion
-          PredictM1 <- SuppDists::rinvGauss(n, nu = muM1, lambda = 1/disp)
-          PredictM0 <- SuppDists::rinvGauss(n, nu = muM0, lambda = 1/disp)
-        } else {
-          stop("unsupported glm family")
-        }
-        
-        ### Case II-b: Ordered Mediator
-      } else if(isOrdered.m) {
-        probs_m1 <- predict(new.fit.M, type="probs", newdata=pred.data.t)
-        probs_m0 <- predict(new.fit.M, type="probs", newdata=pred.data.c)
-        draws_m1 <- matrix(NA, n, m)
-        draws_m0 <- matrix(NA, n, m)
-        
-        for(ii in 1:n){
-          draws_m1[ii,] <- t(rmultinom(1, 1, prob = probs_m1[ii,]))
-          draws_m0[ii,] <- t(rmultinom(1, 1, prob = probs_m0[ii,]))
-        }
-        PredictM1 <- apply(draws_m1, 1, indexmax)
-        PredictM0 <- apply(draws_m0, 1, indexmax)
-        
-        ### Case II-c: Quantile Regression for Mediator
-      } else if(isRq.m){
-        # Use inverse transform sampling to predict M
-        call.new <- new.fit.M$call
-        call.new$tau <- runif(n)
-        newfits <- eval.parent(call.new)
-        tt <- delete.response(terms(new.fit.M))
-        m.t <- model.frame(tt, pred.data.t, xlev = new.fit.M$xlevels)
-        m.c <- model.frame(tt, pred.data.c, xlev = new.fit.M$xlevels)
-        X.t <- model.matrix(tt, m.t, contrasts = new.fit.M$contrasts)
-        X.c <- model.matrix(tt, m.c, contrasts = new.fit.M$contrasts)
-        rm(tt, m.t, m.c)
-        PredictM1 <- rowSums(X.t * t(newfits$coefficients))
-        PredictM0 <- rowSums(X.c * t(newfits$coefficients))
-        rm(newfits, X.t, X.c)
-        
-        ### Case II-d: Linear
-      } else if(isLm.m){
-        sigma <- summary(new.fit.M)$sigma
-        error <- rnorm(n, mean=0, sd=sigma)
-        PredictM1 <- predict(new.fit.M, type="response",
-                             newdata=pred.data.t) + error
-        PredictM0 <- predict(new.fit.M, type="response",
-                             newdata=pred.data.c) + error
-        rm(error)
-        
-        ### Case I-2-e: Survreg
-      } else if(isSurvreg.m){
-        dd <- survival::survreg.distributions[[new.fit.M$dist]]
-        if (is.null(dd$itrans)){
-          itrans <- function(x) x
-        } else {
-          itrans <- dd$itrans
-        }
-        dname <- dd$dist
-        if(is.null(dname)){
-          dname <- new.fit.M$dist
-        }
-        scale <- new.fit.M$scale
-        lpM1 <- predict(new.fit.M, newdata=pred.data.t, type="linear")
-        lpM0 <- predict(new.fit.M, newdata=pred.data.c, type="linear")
-        error <- switch(dname,
-                        extreme = log(rweibull(n, shape=1, scale=1)),
-                        gaussian = rnorm(n),
-                        logistic = rlogis(n),
-                        t = rt(n, df=dd$parms))
-        PredictM1 <- as.numeric(itrans(lpM1 + scale * error))
-        PredictM0 <- as.numeric(itrans(lpM0 + scale * error))
-        rm(error)
-        
-      } else {
-        stop("mediator model is not yet implemented")
-      }
-      
-      #####################################
-      #  Outcome Predictions
-      #####################################
-      effects.tmp <- array(NA, dim = c(n, n.ycat, 4))
-      for(e in 1:4){
-        tt <- switch(e, c(1,1,1,0), c(0,0,1,0), c(1,0,1,1), c(1,0,0,0))
-        pred.data.t <- pred.data.c <- y.data
-        
-        if(!is.null(covariates)){
-          for(p in 1:length(covariates)){
-            vl <- names(covariates[p])
-            if(is.factor(pred.data.t[,vl])){
-              pred.data.t[,vl] <- pred.data.c[,vl] <- factor(covariates[[p]], levels = levels(y.data[,vl]))
-            } else {
-              pred.data.t[,vl] <- pred.data.c[,vl] <- covariates[[p]]
-            }
-          }
-        }
-        
-        # Set treatment values
-        cat.t <- ifelse(tt[1], cat.1, cat.0)
-        cat.c <- ifelse(tt[2], cat.1, cat.0)
-        cat.t.ctrl <- ifelse(tt[1], cat.0, cat.1)
-        cat.c.ctrl <- ifelse(tt[2], cat.0, cat.1)
-        if(isFactorT){
-          pred.data.t[,treat] <- factor(cat.t, levels = t.levels)
-          pred.data.c[,treat] <- factor(cat.c, levels = t.levels)
-          if(!is.null(control)){
-            pred.data.t[,control] <- factor(cat.t.ctrl, levels = t.levels)
-            pred.data.c[,control] <- factor(cat.c.ctrl, levels = t.levels)
-          }
-        } else {
-          pred.data.t[,treat] <- cat.t
-          pred.data.c[,treat] <- cat.c
-          if(!is.null(control)){
-            pred.data.t[,control] <- cat.t.ctrl
-            pred.data.c[,control] <- cat.c.ctrl
-          }
-        }
-        
-        # Set mediator values
-        PredictM1.tmp <- PredictM1
-        PredictM0.tmp <- PredictM0
-        PredictMt <- PredictM1 * tt[3] + PredictM0 * (1 - tt[3])
-        PredictMc <- PredictM1 * tt[4] + PredictM0 * (1 - tt[4])
-        if(isFactorM) {
-          pred.data.t[,mediator] <- factor(PredictMt, levels=1:m, labels=m.levels)
-          pred.data.c[,mediator] <- factor(PredictMc, levels=1:m, labels=m.levels)
-        } else {
-          pred.data.t[,mediator] <- PredictMt
-          pred.data.c[,mediator] <- PredictMc
-        }
-        probs_p1 <- predict(new.fit.Y, newdata=pred.data.t, type="probs")
-        probs_p0 <- predict(new.fit.Y, newdata=pred.data.c, type="probs")
-        effects.tmp[,,e] <- probs_p1 - probs_p0
-        rm(pred.data.t, pred.data.c, probs_p1, probs_p0)
-      }
-      
-      # Compute all QoIs
-      if(b == sims+1){
-        d1 <- apply(effects.tmp[,,1], 2, weighted.mean, w=weights)
-        d0 <- apply(effects.tmp[,,2], 2, weighted.mean, w=weights)
-        z1 <- apply(effects.tmp[,,3], 2, weighted.mean, w=weights)
-        z0 <- apply(effects.tmp[,,4], 2, weighted.mean, w=weights)
-      } else {
-        delta.1[b,] <- apply(effects.tmp[,,1], 2, weighted.mean, w=weights)
-        delta.0[b,] <- apply(effects.tmp[,,2], 2, weighted.mean, w=weights)
-        zeta.1[b,] <- apply(effects.tmp[,,3], 2, weighted.mean, w=weights)
-        zeta.0[b,] <- apply(effects.tmp[,,4], 2, weighted.mean, w=weights)
-      }
-      
-    }  # Bootstrap loop ends
+       
+    # Bootstrap QoI
+    message("Running nonparametric bootstrap for ordered outcome\n")
+
+    # Make objects available to med.fun.ordered
+    environment(med.fun.ordered) <- environment()
+
+    D <- boot::boot(data = y.data, 
+                    statistic = med.fun.ordered, 
+                    R = sims,
+                    sim = "ordinary",
+                    m.data = m.data,
+                    ...)
+
+    # Extract estimates from resampling
+    col_index <- lapply(c("d1", "d0", "z1", "z0"), function(i) {
+      grep(i, names(D$t0))
+    })
+
+    delta.1 <- D$t[, col_index[[1]]]
+    delta.0 <- D$t[, col_index[[2]]]
+    zeta.1 <- D$t[, col_index[[3]]]
+    zeta.0 <- D$t[, col_index[[4]]]
+
+    # Generate QoIs for actual sample
+    D <- med.fun.ordered(y.data = y.data, m.data = m.data, index = 1:n)
+    d1 <- D[col_index[[1]]]
+    d0 <- D[col_index[[2]]]
+    z1 <- D[col_index[[3]]]
+    z0 <- D[col_index[[4]]]
     
     tau.coef <- (d1 + d0 + z1 + z0)/2
     tau <- (zeta.1 + zeta.0 + delta.0 + delta.1)/2
@@ -1942,22 +1937,605 @@ mediate <- function(model.m, model.y, sims = 1000,
 }
 
 ##################################################################
+med.fun <- function(y.data, index, m.data) {
+          
+  if(isSurvreg.m){
+    mname <- names(m.data)[1]
+    nc <- nchar(mediator)
+    eventname <- substr(mname, 5 + nc + 3, nchar(mname) - 1)
+    if(nchar(eventname) == 0){
+      m.data.tmp <- data.frame(m.data,
+                               as.numeric(m.data[,1L][,1L]))
+      names(m.data.tmp)[c(1L, ncol(m.data)+1)] <- c(mname, mediator)
+    } else {
+      m.data.tmp <- data.frame(m.data,
+                               as.numeric(m.data[,1L][,1L]),
+                               as.numeric(model.m$y[,2]))
+      names(m.data.tmp)[c(1L, ncol(m.data)+(1:2))] <- c(mname, mediator, eventname)
+    }
+    Call.M$data <- m.data.tmp[index,]
+  } else {
+    Call.M$data <- m.data[index,]
+  }
+  
+  if(isSurvreg.y){
+    yname <- names(y.data)[1]
+    nc <- nchar(outcome)
+    eventname <- substr(yname, 5 + nc + 3, nchar(yname) - 1)
+    if(nchar(eventname) == 0){
+      y.data.tmp <- data.frame(y.data,
+                               as.numeric(y.data[,1L][,1L]))
+      names(y.data.tmp)[c(1L, ncol(y.data)+1)] <- c(yname, outcome)
+    } else {
+      y.data.tmp <- data.frame(y.data,
+                               as.numeric(y.data[,1L][,1L]),
+                               as.numeric(model.y$y[,2]))
+      names(y.data.tmp)[c(1L, ncol(y.data)+(1:2))] <- c(yname, outcome, eventname)
+    }
+    Call.Y$data <- y.data.tmp[index,]
+  } else {
+    Call.Y$data <- y.data[index,]
+  }
+  
+  Call.M$weights <- m.data[index,"(weights)"]
+  Call.Y$weights  <- y.data[index,"(weights)"]
+  
+  if(isOrdered.m && length(unique(y.data[index,mediator])) != m){
+    stop("insufficient variation on mediator")
+  }
+  
+  # Refit Models with Resampled Data
+  new.fit.M <- NULL
+  new.fit.Y <- NULL
+
+  if (use_speed) {
+    if (isGlm.m) 
+      new.fit.M <- fit_speedglm(Call.M)
+    else if (isLm.m) {
+      formula <- Call.M$formula 
+      # ^^ to circumvent eval(call[[2]], parent.frame()) problem.
+      new.fit.M <- speedglm::speedlm(formula = formula, 
+                                     data = Call.M$data, 
+                                     weights = Call.M$weights)
+    }
+
+    if (isGlm.y) 
+      new.fit.Y <- fit_speedglm(Call.Y)
+    else if (isLm.y) {
+      formula <- Call.Y$formula
+      # ^^ See above.
+      new.fit.Y <- speedglm::speedlm(formula = formula, 
+                                     data = Call.Y$data, 
+                                     weights = Call.Y$weights)
+    }
+
+  }
+
+  if (is.null(new.fit.M))
+    new.fit.M <- eval.parent(Call.M)
+
+  if (is.null(new.fit.Y))
+    new.fit.Y <- eval.parent(Call.Y)  
+ 
+  
+  #####################################
+  #  Mediator Predictions
+  #####################################
+  pred.data.t <- pred.data.c <- m.data
+  
+  if(isFactorT){
+    pred.data.t[,treat] <- factor(cat.1, levels = t.levels)
+    pred.data.c[,treat] <- factor(cat.0, levels = t.levels)
+  } else {
+    pred.data.t[,treat] <- cat.1
+    pred.data.c[,treat] <- cat.0
+  }
+  
+  if(!is.null(covariates)){
+    for(p in 1:length(covariates)){
+      vl <- names(covariates[p])
+      if(is.factor(pred.data.t[,vl])){
+        pred.data.t[,vl] <- pred.data.c[,vl] <- factor(covariates[[p]], levels = levels(m.data[,vl]))
+      } else {
+        pred.data.t[,vl] <- pred.data.c[,vl] <- covariates[[p]]
+      }
+    }
+  }
+  
+  ### Case I-2-a: GLM Mediator (including GAMs)
+  if(isGlm.m){
+    
+    muM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
+    muM0 <- predict(new.fit.M, type="response", newdata=pred.data.c)
+    
+    if(FamilyM == "poisson"){
+      PredictM1 <- rpois(n, lambda = muM1)
+      PredictM0 <- rpois(n, lambda = muM0)
+    } else if (FamilyM == "Gamma") {
+      shape <- gamma.shape(new.fit.M)$alpha
+      PredictM1 <- rgamma(n, shape = shape, scale = muM1/shape)
+      PredictM0 <- rgamma(n, shape = shape, scale = muM0/shape)
+    } else if (FamilyM == "binomial"){
+      PredictM1 <- rbinom(n, size = 1, prob = muM1)
+      PredictM0 <- rbinom(n, size = 1, prob = muM0)
+    } else if (FamilyM == "gaussian"){
+      sigma <- sqrt(summary(new.fit.M)$dispersion)
+      error <- rnorm(n, mean=0, sd=sigma)
+      PredictM1 <- muM1 + error
+      PredictM0 <- muM0 + error
+    } else if (FamilyM == "inverse.gaussian"){
+      disp <- summary(new.fit.M)$dispersion
+      PredictM1 <- SuppDists::rinvGauss(n, nu = muM1, lambda = 1/disp)
+      PredictM0 <- SuppDists::rinvGauss(n, nu = muM0, lambda = 1/disp)
+    } else {
+      stop("unsupported glm family")
+    }
+    
+    ### Case I-2-b: Ordered Mediator
+  } else if(isOrdered.m) {
+    probs_m1 <- predict(new.fit.M, newdata=pred.data.t, type="probs")
+    probs_m0 <- predict(new.fit.M, newdata=pred.data.c, type="probs")
+    draws_m1 <- matrix(NA, n, m)
+    draws_m0 <- matrix(NA, n, m)
+    for(ii in 1:n){
+      draws_m1[ii,] <- t(rmultinom(1, 1, prob = probs_m1[ii,]))
+      draws_m0[ii,] <- t(rmultinom(1, 1, prob = probs_m0[ii,]))
+    }
+    PredictM1 <- apply(draws_m1, 1, which.max)
+    PredictM0 <- apply(draws_m0, 1, which.max)
+    
+    ### Case I-2-c: Quantile Regression for Mediator
+  } else if(isRq.m){
+    # Use inverse transform sampling to predict M
+    call.new <- new.fit.M$call
+    call.new$tau <- runif(n)
+    newfits <- eval.parent(call.new)
+    tt <- delete.response(terms(new.fit.M))
+    m.t <- model.frame(tt, pred.data.t, xlev = new.fit.M$xlevels)
+    m.c <- model.frame(tt, pred.data.c, xlev = new.fit.M$xlevels)
+    X.t <- model.matrix(tt, m.t, contrasts = new.fit.M$contrasts)
+    X.c <- model.matrix(tt, m.c, contrasts = new.fit.M$contrasts)
+    rm(tt, m.t, m.c)
+    PredictM1 <- rowSums(X.t * t(newfits$coefficients))
+    PredictM0 <- rowSums(X.c * t(newfits$coefficients))
+    rm(newfits, X.t, X.c)
+    
+    ### Case I-2-d: Linear
+  } else if(isLm.m){
+    if (class(new.fit.M) == "speedlm")
+      sigma <- sqrt(summary(new.fit.M)$var.res)
+    else
+      sigma <- summary(new.fit.M)$sigma
+    error <- rnorm(n, mean=0, sd=sigma)
+    PredictM1 <- predict(new.fit.M, type="response",
+                         newdata=pred.data.t) + error
+    PredictM0 <- predict(new.fit.M, type="response",
+                         newdata=pred.data.c) + error
+    rm(error)
+    
+    ### Case I-2-e: Survreg
+  } else if(isSurvreg.m){
+    dd <- survival::survreg.distributions[[new.fit.M$dist]]
+    if (is.null(dd$itrans)){
+      itrans <- function(x) x
+    } else {
+      itrans <- dd$itrans
+    }
+    dname <- dd$dist
+    if(is.null(dname)){
+      dname <- new.fit.M$dist
+    }
+    scale <- new.fit.M$scale
+    lpM1 <- predict(new.fit.M, newdata=pred.data.t, type="linear")
+    lpM0 <- predict(new.fit.M, newdata=pred.data.c, type="linear")
+    error <- switch(dname,
+                    extreme = log(rweibull(n, shape=1, scale=1)),
+                    gaussian = rnorm(n),
+                    logistic = rlogis(n),
+                    t = rt(n, df=dd$parms))
+    PredictM1 <- as.numeric(itrans(lpM1 + scale * error))
+    PredictM0 <- as.numeric(itrans(lpM0 + scale * error))
+    rm(error)
+    
+  } else {
+    stop("mediator model is not yet implemented")
+  }
+  
+  #####################################
+  #  Outcome Predictions
+  #####################################
+  effects.tmp <- matrix(NA, nrow = n, ncol = 4)
+  for(e in 1:4){
+    tt <- switch(e, c(1,1,1,0), c(0,0,1,0), c(1,0,1,1), c(1,0,0,0))
+    pred.data.t <- pred.data.c <- y.data
+    
+    if(!is.null(covariates)){
+      for(p in 1:length(covariates)){
+        vl <- names(covariates[p])
+        if(is.factor(pred.data.t[,vl])){
+          pred.data.t[,vl] <- pred.data.c[,vl] <- factor(covariates[[p]], levels = levels(y.data[,vl]))
+        } else {
+          pred.data.t[,vl] <- pred.data.c[,vl] <- covariates[[p]]
+        }
+      }
+    }
+    
+    # Set treatment values
+    cat.t <- ifelse(tt[1], cat.1, cat.0)
+    cat.c <- ifelse(tt[2], cat.1, cat.0)
+    cat.t.ctrl <- ifelse(tt[1], cat.0, cat.1)
+    cat.c.ctrl <- ifelse(tt[2], cat.0, cat.1)
+    if(isFactorT){
+      pred.data.t[,treat] <- factor(cat.t, levels = t.levels)
+      pred.data.c[,treat] <- factor(cat.c, levels = t.levels)
+      if(!is.null(control)){
+        pred.data.t[,control] <- factor(cat.t.ctrl, levels = t.levels)
+        pred.data.c[,control] <- factor(cat.c.ctrl, levels = t.levels)
+      }
+    } else {
+      pred.data.t[,treat] <- cat.t
+      pred.data.c[,treat] <- cat.c
+      if(!is.null(control)){
+        pred.data.t[,control] <- cat.t.ctrl
+        pred.data.c[,control] <- cat.c.ctrl
+      }
+    }
+    
+    # Set mediator values
+    PredictM1.tmp <- PredictM1
+    PredictM0.tmp <- PredictM0
+    PredictMt <- PredictM1 * tt[3] + PredictM0 * (1 - tt[3])
+    PredictMc <- PredictM1 * tt[4] + PredictM0 * (1 - tt[4])
+    if(isFactorM) {
+      pred.data.t[,mediator] <- factor(PredictMt, levels=1:m, labels=m.levels)
+      pred.data.c[,mediator] <- factor(PredictMc, levels=1:m, labels=m.levels)
+    } else {
+      pred.data.t[,mediator] <- PredictMt
+      pred.data.c[,mediator] <- PredictMc
+    }
+    
+    if(isRq.y){
+      pr.1 <- predict(new.fit.Y, type="response",
+                      newdata=pred.data.t, interval="none")
+      pr.0 <- predict(new.fit.Y, type="response",
+                      newdata=pred.data.c, interval="none")
+    } else {
+      pr.1 <- predict(new.fit.Y, type="response",
+                      newdata=pred.data.t)
+      pr.0 <- predict(new.fit.Y, type="response",
+                      newdata=pred.data.c)
+    }
+    pr.mat <- as.matrix(cbind(pr.1, pr.0))
+    effects.tmp[,e] <- pr.mat[,1] - pr.mat[,2]
+    
+    rm(pred.data.t, pred.data.c, pr.1, pr.0, pr.mat)
+  }
+  
+  # Compute all QoIs
+  d1 <- weighted.mean(effects.tmp[,1], weights)
+  d0 <- weighted.mean(effects.tmp[,2], weights)
+  z1 <- weighted.mean(effects.tmp[,3], weights)
+  z0 <- weighted.mean(effects.tmp[,4], weights)
+  
+  c(d1 = d1, d0 = d0, z1 = z1, z0 = z0)
+}
+
+med.fun.ordered <- function(y.data, index, m.data) {
+      
+  Call.M <- model.m$call
+  Call.Y <- model.y$call
+  
+  if(isSurvreg.m){
+    if(ncol(model.m$y) > 2){
+      stop("unsupported censoring type")
+    }
+    mname <- names(m.data)[1]
+    if(substr(mname, 1, 4) != "Surv"){
+      stop("refit the survival model with `Surv' used directly in model formula")
+    }
+    nc <- nchar(mediator)
+    eventname <- substr(mname, 5 + nc + 3, nchar(mname) - 1)
+    if(nchar(eventname) == 0){
+      m.data.tmp <- data.frame(m.data,
+                               as.numeric(m.data[,1L][,1L]))
+      names(m.data.tmp)[c(1L, ncol(m.data)+1)] <- c(mname, mediator)
+    } else {
+      m.data.tmp <- data.frame(m.data,
+                               as.numeric(m.data[,1L][,1L]),
+                               as.numeric(model.m$y[,2]))
+      names(m.data.tmp)[c(1L, ncol(m.data)+(1:2))] <- c(mname, mediator, eventname)
+    }
+    Call.M$data <- m.data.tmp[index,]
+  } else {
+    Call.M$data <- m.data[index,]
+  }
+  
+  Call.Y$data <- y.data[index,]
+  Call.M$weights <- m.data[index,"(weights)"]
+  Call.Y$weights  <- y.data[index,"(weights)"]
+  new.fit.M <- eval.parent(Call.M)
+  new.fit.Y <- eval.parent(Call.Y)
+  
+  if(isOrdered.m && length(unique(y.data[index,mediator]))!=m){
+    # Modify the coefficients when mediator has empty cells
+    coefnames.y <- names(model.y$coefficients)
+    coefnames.new.y <- names(new.fit.Y$coefficients)
+    new.fit.Y.coef <- rep(0, length(coefnames.y))
+    names(new.fit.Y.coef) <- coefnames.y
+    new.fit.Y.coef[coefnames.new.y] <- new.fit.Y$coefficients
+    new.fit.Y$coefficients <- new.fit.Y.coef
+  }
+  
+  #####################################
+  # Mediator Predictions
+  #####################################
+  pred.data.t <- pred.data.c <- m.data
+  
+  if(isFactorT){
+    pred.data.t[,treat] <- factor(cat.1, levels = t.levels)
+    pred.data.c[,treat] <- factor(cat.0, levels = t.levels)
+  } else {
+    pred.data.t[,treat] <- cat.1
+    pred.data.c[,treat] <- cat.0
+  }
+  
+  if(!is.null(covariates)){
+    for(p in 1:length(covariates)){
+      vl <- names(covariates[p])
+      if(is.factor(pred.data.t[,vl])){
+        pred.data.t[,vl] <- pred.data.c[,vl] <- factor(covariates[[p]], levels = levels(m.data[,vl]))
+      } else {
+        pred.data.t[,vl] <- pred.data.c[,vl] <- covariates[[p]]
+      }
+    }
+  }
+  
+  ### Case II-a: GLM Mediator (including GAMs)
+  if(isGlm.m){
+    
+    muM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
+    muM0 <- predict(new.fit.M, type="response", newdata=pred.data.c)
+    
+    if(FamilyM == "poisson"){
+      PredictM1 <- rpois(n, lambda = muM1)
+      PredictM0 <- rpois(n, lambda = muM0)
+    } else if (FamilyM == "Gamma") {
+      shape <- gamma.shape(model.m)$alpha
+      PredictM1 <- rgamma(n, shape = shape, scale = muM1/shape)
+      PredictM0 <- rgamma(n, shape = shape, scale = muM0/shape)
+    } else if (FamilyM == "binomial"){
+      PredictM1 <- rbinom(n, size = 1, prob = muM1)
+      PredictM0 <- rbinom(n, size = 1, prob = muM0)
+    } else if (FamilyM == "gaussian"){
+      sigma <- sqrt(summary(model.m)$dispersion)
+      error <- rnorm(n, mean=0, sd=sigma)
+      PredictM1 <- muM1 + error
+      PredictM0 <- muM0 + error
+    } else if (FamilyM == "inverse.gaussian"){
+      disp <- summary(model.m)$dispersion
+      PredictM1 <- SuppDists::rinvGauss(n, nu = muM1, lambda = 1/disp)
+      PredictM0 <- SuppDists::rinvGauss(n, nu = muM0, lambda = 1/disp)
+    } else {
+      stop("unsupported glm family")
+    }
+    
+    ### Case II-b: Ordered Mediator
+  } else if(isOrdered.m) {
+    probs_m1 <- predict(new.fit.M, type="probs", newdata=pred.data.t)
+    probs_m0 <- predict(new.fit.M, type="probs", newdata=pred.data.c)
+    draws_m1 <- matrix(NA, n, m)
+    draws_m0 <- matrix(NA, n, m)
+    
+    for(ii in 1:n){
+      draws_m1[ii,] <- t(rmultinom(1, 1, prob = probs_m1[ii,]))
+      draws_m0[ii,] <- t(rmultinom(1, 1, prob = probs_m0[ii,]))
+    }
+    PredictM1 <- apply(draws_m1, 1, which.max)
+    PredictM0 <- apply(draws_m0, 1, which.max)
+    
+    ### Case II-c: Quantile Regression for Mediator
+  } else if(isRq.m){
+    # Use inverse transform sampling to predict M
+    call.new <- new.fit.M$call
+    call.new$tau <- runif(n)
+    newfits <- eval.parent(call.new)
+    tt <- delete.response(terms(new.fit.M))
+    m.t <- model.frame(tt, pred.data.t, xlev = new.fit.M$xlevels)
+    m.c <- model.frame(tt, pred.data.c, xlev = new.fit.M$xlevels)
+    X.t <- model.matrix(tt, m.t, contrasts = new.fit.M$contrasts)
+    X.c <- model.matrix(tt, m.c, contrasts = new.fit.M$contrasts)
+    rm(tt, m.t, m.c)
+    PredictM1 <- rowSums(X.t * t(newfits$coefficients))
+    PredictM0 <- rowSums(X.c * t(newfits$coefficients))
+    rm(newfits, X.t, X.c)
+    
+    ### Case II-d: Linear
+  } else if(isLm.m){
+    sigma <- summary(new.fit.M)$sigma
+    error <- rnorm(n, mean=0, sd=sigma)
+    PredictM1 <- predict(new.fit.M, type="response",
+                         newdata=pred.data.t) + error
+    PredictM0 <- predict(new.fit.M, type="response",
+                         newdata=pred.data.c) + error
+    rm(error)
+    
+    ### Case I-2-e: Survreg
+  } else if(isSurvreg.m){
+    dd <- survival::survreg.distributions[[new.fit.M$dist]]
+    if (is.null(dd$itrans)){
+      itrans <- function(x) x
+    } else {
+      itrans <- dd$itrans
+    }
+    dname <- dd$dist
+    if(is.null(dname)){
+      dname <- new.fit.M$dist
+    }
+    scale <- new.fit.M$scale
+    lpM1 <- predict(new.fit.M, newdata=pred.data.t, type="linear")
+    lpM0 <- predict(new.fit.M, newdata=pred.data.c, type="linear")
+    error <- switch(dname,
+                    extreme = log(rweibull(n, shape=1, scale=1)),
+                    gaussian = rnorm(n),
+                    logistic = rlogis(n),
+                    t = rt(n, df=dd$parms))
+    PredictM1 <- as.numeric(itrans(lpM1 + scale * error))
+    PredictM0 <- as.numeric(itrans(lpM0 + scale * error))
+    rm(error)
+    
+  } else {
+    stop("mediator model is not yet implemented")
+  }
+  
+  #####################################
+  #  Outcome Predictions
+  #####################################
+  effects.tmp <- array(NA, dim = c(n, n.ycat, 4))
+  for(e in 1:4){
+    tt <- switch(e, c(1,1,1,0), c(0,0,1,0), c(1,0,1,1), c(1,0,0,0))
+    pred.data.t <- pred.data.c <- y.data
+    
+    if(!is.null(covariates)){
+      for(p in 1:length(covariates)){
+        vl <- names(covariates[p])
+        if(is.factor(pred.data.t[,vl])){
+          pred.data.t[,vl] <- pred.data.c[,vl] <- factor(covariates[[p]], levels = levels(y.data[,vl]))
+        } else {
+          pred.data.t[,vl] <- pred.data.c[,vl] <- covariates[[p]]
+        }
+      }
+    }
+    
+    # Set treatment values
+    cat.t <- ifelse(tt[1], cat.1, cat.0)
+    cat.c <- ifelse(tt[2], cat.1, cat.0)
+    cat.t.ctrl <- ifelse(tt[1], cat.0, cat.1)
+    cat.c.ctrl <- ifelse(tt[2], cat.0, cat.1)
+    if(isFactorT){
+      pred.data.t[,treat] <- factor(cat.t, levels = t.levels)
+      pred.data.c[,treat] <- factor(cat.c, levels = t.levels)
+      if(!is.null(control)){
+        pred.data.t[,control] <- factor(cat.t.ctrl, levels = t.levels)
+        pred.data.c[,control] <- factor(cat.c.ctrl, levels = t.levels)
+      }
+    } else {
+      pred.data.t[,treat] <- cat.t
+      pred.data.c[,treat] <- cat.c
+      if(!is.null(control)){
+        pred.data.t[,control] <- cat.t.ctrl
+        pred.data.c[,control] <- cat.c.ctrl
+      }
+    }
+    
+    # Set mediator values
+    PredictM1.tmp <- PredictM1
+    PredictM0.tmp <- PredictM0
+    PredictMt <- PredictM1 * tt[3] + PredictM0 * (1 - tt[3])
+    PredictMc <- PredictM1 * tt[4] + PredictM0 * (1 - tt[4])
+    if(isFactorM) {
+      pred.data.t[,mediator] <- factor(PredictMt, levels=1:m, labels=m.levels)
+      pred.data.c[,mediator] <- factor(PredictMc, levels=1:m, labels=m.levels)
+    } else {
+      pred.data.t[,mediator] <- PredictMt
+      pred.data.c[,mediator] <- PredictMc
+    }
+    probs_p1 <- predict(new.fit.Y, newdata=pred.data.t, type="probs")
+    probs_p0 <- predict(new.fit.Y, newdata=pred.data.c, type="probs")
+    effects.tmp[,,e] <- probs_p1 - probs_p0
+    rm(pred.data.t, pred.data.c, probs_p1, probs_p0)
+  }
+  
+  # Compute all QoIs
+  d1 <- apply(effects.tmp[,,1], 2, weighted.mean, w=weights)
+  d0 <- apply(effects.tmp[,,2], 2, weighted.mean, w=weights)
+  z1 <- apply(effects.tmp[,,3], 2, weighted.mean, w=weights)
+  z0 <- apply(effects.tmp[,,4], 2, weighted.mean, w=weights)
+
+  c(d1 = d1, d0 = d0, z1 = z1, z0 = z0)
+}
+##################################################################
+
+##################################################################
+
+#' Summarizing Output from Mediation Analysis
+#' 
+#' Function to report results from mediation analysis. Reported categories are 
+#' mediation effect, direct effect, total effect, and proportion of total effect
+#' mediated. All quantities reported with confidence intervals. If the 
+#' treatment-mediator interaction is allowed in the mediation analysis, effects 
+#' are reported separately for the treatment and control conditions as well as 
+#' the simple averages of these effects are displayed at the bottom of the 
+#' summary table.
+#' 
+#' @aliases summary.mediate summary.mediate.order print.summary.mediate 
+#'   print.summary.mediate.order
+#'   
+#' @param object output from mediate or mediate_tsls function.
+#' @param x output from summary.mediate function.
+#' @param ...  additional arguments affecting the summary produced.
+#' 
+#' @author Dustin Tingley, Harvard University, 
+#'   \email{dtingley@@gov.harvard.edu}; Teppei Yamamoto, Massachusetts Institute
+#'   of Technology, \email{teppei@@mit.edu}; Luke Keele, Penn State University, 
+#'   \email{ljk20@@psu.edu}; Kosuke Imai, Princeton University, 
+#'   \email{kimai@@princeton.edu}.
+#'   
+#' @seealso \code{\link{mediate}}, \code{\link{mediate_tsls}},
+#'   \code{\link{plot.mediate}}, \code{\link{summary}}.
+#'   
+#' @references Tingley, D., Yamamoto, T., Hirose, K., Imai, K. and Keele, L. 
+#'   (2014). "mediation: R package for Causal Mediation Analysis", Journal of 
+#'   Statistical Software, Vol. 59, No. 5, pp. 1-38.
+#'   
+#'   Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2011). Unpacking the 
+#'   Black Box of Causality: Learning about Causal Mechanisms from Experimental 
+#'   and Observational Studies, American Political Science Review, Vol. 105, No.
+#'   4 (November), pp. 765-789.
+#'   
+#'   Imai, K., Keele, L. and Tingley, D. (2010) A General Approach to Causal 
+#'   Mediation Analysis, Psychological Methods, Vol. 15, No. 4 (December), pp. 
+#'   309-334.
+#'   
+#'   Imai, K., Keele, L. and Yamamoto, T. (2010) Identification, Inference, and 
+#'   Sensitivity Analysis for Causal Mediation Effects, Statistical Science,
+#'   Vol. 25, No. 1 (February), pp. 51-71.
+#'   
+#'   Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation 
+#'   Analysis Using R" in Advances in Social Science Research Using R, ed. H. D.
+#'   Vinod New York: Springer.
+#'   
+#' @export
 summary.mediate <- function(object, ...){
   structure(object, class = c("summary.mediate", class(object)))
 }
 
+
+#' @rdname summary.mediate
+#' @export
 print.summary.mediate <- function(x, ...){
   clp <- 100 * x$conf.level
   cat("\n")
-  cat("Causal Mediation Analysis \n\n")
-  if(x$boot){
-    if(x$boot.ci.type == "perc"){
-      cat("Nonparametric Bootstrap Confidence Intervals with the Percentile Method\n\n")
-    } else if(x$boot.ci.type == "bca"){
-      cat("Nonparametric Bootstrap Confidence Intervals with the BCa Method\n\n") 
-    }
+  cat(
+    sprintf(
+      "Causal Mediation Analysis %s\n\n",
+      ifelse(inherits(x, "mediate.tsls"), "using Two-Stage Least Squares", "")
+    )
+  )
+  if(x$boot) {    
+    cat(
+      sprintf(
+        "Nonparametric Bootstrap Confidence Intervals with the %s Method\n\n",
+        ifelse(x$boot.ci.type == "perc", "Percentile", "BCa")
+      )
+    )
   } else {
-    cat("Quasi-Bayesian Confidence Intervals\n\n")
+    cat(
+      sprintf(
+        "%s Confidence Intervals\n\n",
+        ifelse(inherits(x, "mediate.tsls"), "Two-Stage Least Squares", 
+          "Quasi-Bayesian")
+      )
+    )   
   }
   
   if(!is.null(x$covariates)){
@@ -2012,6 +2590,86 @@ print.summary.mediate <- function(x, ...){
 }
 
 #########################################################################
+
+#' Summarizing Output from Mediation Analysis of Multilevel Models
+#' 
+#' Function to report results from mediation analysis of multilevel models. 
+#' Reported categories are mediation effect, direct effect, total effect, and 
+#' proportion of total effect mediated. All quantities reported with confidence 
+#' intervals. Group-specific effects and confidence intervals reported based on 
+#' the mediator or the outcome group. Group-average quantities reported as 
+#' default.
+#' 
+#' 
+#' @aliases summary.mediate.mer print.summary.mediate.mer 
+#'   print.summary.mediate.mer.2 print.summary.mediate.mer.3
+#'   
+#' @param object output from mediate function.
+#' @param output group-specific effects organized by effect if output = 
+#'   "byeffect"; group-specific effects organized by group if output =
+#'   "bygroup"; group-average effects reported as default.
+#' @param x output from summary.mediate.mer function.
+#' @param ...  additional arguments affecting the summary produced.
+#' 
+#' @author Kentaro Hirose, Princeton University, \email{hirose@@princeton.edu}.
+#' 
+#' @seealso \code{\link{mediate}}, \code{\link{plot.mediate.mer}}.
+#' 
+#' @references Tingley, D., Yamamoto, T., Hirose, K., Imai, K. and Keele, L. 
+#'   (2014). "mediation: R package for Causal Mediation Analysis", Journal of 
+#'   Statistical Software, Vol. 59, No. 5, pp. 1-38.
+#'   
+#'   Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2011). Unpacking the 
+#'   Black Box of Causality: Learning about Causal Mechanisms from Experimental 
+#'   and Observational Studies, American Political Science Review, Vol. 105, No.
+#'   4 (November), pp. 765-789.
+#'   
+#'   Imai, K., Keele, L. and Tingley, D. (2010) A General Approach to Causal 
+#'   Mediation Analysis, Psychological Methods, Vol. 15, No. 4 (December), pp. 
+#'   309-334.
+#'   
+#'   Imai, K., Keele, L. and Yamamoto, T. (2010) Identification, Inference, and 
+#'   Sensitivity Analysis for Causal Mediation Effects, Statistical Science,
+#'   Vol. 25, No. 1 (February), pp. 51-71.
+#'   
+#'   Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation 
+#'   Analysis Using R" in Advances in Social Science Research Using R, ed. H. D.
+#'   Vinod New York: Springer.
+#'   
+#' @examples
+#' # Examples with JOBS II Field Experiment
+#' 
+#' # **For illustration purposes a small number of simulations are used**
+#' \dontrun{
+#' data(jobs)
+#' require(lme4)
+#' 
+#' # educ: mediator group
+#' # occp: outcome group
+#' 
+#' # Varying intercept for mediator 
+#' model.m <- glmer(job_dich ~ treat + econ_hard + (1 | educ), 
+#'              		     family = binomial(link = "probit"), data = jobs)
+#' 
+#' # Varying intercept and slope for outcome
+#' model.y <- glmer(work1 ~ treat + job_dich + econ_hard + (1 + treat | occp), 
+#'                 family = binomial(link = "probit"), data = jobs)
+#' 
+#' # Output based on mediator group
+#' multilevel <- mediate(model.m, model.y, treat = "treat", 
+#'                       mediator = "job_dich", sims=50, group.out="educ")
+#' 
+#' # Group-average effects  
+#' summary(multilevel)
+#' 
+#' # Group-specific effects organized by effect
+#' summary(multilevel, output="byeffect")
+#' 
+#' # Group-specific effects organized by group
+#' summary(multilevel, output="bygroup")
+#' }
+#' 
+#' @export
 summary.mediate.mer <- function(object, output=c("default","byeffect","bygroup"),...){
   output <- match.arg(output)
   switch(output,
@@ -2021,6 +2679,8 @@ summary.mediate.mer <- function(object, output=c("default","byeffect","bygroup")
 }
 
 #########################################################################
+#' @rdname summary.mediate.mer
+#' @export
 print.summary.mediate.mer <- function(x,...){  
   clp <- 100 * x$conf.level
   cat("\n")
@@ -2092,6 +2752,8 @@ print.summary.mediate.mer <- function(x,...){
   invisible(x)
 }
 #########################################################################
+#' @rdname summary.mediate.mer
+#' @export
 print.summary.mediate.mer.2 <- function(x,...){
   clp <- 100 * x$conf.level
   cat("\n")
@@ -2247,6 +2909,8 @@ print.summary.mediate.mer.2 <- function(x,...){
   }
 }
 #########################################################################
+#' @rdname summary.mediate.mer
+#' @export
 print.summary.mediate.mer.3 <- function(x,...){
   clp <- 100 * x$conf.level
   cat("\n")
@@ -2342,12 +3006,12 @@ print.summary.mediate.mer.3 <- function(x,...){
   }
 }
 #########################################################################
+#' @export
 summary.mediate.order <- function(object, ...){
   structure(object, class = c("summary.mediate.order", class(object)))
 }
 
-
-
+#' @export
 print.summary.mediate.order <- function(x, ...){
   tab.d0 <- rbind(x$d0, x$d0.ci, x$d0.p)
   tab.d1 <- rbind(x$d1, x$d1.ci, x$d1.p)
@@ -2429,6 +3093,61 @@ plot.process <- function(model) {
 }
 
 #########################################################################
+#' Plotting Indirect, Direct, and Total Effects from Mediation Analysis
+#' 
+#' Function to plot results from \code{mediate}. The vertical axis lists 
+#' indirect, direct, and total effects and the horizontal axis indicates the 
+#' respective magnitudes. Most standard options for plot function available.
+#' 
+#' @aliases plot.mediate plot.mediate.order
+#'   
+#' @param x object of class \code{mediate} or \code{mediate.order} as produced 
+#'   by \code{mediate}.
+#' @param treatment a character string indicating the baseline treatment value 
+#'   of the estimated causal mediation effect and direct effect to plot. Can be 
+#'   either "control", "treated" or "both". If 'NULL' (default), both sets of 
+#'   estimates are plotted if and only if they differ.
+#' @param labels a vector of character strings indicating the labels for the 
+#'   estimated effects. The default labels will be used if NULL.
+#' @param effect.type a vector indicating which quantities of interest to plot. 
+#'   Default is to plot all three quantities (indirect, direct and total 
+#'   effects).
+#' @param xlim range of the horizontal axis.
+#' @param ylim range of the vertical axis.
+#' @param xlab label of the horizontal axis.
+#' @param ylab label of the vertical axis.
+#' @param main main title.
+#' @param lwd width of the horizontal bars for confidence intervals.
+#' @param cex size of the dots for point estimates.
+#' @param col color of the dots and horizontal bars for the estimates.
+#' @param ...  additional parameters passed to 'plot'.
+#'   
+#' @return \code{mediate} returns an object of class "\code{mediate}". The 
+#'   function \code{summary} is used to obtain a table of the results. The 
+#'   \code{plot} function plots these quantities.
+#'   
+#' @author Dustin Tingley, Harvard University, 
+#'   \email{dtingley@@gov.harvard.edu}; Teppei Yamamoto, Massachusetts Institute
+#'   of Technology, \email{teppei@@mit.edu}.
+#'   
+#' @seealso \code{\link{mediate}}, \code{\link{plot}}
+#'   
+#' @references Tingley, D., Yamamoto, T., Hirose, K., Imai, K. and Keele, L. 
+#'   (2014). "mediation: R package for Causal Mediation Analysis", Journal of 
+#'   Statistical Software, Vol. 59, No. 5, pp. 1-38.
+#'   
+#'   Imai, K., Keele, L. and Tingley, D. (2010) A General Approach to Causal 
+#'   Mediation Analysis, Psychological Methods, Vol. 15, No. 4 (December), pp. 
+#'   309-334.
+#'   
+#'   Imai, K., Keele, L. and Yamamoto, T. (2010) Identification, Inference, and 
+#'   Sensitivity Analysis for Causal Mediation Effects, Statistical Science,
+#'   Vol. 25, No. 1 (February), pp. 51-71.
+#'   
+#'   Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation 
+#'   Analysis Using R" in Advances in Social Science Research Using R, ed. H. D.
+#'   Vinod New York: Springer.
+#' @export
 plot.mediate <- function(x, treatment = NULL, labels = NULL,
                          effect.type = c("indirect","direct","total"),
                          xlim = NULL, ylim = NULL, xlab = "", ylab = "",
@@ -2574,6 +3293,68 @@ plot.process.mer <- function(model) {
 }
 
 #########################################################################
+
+#' Plotting Indirect, Direct, and Total Effects from Mediation Analysis of 
+#' Multilevel Models
+#' 
+#' Function to plot group-specific effects derived from causal mediation 
+#' analysis of multilevel models.
+#' 
+#' @param x object of class 'mediate.mer' produced by 'mediate'.
+#' @param treatment a character string indicating the baseline treatment value 
+#'   of the estimated causal mediation effect and direct effect to plot. Can be 
+#'   either "control", "treated", or "both". If 'NULL' (default), both sets of 
+#'   estimates are plotted if and only if they differ.
+#' @param group.plots a logical value indicating whether group-specific effects 
+#'   should be plotted in addition to the population-averaged effects.
+#' @param ask a logical value. If 'TRUE', the user is asked for input before a 
+#'   new figure is plotted. Default is to ask only if the number of plots on 
+#'   current screen is fewer than necessary.
+#' @param xlim range of the horizontal axis.
+#' @param ylim range of the vertical axis.
+#' @param xlab label of the horizontal axis.
+#' @param ylab label of the vertical axis.
+#' @param main main title.
+#' @param lwd width of the horizontal bars for confidence intervals .
+#' @param cex size of the dots for point estimates.
+#' @param col color of the dots and horizontal bars for the estimates..
+#' @param ...  additional parameters passed to 'plot'.
+#' 
+#' @author Kentaro Hirose, Princeton University, \email{hirose@@princeton.edu}.
+#' 
+#' @seealso \code{\link{mediate}}, \code{\link{summary.mediate.mer}}.
+#' 
+#' @references Tingley, D., Yamamoto, T., Hirose, K., Imai, K. and Keele, L. 
+#'   (2014). "mediation: R package for Causal Mediation Analysis", Journal of 
+#'   Statistical Software, Vol. 59, No. 5, pp. 1-38.
+#'   
+#' @examples
+#' # Examples with JOBS II Field Experiment
+#' 
+#' # **For illustration purposes a small number of simulations are used**
+#' \dontrun{
+#' data(jobs)
+#' require(lme4)
+#' 
+#' # educ: mediator group
+#' # occp: outcome group
+#' 
+#' # Varying intercept for mediator 
+#' model.m <- glmer(job_dich ~ treat + econ_hard + (1 | educ), 
+#'              		     family = binomial(link = "probit"), data = jobs)
+#' 
+#' # Varying intercept and slope for outcome
+#' model.y <- glmer(work1 ~ treat + job_dich + econ_hard + (1 + treat | occp), 
+#'                 family = binomial(link = "probit"), data = jobs)
+#' 
+#' # Output based on mediator group
+#' multilevel <- mediate(model.m, model.y, treat = "treat", 
+#'                       mediator = "job_dich", sims=50, group.out="educ")
+#' 
+#' #plot(multilevel, group.plots=TRUE)
+#' }
+#' 
+#' @export
 plot.mediate.mer <- function(x, treatment = NULL, group.plots = FALSE,
                              ask = prod(par("mfcol")) < nplots, 
                              xlim = NULL, ylim = NULL, xlab = "", ylab = "",
@@ -2812,6 +3593,7 @@ plot.process.order <- function(model){
 }
 
 #########################################################################
+#' @export
 plot.mediate.order <- function(x, treatment = NULL,
                                labels = c("ACME","ADE","Total\nEffect"),
                                xlim = NULL, ylim = NULL, xlab = "", ylab = "",

@@ -1,3 +1,204 @@
+#' Sensitivity Analysis for Causal Mediation Effects
+#' 
+#' 'medsens' is used to perform sensitivity analysis on the average causal 
+#' mediation effects and direct effects for violations of the sequential 
+#' ignorability assumption.  The function takes output from '\code{mediate}' and
+#' calculates the true average causal mediation effects and direct effects for
+#' different values of the sensitivity parameter representing the degree of the
+#' sequential ignorability violation.
+#' 
+#' @details This is the workhorse function for sensitivity analyses for average
+#'   causal mediation effects. The sensitivity analysis can be used to assess
+#'   the robustness of the findings from \code{mediate} to the violation of 
+#'   sequential ignorability, the crucial identification assumption necessary
+#'   for the estimates to be valid. The analysis proceeds by quantifying the
+#'   degree of sequential ignorability violation as the correlation between the
+#'   error terms of the mediator and outcome models, and then calculating the
+#'   true values of the average causal mediation effect for given values of this
+#'   sensitivity parameter, rho. The original findings are deemed sensitive if 
+#'   the true effects are found to vary widely as function of rho.
+#'   
+#'   The sensitivity analysis is only implemented for the following three model 
+#'   combinations: linear mediator and outcome models (both of class 'lm'), 
+#'   binary probit mediator (fitted via 'glm' with family "binomial" and link 
+#'   "probit") and linear outcome models, and linear mediator and binary probit 
+#'   outcome models.  In addition, the binary outcome model cannot include a 
+#'   treatment-mediator interaction term. An error is returned if the 'mediate' 
+#'   object in 'x' is based on other model combinations.  As of version 3.0, the
+#'   sensitivity analysis can also be conducted with respect to the average 
+#'   direct effect by setting 'effect.type' to "direct" (or "both" if results
+#'   for the average causal mediation effect are also desired).
+#'   
+#'   Users should note that computation can take significant time for 
+#'   \code{medsens}. Setting 'rho.by' to a larger number significantly decreases
+#'   computational time, as does decreasing 'eps' (for the linear-linear case)
+#'   or the number of simulations 'sims' (for the binary-linear and
+#'   linear-binary cases).
+#'   
+#' @param x an object of class 'mediate', typically an output from the 
+#'   \code{mediate} function.
+#' @param rho.by a numeric value between 0 and 1 indicating the increment for 
+#'   the sensitivity parameter, rho.
+#' @param sims the number of Monte Carlo draws for the calculation of confidence
+#'   intervals. Only used in cases where either the mediator or outcome variable
+#'   is binary.
+#' @param eps convergence tolerance parameter for the iterative FGLS. Only used 
+#'   when both the mediator and outcome models are linear.
+#' @param effect.type a character string indicating which effect(s) to be 
+#'   analyzed.  Default is "indirect".
+#'   
+#' @return \code{medsens} returns an object of class "\code{medsens}", a list 
+#'   containing the following elements. Some of these elements are not available
+#'   depending on the 'effect.type' argument specified by the user. The output 
+#'   can then be passed to the \code{\link{summary}} (i.e., 
+#'   \code{\link{summary.medsens}}) and \code{\link{plot}} (i.e., 
+#'   \code{\link{plot.medsens}}) functions to produce tabular and graphical 
+#'   summaries of the results.
+#'   
+#'   \item{d0, d1}{vectors of point estimates for average causal mediation 
+#'   effects under the control and treatment conditions for each value of 
+#'   sensitivity parameter rho.}
+#'   \item{upper.d0, lower.d0, upper.d1, lower.d1}{vectors of upper and lower 
+#'   confidence limits for average causal mediation effect under the control 
+#'   and treatment conditions for each value of rho.}
+#'   \item{z0, z1}{vectors of point estimates for average direct effect under 
+#'   the control and treatment conditions for each value of sensitivity 
+#'   parameter rho.}
+#'   \item{upper.z0, lower.z0, upper.z1, lower.z1}{vectors of upper and lower 
+#'   confidence limits for average direct effect under the control and 
+#'   treatment conditions for each value of rho.}
+#'   \item{tau}{a vector of point estimates for total effect for each value of 
+#'   rho.  Only present when the outcome model is binary.}
+#'   \item{upper.tau, lower.tau}{vectors of upper and lower confidence limits 
+#'   for total effect.  Only present when the outcome model is binary.}
+#'   \item{nu}{a vector of point estimates for the proportion mediated for each 
+#'   value of rho.  Only present when the outcome model is binary.}
+#'   \item{upper.nu, lower.nu}{vectors of upper and lower confidence limits 
+#'   for the proportion mediated.  Only present when the outcome model is binary.}
+#'   \item{rho}{a numeric vector containing the values of sensitivity 
+#'   parameter rho used.}
+#'   \item{rho.by}{a numeric value indicating the increment of rho used.}
+#'   \item{sims}{a numeric value indicating the number of Monte Carlo draws 
+#'   used.}
+#'   \item{err.cr.d, err.cr.z}{the values of rho with which the average causal 
+#'   mediation and direct effects are zero.  Vectors of length two if 'INT' is 
+#'   'TRUE'; numeric values otherwise.}
+#'   \item{ind.d0, ind.d1, ind.z0, ind.z1}{vectors of 0s/1s, indicating whether 
+#'   the confidence intervals of d0, d1, z0 and z1 do not cover zero for each 
+#'   value of rho.}
+#'   \item{R2star.prod}{a numeric vector containing the values of the products 
+#'   of the two "R square stars", representing the proportions of residual 
+#'   variance in the mediator and outcome explained by the hypothesized 
+#'   unobserved confounder. The values correspond to those of rho. See 
+#'   \code{\link{plot.medsens}} for details.}
+#'   \item{R2tilde.prod}{a numeric vector containing the values of the products 
+#'   of the two "R square tildes", representing the proportions of total 
+#'   variance in the mediator and outcome explained by the hypothesized 
+#'   unobserved confounder. The values correspond to those of rho. See 
+#'   \code{\link{plot.medsens}} for details.}
+#'   \item{R2star.d.thresh, R2star.z.thresh}{the values of the product of "R 
+#'   square stars" for which the average causal mediation and direct effects are 
+#'   zero, respectively.}
+#'   \item{R2tilde.d.thresh, R2tilde.z.thresh}{the values of the product of "R 
+#'   square tildes" for which the average causal mediation and direct effects 
+#'   are zero, respectively.}
+#'   \item{r.square.y, r.square.m}{the usual R square statistics for the 
+#'   outcome and mediator models.}
+#'   \item{INT}{a logical value indicating whether interaction between the 
+#'   treatment and mediator is allowed in the original mediate object.}
+#'   \item{conf.level}{the confidence level used.}
+#'   \item{effect.type}{the 'effect.type' argument used.}
+#'   \item{type}{a character string indicating the type of the mediator and 
+#'   outcome models used. Currently either "ct" (linear mediator and outcome 
+#'   models), 'bm' (binary mediator and linear outcome models) or 'bo' (linear 
+#'   mediator and binary outcome models).}
+#'   \item{robustSE}{`TRUE' or `FALSE'.}
+#'   \item{cluster}{the clusters used.}
+
+#' @author Dustin Tingley, Harvard University, 
+#'   \email{dtingley@@gov.harvard.edu}; Teppei Yamamoto, Massachusetts Institute
+#'   of Technology, \email{teppei@@mit.edu}; Jaquilyn Waddell-Boie, Princeton 
+#'   University, \email{jwaddell@@princeton.edu}; Kentaro Hirose, Princeton 
+#'   University, \email{hirose@@princeton.edu}; Luke Keele, Penn State 
+#'   University, \email{ljk20@@psu.edu}; Kosuke Imai, Princeton University, 
+#'   \email{kimai@@princeton.edu}.
+#'   
+#' @seealso \code{\link{mediate}}, \code{\link{summary.medsens}}, 
+#'   \code{\link{plot.medsens}}.
+#'   
+#' @references Tingley, D., Yamamoto, T., Hirose, K., Imai, K. and Keele, L. 
+#'   (2014). "mediation: R package for Causal Mediation Analysis", Journal of 
+#'   Statistical Software, Vol. 59, No. 5, pp. 1-38.
+#'   
+#'   Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2011). Unpacking the 
+#'   Black Box of Causality: Learning about Causal Mechanisms from Experimental 
+#'   and Observational Studies, American Political Science Review, Vol. 105, No.
+#'   4 (November), pp. 765-789.
+#'   
+#'   Imai, K., Keele, L. and Tingley, D. (2010) A General Approach to Causal 
+#'   Mediation Analysis, Psychological Methods, Vol. 15, No. 4 (December), pp. 
+#'   309-334.
+#'   
+#'   Imai, K., Keele, L. and Yamamoto, T. (2010) Identification, Inference, and 
+#'   Sensitivity Analysis for Causal Mediation Effects, Statistical Science,
+#'   Vol. 25, No. 1 (February), pp. 51-71.
+#'   
+#'   Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation 
+#'   Analysis Using R" in Advances in Social Science Research Using R, ed. H. D.
+#'   Vinod New York: Springer.
+#'   
+#' @export
+#' @examples
+#' # Examples with JOBS II Field Experiment
+#' 
+#' # **For illustration purposes a small number of simulations are used**
+#' 
+#' data(jobs)
+#' 
+#' ####################################################
+#' # Example 1: Binary treatment 
+#' ####################################################
+#' # Fit parametric models
+#' b <- lm(job_seek ~ treat + econ_hard + sex + age, data=jobs)
+#' c <- lm(depress2 ~ treat + job_seek + econ_hard + sex + age, data=jobs)
+#' 
+#' # Pass model objects through mediate function
+#' med.cont <- mediate(b, c, treat="treat", mediator="job_seek", sims=50)
+#' # med.cont <- mediate(b, c, treat="treat", mediator="job_seek", sims=50, robustSE = T)
+#' # jobs$cluster <- rep(1:30, each = 30)[-1]
+#' # med.cont <- mediate(b, c, treat="treat", mediator="job_seek", sims=50, cluster = jobs$cluster)
+#' 
+#' # Pass mediate output through medsens function
+#' sens.cont <- medsens(med.cont, rho.by=.1, eps=.01, effect.type="both")
+#' 
+#' # Use summary function to display results
+#' summary(sens.cont)
+#' 
+#' # Plot true ACMEs and ADEs as functions of rho
+#' par.orig <- par(mfrow = c(2,2))
+#' plot(sens.cont, main="JOBS", ylim=c(-.2,.2))
+#' 
+#' # Plot true ACMEs and ADEs as functions of "R square tildes"
+#' plot(sens.cont, sens.par="R2", r.type="total", sign.prod="positive")
+#' par(par.orig)
+#' 
+#' ####################################################
+#' # Example 2: Categorical treatment 
+#' ####################################################
+#' \dontrun{
+#' 
+#' # Purely for illustration, think of educ as a ``treatment''
+#' 
+#' b <- lm(job_seek ~ educ + sex, data=jobs)
+#' c <- lm(depress2 ~ educ + job_seek + sex, data=jobs)
+#' 
+#' # compare two categories of educ --- gradwk and somcol
+#' med.cont <- mediate(b, c, treat="educ", mediator="job_seek", sims=50, 
+#'                     control.value = "gradwk", treat.value = "somcol")
+#' sens.cont <- medsens(med.cont, rho.by=.1, eps=.01, effect.type="both")
+#' summary(sens.cont)
+#' }
+#' 
 medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps),
         effect.type = c("indirect", "direct", "both"))
 {
@@ -733,12 +934,53 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
 }
 
 
-
+#' Summarizing Results from Sensitivity Analysis for Causal Mediation Effects
+#' 
+#' Functions to report results from the sensitivity analysis for causal 
+#' mediation effects via \code{\link{medsens}} in a tabular form.
+#' 
+#' @aliases summary.medsens print.summary.medsens
+#' 
+#' @param object output from medsens function.
+#' @param x output from summary.medsens function.
+#' @param ...  additional arguments affecting the summary produced.
+#' 
+#' @author Dustin Tingley, Harvard University, 
+#'   \email{dtingley@@gov.harvard.edu}; Teppei Yamamoto, Massachusetts Institute
+#'   of Technology, \email{teppei@@mit.edu}; Jaquilyn Waddell-Boie, Princeton 
+#'   University, \email{jwaddell@@princeton.edu}; Luke Keele, Penn State 
+#'   University, \email{ljk20@@psu.edu}; Kosuke Imai, Princeton University, 
+#'   \email{kimai@@princeton.edu}.
+#'   
+#' @seealso \code{\link{medsens}}, \code{\link{summary}}.
+#' 
+#' @references Tingley, D., Yamamoto, T., Hirose, K., Imai, K. and Keele, L. 
+#'   (2014). "mediation: R package for Causal Mediation Analysis", Journal of 
+#'   Statistical Software, Vol. 59, No. 5, pp. 1-38.
+#'   
+#'   Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2011). Unpacking the 
+#'   Black Box of Causality: Learning about Causal Mechanisms from Experimental 
+#'   and Observational Studies, American Political Science Review, Vol. 105, No.
+#'   4 (November), pp. 765-789.
+#'   
+#'   Imai, K., Keele, L. and Tingley, D. (2010) A General Approach to Causal 
+#'   Mediation Analysis, Psychological Methods, Vol. 15, No. 4 (December), pp. 
+#'   309-334.
+#'   
+#'   Imai, K., Keele, L. and Yamamoto, T. (2010) Identification, Inference, and 
+#'   Sensitivity Analysis for Causal Mediation Effects, Statistical Science,
+#'   Vol. 25, No. 1 (February), pp. 51-71.
+#'   
+#'   Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation 
+#'   Analysis Using R" in Advances in Social Science Research Using R, ed. H. D.
+#'   Vinod New York: Springer.
+#'   
+#' @export
 summary.medsens <- function(object, ...)
     structure(object, class = c("summary.medsens", class(object)))
 
-
-
+#' @rdname summary.medsens
+#' @export
 print.summary.medsens <- function(x, ...){
     etype.vec <- x$effect.type
     if(etype.vec == "both"){
@@ -873,8 +1115,122 @@ print.summary.medsens <- function(x, ...){
     }
 }
 
-
-
+#' Plotting Results from Sensitivity Analysis for Causal Mediation Effects
+#' 
+#' This function is used to plot results from the 'medsens' function. Causal 
+#' average mediation effects (as well as average direct effects and proportions 
+#' mediated for selected models) can be plotted against two alternative 
+#' sensitivity parameters.
+#' 
+#' @details The sensitivity analysis for causal mediation effects can be
+#'   conducted in terms of two alternative sensitivity parameters, which both
+#'   quantify the degree of violation of the sequential ignorability assumption.
+#'   The "rho" parameter represents the correlation between the two error terms
+#'   of the (latent) linear models for the mediator and outcome variables. A
+#'   large value of rho indicates the existence of important common unobserved
+#'   predictors for both the mediator and outcome and therefore a high degree of
+#'   sequential ignorability violation, while a value close to zero implies
+#'   there is no such confounders.
+#'   
+#'   The resulting "rho" figures plot the estimated true values of ACME (or ADE,
+#'   proportion mediated) against rho, along with the confidence intervals. When
+#'   rho is zero, sequantial ignorability holds, so the estimated value at that 
+#'   point will be equal to the estimate returned by the \code{\link{mediate}}. 
+#'   The confidence level is determined by the 'conf.level' value of the
+#'   original \code{\link{mediate}} object.
+#'   
+#'   The "R2" parameters represent the proportions of the mediator and outcome 
+#'   variances that are explained by an unobserved pre-treatment confounder, 
+#'   thereby indicating the importance of such a confounder in each model.  When
+#'   'r.type' is "residual", the R2 parameters represent the proportions of the 
+#'   residual variances of the mediator and outcome models that become explained
+#'   by the inclusion of the hypothetical pre-treatment confounder.  These are 
+#'   denoted as "R square stars" in Imai, Keele and Yamamoto (2010) and can also
+#'   be specified as "star" or using a numeric value 1 in \code{medsens.plot}. 
+#'   When 'r.type' is "total", the R2s represent the total mediator and outcome 
+#'   variances the unobserved confounder would explain. This option can also be 
+#'   specified using "tilde" or a numeric value 2.
+#'   
+#'   For both types of the "R2" parameters, 'sign.prod' indicates the
+#'   hypothesized direction in which the unobserved confounder affects the
+#'   mediator and outcome. (The name derives from the fact that this direction
+#'   is mathematically represented by the sign of the product of two regression 
+#'   coefficients.) If "positive" (or a numeric value 1) is given, the
+#'   confounder is assumed to affect the mediator and outcome in the same
+#'   direction.  If "negative" (or a numeric value -1), the effect is assumed to
+#'   be in opposite directions.
+#'   
+#'   The resulting contours in the "R2" plots represent the values of the ACME
+#'   (or ADE) for different combinations of the mediator R2 and outcome R2
+#'   values. When both values are zero (the lower-left corner of the plot), the
+#'   unobserved pre-treatment confounder has no effect on either mediator or
+#'   outcome and therefore sequantial ignorability is satisfied.
+#'   
+#' @param x 'medsens' object, typically output from \code{medsens}.
+#' @param sens.par a character string indicating the sensitivity parameter to be
+#'   used. Default plots effects as functions of "rho". See Details.
+#' @param r.type type of the R square parameter to be used in "R2" plots. If 
+#'   "residual", effects are plotted against the proportions of the residual 
+#'   variances that are explained by the unobserved confounder.  If "total", the
+#'   proportions of the total variances are used as sensitivity parameters. Only
+#'   relevant if 'sens.par' is "R2".
+#' @param sign.prod a value indicating the direction of hypothesized confounding
+#'   in the sensitivity analysis. If "positive", the confounder is assumed to 
+#'   affect the mediator and outcome variable in the same direction; if 
+#'   "negative" the effects are assumed to be in opposite directions.  Only 
+#'   relevant if sens.par is set to "R2".
+#' @param pr.plot a logical value. If 'TRUE', the "proportions mediated" will be
+#'   plotted instead of the average causal mediation effects or direct effects. 
+#'   Currently only available if the object 'medsens' is based on the linear 
+#'   mediator and binary probit outcome models. Default is 'FALSE'.
+#' @param smooth.effect a logical value indicating whether the estimated 
+#'   mediation effects are smoothed via \code{\link{lowess}} before being 
+#'   plotted. Default is 'FALSE'.
+#' @param smooth.ci a logical value indicating whether the confidence bands are 
+#'   smoothed via \code{\link{lowess}} before being plotted. Default is 'FALSE'.
+#' @param ask a logical value. If 'TRUE', the user is asked for input before a 
+#'   new figure is plotted.  Default is to ask only if the number of plots on 
+#'   current screen is fewer than necessary.
+#' @param levels vector of levels at which to draw contour lines. Only relevant 
+#'   if 'sens.par' is set to "R2". If 'NULL', default values in 
+#'   \code{\link{contour.default}} are used.
+#' @param xlab label for the x axis. Default labels are used if 'NULL'.
+#' @param ylab label for the y axis. Default labels are used if 'NULL'.
+#' @param xlim limits of the x axis. If 'NULL' default values are used.
+#' @param ylim limits of the y axis. If 'NULL' default values are used.
+#' @param main main title for the plot. If 'NULL', default titles are used.
+#' @param lwd width of the lines used in graphs.
+#' @param ...  additional arguments to be passed to plotting functions.
+#' 
+#' @section Warning: The 'smooth.effect' and 'smooth.ci' options should be used 
+#'   with caution since the smoothing could affect substantive implications of 
+#'   the graphical analysis in a significant way.
+#'   
+#' @author Dustin Tingley, Harvard University, 
+#'   \email{dtingley@@gov.harvard.edu}; Teppei Yamamoto, Massachusetts Institute
+#'   of Technology, \email{teppei@@mit.edu}; Jaquilyn Waddell-Boie, Princeton 
+#'   University, \email{jwaddell@@princeton.edu}; Luke Keele, Penn State 
+#'   University, \email{ljk20@@psu.edu}; Kosuke Imai, Princeton University, 
+#'   \email{kimai@@princeton.edu}.
+#'   
+#' @seealso \code{\link{medsens}}, \code{\link{plot}}, \code{\link{contour}}.
+#' 
+#' @references Tingley, D., Yamamoto, T., Hirose, K., Imai, K. and Keele, L. 
+#'   (2014). "mediation: R package for Causal Mediation Analysis", Journal of 
+#'   Statistical Software, Vol. 59, No. 5, pp. 1-38.
+#'   
+#'   Imai, K., Keele, L. and Tingley, D. (2010) A General Approach to Causal 
+#'   Mediation Analysis, Psychological Methods, Vol. 15, No. 4 (December), pp. 
+#'   309-334.
+#'   
+#'   Imai, K., Keele, L. and Yamamoto, T. (2010) Identification, Inference, and 
+#'   Sensitivity Analysis for Causal Mediation Effects, Statistical Science, 
+#'   Vol. 25, No. 1 (February), pp. 51-71.
+#'   
+#'   Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation 
+#'   Analysis Using R" in Advances in Social Science Research Using R, ed. H. D.
+#'   Vinod New York: Springer.
+#' @export
 plot.medsens <- function(x, sens.par = c("rho", "R2"), 
         r.type = c("residual", "total"), sign.prod = c("positive", "negative"),
         pr.plot = FALSE, smooth.effect = FALSE, smooth.ci = FALSE, 

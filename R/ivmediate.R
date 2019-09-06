@@ -1,3 +1,156 @@
+#' Causal Mediation Analysis with Treatment Noncompliance
+#' 
+#' 'ivmediate' is used to estimate local average causal mediation effects, local
+#' average natural direct effects and local average treatment effects for 
+#' compliers using the method of Yamamoto (2013).
+#' 
+#' @details This is the workhorse function for estimating local causal mediation
+#'   effects for compliers using the approach of Yamamoto (2013).
+#'   
+#'   Although the method is quite general and accommodate various types of 
+#'   mediator and outcome variables, the current function can only handle binary
+#'   variables (modeled via \code{glm} with \code{family=binomial}) and 
+#'   continuous variables (modeled via \code{lm}). In addition, when the
+#'   mediator is continuous and its model contains any predictor other than the 
+#'   encouragement and actual treatment, computation of confidence intervals is 
+#'   extremely slow because it requires numerical integration via 
+#'   \code{\link{integrate}} for each observation in each simulation iteration. 
+#'   Users are advised to use a powerful computer (preferably equipped with 
+#'   multiple CPU cores and a non-Windows operating system) for such
+#'   calculation, especially if the data contain many rows and/or the desired
+#'   number of simulations is large.
+#'   
+#' @param model.t a fitted model object for actual treatment. Can be of class 
+#'   'lm' or 'glm'.
+#' @param model.m a fitted model object for mediator.  Can be of class 'lm', or 
+#'   'glm'.
+#' @param model.y a fitted model object for outcome.  Can be of class 'lm', or 
+#'   'glm'.
+#' @param ci a logical value. if 'TRUE' both point estimates and confidence 
+#'   intervals are calculated; if 'FALSE' only point estimates are produced. 
+#'   Default is 'TRUE'.
+#' @param sims number of Monte Carlo draws for nonparametric bootstrap or 
+#'   quasi-Bayesian approximation.
+#' @param boot a logical value. if 'FALSE' a quasi-Bayesian approximation is 
+#'   used for confidence intervals; if 'TRUE' nonparametric bootstrap will be 
+#'   used. Default is 'TRUE'.
+#' @param enc a character string indicating the name of the encouragement 
+#'   variable used in the models. Must be a binary variable.
+#' @param treat a character string indicating the name of the actual treatment 
+#'   variable used in the models.  Must be a binary variable.
+#' @param mediator a character string indicating the name of the mediator 
+#'   variable used in the models.
+#' @param conf.level a numeric vector indicating the levels of the returned 
+#'   two-sided confidence intervals. Default is to return the 2.5 and 97.5 
+#'   percentiles of the simulated quantities.
+#' @param long a logical value. If 'TRUE', the output will contain the entire 
+#'   sets of simulation draws of the estimated effects. Default is 'TRUE'.
+#' @param dropobs a logical value indicating the behavior when the model frames 
+#'   of 'model.t', 'model.m' and 'model.y' are composed of different 
+#'   observations. If 'TRUE', models will be re-fitted using common data rows.
+#'   If 'FALSE', error is returned. Default is 'FALSE'.
+#' @param multicore a logical value indicating whether to parallelize 
+#'   simulations into multiple cores. Default is 'FALSE'. Note that this option 
+#'   is currently unavailable on Windows.
+#' @param mc.cores number of cores to be used in the parallelization of 
+#'   bootstrap or Monte Carlo simulations. Default is the value in the
+#'   'mc.cores' option (see \code{\link{mclapply}}).
+#'   
+#' @return \code{ivmediate} returns an object of class '\code{ivmediate}', a 
+#'   list that contains the components listed below.  Some of these elements are
+#'   not available depending on the values of the 'ci' and 'long' options.
+#'   
+#'   The function \code{summary} (i.e., \code{summary.ivmediate}) can be used to
+#'   obtain a table of the results.  The function \code{plot} (i.e., 
+#'   \code{plot.ivmediate}) can be used to produce a plot of the estimated 
+#'   effects along with their confidence intervals.
+#'   
+#'   \item{dc0, dc1}{point estimates for the local average causal mediation 
+#'   effects under the control and treatment conditions.}
+#'   \item{dc0.ci, dc1.ci}{confidence intervals for the local average causal 
+#'   mediation effects. The confidence levels are set at the value specified in 
+#'   'conf.level'.}
+#'   \item{dc0.issue, dc1.issue}{number of observations for which the numerical 
+#'   integration via \code{\link{integrate}} encountered computational problems 
+#'   when calculating dc0 and dc1, respectively.}
+#'   \item{dc0.inf, dc1.inf}{number of observations for which the numerical 
+#'   integration produced non-finite values when calculating dc0 and dc1, 
+#'   respectively. (Such values are excluded from the calculation of average 
+#'   effects.)}
+#'   \item{dc0.sims, dc1.sims}{vectors of length 'sims' containing simulation 
+#'   draws of local average causal mediation effects.}
+#'   \item{zc0, zc1}{point estimates for the local average natural direct 
+#'   effects under the control and treatment conditions.}
+#'   \item{zc0.ci, zc1.ci}{confidence intervals for the local average natural 
+#'   direct effects.}
+#'   \item{zc0.issue, zc1.issue}{number of observations for which the numerical 
+#'   integration encountered computational problems when calculating zc0 and 
+#'   zc1, respectively.}
+#'   \item{zc0.inf, zc1.inf}{number of observations for which the numerical 
+#'   integration produced non-finite values for zc0 and zc1.}
+#'   \item{zc0.sims, zc1.sims}{vectors of length 'sims' containing simulation 
+#'   draws of local average natural direct effects.}
+#'   \item{tauc}{point estimate for the local average treatment effect.}
+#'   \item{tauc.ci}{confidence interval for the local average treatment effect.}
+#'   \item{tauc.sims}{a vector of length 'sims' containing simulation draws of 
+#'   the local average treatment effect.}
+#'   \item{boot}{logical, the 'boot' argument used.}
+#'   \item{enc}{a character string indicating the name of the 'enc' variable 
+#'   used.}
+#'   \item{treat}{a character string indicating the name of the 'treat' variable 
+#'   used.}
+#'   \item{mediator}{a character string indicating the name of the 'mediator' 
+#'   variable used.}
+#'   \item{conf.level}{the confidence levels used. }
+#'   \item{nobs}{number of observations in the model frame for 'model.t', 
+#'   'model.m' and 'model.y'. May differ from the numbers in the original models 
+#'   input to 'ivmediate' if 'dropobs' was 'TRUE'.}
+#'   \item{sims}{number of simulation draws used.}
+#'
+#' @author Teppei Yamamoto, Massachusetts Institute of Technology, 
+#'   \email{teppei@@mit.edu}.
+#'   
+#' @seealso \code{\link{plot.ivmediate}}, \code{\link{summary.ivmediate}}
+#' 
+#' @references Tingley, D., Yamamoto, T., Hirose, K., Imai, K. and Keele, L. 
+#'   (2014). "mediation: R package for Causal Mediation Analysis", Journal of 
+#'   Statistical Software, Vol. 59, No. 5, pp. 1-38.
+#'   
+#'   Yamamoto, T. (2013). Identification and Estimation of Causal Mediation 
+#'   Effects with Treatment Noncompliance. Unpublished manuscript.
+#' 
+#' @export  
+#' @examples
+#' # Examples with JOBS II Field Experiment
+#' 
+#' # ** For illustration purposes a small number of simulations are used **
+#' 
+#' require(parallel)
+#' require(MASS)
+#' 
+#' data(jobs)
+#' 
+#' a <- lm(comply ~ treat + sex + age + marital + nonwhite + educ + income, 
+#'         data = jobs)
+#' b <- glm(job_dich ~ comply + treat + sex + age + marital + nonwhite + educ + income, 
+#'         data = jobs, family = binomial)
+#' c <- lm(depress2 ~ job_dich * (comply + treat) + sex + age + marital + nonwhite + educ + income, 
+#'         data = jobs)
+#' 
+#' out <- ivmediate(a, b, c, sims = 50, boot = FALSE, 
+#'                  enc = "treat", treat = "comply", mediator = "job_dich")
+#'                  
+#' summary(out)
+#' plot(out)
+#' 
+#' # Using non-parametric bootstrap
+#' out.boot <- ivmediate(a, b, c, sims = 50, boot = TRUE, 
+#'                  enc = "treat", treat = "comply", mediator = "job_dich")
+#'                  
+#' summary(out.boot)
+#' plot(out.boot)
+#' 
+#' 
 ivmediate <- function(model.t, model.m, model.y, ci = TRUE, sims = 1000, boot = TRUE,
                       enc = "enc.name", treat = "treat.name", mediator = "med.name",
                       conf.level = .95, long = TRUE, dropobs = FALSE,
@@ -365,7 +518,57 @@ ivmediate.fit <- function(x, model.t, model.m, model.y,
   
 }
 
-
+#' Summarizing Output from Mediation Analysis with Treatment Noncompliance
+#' 
+#' Function to report results from mediation analysis with treatment 
+#' noncompliance. Reported categories are local average causal mediation 
+#' effects, local average natural direct effects and local average treatment 
+#' (total) effect.
+#' 
+#' @aliases summary.ivmediate print.summary.ivmediate
+#'   
+#' @param object output from mediate function.
+#' @param conf.level confidence level for the intervals reported in the summary 
+#'   table.
+#' @param x output from summary.mediate function.
+#' @param ...  additional arguments affecting the summary produced.
+#'   
+#' @author Teppei Yamamoto, Massachusetts Institute of Technology, 
+#'   \email{teppei@@mit.edu}.
+#'   
+#' @seealso \code{\link{ivmediate}}, \code{\link{plot.ivmediate}}
+#'   
+#' @references Tingley, D., Yamamoto, T., Hirose, K., Imai, K. and Keele, L. 
+#'   (2014). "mediation: R package for Causal Mediation Analysis", Journal of 
+#'   Statistical Software, Vol. 59, No. 5, pp. 1-38.
+#'   
+#'   Yamamoto, T. (2013). Identification and Estimation of Causal Mediation 
+#'   Effects with Treatment Noncompliance. Unpublished manuscript.
+#'   
+#' @examples
+#' # Examples with JOBS II Field Experiment
+#' 
+#' # ** For illustration purposes a small number of simulations are used **
+#' 
+#' require(parallel)
+#' require(MASS)
+#' 
+#' data(jobs)
+#' 
+#' a <- lm(comply ~ treat + sex + age + marital + nonwhite + educ + income, 
+#'         data = jobs)
+#' b <- glm(job_dich ~ comply + treat + sex + age + marital + nonwhite + educ + income, 
+#'         data = jobs, family = binomial)
+#' c <- lm(depress2 ~ job_dich * (comply + treat) + sex + age + marital + nonwhite + educ + income, 
+#'         data = jobs)
+#' 
+#' out <- ivmediate(a, b, c, sims = 50, boot = FALSE,
+#'                  enc = "treat", treat = "comply", mediator = "job_dich")
+#'                  
+#' summary(out)
+#' plot(out)
+#' 
+#' @export
 summary.ivmediate <- function(object, conf.level = object$conf.level[1], ...){
   if(!is.null(object$dc1.ci)){
       cl.ind <- match(conf.level, object$conf.level)
@@ -382,7 +585,8 @@ summary.ivmediate <- function(object, conf.level = object$conf.level[1], ...){
   structure(object, class = c("summary.ivmediate", class(object)))
 }
 
-
+#' @rdname summary.ivmediate
+#' @export
 print.summary.ivmediate <- function(x, ...){
   cat("\n")
   cat("Causal Mediation Analysis with Treatment Noncompliance\n\n")
@@ -423,7 +627,73 @@ print.summary.ivmediate <- function(x, ...){
   invisible(x)
 }
 
-
+#' Plotting Local Indirect, Direct, and Total Effects from Mediation Analysis 
+#' with Treatment Noncompliance
+#' 
+#' Function to plot results from \code{ivmediate}. The vertical axis lists the 
+#' local average causal mediation effects, local average natural direct effects 
+#' and local average treatment effects and the horizontal axis indicates the 
+#' respective magnitudes. Most standard options for plot function available.
+#' 
+#' @param x object of class \code{ivmediate} as produced by \code{ivmediate}.
+#' @param treatment a character string indicating the baseline treatment value 
+#'   of the estimated local average causal mediation effect and direct effect to
+#'   plot. Can be either "control", "treated" or "both". If 'NULL' (default), 
+#'   both sets of estimates are plotted.
+#' @param labels a vector of character strings indicating the labels for the 
+#'   estimated effects. The default labels will be used if NULL.
+#' @param effect.type a vector indicating which quantities of interest to plot. 
+#'   Default is to plot all three quantities (indirect, direct and total 
+#'   effects).
+#' @param conf.level a numeric value for the level of the confidence intervals 
+#'   to plot. Must equal one of the confidence levels used to produce the 
+#'   \code{ivmediate} object.
+#' @param xlim range of the horizontal axis.
+#' @param ylim range of the vertical axis.
+#' @param xlab label of the horizontal axis.
+#' @param ylab label of the vertical axis.
+#' @param main main title.
+#' @param lwd width of the horizontal bars for confidence intervals.
+#' @param cex size of the dots for point estimates.
+#' @param col color of the dots and horizontal bars for the estimates.
+#' @param ...  additional parameters passed to 'plot'.
+#' 
+#' @author Teppei Yamamoto, Massachusetts Institute of Technology, 
+#'   \email{teppei@@mit.edu}.
+#'   
+#' @seealso \code{\link{ivmediate}}, \code{\link{summary.ivmediate}}
+#' 
+#' @references Tingley, D., Yamamoto, T., Hirose, K., Imai, K. and Keele, L. 
+#'   (2014). "mediation: R package for Causal Mediation Analysis", Journal of 
+#'   Statistical Software, Vol. 59, No. 5, pp. 1-38.
+#'   
+#'   Yamamoto, T. (2013). Identification and Estimation of Causal Mediation 
+#'   Effects with Treatment Noncompliance. Unpublished manuscript.
+#'   
+#' @examples
+#' # Examples with JOBS II Field Experiment
+#' 
+#' # ** For illustration purposes a small number of simulations are used **
+#' 
+#' require(parallel)
+#' require(MASS)
+#' 
+#' data(jobs)
+#' 
+#' a <- lm(comply ~ treat + sex + age + marital + nonwhite + educ + income, 
+#'         data = jobs)
+#' b <- glm(job_dich ~ comply + treat + sex + age + marital + nonwhite + educ + income, 
+#'         data = jobs, family = binomial)
+#' c <- lm(depress2 ~ job_dich * (comply + treat) + sex + age + marital + nonwhite + educ + income, 
+#'         data = jobs)
+#' 
+#' out <- ivmediate(a, b, c, sims = 50, boot = FALSE,
+#'                  enc = "treat", treat = "comply", mediator = "job_dich")
+#'                  
+#' summary(out)
+#' plot(out)
+#' 
+#' @export
 plot.ivmediate <- function(x, treatment = NULL, labels = NULL,
                          effect.type = c("indirect","direct","total"),
                          conf.level = x$conf.level[1],

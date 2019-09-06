@@ -1,11 +1,73 @@
+#' Significance Test for Treatment-Mediator Interaction in Causal Mediation 
+#' Analysis
+#' 
+#' Function to test whether the average causal mediation effects and direct 
+#' effects are significantly different between the treatment and control 
+#' contitions.
+#' 
+#' @aliases test.TMint test.TMint.default test.TMint.mediate 
+#'   test.TMint.mediate.order print.htest.order
+#'   
+#' @param x output from \code{mediate} function.
+#' @param conf.level level of the returned two-sided confidence intervals for 
+#'   the effect differences. By default it is set to the value used in the 
+#'   original mediate call.
+#' @param ...  additional arguments.
+#' 
+#' @return \code{test.TMint} returns an object of class "\code{htest}" when 
+#'   applied to a \code{mediate} object. See \code{\link{t.test}} for more 
+#'   explanations of the contents. The function returns an object of class 
+#'   "\code{htest.order}" which has its own \code{print} method included in this
+#'   package.
+#'   
+#' @author Teppei Yamamoto, Massachusetts Institute of Technology, 
+#'   \email{teppei@@mit.edu}.
+#'   
+#' @seealso \code{\link{mediate}}
+#' 
+#' @references Tingley, D., Yamamoto, T., Hirose, K., Imai, K. and Keele, L. 
+#'   (2014). "mediation: R package for Causal Mediation Analysis", Journal of 
+#'   Statistical Software, Vol. 59, No. 5, pp. 1-38.
+#'   
+#'   Imai, K., Keele, L. and Tingley, D. (2010) A General Approach to Causal 
+#'   Mediation Analysis, Psychological Methods, Vol. 15, No. 4 (December), pp. 
+#'   309-334.
+#'   
+#'   Imai, K., Keele, L. and Yamamoto, T. (2010) Identification, Inference, and 
+#'   Sensitivity Analysis for Causal Mediation Effects, Statistical Science,
+#'   Vol. 25, No. 1 (February), pp. 51-71.
+#'   
+#'   Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation 
+#'   Analysis Using R" in Advances in Social Science Research Using R, ed. H. D.
+#'   Vinod New York: Springer.
+#'   
+#' @examples
+#' # Examples with JOBS II Field Experiment
+#' 
+#' # **For illustration purposes a small number of simulations are used**
+#' 
+#' data(jobs)
+#' 
+#' # Fit mediator and outcome models allowing for treatment-mediator interaction
+#' b <- lm(job_seek ~ treat + econ_hard + sex + age, data=jobs)
+#' d <- lm(depress2 ~ treat*job_seek + econ_hard + sex + age, data=jobs)
+#' 
+#' # Test for significance of interaction
+#' fit <- mediate(b, d, sims=50, treat="treat", mediator="job_seek")
+#' test.TMint(fit)
+#' 
+#' @export
 test.TMint <- function(x, ...){
   UseMethod("test.TMint")
 }
 
+#' @export
 test.TMint.default <- function(x, ...){
   stop("currently no test.TMint method exists for the input object.")
 }
 
+#' @rdname test.TMint
+#' @export
 test.TMint.mediate <- function(x, conf.level = x$conf.level, ...){
   if(is.null(x$d0.sims) || is.null(x$d1.sims) || is.null(x$z0.sims) || is.null(x$z1.sims)){
     stop("simulation draws missing; rerun mediate with 'long' set to TRUE")
@@ -34,15 +96,92 @@ test.TMint.mediate <- function(x, conf.level = x$conf.level, ...){
   return(res)
 }
 
+#' Significance Test for Moderated Mediation
+#' 
+#' Function to test whether the average causal mediation effects and direct 
+#' effects are significantly different between two moderator strata.
+#' 
+#' @details The function takes the original call to \code{mediate} and reruns
+#'   the algorithm twice with the two sets of \code{covariates} values. It
+#'   assumes that the objects in the environment in which the original mediate
+#'   call was made also exist in the current environment under the same variable
+#'   names, i.e., it evaluates the updated call in the current environment.
+#'   
+#' @aliases test.modmed test.modmed.default test.modmed.mediate 
+#'   test.modmed.mediate.order print.test.modmed.mediate 
+#'   print.test.modmed.mediate.order
+#'   
+#' @param object output from \code{mediate} function.
+#' @param covariates.1 first set of value(s) of covariates (moderators) included
+#'   in the mediator and outcome models. See documentation for the 
+#'   \code{covariates} argument for the \code{\link{mediate}} function.
+#' @param covariates.2 second set of value(s) of covariates (moderators) 
+#'   included in the mediator and outcome models.
+#' @param sims number of simulation draws the test will be based on. Defaults to
+#'   the number used in the original mediate fit.
+#' @param conf.level level of the returned two-sided confidence intervals for 
+#'   the effect differences. By default it is set to the value used in the 
+#'   original mediate call.
+#' @param x output from \code{test.modmed} function.
+#' @param ...  additional arguments.
+#' 
+#' @return When applied to a \code{mediate} object, \code{test.modmed} returns 
+#'   an object of class "\code{test.modmed.mediate}", a list composed of 
+#'   "\code{htest}" objects. See \code{\link{t.test}} for more explanations of 
+#'   \code{htest} objects. When applied to a \code{mediate.order} object, the 
+#'   function returns an object of class "\code{test.modmed.mediate.order}" 
+#'   which is a list composed of "\code{htest.order}" objects.
+#'   
+#' @author Teppei Yamamoto, Massachusetts Institute of Technology, 
+#'   \email{teppei@@mit.edu}.
+#'   
+#' @seealso \code{\link{mediate}}, \code{\link{test.TMint}}
+#' 
+#' @references Tingley, D., Yamamoto, T., Hirose, K., Imai, K. and Keele, L. 
+#'   (2014). "mediation: R package for Causal Mediation Analysis", Journal of 
+#'   Statistical Software, Vol. 59, No. 5, pp. 1-38.
+#'   
+#'   Imai, K., Keele, L. and Tingley, D. (2010) A General Approach to Causal 
+#'   Mediation Analysis, Psychological Methods, Vol. 15, No. 4 (December), pp. 
+#'   309-334.
+#'   
+#'   Imai, K., Keele, L. and Yamamoto, T. (2010) Identification, Inference, and 
+#'   Sensitivity Analysis for Causal Mediation Effects, Statistical Science, 
+#'   Vol. 25, No. 1 (February), pp. 51-71.
+#'   
+#'   Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation 
+#'   Analysis Using R" in Advances in Social Science Research Using R, ed. H. D.
+#'   Vinod New York: Springer.
+#'   
+#' @examples
+#' # Examples with JOBS II Field Experiment
+#' 
+#' # **For illustration purposes a small number of simulations are used**
+#' 
+#' data(jobs)
+#' 
+#' # Fit mediator and outcome models allowing for interaction with moderator
+#' b.int <- lm(job_seek ~ treat*age + econ_hard + sex, data=jobs)
+#' d.int <- lm(depress2 ~ treat*job_seek*age + econ_hard + sex, data=jobs)
+#' 
+#' # Initial mediate fit
+#' fit <- mediate(b.int, d.int, sims=50, treat="treat", mediator="job_seek")
+#' 
+#' # Test for significance of moderated mediation
+#' test.modmed(fit, list(age = 20), list(age = 70), sims = 100)
+#' 
+#' @export
 test.modmed <- function(object, ...){
   UseMethod("test.modmed")
 }
 
+#' @export
 test.modmed.default <- function(object, ...){
   stop("currently no test.modmed method exists for the input object.")
 }
 
-
+#' @rdname test.modmed
+#' @export
 test.modmed.mediate <- function(object, covariates.1, covariates.2,
                                 sims = object$sims, conf.level = object$conf.level, ...){
   
@@ -52,11 +191,11 @@ test.modmed.mediate <- function(object, covariates.1, covariates.2,
   
   seed <- .Random.seed
   cl$covariates <- covariates.1
-  out.1 <- eval(cl)
+  out.1 <- eval(cl, envir = parent.frame())
   
   .Random.seed <- seed
   cl$covariates <- covariates.2
-  out.2 <- eval(cl)
+  out.2 <- eval(cl, envir = parent.frame())
   
   d1.diff <- out.1$d1 - out.2$d1
   d1.diff.sims <- out.1$d1.sims - out.2$d1.sims
@@ -149,6 +288,8 @@ test.modmed.mediate <- function(object, covariates.1, covariates.2,
   
 }
 
+#' @rdname test.modmed
+#' @export
 print.test.modmed.mediate <- function(x, ...){
   for(i in 1:length(x)){
     print(x[[i]], ...)
@@ -158,6 +299,7 @@ print.test.modmed.mediate <- function(x, ...){
 
 ##############################Order Functions##################################
 
+#' @export
 test.TMint.mediate.order <- function(x, conf.level = x$conf.level, ...){
   if(is.null(x$d0.sims) || is.null(x$d1.sims) || is.null(x$z0.sims) || is.null(x$z1.sims)){
     stop("simulation draws missing; rerun mediate with 'long' set to TRUE")
@@ -191,7 +333,7 @@ test.TMint.mediate.order <- function(x, conf.level = x$conf.level, ...){
   res
 }
 
-
+#' @export
 print.htest.order <- function(x, ...){
   
   clp <- 100 * x$conf.level
@@ -212,7 +354,7 @@ print.htest.order <- function(x, ...){
   
 }
 
-
+#' @export
 test.modmed.mediate.order <- function(object, covariates.1, covariates.2,
                                 sims = object$sims, conf.level = object$conf.level, ...){
   
@@ -343,6 +485,7 @@ test.modmed.mediate.order <- function(object, covariates.1, covariates.2,
   return(res)
 }
 
+#' @export
 print.test.modmed.mediate.order <- function(x, ...){
   for(i in 1:length(x)){
     print(x[[i]], ...)

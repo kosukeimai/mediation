@@ -1,6 +1,103 @@
 ## User interface functions
 
 #single experiment design
+
+#' Estimating Average Causal Mediation Effects under the Single Experiment 
+#' Design
+#' 
+#' @details 'mediate.sed' estimates average causal mediation effects for the 
+#'   single experiment design. The two options are to use either the sequential 
+#'   ignorability (SI) assumption in which nonparametric estimates of the 
+#'   average causal mediation effect are produced, or, to relax the SI 
+#'   assumption and to calculate the nonparametric bounds on the average causal 
+#'   mediation effect.
+#'   
+#'   This function calculates average causal mediation effects (ACME) for the 
+#'   single experiment design, where the treatment is randomized and the 
+#'   mediator/outcome variables are measured. The user specifies whether they 
+#'   want non-parametric point estimates based on the sequential ignorability 
+#'   (SI) assumption, or nonparametric bounds without the SI assumption.
+#'   
+#' @param outcome name of the outcome variable in 'data'. The variable must be 
+#'   binary (factor or numeric 0/1) if 'SI' is FALSE.
+#' @param mediator name of the mediator in 'data'. The variable must be binary 
+#'   (factor or numeric 0/1) if 'SI' is FALSE and discrete if TRUE.
+#' @param treat name of the treatment variable in 'data'. Must be binary (factor
+#'   or numeric 0/1).
+#' @param data a data frame containing all the above variables.
+#' @param SI whether the sequential ignorability assumption is made.
+#' @param sims number of bootstrap simulations. Only relevant when 'SI' is TRUE.
+#' @param conf.level level of the returned two-sided confidence intervals. Only 
+#'   relevant when 'SI' is TRUE.
+#' @param boot a logical value. if 'FALSE' a large sample Delta method 
+#'   approximation is used for confidence intervals; if 'TRUE' nonparametric 
+#'   bootstrap will be used. Default is 'FALSE'. Only relevant if 'SI' is TRUE.
+#'   
+#' @return \code{mediate.sed} returns an object of class 
+#'   "\code{mediate.design}", a list that contains the components listed below.
+#'   
+#'   The \code{summary} function can be used to obtain a table of the results.
+#'   
+#'   \item{d0, d1}{point estimates or lower/upper bounds for causal mediation
+#'   effects under the control and treatment conditions, respectively.} 
+#'   \item{d0.ci, d1.ci}{confidence intervals for average causal mediation
+#'   effects for the nonparametric estimates. The confidence level is set at the
+#'   value specified in 'conf.level'. The value exists only when 'SI' is TRUE.} 
+#'   \item{boot}{logical, the 'boot' argument used.} 
+#'   \item{conf.level}{the confidence level used. } 
+#'   \item{sims}{number of bootstrap simulations used for confidence interval 
+#'   calculation.} 
+#'   \item{nobs}{number of observations used.} 
+#'   \item{design}{ indicates the design. Equals either "SED.NP.SI" or
+#'   "SED.NP.NOSI".}
+#'   
+#' @author Dustin Tingley, Harvard University, 
+#'   \email{dtingley@@gov.harvard.edu}; Teppei Yamamoto, Massachusetts Institute
+#'   of Technology, \email{teppei@@mit.edu}.
+#'   
+#' @seealso \code{\link{mediate}}, \code{\link{summary.mediate.design}}
+#' 
+#' @references Tingley, D., Yamamoto, T., Hirose, K., Imai, K. and Keele, L. 
+#'   (2014). "mediation: R package for Causal Mediation Analysis", Journal of 
+#'   Statistical Software, Vol. 59, No. 5, pp. 1-38.
+#'   
+#'   Imai, K., Tingley, D. and Yamamoto, T. (2012) Experimental Designs for 
+#'   Identifying Causal Mechanisms. Journal of the Royal Statistical Society, 
+#'   Series A (Statistics in Society)"
+#'   
+#'   Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2011). Unpacking the 
+#'   Black Box of Causality: Learning about Causal Mechanisms from Experimental 
+#'   and Observational Studies, American Political Science Review, Vol. 105, No.
+#'   4 (November), pp. 765-789.
+#'   
+#'   Imai, K., Keele, L. and Yamamoto, T. (2010) Identification, Inference, and 
+#'   Sensitivity Analysis for Causal Mediation Effects, Statistical Science, 
+#'   Vol. 25, No. 1 (February), pp. 51-71.
+#'   
+#'   Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation 
+#'   Analysis Using R" in Advances in Social Science Research Using R, ed. H. D.
+#'   Vinod New York: Springer.
+#'   
+#' @export   
+#' @examples
+#' # Example 1: Bounds without SI assumption
+#' 
+#' data(boundsdata)
+#' 
+#' data.SED <- subset(boundsdata, manip == 0)
+#' bound1 <- mediate.sed("out", "med", "ttt", data.SED, SI=FALSE)
+#' summary(bound1)
+#' 
+#' # Example 2: Nonparametric estimate of ACME under SI assumption
+#' # Example with JOBS II Field Experiment
+#' 
+#' data(jobs)
+#' 
+#' foo.1 <- mediate.sed("depress2", "job_disc", "treat", jobs, SI=TRUE)
+#' summary(foo.1)
+#' 
+#' foo.2 <- mediate.sed("depress2", "job_disc", "treat", jobs, SI=TRUE, boot=TRUE)
+#' summary(foo.2)
 mediate.sed <- function(outcome, mediator, treat, data,
                         SI = FALSE, sims = 1000, conf.level = 0.95, boot = FALSE) {
 
@@ -31,6 +128,95 @@ mediate.sed <- function(outcome, mediator, treat, data,
 
 
 #parallel design
+
+#' Estimating Average Causal Mediation Effects under the Parallel Design
+#' 
+#' 'mediate.pd' estimates the average causal mediation effects for the parallel 
+#' design. If a treatment-mediator interaction is allowed then the nonparametric
+#' sharp bounds are calculated. If a treatment-mediator interaction is not 
+#' allowed then the estimates of the (point-identified) effects are computed 
+#' along with bootstrapped confidence intervals.
+#' 
+#' @details This function calculates average causal mediation effects (ACME) for
+#'   the parallel design. The design consists of two randomly separated 
+#'   experimental arms, indicated by 'manipulated'. In one the treatment is 
+#'   randomized and the mediator and outcome variables are measured. In the 
+#'   second arm, the treatment is randomized, the mediator is perfectly 
+#'   manipulated and the outcome variable is measured.
+#'   
+#'   Under the parallel design, the ACME is identified when it is assumed that 
+#'   there is no interaction between the treatment and mediator. Without the 
+#'   assumption the nonparametric sharp bounds can be computed. See Imai, 
+#'   Tingley and Yamamoto (2012) for details.
+#'   
+#' @param outcome name of the outcome variable in 'data'.
+#' @param mediator name of the mediator in 'data'. The variable must be binary 
+#'   (factor or numeric 0/1).
+#' @param treat name of the treatment variable in 'data'. Must be binary (factor
+#'   or numeric 0/1).
+#' @param manipulated name of the binary design indicator in 'data', indicating 
+#'   whether observation received mediator manipulation.
+#' @param data a data frame containing all the above variables.
+#' @param NINT whether the no interaction assumption is made.
+#' @param sims number of bootstrap simulations. Only relevant when 'NINT' is 
+#'   TRUE.
+#' @param conf.level level of the returned two-sided confidence intervals. Only 
+#'   relevant when 'NINT' is TRUE.
+#'   
+#' @return \code{mediate.pd} returns an object of class "\code{mediate.design}",
+#'   a list that contains the components listed below.
+#'   
+#'   The function \code{summary} (i.e., \code{summary.mediate.design}) can be 
+#'   used to obtain a table of the results.
+#'   
+#'   \item{d0, d1}{ point estimates or bounds for the average causal mediation
+#'   effects under the control and treatment conditions, respectively.} 
+#'   \item{d0.ci, d1.ci}{ confidence intervals for the effects based on the
+#'   nonparametric bootstrap. The confidence level is set at the value specified
+#'   in 'conf.level'. Only exists when 'NINT' is TRUE.} \item{nobs}{ number of
+#'   observations used.} \item{conf.level}{ confidence level used. Only exists
+#'   when 'NINT' is TRUE.} \item{sims}{ number of bootstrap simulations used for
+#'   confidence interval calculation. Only exists when 'NINT' is TRUE.} 
+#'   \item{design}{ indicates the design. "PD.NINT" if no interaction assumed;
+#'   "PD" if interaction allowed.}
+
+#' @author Dustin Tingley, Harvard University, 
+#'   \email{dtingley@@gov.harvard.edu}; Teppei Yamamoto, Massachusetts Institute
+#'   of Technology, \email{teppei@@mit.edu}.
+#'   
+#' @seealso \code{\link{mediate}}, \code{\link{summary.mediate.design}}
+#' 
+#' @references Tingley, D., Yamamoto, T., Hirose, K., Imai, K. and Keele, L. 
+#'   (2014). "mediation: R package for Causal Mediation Analysis", Journal of 
+#'   Statistical Software, Vol. 59, No. 5, pp. 1-38.
+#'   
+#'   Imai, K., Tingley, D. and Yamamoto, T. (2012) Experimental Designs for 
+#'   Identifying Causal Mechanisms. Journal of the Royal Statistical Society, 
+#'   Series A (Statistics in Society)"
+#'   
+#'   Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2011). Unpacking the 
+#'   Black Box of Causality: Learning about Causal Mechanisms from Experimental 
+#'   and Observational Studies, American Political Science Review, Vol. 105, No.
+#'   4 (November), pp. 765-789.
+#'   
+#'   Imai, K., Keele, L. and Yamamoto, T. (2010) Identification, Inference, and 
+#'   Sensitivity Analysis for Causal Mediation Effects, Statistical Science,
+#'   Vol. 25, No. 1 (February), pp. 51-71.
+#'   
+#'   Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) Causal Mediation 
+#'   Analysis Using R" in Advances in Social Science Research Using R, ed. H. D.
+#'   Vinod New York: Springer.
+#'   
+#' @export   
+#' @examples
+#' data(boundsdata)
+#' 
+#' bound2 <- mediate.pd("out", "med", "ttt", "manip", boundsdata, 
+#'                   NINT = TRUE, sims = 100, conf.level=.95)
+#' summary(bound2)
+#' 
+#' bound2.1 <- mediate.pd("out", "med", "ttt", "manip", boundsdata, NINT = FALSE)
+#' summary(bound2.1)
 mediate.pd <- function(outcome, mediator, treat, manipulated, data,
                         NINT = TRUE, sims = 1000, conf.level = 0.95) {
 
@@ -59,6 +245,87 @@ mediate.pd <- function(outcome, mediator, treat, manipulated, data,
 
 
 #parallel encouragement design
+
+#' Computing Bounds on Average Causal Mediation Effects under the Parallel
+#' Encouragement Design
+#' 
+#' 'mediate.ped' computes the nonparametric bounds on the average causal
+#' mediation effects for the parallel encouragement design.
+#' 
+#' @details This function calculates average causal mediation effects (ACME) for
+#'   the parallel encouragement design. 
+#'   
+#'   In the design two experimental arms are
+#'   used. In one the treatment is randomized and the mediator and outcome
+#'   variables are measured. In the second arm the treatment is randomized, the
+#'   mediator is randomly encouraged either up or down, and the outcome variable
+#'   is measured. 
+#'   
+#'   Two type of causal quantities are estimated: the population
+#'   ACME and the complier ACME. The latter refers to the subpopulation of the
+#'   units for whom the encouragement has its intended effect, and the width of
+#'   its bounds are tighter than that of the population ACME. See Imai, Tingley
+#'   and Yamamoto (2012) for details.
+#' 
+#' @param outcome name of the outcome variable in 'data'.
+#' @param mediator name of the mediator in 'data'. The variable must be binary
+#' (factor or numeric 0/1).
+#' @param treat name of the treatment variable in 'data'. Must be binary
+#' (factor or numeric 0/1).
+#' @param encourage name of the encouragement variable in 'data'. The variable
+#' must be a numeric vector taking on either -1, 0, or 1.
+#' @param data a data frame containing all the above variables.
+#' 
+#' @return \code{mediate.pd} returns an object of class
+#' "\code{mediate.design}", a list that contains the components listed below.
+#' 
+#' The function \code{summary} (i.e., \code{summary.mediate.design}) can be
+#' used to obtain a table of the results.
+#' 
+#'   \item{d0, d1}{ estimated nonparametric sharp bounds for the population ACME under the control and treatment conditions.}
+#'   \item{d0.p, d1.p}{ estimated nonparametric sharp bounds for the complier ACME under the control and treatment conditions.}
+#'   \item{nobs}{ number of observations used.}
+#'   \item{design}{ indicates the design. Always equals "PED".}
+#'   
+#' @author Dustin Tingley, Harvard University,
+#' \email{dtingley@@gov.harvard.edu}; Teppei Yamamoto, Massachusetts Institute
+#' of Technology, \email{teppei@@mit.edu}.
+#' 
+#' @seealso \code{\link{mediate}}, \code{\link{medsens}},
+#'   \code{\link{plot.mediate}}, \code{\link{summary.mediate}},
+#'   \code{\link{mediations}}
+#' 
+#' @references Tingley, D., Yamamoto, T., Hirose, K., Imai, K. and Keele, L.
+#' (2014). "mediation: R package for Causal Mediation Analysis", Journal of
+#' Statistical Software, Vol. 59, No. 5, pp. 1-38.
+#' 
+#' Imai, K., Tingley, D. and Yamamoto, T. (2012) Experimental Designs for
+#' Identifying Causal Mechanisms. Journal of the Royal Statistical Society,
+#' Series A (Statistics in Society)"
+#' 
+#' Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2011). Unpacking the
+#' Black Box of Causality: Learning about Causal Mechanisms from Experimental
+#' and Observational Studies, American Political Science Review, Vol. 105, No.
+#' 4 (November), pp. 765-789.
+#' 
+#' Imai, K., Keele, L. and Tingley, D. (2010) A General Approach to Causal
+#' Mediation Analysis, Psychological Methods, Vol. 15, No. 4 (December), pp.
+#' 309-334.
+#' 
+#' Imai, K., Keele, L. and Yamamoto, T. (2010) Identification, Inference, and
+#' Sensitivity Analysis for Causal Mediation Effects, Statistical Science, Vol.
+#' 25, No. 1 (February), pp. 51-71.
+#' 
+#' Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation
+#' Analysis Using R" in Advances in Social Science Research Using R, ed. H. D.
+#' Vinod New York: Springer.
+#' 
+#' @export
+#' @examples
+#' data(boundsdata)
+#' 
+#' bound3 <- mediate.ped("out.enc", "med.enc", "ttt", "enc", boundsdata)
+#' summary(bound3)
 mediate.ped <- function(outcome, mediator, treat, encourage, data) {
 
     varnames <- c(outcome, mediator, treat, encourage)
@@ -82,6 +349,88 @@ mediate.ped <- function(outcome, mediator, treat, encourage, data) {
 
 
 #crossover encouragement design
+
+#' Estimating Average Causal Mediation Effects under the Crossover Encouragement
+#' Design
+#' 
+#' 'mediate.ced' estimates the average causal mediation effects for the 
+#' crossover encouragement design.
+#' 
+#' @details This function estimates the average indirect effects for the pliable
+#'   units under the crossover encouragement design. The design has two stages. 
+#'   In the first stage the treatment is randomized and the mediator and outcome
+#'   variables are measured. In the second the treatment is set to the value 
+#'   opposite of first period and a randomly selected group of units receives 
+#'   encouragement to take on the mediator opposite to the values observed in 
+#'   the first stage.  See Imai, Tingley and Yamamoto (2012) for a full 
+#'   description. The confidence intervals are calculated via the nonparametric 
+#'   bootstrap.
+#'   
+#'   Note that \code{outcome} should be the observed responses in the
+#'   \emph{second} stage whereas \code{treat} should be the values in the
+#'   \emph{first} stage.
+#'   
+#' @param outcome variable name in 'data' containing the outcome values observed
+#'   in the second experiment. The variable must be binary (factor or numeric
+#'   0/1).
+#' @param med.1 variable name in 'data' containing the mediator values observed 
+#'   in the first experiment. The variable must be binary (factor or numeric 
+#'   0/1).
+#' @param med.2 variable name in 'data' containing the mediator values observed 
+#'   in the second experiment.
+#' @param treat variable name in 'data' containing the treatment values in the 
+#'   first experiment. Must be binary (factor or numeric 0/1).
+#' @param encourage name of the encouragement indicator in 'data'. Must be 
+#'   binary (factor or numeric 0/1).
+#' @param data a data frame containing all the above variables.
+#' @param sims number of bootstrap simulations.
+#' @param conf.level level of the returned two-sided confidence intervals.
+#' 
+#' @return \code{mediate.ced} returns an object of class 
+#'   "\code{mediate.design}", a list that contains the components listed below.
+#'   
+#'   The \code{summary} function can be used to obtain a table of the results.
+#'   
+#'   \item{d0, d1}{point estimates of the average indirect effects under the control and treatment conditions.}
+#'   \item{d0.ci, d1.ci}{confidence intervals for the effects. The confidence level is set at the value specified in 'conf.level'.}
+#'   \item{conf.level}{ confidence level used.}
+#'   \item{sims}{ number of bootstrap simulations.}
+#'   \item{nobs}{ number of observations used.}
+#'   \item{design}{ indicates the design. Always equals "CED".}
+#'   
+#' @author Dustin Tingley, Harvard University, 
+#'   \email{dtingley@@gov.harvard.edu}; Teppei Yamamoto, Massachusetts Institute
+#'   of Technology, \email{teppei@@mit.edu}.
+#'   
+#' @seealso \code{\link{mediate}}, \code{\link{summary.mediate.design}}
+#' 
+#' @references Tingley, D., Yamamoto, T., Hirose, K., Imai, K. and Keele, L. 
+#'   (2014). "mediation: R package for Causal Mediation Analysis", Journal of 
+#'   Statistical Software, Vol. 59, No. 5, pp. 1-38.
+#'   
+#'   Imai, K., Tingley, D. and Yamamoto, T. (2012) Experimental Designs for 
+#'   Identifying Causal Mechanisms. Journal of the Royal Statistical Society, 
+#'   Series A (Statistics in Society)"
+#'   
+#'   Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2011). Unpacking the 
+#'   Black Box of Causality: Learning about Causal Mechanisms from Experimental 
+#'   and Observational Studies, American Political Science Review, Vol. 105, No.
+#'   4 (November), pp. 765-789.
+#'   
+#'   Imai, K., Keele, L. and Yamamoto, T. (2010) Identification, Inference, and 
+#'   Sensitivity Analysis for Causal Mediation Effects, Statistical Science,
+#'   Vol. 25, No. 1 (February), pp. 51-71.
+#'   
+#'   Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) Causal Mediation 
+#'   Analysis Using R" in Advances in Social Science Research Using R, ed. H. D.
+#'   Vinod New York: Springer.
+#'
+#' @export   
+#' @examples
+#' data(CEDdata)
+#' 
+#' res <- mediate.ced("Y2", "M1", "M2", "T1", "Z", CEDdata, sims = 100)
+#' summary(res)
 mediate.ced <- function(outcome, med.1, med.2, treat, encourage, data,
                         sims = 1000, conf.level = .95){
 
@@ -316,46 +665,50 @@ mediate.np <- function(Y, M, T, sims, conf.level, boot){
 #parallel design under no interaction assumption
 boot.pd <- function(outcome, mediator, treatment, manipulated,
                     sims, conf.level) {
-    n <- length(outcome)
-    data <- matrix(, nrow = n, ncol = 4)
-    data[,1] <- outcome
-    data[,2] <- treatment
-    data[,3] <- mediator
-    data[,4] <- manipulated
-    data <- as.data.frame(data)
-    names(data) <- c("Y","T","M","D")
-
-    acme <- matrix(NA, sims, 1)
-    for(b in 1:(sims+1)){  # bootstrap
-        index <- sample(1:n, n, replace = TRUE)
-        if(b == sims + 1){
-        	index <- 1:n
-        }
-        d <- data[index,]
-        tau <- mean(d$Y[d$T==1 & d$D==0]) - mean(d$Y[d$T==0 & d$D==0])
-        weight.m1 <- sum(d$M==1 & d$D==1 )/sum(d$D==1)
-        weight.m0 <- sum(d$M==0 & d$D==1 )/sum(d$D==1)
-        m1 <- mean(d$Y[d$T==1 & d$M==1 & d$D==1]) - mean(d$Y[d$T==0 & d$M==1 & d$D==1])
-        m0 <- mean(d$Y[d$T==1 & d$M==0 & d$D==1]) - mean(d$Y[d$T==0 & d$M==0 & d$D==1])
-        z <- weight.m1*m1 + weight.m0*m0
-        if(b == sims + 1){
-	        acme.mu <- tau - z
-        } else {
-	        acme[b] <- tau - z
-    	}
+  n <- length(outcome)
+  data <- matrix(, nrow = n, ncol = 4)
+  data[,1] <- outcome
+  data[,2] <- treatment
+  data[,3] <- mediator
+  data[,4] <- manipulated
+  data <- as.data.frame(data)
+  names(data) <- c("Y","T","M","D")
+  
+  acme <- matrix(NA, sims, 1)
+  for(b in 1:(sims+1)){  # bootstrap
+    index <- sample(1:n, n, replace = TRUE)
+    if(b == sims + 1){
+      index <- 1:n
     }
-
-    acme[acme==-Inf] <- NA
-    acme[acme==Inf] <- NA
-
-    low <- (1 - conf.level)/2
-    high <- 1 - low
-    acme.ci <- quantile(acme, c(low,high), na.rm=TRUE)
-    out <- list(d0 = acme.mu, d1 = acme.mu, d0.ci = acme.ci, d1.ci = acme.ci,
-                nobs = n, conf.level = conf.level, sims = sims, design = "PD.NINT")
-    class(out) <- "mediate.design"
-    out
-
+    d <- data[index,]
+    tau <- mean(d$Y[d$T==1 & d$D==0]) - mean(d$Y[d$T==0 & d$D==0])
+    weight.m1 <- sum(d$M==1 & d$D==1 )/sum(d$D==1)
+    weight.m0 <- sum(d$M==0 & d$D==1 )/sum(d$D==1)
+    m1 <- mean(d$Y[d$T==1 & d$M==1 & d$D==1]) - mean(d$Y[d$T==0 & 
+                                                           d$M==1 & d$D==1])
+    m0 <- mean(d$Y[d$T==1 & d$M==0 & d$D==1]) - mean(d$Y[d$T==0 & 
+                                                           d$M==0 & d$D==1])
+    z <- weight.m1*m1 + weight.m0*m0
+    if(b == sims + 1){
+      acme.mu <- tau - z
+    } else {
+      acme[b] <- tau - z
+    }
+  }
+  
+  acme[acme==-Inf] <- NA
+  acme[acme==Inf] <- NA
+  
+  low <- (1 - conf.level)/2
+  high <- 1 - low
+  acme.ci <- quantile(acme, c(low,high), na.rm=TRUE)
+  out <- list(d0 = acme.mu, d1 = acme.mu, d0.ci = acme.ci, d1.ci = 
+                acme.ci,
+              nobs = n, conf.level = conf.level, sims = sims, design 
+              = "PD.NINT")
+  class(out) <- "mediate.design"
+  out
+  
 }
 
 
@@ -545,12 +898,55 @@ mechanism.bounds <- function(outcome, mediator, treatment, DorZ, design) {
 
 ## Summary methods
 
+#' Summarizing Output from Design Based Mediation Analysis
+#' 
+#' Function to report results from design based mediation analysis. Reported 
+#' categories differ depending on the design and assumptions used.
+#' 
+#' 
+#' @aliases summary.mediate.design print.summary.mediate.design
+#' 
+#' @param object object of class \code{mediate.design}, typically output from a 
+#'   function for design-based mediation analysis (such as 
+#'   \code{\link{mediate.sed}}).
+#' @param x output from the summary function.
+#' @param ...  additional arguments affecting the summary produced.
+#' 
+#' @author Dustin Tingley, Harvard University, 
+#'   \email{dtingley@@gov.harvard.edu}; Teppei Yamamoto, Massachusetts Institute
+#'   of Technology, \email{teppei@@mit.edu}.
+#'   
+#' @seealso \code{\link{mediate}}, \code{\link{plot.mediate}}, 
+#'   \code{\link{summary}}.
+#'   
+#' @references Tingley, D., Yamamoto, T., Hirose, K., Imai, K. and Keele, L. 
+#'   (2014). "mediation: R package for Causal Mediation Analysis", Journal of 
+#'   Statistical Software, Vol. 59, No. 5, pp. 1-38.
+#'   
+#'   Imai, K., Tingley, D. and Yamamoto, T. (2012) Experimental Designs for 
+#'   Identifying Causal Mechanisms. Journal of the Royal Statistical Society, 
+#'   Series A (Statistics in Society)
+#'   
+#'   Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2011). Unpacking the 
+#'   Black Box of Causality: Learning about Causal Mechanisms from Experimental 
+#'   and Observational Studies, American Political Science Review, Vol. 105, No.
+#'   4 (November), pp. 765-789.
+#'   
+#'   Imai, K., Keele, L. and Yamamoto, T. (2010) Identification, Inference, and 
+#'   Sensitivity Analysis for Causal Mediation Effects, Statistical Science,
+#'   Vol. 25, No. 1 (February), pp. 51-71.
+#'   
+#'   Imai, K., Keele, L., Tingley, D. and Yamamoto, T. (2009) "Causal Mediation 
+#'   Analysis Using R" in Advances in Social Science Research Using R, ed. H. D.
+#'   Vinod New York: Springer.
+#'   
+#' @export
 summary.mediate.design <- function(object, ...){
     structure(object, class = c("summary.mediate.design", class(object)))
 }
 
-
-
+#' @rdname summary.mediate.design
+#' @export
 print.summary.mediate.design <- function(x, ...){
     cat("\n")
     cat("Design-Based Causal Mediation Analysis\n\n")
@@ -599,16 +995,15 @@ print.summary.mediate.design <- function(x, ...){
         } else {
             cat("Confidence Intervals Based on Asymptotic Variance\n\n")
         }
-
         smat <- rbind(c(x$d0, x$d0.ci), c(x$d1, x$d1.ci))
         colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
                           paste(clp, "% CI Upper", sep=""))
         rownames(smat) <- c("ACME (control)", "ACME (treated)")
 
     }
-
+    
     printCoefmat(smat, digits=4)
     cat("\n")
     cat("Sample Size Used: ", x$nobs,"\n\n")
     invisible(x)
-}
+  }
