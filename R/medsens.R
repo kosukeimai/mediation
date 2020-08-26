@@ -227,65 +227,84 @@ medsens <- function(x, rho.by = 0.1, sims = 1000, eps = sqrt(.Machine$double.eps
     ## Uppercase letters (e.g. T) = labels in the input matrix
     ## Uppercase letters + ".out" (e.g. T.out) = labels in the regression output
 
-    y.data <- model.frame(model.y)
-    Y <- colnames(y.data)[1]
-    if(is.factor(y.data[,treat])){
-        t.levels <- levels(y.data[,treat])
-        n.t.levels <- length(t.levels)
-        ## When treatment = more than two categories 
-        ## control.value => 1st factor level (baseline category)
-        ## treat.value => 2nd factor level
-        ## run regression again with this new data set
-        if(n.t.levels != 2){
-            number <- 1:n.t.levels
-            t.levels.mat <- data.frame(number, t.levels)
-            c.num <- t.levels.mat$number[t.levels.mat$t.levels == control.value]
-            t.num <- t.levels.mat$number[t.levels.mat$t.levels == treat.value]            
-            number.new <- c(c.num, t.num, number[-c(c.num, t.num)])
-            y.data[, treat] <- factor(y.data[, treat], levels(y.data[, treat])[number.new])
-            model.y <- update(model.y, data = y.data)     
-        }
-        t.levels <- levels(y.data[,treat])
-        cat.c <- t.levels[1]
-        cat.t <- t.levels[2]
+    # Model frames for M and Y models
+    m.data <- model.frame(model.m)  # Call.M$data
+    y.data <- model.frame(model.y)  # Call.Y$data
+    
+    # Convert character treatment to factor
+    if(is.character(m.data[,treat])){
+      m.data[,treat] <- factor(m.data[,treat])
+    }
+    if(is.character(y.data[,treat])){
+      y.data[,treat] <- factor(y.data[,treat])
+    }
+    
+    # Convert character mediator to factor
+    if(is.character(y.data[,mediator])){
+      y.data[,mediator] <- factor(y.data[,mediator])
+    }
+    
+    # Factor treatment indicator
+    isFactorT.m <- is.factor(m.data[,treat])
+    isFactorT.y <- is.factor(y.data[,treat])
+    if(isFactorT.m != isFactorT.y){
+      stop("treatment variable types differ in mediator and outcome models")
     } else {
-        cat.c <- NULL
-        cat.t <- NULL
+      isFactorT <- isFactorT.y
+    }
+    
+    if(isFactorT){
+      t.levels <- levels(y.data[,treat])
+      n.t.levels <- length(t.levels)
+      # NOTE-TK: this step can be fixed next; medsens should be able to inherit
+      # new treat.value and control.value from mediate output
+      if(treat.value %in% t.levels & control.value %in% t.levels){
+        cat.0 <- control.value
+        cat.1 <- treat.value
+      } else {
+        cat.0 <- t.levels[1]
+        cat.1 <- t.levels[2]
+        warning("treatment and control values do not match factor levels; using ", cat.0, " and ", cat.1, " as control and treatment, respectively")
+      }
+      ## When treatment = more than two categories
+      ## control.value => 1st factor level (baseline category)
+      ## treat.value => 2nd factor level
+      ## run regression again with this new data set
+      if(n.t.levels != 2){
+        number <- 1:n.t.levels
+        t.levels.mat <- data.frame(number, t.levels)
+        c.num <- t.levels.mat$number[t.levels.mat$t.levels == cat.0]
+        t.num <- t.levels.mat$number[t.levels.mat$t.levels == cat.1]
+        number.new <- c(c.num, t.num, number[-c(c.num, t.num)])
+        y.data[, treat] <- factor(y.data[, treat], levels(y.data[, treat])[number.new])
+        model.y <- update(model.y, data = y.data)
+      }
+      t.levels <- levels(y.data[,treat])
+      cat.c <- t.levels[1]
+      cat.t <- t.levels[2]
+    } else {
+      cat.c <- NULL
+      cat.t <- NULL
     }
     T.out <- paste(treat, cat.t, sep="")
-
-    m.data <- model.frame(model.m)
-    if(is.factor(m.data[,treat])){
-        t.levels <- levels(m.data[,treat])
-        n.t.levels <- length(t.levels)
-        ## When treatment = more than two categories 
-        ## control.value => 1st factor level (baseline category)
-        ## treat.value => 2nd factor level
-        ## run regression again with this new data set 
-        if(n.t.levels != 2){
-            number <- 1:n.t.levels
-            t.levels.mat <- data.frame(number, t.levels)
-            c.num <- t.levels.mat$number[t.levels.mat$t.levels == control.value]
-            t.num <- t.levels.mat$number[t.levels.mat$t.levels == treat.value]            
-            number.new <- c(c.num, t.num, number[-c(c.num, t.num)])
-            m.data[, treat] <- factor(m.data[, treat], levels(m.data[, treat])[number.new])
-            model.m <- update(model.m, data = m.data)     
-        }
-    } 
     
-    if(is.factor(y.data[,mediator])){
-        m.levels <- levels(y.data[,mediator])
-        if(length(m.levels) != 2){
-            stop("mediator with more than two categories currently not supported")
-        }
-        cat.m0 <- m.levels[1]
-        cat.m1 <- m.levels[2]
+    # Factor mediator indicator
+    isFactorM <- is.factor(y.data[,mediator])
+    
+    if(isFactorM){
+      m.levels <- levels(y.data[,mediator])
+      if(length(m.levels) != 2){
+        stop("mediator with more than two categories currently not supported")
+      }
+      cat.m0 <- m.levels[1]
+      cat.m1 <- m.levels[2]
     } else {
-        cat.m0 <- NULL
-        cat.m1 <- NULL
+      cat.m0 <- NULL
+      cat.m1 <- NULL
     }
+    
     M.out <- paste(mediator, cat.m1, sep="")
-
+    
     if(INT){
         if(paste(treat,mediator,sep=":") %in% attr(model.y$terms,"term.labels")){ # T:M
             TM.out <- paste(T.out, M.out, sep=":")
