@@ -1343,8 +1343,8 @@ mediate <- function(model.m, model.y, sims = 1000,
           PredictMt <- PredictM1[j,] * tt[3] + PredictM0[j,] * (1 - tt[3])
           PredictMc <- PredictM1[j,] * tt[4] + PredictM0[j,] * (1 - tt[4])
           if(isFactorM) {
-            pred.data.t[,mediator] <- factor(PredictMt, levels=1:m, labels=m.levels)
-            pred.data.c[,mediator] <- factor(PredictMc, levels=1:m, labels=m.levels)
+            pred.data.t[,mediator] <- factor(PredictMt, levels=0:(m-1), labels=m.levels)
+            pred.data.c[,mediator] <- factor(PredictMc, levels=0:(m-1), labels=m.levels)
           } else {
             pred.data.t[,mediator] <- PredictMt
             pred.data.c[,mediator] <- PredictMc
