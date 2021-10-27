@@ -516,15 +516,15 @@ mediate <- function(model.m, model.y, sims = 1000,
     newdata <- newdata[,-1L]
     rm(odata.m, odata.y)
     
-    call.m <- getCall(model.m)
-    call.y <- getCall(model.y)
+    Call.M <- getCall(model.m)
+    Call.Y <- getCall(model.y)
     
-    call.m$data <- call.y$data <- newdata
+    Call.M$data <- Call.Y$data <- newdata
     if(c("(weights)") %in% names(newdata)){
-      call.m$weights <- call.y$weights <- model.weights(newdata)
+      Call.M$weights <- Call.Y$weights <- model.weights(newdata)
     }
-    model.m <- eval.parent(call.m)
-    model.y <- eval.parent(call.y)
+    model.m <- eval.parent(Call.M)
+    model.y <- eval.parent(Call.Y)
     if(!is.null(cluster)){
       cluster <- factor(newdata[, ncol(newdata)])  # factor drops missing levels
     }
