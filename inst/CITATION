@@ -12,13 +12,13 @@ citEntry(entry = "Article",
   volume       = "59",
   number       = "5",
   pages        = "1--38",
-  url          = "http://www.jstatsoft.org/v59/i05/",
+  url          = "https://www.jstatsoft.org/v59/i05/",
 
   textVersion  =
   paste("Dustin Tingley, Teppei Yamamoto, Kentaro Hirose, Luke Keele, Kosuke Imai (2014).",
         "mediation: R Package for Causal Mediation Analysis.",
         "Journal of Statistical Software, 59(5), 1-38.",
-        "URL http://www.jstatsoft.org/v59/i05/.")
+        "URL https://www.jstatsoft.org/v59/i05/.")
 )
 
 citEntry(entry = "Article",
@@ -31,7 +31,7 @@ citEntry(entry = "Article",
   volume       = "25",
   number       = "1",
   pages        = "51--71",
-  url          = "http://imai.princeton.edu/research/mediation.html",
+  url          = "https://imai.fas.harvard.edu/research/mediation.html",
 
   textVersion  =
   paste("Kosuke Imai, Luke Keele and Teppei Yamamoto (2010).",
@@ -51,7 +51,7 @@ citEntry(entry = "Article",
   volume       = "15",
   number       = "4",
   pages        = "309--334",
-  url          = "http://imai.princeton.edu/research/BaronKenny.html",
+  url          = "https://imai.fas.harvard.edu/research/BaronKenny.html",
 
   textVersion  =
   paste("Kosuke Imai, Luke Keele and Dustin Tingley (2010).",
@@ -70,7 +70,7 @@ citEntry(entry = "Article",
   volume       = "105",
   number       = "4",
   pages        = "765--789",
-  url          = "http://imai.princeton.edu/research/mediationP.html",
+  url          = "https://imai.fas.harvard.edu/research/mediationP.html",
 
   textVersion  =
   paste("Kosuke Imai, Luke Keele, Dustin Tingley and Teppei Yamamoto (2011).",
@@ -87,7 +87,7 @@ citEntry(entry = "Article",
   volume       = "21",
   number       = "2",
   pages        = "141--171",
-  url          = "http://imai.princeton.edu/research/medsens.html",
+  url          = "https://imai.fas.harvard.edu/research/medsens.html",
 
   textVersion  =
   paste("Kosuke Imai and Teppei Yamamoto (2013).",
