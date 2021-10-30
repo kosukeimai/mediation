@@ -1002,7 +1002,7 @@ print.summary.mediate.design <- function(x, ...){
 
     }
     
-    printCoefmat(smat, digits=4)
+    printCoefmat(smat, tst.ind=NULL)
     cat("\n")
     cat("Sample Size Used: ", x$nobs,"\n\n")
     invisible(x)

@@ -615,7 +615,7 @@ print.summary.ivmediate <- function(x, ...){
                       paste(clp, "% CI Upper", sep=""))
   }
   
-  printCoefmat(smat)
+  printCoefmat(smat, tst.ind=NULL)
   cat("\n")
   cat("Sample Size Used:", x$nobs,"\n\n")
   
