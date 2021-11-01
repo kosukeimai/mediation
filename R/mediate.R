@@ -2581,7 +2581,7 @@ print.summary.mediate <- function(x, ...){
   }
   colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
                       paste(clp, "% CI Upper", sep=""), "p-value")
-  printCoefmat(smat, digits=3)
+  printCoefmat(smat, tst.ind=NULL)
   cat("\n")
   cat("Sample Size Used:", x$nobs,"\n\n")
   cat("\n")
@@ -2744,7 +2744,7 @@ print.summary.mediate.mer <- function(x,...){
   }
   colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
                       paste(clp, "% CI Upper", sep=""), "p-value")
-  printCoefmat(smat, digits=3)
+  printCoefmat(smat, tst.ind=NULL)
   cat("\n")
   cat("Sample Size Used:", x$nobs,"\n\n")
   cat("\n")
@@ -2800,28 +2800,28 @@ print.summary.mediate.mer.2 <- function(x,...){
     rownames(smat) <- gname
     colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
                         paste(clp, "% CI Upper", sep=""), "p-value") 
-    printCoefmat(smat, digits=3)
+    printCoefmat(smat, tst.ind=NULL)
     cat("\n")
     cat("ADE","\n\n")
     smat<-cbind(x$z0.group, x$z0.ci.group, x$z0.p.group)
     rownames(smat) <- gname
     colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
                         paste(clp, "% CI Upper", sep=""), "p-value") 
-    printCoefmat(smat, digits=3)
+    printCoefmat(smat, tst.ind=NULL)
     cat("\n")
     cat("Total Effect","\n\n")
     smat<-cbind(x$tau.coef.group, x$tau.ci.group, x$tau.p.group)
     rownames(smat) <- gname
     colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
                         paste(clp, "% CI Upper", sep=""), "p-value") 
-    printCoefmat(smat, digits=3)
+    printCoefmat(smat, tst.ind=NULL)
     cat("\n") 
     cat("Prop. Mediated","\n\n")
     smat<-cbind(x$n0.group, x$n0.ci.group, x$n0.p.group)
     rownames(smat) <- gname
     colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
                         paste(clp, "% CI Upper", sep=""), "p-value") 
-    printCoefmat(smat, digits=3)
+    printCoefmat(smat, tst.ind=NULL)
     cat("\n")  
     
     cat("\n")
@@ -2835,70 +2835,70 @@ print.summary.mediate.mer.2 <- function(x,...){
     rownames(smat) <- gname
     colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
                         paste(clp, "% CI Upper", sep=""), "p-value") 
-    printCoefmat(smat, digits=3)
+    printCoefmat(smat, tst.ind=NULL)
     cat("\n")
     cat("ACME (treated)","\n\n")
     smat<-cbind(x$d1.group, x$d1.ci.group, x$d1.p.group)
     rownames(smat) <- gname
     colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
                         paste(clp, "% CI Upper", sep=""), "p-value") 
-    printCoefmat(smat, digits=3)
+    printCoefmat(smat, tst.ind=NULL)
     cat("\n")
     cat("ADE (control)","\n\n")
     smat<-cbind(x$z0.group, x$z0.ci.group, x$z0.p.group)
     rownames(smat) <- gname
     colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
                         paste(clp, "% CI Upper", sep=""), "p-value") 
-    printCoefmat(smat, digits=3)
+    printCoefmat(smat, tst.ind=NULL)
     cat("\n")
     cat("ADE (treated)","\n\n")
     smat<-cbind(x$z1.group, x$z1.ci.group, x$z1.p.group)
     rownames(smat) <- gname
     colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
                         paste(clp, "% CI Upper", sep=""), "p-value") 
-    printCoefmat(smat, digits=3)
+    printCoefmat(smat, tst.ind=NULL)
     cat("\n")    
     cat("Total Effect","\n\n")
     smat<-cbind(x$tau.coef.group, x$tau.ci.group, x$tau.p.group)
     rownames(smat) <- gname
     colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
                         paste(clp, "% CI Upper", sep=""), "p-value") 
-    printCoefmat(smat, digits=3)
+    printCoefmat(smat, tst.ind=NULL)
     cat("\n") 
     cat("Prop. Mediated (control)","\n\n")
     smat<-cbind(x$n0.group, x$n0.ci.group, x$n0.p.group)
     rownames(smat) <- gname
     colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
                         paste(clp, "% CI Upper", sep=""), "p-value") 
-    printCoefmat(smat, digits=3)
+    printCoefmat(smat, tst.ind=NULL)
     cat("\n")  
     cat("Prop. Mediated (treated)","\n\n")
     smat<-cbind(x$n1.group, x$n1.ci.group, x$n1.p.group)
     rownames(smat) <- gname
     colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
                         paste(clp, "% CI Upper", sep=""), "p-value") 
-    printCoefmat(smat, digits=3)
+    printCoefmat(smat, tst.ind=NULL)
     cat("\n") 
     cat("ACME (average)","\n\n")
     smat<-cbind(x$d.avg.group, x$d.avg.ci.group, x$d.avg.p.group)
     rownames(smat) <- gname
     colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
                         paste(clp, "% CI Upper", sep=""), "p-value") 
-    printCoefmat(smat, digits=3)
+    printCoefmat(smat, tst.ind=NULL)
     cat("\n") 
     cat("ADE (average)","\n\n")
     smat<-cbind(x$z.avg.group, x$z.avg.ci.group, x$z.avg.p.group)
     rownames(smat) <- gname
     colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
                         paste(clp, "% CI Upper", sep=""), "p-value") 
-    printCoefmat(smat, digits=3)
+    printCoefmat(smat, tst.ind=NULL)
     cat("\n")
     cat("Prop. Mediated (average)","\n\n")
     smat<-cbind(x$n.avg.group, x$n.avg.ci.group, x$n.avg.p.group)   
     rownames(smat) <- gname
     colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
                         paste(clp, "% CI Upper", sep=""), "p-value") 
-    printCoefmat(smat, digits=3)
+    printCoefmat(smat, tst.ind=NULL)
     cat("\n")                          
     
     cat("\n")
@@ -2965,7 +2965,7 @@ print.summary.mediate.mer.3 <- function(x,...){
                           "Prop. Mediated") 
       colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
                           paste(clp, "% CI Upper", sep=""), "p-value")             
-      printCoefmat(smat, digits=3)
+      printCoefmat(smat, tst.ind=NULL)
     }
     cat("\n")
     cat("Sample Size Used:", x$nobs,"\n\n")
@@ -2996,7 +2996,7 @@ print.summary.mediate.mer.3 <- function(x,...){
                           "Prop. Mediated (average)") 
       colnames(smat) <- c("Estimate", paste(clp, "% CI Lower", sep=""),
                           paste(clp, "% CI Upper", sep=""), "p-value")             
-      printCoefmat(smat, digits=3)
+      printCoefmat(smat, tst.ind=NULL)
     }
     cat("\n")
     cat("Sample Size Used:", x$nobs,"\n\n")
