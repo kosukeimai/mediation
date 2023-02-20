@@ -592,6 +592,7 @@ se.ranef.new <- function(object)
     return(se.bygroup)
 }
 
+# Simple passing of coefficients with terminating condition
 drawCoefficientsGaussian <- function(num_sims, Model.coef, Model.var.cov)
 {
     if(sum(is.na(Model.coef)) > 0)
@@ -599,6 +600,16 @@ drawCoefficientsGaussian <- function(num_sims, Model.coef, Model.var.cov)
         stop("NA in model coefficients; rerun models with nonsingular design matrix")
     }
     return rmvnorm(num_sims, mean=Model.coef, sigma=Model.var.cov)
+}
+
+calculateDeltaGroups <- function(group.id, sims, weights, et)
+{
+    G <-length(unique(group.id))
+    matrix_out <-matrix(NA,G,sims)
+    for (g in 1:G)
+    {
+        matrix_out[g,] <- t(apply(matrix(et[group.id==unique(group.id)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id==unique(group.id)[g]]))
+    }
 }
 
 mediate <- function(model.m, model.y, sims = 1000,
@@ -1626,31 +1637,21 @@ mediate <- function(model.m, model.y, sims = 1000,
       z.avg <- (z0 + z1)/2
       n.avg <- (n0 + n1)/2
 
-      if(isMer.y | isMer.m){
-        if(!is.null(group.m) && group.name == group.m){
-          G<-length(unique(group.id.m))
-          delta.1.group<-matrix(NA,G,sims)
-          delta.0.group<-matrix(NA,G,sims)
-          zeta.1.group<-matrix(NA,G,sims)
-          zeta.0.group<-matrix(NA,G,sims)
-          for (g in 1:G){
-           delta.1.group[g,] <- t(apply(matrix(et1[group.id.m==unique(group.id.m)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]]))
-           delta.0.group[g,] <- t(apply(matrix(et2[group.id.m==unique(group.id.m)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]]))
-           zeta.1.group[g,] <- t(apply(matrix(et3[group.id.m==unique(group.id.m)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]]))
-           zeta.0.group[g,] <- t(apply(matrix(et4[group.id.m==unique(group.id.m)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.m==unique(group.id.m)[g]]))
-          }
-        } else {
-          G<-length(unique(group.id.y))
-          delta.1.group<-matrix(NA,G,sims)
-          delta.0.group<-matrix(NA,G,sims)
-          zeta.1.group<-matrix(NA,G,sims)
-          zeta.0.group<-matrix(NA,G,sims)
-          for (g in 1:G){
-            delta.1.group[g,] <- t(apply(matrix(et1[group.id.y==unique(group.id.y)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.y==unique(group.id.y)[g]]))
-            delta.0.group[g,] <- t(apply(matrix(et2[group.id.y==unique(group.id.y)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.y==unique(group.id.y)[g]]))
-            zeta.1.group[g,] <- t(apply(matrix(et3[group.id.y==unique(group.id.y)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.y==unique(group.id.y)[g]]))
-            zeta.0.group[g,] <- t(apply(matrix(et4[group.id.y==unique(group.id.y)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id.y==unique(group.id.y)[g]]))
-          }
+      if(isMer.y | isMer.m)
+      {
+        if(!is.null(group.m) && group.name == group.m)
+        {
+            delta.1.group = calculateDeltaGroups(group.id.m, sims, weights, et1)
+            delta.0.group = calculateDeltaGroups(group.id.m, sims, weights, et2)
+            zeta.1.group = calculateDeltaGroups(group.id.m, sims, weights, et3)
+            zeta.0.group = calculateDeltaGroups(group.id.m, sims, weights, et4)
+        }
+        else
+        {
+            delta.1.group = calculateDeltaGroups(group.id.y, sims, weights, et1)
+            delta.0.group = calculateDeltaGroups(group.id.y, sims, weights, et2)
+            zeta.1.group = calculateDeltaGroups(group.id.y, sims, weights, et3)
+            zeta.0.group = calculateDeltaGroups(group.id.y, sims, weights, et4)
         }
         tau.group <- (zeta.1.group + delta.0.group + zeta.0.group + delta.1.group)/2
         nu.0.group <- delta.0.group/tau.group
