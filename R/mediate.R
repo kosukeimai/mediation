@@ -542,6 +542,15 @@ extractWeights <- function(m.data, y.data, isGlm.m, isGlmer.m, isMer.y, isMer.m,
  return weights.y ### group-level mediator
 }
 
+convertCharacterToFactor <- function(data, column)
+{
+  if(is.character(data[,column]))
+  {
+     return factor(data[,column])
+  }
+  return data[,column]
+}
+
 mediate <- function(model.m, model.y, sims = 1000, 
                     boot = FALSE, boot.ci.type = "perc",
                     treat = "treat.name", mediator = "med.name",
@@ -863,21 +872,11 @@ mediate <- function(model.m, model.y, sims = 1000,
   # Extracting weights from models
   weights <- extractWeights(m.data, y.data, isGlm.m, isGlmer.m, isMer.y, isMer.m, FamilyM)
 
-  # Convert character treatment to factor
-  if(is.character(m.data[,treat]))
-  {
-    m.data[,treat] <- factor(m.data[,treat])
-  }
-  if(is.character(y.data[,treat]))
-  {
-    y.data[,treat] <- factor(y.data[,treat])
-  }
-  
-  # Convert character mediator to factor
-  if(is.character(y.data[,mediator])){
-    y.data[,mediator] <- factor(y.data[,mediator])
-  }
-  
+  # Convert characters to factor
+  m.data[,treat] = convertCharacterToFactor(m.data, treat)
+  y.data[,treat] = convertCharacterToFactor(y.data, treat)
+  y.data[,mediator] = convertCharacterToFactor(y.data, mediator)
+ 
   # Factor treatment indicator
   isFactorT.m <- is.factor(m.data[,treat])
   isFactorT.y <- is.factor(y.data[,treat])
