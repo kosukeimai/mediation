@@ -1,3 +1,5 @@
+library(logger)
+
 #' Causal Mediation Analysis
 #' 
 #' 'mediate' is used to estimate various quantities for causal mediation 
@@ -461,6 +463,44 @@
 #' summary(multilevel, output="bygroup")
 #' # See summary.mediate.mer for detailed explanations 
 #' }
+
+extractFamilyGlmer <- function(model, tag)
+{
+    log_debug("Extracting Family from Glmer")
+
+    famliy <- as.character(model@call$family)
+    isBinomial <- famliy[1] == "binomial"
+    isPoisson <- famliy[1] == "poisson"
+
+    if(isBinomial && (is.na(famliy[2]) || famliy[2] == "logit"))
+    {
+        return binomial(link = "logit")
+    }
+    else if(isBinomial && famliy[2] == "probit")
+    {
+        return binomial(link = "probit")
+    }
+    else if(isBinomial && famliy[2] == "cloglog")
+    {
+        return binomial(link = "cloglog")
+    }
+    else if(isPoisson && (is.na(famliy[2]) || famliy[2] == "log"))
+    {
+        return poisson(link = "log")
+    }
+    else if(isPoisson && famliy[2] == "identity")
+    {
+        return poisson(link = "identity")
+    }
+    else if(isPoisson && famliy[2] == "sqrt")
+    {
+        return poisson(link = "sqrt")
+    }
+    statement <- cat(sprintf("glmer family for the %s model not supported", tag))
+    stop(statement)
+    ### gamma & inverse gaussian excluded (no function to estimate parameters of S4 glmer vs. S3 glm)
+}
+
 mediate <- function(model.m, model.y, sims = 1000, 
                     boot = FALSE, boot.ci.type = "perc",
                     treat = "treat.name", mediator = "med.name",
@@ -474,20 +514,24 @@ mediate <- function(model.m, model.y, sims = 1000,
   cl <- match.call()
   
   # Warn users who still use INT option
-  if(match("INT", names(cl), 0L)){
+  if(match("INT", names(cl), 0L))
+  {
     warning("'INT' is deprecated - existence of interaction terms is now automatically detected from model formulas")
   }
   
   # Warning for robustSE and cluster used with boot
-  if(robustSE && boot){
+  if(robustSE && boot)
+  {
     warning("'robustSE' is ignored for nonparametric bootstrap")
   }
   
-  if(!is.null(cluster) && boot){
+  if(!is.null(cluster) && boot)
+  {
     warning("'cluster' is ignored for nonparametric bootstrap")
   }
   
-  if(robustSE & !is.null(cluster)){
+  if(robustSE & !is.null(cluster))
+  {
     stop("choose either `robustSE' or `cluster' option, not both")
   }
 
@@ -496,22 +540,23 @@ mediate <- function(model.m, model.y, sims = 1000,
   }
   
   # Drop observations not common to both mediator and outcome models
-  if(dropobs){
+  if(dropobs)
+  {
+    log_debug("Dropping observations")
     odata.m <- model.frame(model.m)
     odata.y <- model.frame(model.y)
-    if(!is.null(cluster)){
-      if(is.null(row.names(cluster)) &
-           (nrow(odata.m)!=length(cluster) | nrow(odata.y)!=length(cluster))
-      ){
+    if(!is.null(cluster))
+    {
+      if(is.null(row.names(cluster)) & (nrow(odata.m)!=length(cluster) | nrow(odata.y)!=length(cluster))
+      )
+      {
         warning("cluster IDs may not correctly match original observations due to missing data")
       }
-      odata.y <- merge(odata.y, as.data.frame(cluster), sort=FALSE,
-                       by="row.names")
+      odata.y <- merge(odata.y, as.data.frame(cluster), sort=FALSE, by="row.names")
       rownames(odata.y) <- odata.y$Row.names
       odata.y <- odata.y[,-1L]
     }
-    newdata <- merge(odata.m, odata.y, sort=FALSE,
-                     by=c("row.names", intersect(names(odata.m), names(odata.y))))
+    newdata <- merge(odata.m, odata.y, sort=FALSE, by=c("row.names", intersect(names(odata.m), names(odata.y))))
     rownames(newdata) <- newdata$Row.names
     newdata <- newdata[,-1L]
     rm(odata.m, odata.y)
@@ -520,12 +565,14 @@ mediate <- function(model.m, model.y, sims = 1000,
     Call.Y <- getCall(model.y)
     
     Call.M$data <- Call.Y$data <- newdata
-    if(c("(weights)") %in% names(newdata)){
+    if(c("(weights)") %in% names(newdata))
+    {
       Call.M$weights <- Call.Y$weights <- model.weights(newdata)
     }
     model.m <- eval.parent(Call.M)
     model.y <- eval.parent(Call.Y)
-    if(!is.null(cluster)){
+    if(!is.null(cluster))
+    {
       cluster <- factor(newdata[, ncol(newdata)])  # factor drops missing levels
     }
   }
@@ -548,43 +595,15 @@ mediate <- function(model.m, model.y, sims = 1000,
   isMer.m <- inherits(model.m, "merMod") # Note lmer and glmer do not inherit "lm" and "glm"
   
   # Record family and link of model.m if glmer 
-  if(isMer.m && class(model.m)[[1]] == "glmerMod"){
-    m.family <- as.character(model.m@call$family)
-    if(m.family[1] == "binomial" && (is.na(m.family[2]) || m.family[2] == "logit")){
-      M.fun <- binomial(link = "logit")
-    } else if(m.family[1] == "binomial" && m.family[2] == "probit"){
-      M.fun <- binomial(link = "probit")
-    } else if(m.family[1] == "binomial" && m.family[2] == "cloglog"){ 
-      M.fun <- binomial(link = "cloglog")
-    } else if(m.family[1] == "poisson" && (is.na(m.family[2]) || m.family[2] == "log")){
-      M.fun <- poisson(link = "log")
-    } else if(m.family[1] == "poisson" && m.family[2] == "identity"){
-      M.fun <- poisson(link = "identity")
-    } else if(m.family[1] == "poisson" && m.family[2] == "sqrt"){
-      M.fun <- poisson(link = "sqrt")
-    } else {
-      stop("glmer family for the mediation model not supported")
-    } ### gamma & inverse gaussian excluded (no function to estimate parameters of S4 glmer vs. S3 glm)
+  if(isMer.m && class(model.m)[[1]] == "glmerMod")
+  {
+    M.fun <- extractFamilyGlmer(model.m, "mediation")
   }
   
   # Record family and link of model.y if glmer 
-  if(isMer.y && class(model.y)[[1]] == "glmerMod"){
-    y.family <- as.character(model.y@call$family)
-    if(y.family[1] == "binomial" && (is.na(y.family[2]) || y.family[2] == "logit")){
-      Y.fun <- binomial(link = "logit")
-    } else if(y.family[1] == "binomial" && y.family[2] == "probit"){
-      Y.fun <- binomial(link = "probit")
-    } else if(y.family[1] == "binomial" && y.family[2] == "cloglog"){ 
-      Y.fun <- binomial(link = "cloglog")
-    } else if(y.family[1] == "poisson" && (is.na(y.family[2]) || y.family[2] == "log")){
-      Y.fun <- poisson(link = "log")
-    } else if(y.family[1] == "poisson" && y.family[2] == "identity"){
-      Y.fun <- poisson(link = "identity")
-    } else if(y.family[1] == "poisson" && y.family[2] == "sqrt"){
-      Y.fun <- poisson(link = "sqrt")
-    } else {
-      stop("glmer family for the outcome model not supported")
-    } ### gamma & inverse gaussian excluded (no function to estimate parameters of S4 glmer vs. S3 glm)
+  if(isMer.y && class(model.y)[[1]] == "glmerMod")
+  {
+    Y.fun <- extractFamilyGlmer(model.y, "outcome")
   }
   
   # Record family of model.m if glm
