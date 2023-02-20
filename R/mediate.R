@@ -605,7 +605,7 @@ drawCoefficientsGaussian <- function(num_sims, Model.coef, Model.var.cov)
 # Calls upon the weighted.mean function
 calculateDeltaGroups <- function(group.id, sims, weights, et)
 {
-    G <-length(unique(group.id))
+    G <-length(unique(group.id)) 
     matrix_out <-matrix(NA,G,sims)
     for (g in 1:G)
     {
@@ -951,7 +951,8 @@ mediate <- function(model.m, model.y, sims = 1000,
   if(isFactorT)
   {
     t.levels <- levels(y.data[,treat])
-    if(treat.value %in% t.levels & control.value %in% t.levels){
+    if(treat.value %in% t.levels & control.value %in% t.levels)
+    {
       cat.0 <- control.value
       cat.1 <- treat.value
     }
@@ -1152,7 +1153,8 @@ mediate <- function(model.m, model.y, sims = 1000,
           {
             pred.data.t[,vl] <- pred.data.c[,vl] <- factor(covariates[[p]], levels = levels(m.data[,vl]))
           }
-          else {
+          else 
+          {
             pred.data.t[,vl] <- pred.data.c[,vl] <- covariates[[p]]
           }
         }
@@ -1176,17 +1178,13 @@ mediate <- function(model.m, model.y, sims = 1000,
         else if (FamilyM == "Gamma")
         {
           shape <- gamma.shape(model.m)$alpha
-          PredictM1 <- matrix(rgamma(n*sims, shape = shape,
-                                     scale = muM1/shape), nrow = sims)
-          PredictM0 <- matrix(rgamma(n*sims, shape = shape,
-                                     scale = muM0/shape), nrow = sims)
+          PredictM1 <- matrix(rgamma(n*sims, shape = shape, scale = muM1/shape), nrow = sims)
+          PredictM0 <- matrix(rgamma(n*sims, shape = shape, scale = muM0/shape), nrow = sims)
         }
         else if (FamilyM == "binomial")
         {
-          PredictM1 <- matrix(rbinom(n*sims, size = 1,
-                                     prob = muM1), nrow = sims)
-          PredictM0 <- matrix(rbinom(n*sims, size = 1,
-                                     prob = muM0), nrow = sims)
+          PredictM1 <- matrix(rbinom(n*sims, size = 1, prob = muM1), nrow = sims)
+          PredictM0 <- matrix(rbinom(n*sims, size = 1, prob = muM0), nrow = sims)
         }
         else if (FamilyM == "gaussian")
         {
@@ -1205,8 +1203,6 @@ mediate <- function(model.m, model.y, sims = 1000,
         {
           stop("unsupported glm family")
         }
-
-        ###
       }
       else if(isOrdered.m)
       {
@@ -1294,20 +1290,27 @@ mediate <- function(model.m, model.y, sims = 1000,
         log_debug("Case I-1-d: Survreg") # ========================================================
 
         dd <- survival::survreg.distributions[[model.m$dist]]
-        if (is.null(dd$itrans)){
+        if (is.null(dd$itrans))
+        {
           itrans <- function(x) x
-        } else {
+        } 
+        else 
+        {
           itrans <- dd$itrans
         }
         dname <- dd$dist
-        if(is.null(dname)){
+        if(is.null(dname))
+        {
           dname <- model.m$dist
         }
-        if(scalesim.m){
+        if(scalesim.m)
+        {
           scale <- exp(MModel[,ncol(MModel)])
           lpM1 <- tcrossprod(MModel[,1:(ncol(MModel)-1)], mmat.t)
           lpM0 <- tcrossprod(MModel[,1:(ncol(MModel)-1)], mmat.c)
-        } else {
+        } 
+        else 
+        {
           scale <- dd$scale
           lpM1 <- tcrossprod(MModel, mmat.t)
           lpM0 <- tcrossprod(MModel, mmat.c)
@@ -1321,88 +1324,112 @@ mediate <- function(model.m, model.y, sims = 1000,
         PredictM0 <- itrans(lpM0 + scale * matrix(error, nrow=sims))
         rm(error)
 
-        ### Case I-1-e: Linear Mixed Effect
-      } else if(isMer.m && class(model.m)[[1]]=="lmerMod"){
-        M.RANEF1 <- M.RANEF0 <- 0
-        for (d in 1:Nm.ranef){
-          name <- colnames(lme4::ranef(model.m)[[1]])[d]
-          if(name == "(Intercept)"){
-            var1 <- var0 <- matrix(1,sims,n) ### RE intercept
-          } else if(name == treat){  ### RE slope of treat
-            var1 <- matrix(1,sims,n) ### T = 1
-            var0 <- matrix(0,sims,n) ### T = 0
-          }
-          else {
-            var1 <- var0 <- matrix(data.matrix(m.data[name]),sims,n,byrow=T) ### RE slope of other variables
-          }
-          M.ranef<-matrix(NA,sims,n)
-          MModel.ranef.sim.d <- MModel.ranef.sim[[d]]
-          Z <- data.frame(MModel.ranef.sim.d)
-          if(is.factor(group.id.m)){
-            colnames(Z) <- levels(group.id.m)
-            for (i in 1:n){
-              M.ranef[,i]<-Z[,group.id.m[i]==levels(group.id.m)]
+        ### 
+      } 
+      else if(isMer.m)
+      {
+        if(class(model.m)[[1]]=="lmerMod")
+        {
+          log_info("Case I-1-e: Linear Mixed Effect")
+          
+          M.RANEF1 <- M.RANEF0 <- 0
+          for (d in 1:Nm.ranef)
+          {
+            name <- colnames(lme4::ranef(model.m)[[1]])[d]
+            if(name == "(Intercept)")
+            {
+              var1 <- var0 <- matrix(1,sims,n) ### RE intercept
+            } else if(name == treat){  ### RE slope of treat
+              var1 <- matrix(1,sims,n) ### T = 1
+              var0 <- matrix(0,sims,n) ### T = 0
             }
-          } else {
-            colnames(Z) <- sort(unique(group.id.m))
-            for (i in 1:n){
-              M.ranef[,i]<-Z[,group.id.m[i]==sort(unique(group.id.m))]
+            else 
+            {
+              var1 <- var0 <- matrix(data.matrix(m.data[name]),sims,n,byrow=T) ### RE slope of other variables
             }
+            M.ranef<-matrix(NA,sims,n)
+            MModel.ranef.sim.d <- MModel.ranef.sim[[d]]
+            Z <- data.frame(MModel.ranef.sim.d)
+            if(is.factor(group.id.m))
+            {
+              colnames(Z) <- levels(group.id.m)
+              for (i in 1:n)
+              {
+                M.ranef[,i]<-Z[,group.id.m[i]==levels(group.id.m)]
+              }
+            } 
+            else 
+            {
+              colnames(Z) <- sort(unique(group.id.m))
+              for (i in 1:n)
+              {
+                M.ranef[,i]<-Z[,group.id.m[i]==sort(unique(group.id.m))]
+              }
+            }
+            M.RANEF1 <- M.ranef*var1 + M.RANEF1   # sum of (random effects*corresponding covarites)
+            M.RANEF0 <- M.ranef*var0 + M.RANEF0
           }
-          M.RANEF1 <- M.ranef*var1 + M.RANEF1   # sum of (random effects*corresponding covarites)
-          M.RANEF0 <- M.ranef*var0 + M.RANEF0
+          sigma <- attr(lme4::VarCorr(model.m), "sc")
+          error <- rnorm(sims*n, mean=0, sd=sigma)
+          muM1 <- tcrossprod(MModel.fixef.sim, mmat.t) + M.RANEF1
+          muM0 <- tcrossprod(MModel.fixef.sim, mmat.c) + M.RANEF0
+          PredictM1 <- muM1 + matrix(error, nrow=sims)
+          PredictM0 <- muM0 + matrix(error, nrow=sims)
+          rm(error)
         }
-        sigma <- attr(lme4::VarCorr(model.m), "sc")
-        error <- rnorm(sims*n, mean=0, sd=sigma)
-        muM1 <- tcrossprod(MModel.fixef.sim, mmat.t) + M.RANEF1
-        muM0 <- tcrossprod(MModel.fixef.sim, mmat.c) + M.RANEF0
-        PredictM1 <- muM1 + matrix(error, nrow=sims)
-        PredictM0 <- muM0 + matrix(error, nrow=sims)
-        rm(error)
-
-        ### Case I-1-f: Generalized Linear Mixed Effect
-      } else if(isMer.m && class(model.m)[[1]]=="glmerMod"){
-        M.RANEF1 <-M.RANEF0 <- 0 ### 1=RE for M(1); 0=RE for M(0)
-        for (d in 1:Nm.ranef){
-          name <- colnames(lme4::ranef(model.m)[[1]])[d]
-          if(name == "(Intercept)"){
-            var1 <- var0 <- matrix(1,sims,n) ### RE intercept
-          } else if(name == treat){ ### RE slope of treat
-            var1 <- matrix(1,sims,n) ### T = 1
-            var0 <- matrix(0,sims,n) ### T = 0
-          } else {
-            var1 <- var0 <- matrix(data.matrix(m.data[name]),sims,n,byrow=T) ### RE slope of other variables
-          }
-          M.ranef<-matrix(NA,sims,n)
-          MModel.ranef.sim.d <- MModel.ranef.sim[[d]]
-          Z <- data.frame(MModel.ranef.sim.d)
-          if(is.factor(group.id.m)){
-            colnames(Z) <- levels(group.id.m)
-            for (i in 1:n){
-              M.ranef[,i]<-Z[,group.id.m[i]==levels(group.id.m)]
+        else if(class(model.m)[[1]]=="glmerMod")
+        {
+          log_info("Case I-1-f: Generalized Linear Mixed Effect")
+          {
+            M.RANEF1 <-M.RANEF0 <- 0 ### 1=RE for M(1); 0=RE for M(0)
+            for (d in 1:Nm.ranef){
+              name <- colnames(lme4::ranef(model.m)[[1]])[d]
+              if(name == "(Intercept)"){
+                var1 <- var0 <- matrix(1,sims,n) ### RE intercept
+              } else if(name == treat){ ### RE slope of treat
+                var1 <- matrix(1,sims,n) ### T = 1
+                var0 <- matrix(0,sims,n) ### T = 0
+              } else {
+                var1 <- var0 <- matrix(data.matrix(m.data[name]),sims,n,byrow=T) ### RE slope of other variables
+              }
+              M.ranef<-matrix(NA,sims,n)
+              MModel.ranef.sim.d <- MModel.ranef.sim[[d]]
+              Z <- data.frame(MModel.ranef.sim.d)
+              if(is.factor(group.id.m)){
+                colnames(Z) <- levels(group.id.m)
+                for (i in 1:n){
+                  M.ranef[,i]<-Z[,group.id.m[i]==levels(group.id.m)]
+                }
+              } else {
+                colnames(Z) <- sort(unique(group.id.m))
+                for (i in 1:n){
+                  M.ranef[,i]<-Z[,group.id.m[i]==sort(unique(group.id.m))]
+                }
+              }
+              M.RANEF1 <- M.ranef*var1 + M.RANEF1   # sum of (random effects*corresponding covarites)
+              M.RANEF0 <- M.ranef*var0 + M.RANEF0
             }
-          } else {
-            colnames(Z) <- sort(unique(group.id.m))
-            for (i in 1:n){
-              M.ranef[,i]<-Z[,group.id.m[i]==sort(unique(group.id.m))]
+            muM1 <- M.fun$linkinv(tcrossprod(MModel.fixef.sim,mmat.t) + M.RANEF1)
+            muM0 <- M.fun$linkinv(tcrossprod(MModel.fixef.sim,mmat.c) + M.RANEF0)
+            FamilyM <- M.fun$family
+            if(FamilyM == "poisson"){
+              PredictM1 <- matrix(rpois(sims*n, lambda = muM1), nrow = sims)
+              PredictM0 <- matrix(rpois(sims*n, lambda = muM0), nrow = sims)
+            } else if (FamilyM == "binomial"){
+              PredictM1 <- matrix(rbinom(n*sims, size = 1,
+                                        prob = muM1), nrow = sims)
+              PredictM0 <- matrix(rbinom(n*sims, size = 1,
+                                        prob = muM0), nrow = sims)
             }
           }
-          M.RANEF1 <- M.ranef*var1 + M.RANEF1   # sum of (random effects*corresponding covarites)
-          M.RANEF0 <- M.ranef*var0 + M.RANEF0
         }
-        muM1 <- M.fun$linkinv(tcrossprod(MModel.fixef.sim,mmat.t) + M.RANEF1)
-        muM0 <- M.fun$linkinv(tcrossprod(MModel.fixef.sim,mmat.c) + M.RANEF0)
-        FamilyM <- M.fun$family
-        if(FamilyM == "poisson"){
-          PredictM1 <- matrix(rpois(sims*n, lambda = muM1), nrow = sims)
-          PredictM0 <- matrix(rpois(sims*n, lambda = muM0), nrow = sims)
-        } else if (FamilyM == "binomial"){
-          PredictM1 <- matrix(rbinom(n*sims, size = 1,
-                                     prob = muM1), nrow = sims)
-          PredictM0 <- matrix(rbinom(n*sims, size = 1,
-                                     prob = muM0), nrow = sims)
+        else # unsupported Mer
+        {
+          stop("mediator model is not yet implemented")
         }
-      } else {
+      }       
+      else 
+      {
         stop("mediator model is not yet implemented")
       }
 
