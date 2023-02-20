@@ -501,6 +501,15 @@ extractFamilyGlmer <- function(model, tag)
     ### gamma & inverse gaussian excluded (no function to estimate parameters of S4 glmer vs. S3 glm)
 }
 
+groupData <- function(model_indicator, data, group)
+{
+    if (model_indicator)
+    {
+        return data[,group]
+    }
+    return NULL
+}
+
 mediate <- function(model.m, model.y, sims = 1000, 
                     boot = FALSE, boot.ci.type = "perc",
                     treat = "treat.name", mediator = "med.name",
@@ -734,55 +743,62 @@ mediate <- function(model.m, model.y, sims = 1000,
   }
   
   # group data if lmer or glmer 
-  if(isMer.m)
-  {
-    group.id.m <- m.data[,group.m]
-  } 
-  else 
-  {
-    group.id.m <- NULL
-  } 
-  if(isMer.y)
-  {
-    group.id.y <- y.data[,group.y]	
-  } 
-  else 
-  {
-    group.id.y <- NULL
-  }
+  group.id.m <- groupData(isMer.m, m.data, group.m)
+  group.id.y <- groupData(isMer.y, y.data, group.y)
+
   # group data to be output in summary and plot if lmer or glmer 
-  if(isMer.y && isMer.m){
-    if(group.out == group.m){
+  if(isMer.y && isMer.m)
+  {
+    if(group.out == group.m)
+    {
       group.id <- m.data[,group.m]
       group.name <- group.m
-    } else {
+    } 
+    else 
+    {
       group.id <- y.data[,group.y]     
       group.name <- group.y
     }
-  } else if(!isMer.y && isMer.m){
+  } 
+  else if(!isMer.y && isMer.m)
+  {
     group.id <- m.data[,group.m]   
     group.name <- group.m
-  } else if(isMer.y && !isMer.m){   ### group-level mediator
-    if(!(group.y %in% names(m.data))){
+  } 
+  else if(isMer.y && !isMer.m) ### group-level mediator
+  {   
+    if(!(group.y %in% names(m.data)))
+    {
       stop("specify group-level variable in mediator data")
-    } else {
+    } 
+    else 
+    {
       group.id <- y.data[,group.y]
       group.name <- group.y
       Y.ID<- sort(unique(group.id))
-      if(is.character(m.data[,group.y])){
+      if(is.character(m.data[,group.y]))
+      {
           M.ID <- sort(as.factor(m.data[,group.y]))
-      } else {
+      } 
+      else 
+      {
           M.ID <- sort(as.vector(data.matrix(m.data[group.y])))
       }
-      if(length(Y.ID) != length(M.ID)){
+      if(length(Y.ID) != length(M.ID))
+      {
         stop("groups do not match between mediator and outcome models")
-      } else {
-        if(FALSE %in% unique(Y.ID == M.ID)){
+      } 
+      else 
+      {
+        if(FALSE %in% unique(Y.ID == M.ID))
+        {
           stop("groups do not match between mediator and outcome models")
         }
       }
     }
-  } else {
+  } 
+  else 
+  {
     group.id <- NULL
     group.name <- NULL
   }
