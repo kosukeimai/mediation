@@ -880,23 +880,28 @@ mediate <- function(model.m, model.y, sims = 1000,
   # Factor treatment indicator
   isFactorT.m <- is.factor(m.data[,treat])
   isFactorT.y <- is.factor(y.data[,treat])
-  if(isFactorT.m != isFactorT.y){
+  if(isFactorT.m != isFactorT.y)
+  {
     stop("treatment variable types differ in mediator and outcome models")
-  } else {
-    isFactorT <- isFactorT.y
-  }
+  } 
+  isFactorT <- isFactorT.y
   
-  if(isFactorT){
+  if(isFactorT)
+  {
     t.levels <- levels(y.data[,treat])
     if(treat.value %in% t.levels & control.value %in% t.levels){
       cat.0 <- control.value
       cat.1 <- treat.value
-    } else {
+    } 
+    else 
+    {
       cat.0 <- t.levels[1]
       cat.1 <- t.levels[2]
       warning("treatment and control values do not match factor levels; using ", cat.0, " and ", cat.1, " as control and treatment, respectively")
     }
-  } else {
+  } 
+  else 
+  {
     cat.0 <- control.value
     cat.1 <- treat.value
   }
@@ -904,7 +909,8 @@ mediate <- function(model.m, model.y, sims = 1000,
   # Factor mediator indicator
   isFactorM <- is.factor(y.data[,mediator])
   
-  if(isFactorM){
+  if(isFactorM)
+  {
     m.levels <- levels(y.data[,mediator])
   }
 
@@ -912,12 +918,8 @@ mediate <- function(model.m, model.y, sims = 1000,
   # passing K into intermediate functions, and clean up all stray objects.
   K <- as.list(environment())
   # rm(list = ls())
-   
-  ############################################################################
-  ############################################################################
-  ### CASE I: EVERYTHING EXCEPT ORDERED OUTCOME
-  ############################################################################
-  ############################################################################
+
+  log_info("CASE I: EVERYTHING EXCEPT ORDERED OUTCOME") # =========================================
   if (!isOrdered.y) {
     
     ########################################################################
