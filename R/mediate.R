@@ -573,6 +573,25 @@ extractVarianceParameters <- function(model, data, cluster, robustSE)
   }
 }
 
+se.ranef.new <- function (object)
+{
+    se.bygroup <- lme4::ranef(object, condVar = TRUE)
+    n.groupings <- length(se.bygroup)
+    for (m in 1:n.groupings) {
+        vars.m <- attr(se.bygroup[[m]], "postVar")
+        K <- dim(vars.m)[1]
+        J <- dim(vars.m)[3]
+        names.full <- dimnames(se.bygroup[[m]])
+        se.bygroup[[m]] <- array(NA, c(J, K))
+        for (j in 1:J)
+        {
+            se.bygroup[[m]][j, ] <- sqrt(diag(as.matrix(vars.m[,, j])))
+        }
+        dimnames(se.bygroup[[m]]) <- list(names.full[[1]], names.full[[2]])
+    }
+    return(se.bygroup)
+}
+
 mediate <- function(model.m, model.y, sims = 1000,
                     boot = FALSE, boot.ci.type = "perc",
                     treat = "treat.name", mediator = "med.name",
@@ -1002,9 +1021,6 @@ mediate <- function(model.m, model.y, sims = 1000,
         }
       }
 
-
-
-
       # Get parameters for outcome simulations
       if(isMer.y)
       {
@@ -1050,25 +1066,6 @@ mediate <- function(model.m, model.y, sims = 1000,
       }
 
       # Draw model coefficients from normal
-      se.ranef.new <- function (object)
-      {
-          se.bygroup <- lme4::ranef(object, condVar = TRUE)
-          n.groupings <- length(se.bygroup)
-          for (m in 1:n.groupings) {
-              vars.m <- attr(se.bygroup[[m]], "postVar")
-              K <- dim(vars.m)[1]
-              J <- dim(vars.m)[3]
-              names.full <- dimnames(se.bygroup[[m]])
-              se.bygroup[[m]] <- array(NA, c(J, K))
-              for (j in 1:J)
-              {
-                  se.bygroup[[m]][j, ] <- sqrt(diag(as.matrix(vars.m[,, j])))
-              }
-              dimnames(se.bygroup[[m]]) <- list(names.full[[1]], names.full[[2]])
-          }
-          return(se.bygroup)
-      }
-
       if(isMer.m)
       {
           MModel.fixef.vcov <- as.matrix(vcov(model.m))
