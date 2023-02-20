@@ -602,6 +602,7 @@ drawCoefficientsGaussian <- function(num_sims, Model.coef, Model.var.cov)
     return rmvnorm(num_sims, mean=Model.coef, sigma=Model.var.cov)
 }
 
+# Calls upon the weighted.mean function
 calculateDeltaGroups <- function(group.id, sims, weights, et)
 {
     G <-length(unique(group.id))
@@ -1639,6 +1640,7 @@ mediate <- function(model.m, model.y, sims = 1000,
 
       if(isMer.y | isMer.m)
       {
+        log_debug("Calculating delta groups") # ===================================================
         if(!is.null(group.m) && group.name == group.m)
         {
             delta.1.group = calculateDeltaGroups(group.id.m, sims, weights, et1)
@@ -1674,7 +1676,9 @@ mediate <- function(model.m, model.y, sims = 1000,
       ########################################################################
       ## Case I-2: Nonparametric Bootstrap
       ########################################################################
-    } else {
+    } 
+    else 
+    {
       # Error if lmer or glmer
       if(isMer.m | isMer.y){
         stop("'boot' must be 'FALSE' for models used")
