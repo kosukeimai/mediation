@@ -593,40 +593,42 @@ mediate <- function(model.m, model.y, sims = 1000,
   isSurvreg.m <- inherits(model.m, "survreg")
   isMer.y <- inherits(model.y, "merMod") # Note lmer and glmer do not inherit "lm" and "glm"
   isMer.m <- inherits(model.m, "merMod") # Note lmer and glmer do not inherit "lm" and "glm"
+  isGlmerMod.m <- isMer.m && class(model.m)[[1]] == "glmerMod"
+  isGlmerMod.y <- isMer.y && class(model.y)[[1]] == "glmerMod"
   
   # Record family and link of model.m if glmer 
-  if(isMer.m && class(model.m)[[1]] == "glmerMod")
+  if(isGlmerMod.m)
   {
     M.fun <- extractFamilyGlmer(model.m, "mediation")
+    FamilyM <- M.fun$family
   }
   
   # Record family and link of model.y if glmer 
-  if(isMer.y && class(model.y)[[1]] == "glmerMod")
+  if(isGlmerMod.y)
   {
     Y.fun <- extractFamilyGlmer(model.y, "outcome")
   }
   
   # Record family of model.m if glm
-  if(isGlm.m){
+  if(isGlm.m)
+  {
     FamilyM <- model.m$family$family
-  }
-
-  # Record family of model.m if glmer
-  if(isMer.m && class(model.m)[[1]] == "glmerMod"){
-    FamilyM <- M.fun$family
   }
   
   # Record vfamily of model.y if vglm (currently only tobit)
-  if(isVglm.y){
+  if(isVglm.y)
+  {
     VfamilyY <- model.y@family@vfamily
   }
   
   # Warning for unused options
-  if(!is.null(control) && !isGam.y){
+  if(!is.null(control) && !isGam.y)
+  {
     warning("'control' is only used for GAM outcome models - ignored")
     control <- NULL
   }
-  if(!is.null(outcome) && !(isSurvreg.y && boot)){
+  if(!is.null(outcome) && !(isSurvreg.y && boot))
+  {
     warning("'outcome' is only relevant for survival outcome models with bootstrap - ignored")
   }
   
@@ -634,18 +636,22 @@ mediate <- function(model.m, model.y, sims = 1000,
   m.data <- model.frame(model.m)  # Call.M$data
   y.data <- model.frame(model.y)  # Call.Y$data
 
-  if(!is.null(cluster)){
+  if(!is.null(cluster))
+  {
+      log_debug("Adjusting model weights")
       row.names(m.data) <- 1:nrow(m.data)
       row.names(y.data) <- 1:nrow(y.data)
 
-      if(!is.null(model.m$weights)){
+      if(!is.null(model.m$weights))
+      {
           m.weights <- as.data.frame(model.m$weights)
           m.name <- as.character(model.m$call$weights)  
           names(m.weights) <- m.name
           m.data <- cbind(m.data, m.weights)
       }
 
-      if(!is.null(model.y$weights)){
+      if(!is.null(model.y$weights))
+      {
           y.weights <- as.data.frame(model.y$weights)
           y.name <- as.character(model.y$call$weights)  
           names(y.weights) <- y.name
@@ -654,10 +660,14 @@ mediate <- function(model.m, model.y, sims = 1000,
   }
 
   # group-level mediator 
-  if(isMer.y & !isMer.m){
-    m.data <- eval(model.m$call$data, environment(formula(model.m)))  ### add group ID to m.data 
-    m.data <- na.omit(m.data)
-    y.data <- na.omit(y.data)
+  if(!isMer.m)
+  {
+    if (isMer.y)
+    {
+      m.data <- eval(model.m$call$data, environment(formula(model.m)))  ### add group ID to m.data 
+      m.data <- na.omit(m.data)
+      y.data <- na.omit(y.data)
+    }
   }
   
   # Specify group names
@@ -771,7 +781,7 @@ mediate <- function(model.m, model.y, sims = 1000,
   if(!is.null(weights.m) && isGlm.m && FamilyM == "binomial"){
     message("weights taken as sampling weights, not total number of trials")
   }
-  if(!is.null(weights.m) && isMer.m && class(model.m)[[1]] == "glmerMod" && FamilyM == "binomial"){
+  if(!is.null(weights.m) && isGlmerMod.m && FamilyM == "binomial"){
     message("weights taken as sampling weights, not total number of trials")
   }
   if(is.null(weights.m)){
@@ -1420,7 +1430,7 @@ mediate <- function(model.m, model.y, sims = 1000,
           }
           Pr1 <- apply(Pr1, 2, itrans)
           Pr0 <- apply(Pr0, 2, itrans)
-        } else if(isMer.y && class(model.y)[[1]] == "glmerMod"){
+        } else if(isGlmerMod.y){
           Pr1 <- apply(Pr1, 2, Y.fun$linkinv)
           Pr0 <- apply(Pr0, 2, Y.fun$linkinv)                	
         }
