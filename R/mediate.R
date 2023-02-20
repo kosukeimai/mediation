@@ -672,57 +672,82 @@ mediate <- function(model.m, model.y, sims = 1000,
   
   # Specify group names
   
-  if(isMer.m && isMer.y){
-    med.group <- names(model.m@flist)
-    out.group <- names(model.y@flist)
-    n.med <- length(med.group)
-    n.out <- length(out.group)
-    if(n.med > 1 || n.out > 1){
-      stop("mediate does not support more than two levels per model")
-    } else {
-      group.m <- med.group
-      group.y <- out.group
-      if(!is.null(group.out) && !(group.out %in% c(group.m, group.y))){
-        warning("group.out does not match group names used in merMod")
-      } else if(is.null(group.out)){
+  if(isMer.m)
+  {
+    if(isMer.y)
+    {
+      med.group <- names(model.m@flist)
+      out.group <- names(model.y@flist)
+      n.med <- length(med.group)
+      n.out <- length(out.group)
+      if(n.med > 1 || n.out > 1)
+      {
+        stop("mediate does not support more than two levels per model")
+      } 
+      else 
+      {
+        group.m <- med.group
+        group.y <- out.group
+        if(!is.null(group.out) && !(group.out %in% c(group.m, group.y))){
+          warning("group.out does not match group names used in merMod")
+        } else if(is.null(group.out)){
+          group.out <- group.y
+        }
+      }
+    }
+    else # !isMer.y
+    {
+      med.group <- names(model.m@flist)
+      n.med <- length(med.group)
+      if(n.med > 1)
+      {
+        stop("mediate does not support more than two levels per model")
+      } 
+      else 
+      {
+        group.m <- med.group
+        group.y <- NULL
+        group.out <- group.m
+      }
+    }
+  } 
+  else # !isMer.m
+  {
+    if(isMer.y)
+    {
+      out.group <- names(model.y@flist)
+      n.out <- length(out.group)
+      if(n.out > 1)
+      {
+        stop("mediate does not support more than two levels per model")
+      } 
+      else 
+      {
+        group.m <- NULL
+        group.y <- out.group
         group.out <- group.y
       }
     }
-  } else if(!isMer.m && isMer.y){
-    out.group <- names(model.y@flist)
-    n.out <- length(out.group)
-    if(n.out > 1){
-      stop("mediate does not support more than two levels per model")
-    } else {
-      group.m <- NULL
-      group.y <- out.group
-      group.out <- group.y
-    }
-  } else if(isMer.m && !isMer.y){
-    med.group <- names(model.m@flist)
-    n.med <- length(med.group)
-    if(n.med > 1){
-      stop("mediate does not support more than two levels per model")
-    } else {
-      group.m <- med.group
-      group.y <- NULL
-      group.out <- group.m
-    }
-  } else {
     group.m <- NULL
     group.y <- NULL
     group.out <- NULL
   }
   
   # group data if lmer or glmer 
-  if(isMer.m){
+  if(isMer.m)
+  {
     group.id.m <- m.data[,group.m]
-  } else {
+  } 
+  else 
+  {
     group.id.m <- NULL
   } 
-  if(isMer.y){
+  if(isMer.y)
+  {
     group.id.y <- y.data[,group.y]	
-  } else {
+  } 
+  else 
+  {
     group.id.y <- NULL
   }
   # group data to be output in summary and plot if lmer or glmer 
