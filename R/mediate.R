@@ -1869,15 +1869,15 @@ mediate <- function(model.m, model.y, sims = 1000,
 
     }  # nonpara boot branch ends
 
-    ########################################################################
-    ## Compute Outputs and Put Them Together
-    ########################################################################
+    log_info("Compute outputs and combine them") # ================================================
 
     low <- (1 - conf.level)/2
     high <- 1 - low
 
-    if (boot & boot.ci.type == "bca"){
-        BC.CI <- function(theta){
+    if (boot & boot.ci.type == "bca")
+    {
+        BC.CI <- function(theta)
+        {
             z.inv <- length(theta[theta < mean(theta)])/sims
             z <- qnorm(z.inv)
             U <- (sims - 1) * (mean(theta) - theta)
@@ -1900,7 +1900,9 @@ mediate <- function(model.m, model.y, sims = 1000,
         d.avg.ci <- BC.CI(delta.avg)
         z.avg.ci <- BC.CI(zeta.avg)
         n.avg.ci <- BC.CI(nu.avg)
-    } else {
+    }
+    else
+    {
         d0.ci <- quantile(delta.0, c(low,high), na.rm=TRUE)
         d1.ci <- quantile(delta.1, c(low,high), na.rm=TRUE)
         tau.ci <- quantile(tau, c(low,high), na.rm=TRUE)
@@ -1925,8 +1927,10 @@ mediate <- function(model.m, model.y, sims = 1000,
     n.avg.p <- pval(nu.avg, n.avg)
     tau.p <- pval(tau, tau.coef)
 
-    if(isMer.y | isMer.m){
-      QUANT<-function(object){
+    if(isMer.y | isMer.m)
+    {
+      QUANT<-function(object)
+      {
         z<-quantile(object,c(low,high),na.rm=TRUE)
         return(z)
       }
@@ -1951,7 +1955,8 @@ mediate <- function(model.m, model.y, sims = 1000,
       n1.p.group<-rep(NA,G)
       n.avg.p.group<-rep(NA,G)
       tau.p.group<-rep(NA,G)
-      for (g in 1:G){
+      for (g in 1:G)
+      {
         d0.p.group[g] <- pval(delta.0.group[g,], d0.group[g])
         d1.p.group[g] <- pval(delta.1.group[g,], d1.group[g])
         d.avg.p.group[g] <- pval(delta.avg.group[g,], d.avg.group[g])
@@ -1968,11 +1973,13 @@ mediate <- function(model.m, model.y, sims = 1000,
     # Detect whether models include T-M interaction
     INT <- paste(treat,mediator,sep=":") %in% attr(terms(model.y),"term.labels") |
       paste(mediator,treat,sep=":") %in% attr(terms(model.y),"term.labels")
-    if(!INT & isGam.y){
+    if(!INT & isGam.y)
+    {
       INT <- !isTRUE(all.equal(d0, d1))  # if gam, determine empirically
     }
 
-    if(long && !isMer.y && !isMer.m) {
+    if(long && !isMer.y && !isMer.m)
+    {
       out <- list(
         d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
         d0.p=d0.p, d1.p=d1.p,
@@ -2096,15 +2103,10 @@ mediate <- function(model.m, model.y, sims = 1000,
     }
 
     out
-
-    ############################################################################
-    ############################################################################
-    ### CASE II: ORDERED OUTCOME
-    ############################################################################
-    ############################################################################
   }
   else
   {
+    log_info("CASE II: ORDERED OUTCOME") # ========================================================
     if(boot != TRUE)
     {
       warning("ordered outcome model can only be used with nonparametric bootstrap - option forced")
@@ -2190,7 +2192,8 @@ mediate <- function(model.m, model.y, sims = 1000,
 
     # p-values
     d0.p <- d1.p <- z0.p <- z1.p <- tau.p <- rep(NA, n.ycat)
-    for(i in 1:n.ycat){
+    for(i in 1:n.ycat)
+    {
       d0.p[i] <- pval(delta.0[,i], d0[i])
       d1.p[i] <- pval(delta.1[,i], d1[i])
       z0.p[i] <- pval(zeta.0[,i], z0[i])
@@ -2219,7 +2222,9 @@ mediate <- function(model.m, model.y, sims = 1000,
                   control.value=control.value, treat.value=treat.value,
                   nobs=n, sims=sims, call=cl,
                   robustSE = robustSE, cluster = cluster)
-    } else {
+    }
+    else
+    {
       out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
                   d0.p=d0.p, d1.p=d1.p,
                   tau.coef=tau.coef, tau.ci=tau.ci, tau.p=tau.p,
@@ -2242,48 +2247,55 @@ mediate <- function(model.m, model.y, sims = 1000,
 ##################################################################
 med.fun <- function(y.data, index, m.data)
 {
-  if(isSurvreg.m){
+  if(isSurvreg.m)
+  {
     mname <- names(m.data)[1]
     nc <- nchar(mediator)
     eventname <- substr(mname, 5 + nc + 3, nchar(mname) - 1)
-    if(nchar(eventname) == 0){
-      m.data.tmp <- data.frame(m.data,
-                               as.numeric(m.data[,1L][,1L]))
+    if(nchar(eventname) == 0)
+    {
+      m.data.tmp <- data.frame(m.data, as.numeric(m.data[,1L][,1L]))
       names(m.data.tmp)[c(1L, ncol(m.data)+1)] <- c(mname, mediator)
-    } else {
-      m.data.tmp <- data.frame(m.data,
-                               as.numeric(m.data[,1L][,1L]),
-                               as.numeric(model.m$y[,2]))
+    }
+    else
+    {
+      m.data.tmp <- data.frame(m.data, as.numeric(m.data[,1L][,1L]), as.numeric(model.m$y[,2]))
       names(m.data.tmp)[c(1L, ncol(m.data)+(1:2))] <- c(mname, mediator, eventname)
     }
     Call.M$data <- m.data.tmp[index,]
-  } else {
+  }
+  else
+  {
     Call.M$data <- m.data[index,]
   }
 
-  if(isSurvreg.y){
+  if(isSurvreg.y)
+  {
     yname <- names(y.data)[1]
     nc <- nchar(outcome)
     eventname <- substr(yname, 5 + nc + 3, nchar(yname) - 1)
-    if(nchar(eventname) == 0){
-      y.data.tmp <- data.frame(y.data,
-                               as.numeric(y.data[,1L][,1L]))
+    if(nchar(eventname) == 0)
+    {
+      y.data.tmp <- data.frame(y.data, as.numeric(y.data[,1L][,1L]))
       names(y.data.tmp)[c(1L, ncol(y.data)+1)] <- c(yname, outcome)
-    } else {
-      y.data.tmp <- data.frame(y.data,
-                               as.numeric(y.data[,1L][,1L]),
-                               as.numeric(model.y$y[,2]))
+    }
+    else
+    {
+      y.data.tmp <- data.frame(y.data, as.numeric(y.data[,1L][,1L]), as.numeric(model.y$y[,2]))
       names(y.data.tmp)[c(1L, ncol(y.data)+(1:2))] <- c(yname, outcome, eventname)
     }
     Call.Y$data <- y.data.tmp[index,]
-  } else {
+  }
+  else
+  {
     Call.Y$data <- y.data[index,]
   }
 
   Call.M$weights <- m.data[index,"(weights)"]
   Call.Y$weights  <- y.data[index,"(weights)"]
 
-  if(isOrdered.m && length(unique(y.data[index,mediator])) != m){
+  if(isOrdered.m && length(unique(y.data[index,mediator])) != m)
+  {
     stop("insufficient variation on mediator")
   }
 
@@ -2291,10 +2303,14 @@ med.fun <- function(y.data, index, m.data)
   new.fit.M <- NULL
   new.fit.Y <- NULL
 
-  if (use_speed) {
+  if (use_speed)
+  {
     if (isGlm.m)
+    {
       new.fit.M <- fit_speedglm(Call.M)
-    else if (isLm.m) {
+    }
+    else if (isLm.m)
+    {
       formula <- Call.M$formula
       # ^^ to circumvent eval(call[[2]], parent.frame()) problem.
       new.fit.M <- speedglm::speedlm(formula = formula,
@@ -2303,22 +2319,28 @@ med.fun <- function(y.data, index, m.data)
     }
 
     if (isGlm.y)
+    {
       new.fit.Y <- fit_speedglm(Call.Y)
-    else if (isLm.y) {
+    }
+    else if (isLm.y)
+    {
       formula <- Call.Y$formula
       # ^^ See above.
       new.fit.Y <- speedglm::speedlm(formula = formula,
                                      data = Call.Y$data,
                                      weights = Call.Y$weights)
     }
-
   }
 
   if (is.null(new.fit.M))
+  {
     new.fit.M <- eval.parent(Call.M)
+  }
 
   if (is.null(new.fit.Y))
+  {
     new.fit.Y <- eval.parent(Call.Y)
+  }
 
   log_info("Calculate Mediator Predictions") #=====================================================
   pred.data.t <- pred.data.c <- m.data
@@ -2334,61 +2356,84 @@ med.fun <- function(y.data, index, m.data)
     pred.data.c[,treat] <- cat.0
   }
 
-  if(!is.null(covariates)){
-    for(p in 1:length(covariates)){
+  if(!is.null(covariates))
+  {
+    for(p in 1:length(covariates))
+    {
       vl <- names(covariates[p])
-      if(is.factor(pred.data.t[,vl])){
+      if(is.factor(pred.data.t[,vl]))
+      {
         pred.data.t[,vl] <- pred.data.c[,vl] <- factor(covariates[[p]], levels = levels(m.data[,vl]))
-      } else {
+      }
+      else
+      {
         pred.data.t[,vl] <- pred.data.c[,vl] <- covariates[[p]]
       }
     }
   }
 
-  ### Case I-2-a: GLM Mediator (including GAMs)
-  if(isGlm.m){
+  if(isGlm.m)
+  {
+    log_info("Case I-2-a: GLM Mediator (including GAMs)") # =======================================
 
     muM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
     muM0 <- predict(new.fit.M, type="response", newdata=pred.data.c)
 
-    if(FamilyM == "poisson"){
+    if(FamilyM == "poisson")
+    {
       PredictM1 <- rpois(n, lambda = muM1)
       PredictM0 <- rpois(n, lambda = muM0)
-    } else if (FamilyM == "Gamma") {
+    }
+    else if (FamilyM == "Gamma")
+    {
       shape <- gamma.shape(new.fit.M)$alpha
       PredictM1 <- rgamma(n, shape = shape, scale = muM1/shape)
       PredictM0 <- rgamma(n, shape = shape, scale = muM0/shape)
-    } else if (FamilyM == "binomial"){
+    }
+    else if (FamilyM == "binomial")
+    {
       PredictM1 <- rbinom(n, size = 1, prob = muM1)
       PredictM0 <- rbinom(n, size = 1, prob = muM0)
-    } else if (FamilyM == "gaussian"){
+    }
+    else if (FamilyM == "gaussian")
+    {
       sigma <- sqrt(summary(new.fit.M)$dispersion)
       error <- rnorm(n, mean=0, sd=sigma)
       PredictM1 <- muM1 + error
       PredictM0 <- muM0 + error
-    } else if (FamilyM == "inverse.gaussian"){
+    }
+    else if (FamilyM == "inverse.gaussian")
+    {
       disp <- summary(new.fit.M)$dispersion
       PredictM1 <- SuppDists::rinvGauss(n, nu = muM1, lambda = 1/disp)
       PredictM0 <- SuppDists::rinvGauss(n, nu = muM0, lambda = 1/disp)
-    } else {
+    }
+    else 
+    {
       stop("unsupported glm family")
     }
 
-    ### Case I-2-b: Ordered Mediator
-  } else if(isOrdered.m) {
+  } 
+  else if(isOrdered.m) 
+  {
+    log_info("Case I-2-b: Ordered Mediator") # ====================================================
     probs_m1 <- predict(new.fit.M, newdata=pred.data.t, type="probs")
     probs_m0 <- predict(new.fit.M, newdata=pred.data.c, type="probs")
     draws_m1 <- matrix(NA, n, m)
     draws_m0 <- matrix(NA, n, m)
-    for(ii in 1:n){
+    for(ii in 1:n)
+    {
       draws_m1[ii,] <- t(rmultinom(1, 1, prob = probs_m1[ii,]))
       draws_m0[ii,] <- t(rmultinom(1, 1, prob = probs_m0[ii,]))
     }
     PredictM1 <- apply(draws_m1, 1, which.max)
     PredictM0 <- apply(draws_m0, 1, which.max)
 
-    ### Case I-2-c: Quantile Regression for Mediator
-  } else if(isRq.m){
+  } 
+  else if(isRq.m)
+  {
+    log_info("Case I-2-c: Quantile Regression for Mediator") # ====================================
+
     # Use inverse transform sampling to predict M
     call.new <- new.fit.M$call
     call.new$tau <- runif(n)
@@ -2402,30 +2447,40 @@ med.fun <- function(y.data, index, m.data)
     PredictM1 <- rowSums(X.t * t(newfits$coefficients))
     PredictM0 <- rowSums(X.c * t(newfits$coefficients))
     rm(newfits, X.t, X.c)
+  } 
+  else if(isLm.m)
+  {
+    log_info("Case I-2-d: Linear") # ==============================================================
 
-    ### Case I-2-d: Linear
-  } else if(isLm.m){
     if (class(new.fit.M) == "speedlm")
+    {
       sigma <- sqrt(summary(new.fit.M)$var.res)
+    }
     else
+    {
       sigma <- summary(new.fit.M)$sigma
+    }
     error <- rnorm(n, mean=0, sd=sigma)
-    PredictM1 <- predict(new.fit.M, type="response",
-                         newdata=pred.data.t) + error
-    PredictM0 <- predict(new.fit.M, type="response",
-                         newdata=pred.data.c) + error
+    PredictM1 <- predict(new.fit.M, type="response", newdata=pred.data.t) + error
+    PredictM0 <- predict(new.fit.M, type="response", newdata=pred.data.c) + error
     rm(error)
+  } 
+  else if(isSurvreg.m)
+  {
+    log_info("Case I-2-e: Survreg") # =============================================================
 
-    ### Case I-2-e: Survreg
-  } else if(isSurvreg.m){
     dd <- survival::survreg.distributions[[new.fit.M$dist]]
-    if (is.null(dd$itrans)){
+    if (is.null(dd$itrans))
+    {
       itrans <- function(x) x
-    } else {
+    } 
+    else 
+    {
       itrans <- dd$itrans
     }
     dname <- dd$dist
-    if(is.null(dname)){
+    if(is.null(dname))
+    {
       dname <- new.fit.M$dist
     }
     scale <- new.fit.M$scale
@@ -2440,24 +2495,31 @@ med.fun <- function(y.data, index, m.data)
     PredictM0 <- as.numeric(itrans(lpM0 + scale * error))
     rm(error)
 
-  } else {
+  } 
+  else 
+  {
     stop("mediator model is not yet implemented")
   }
 
-  #####################################
-  #  Outcome Predictions
-  #####################################
+  log_info("Calculate outcome predictions") # =====================================================
+
   effects.tmp <- matrix(NA, nrow = n, ncol = 4)
-  for(e in 1:4){
+  for(e in 1:4)
+  {
     tt <- switch(e, c(1,1,1,0), c(0,0,1,0), c(1,0,1,1), c(1,0,0,0))
     pred.data.t <- pred.data.c <- y.data
 
-    if(!is.null(covariates)){
-      for(p in 1:length(covariates)){
+    if(!is.null(covariates))
+    {
+      for(p in 1:length(covariates))
+      {
         vl <- names(covariates[p])
-        if(is.factor(pred.data.t[,vl])){
+        if(is.factor(pred.data.t[,vl]))
+        {
           pred.data.t[,vl] <- pred.data.c[,vl] <- factor(covariates[[p]], levels = levels(y.data[,vl]))
-        } else {
+        } 
+        else 
+        {
           pred.data.t[,vl] <- pred.data.c[,vl] <- covariates[[p]]
         }
       }
@@ -2468,17 +2530,22 @@ med.fun <- function(y.data, index, m.data)
     cat.c <- ifelse(tt[2], cat.1, cat.0)
     cat.t.ctrl <- ifelse(tt[1], cat.0, cat.1)
     cat.c.ctrl <- ifelse(tt[2], cat.0, cat.1)
-    if(isFactorT){
+    if(isFactorT)
+    {
       pred.data.t[,treat] <- factor(cat.t, levels = t.levels)
       pred.data.c[,treat] <- factor(cat.c, levels = t.levels)
-      if(!is.null(control)){
+      if(!is.null(control))
+      {
         pred.data.t[,control] <- factor(cat.t.ctrl, levels = t.levels)
         pred.data.c[,control] <- factor(cat.c.ctrl, levels = t.levels)
       }
-    } else {
+    } 
+    else 
+    {
       pred.data.t[,treat] <- cat.t
       pred.data.c[,treat] <- cat.c
-      if(!is.null(control)){
+      if(!is.null(control))
+      {
         pred.data.t[,control] <- cat.t.ctrl
         pred.data.c[,control] <- cat.c.ctrl
       }
@@ -2489,24 +2556,26 @@ med.fun <- function(y.data, index, m.data)
     PredictM0.tmp <- PredictM0
     PredictMt <- PredictM1 * tt[3] + PredictM0 * (1 - tt[3])
     PredictMc <- PredictM1 * tt[4] + PredictM0 * (1 - tt[4])
-    if(isFactorM) {
+    if(isFactorM) 
+    {
       pred.data.t[,mediator] <- factor(PredictMt, levels=1:m, labels=m.levels)
       pred.data.c[,mediator] <- factor(PredictMc, levels=1:m, labels=m.levels)
-    } else {
+    } 
+    else 
+    {
       pred.data.t[,mediator] <- PredictMt
       pred.data.c[,mediator] <- PredictMc
     }
 
-    if(isRq.y){
-      pr.1 <- predict(new.fit.Y, type="response",
-                      newdata=pred.data.t, interval="none")
-      pr.0 <- predict(new.fit.Y, type="response",
-                      newdata=pred.data.c, interval="none")
-    } else {
-      pr.1 <- predict(new.fit.Y, type="response",
-                      newdata=pred.data.t)
-      pr.0 <- predict(new.fit.Y, type="response",
-                      newdata=pred.data.c)
+    if(isRq.y)
+    {
+      pr.1 <- predict(new.fit.Y, type="response", newdata=pred.data.t, interval="none")
+      pr.0 <- predict(new.fit.Y, type="response", newdata=pred.data.c, interval="none")
+    } 
+    else 
+    {
+      pr.1 <- predict(new.fit.Y, type="response", newdata=pred.data.t)
+      pr.0 <- predict(new.fit.Y, type="response", newdata=pred.data.c)
     }
     pr.mat <- as.matrix(cbind(pr.1, pr.0))
     effects.tmp[,e] <- pr.mat[,1] - pr.mat[,2]
@@ -2523,33 +2592,30 @@ med.fun <- function(y.data, index, m.data)
   c(d1 = d1, d0 = d0, z1 = z1, z0 = z0)
 }
 
-med.fun.ordered <- function(y.data, index, m.data) {
-
+med.fun.ordered <- function(y.data, index, m.data)
+{
   Call.M <- model.m$call
   Call.Y <- model.y$call
 
-  if(isSurvreg.m){
-    if(ncol(model.m$y) > 2){
-      stop("unsupported censoring type")
-    }
-    mname <- names(m.data)[1]
-    if(substr(mname, 1, 4) != "Surv"){
-      stop("refit the survival model with `Surv' used directly in model formula")
-    }
+  if(isSurvreg.m)
+  {
+    checkTerminalSurvival(model.m, m.data)
     nc <- nchar(mediator)
     eventname <- substr(mname, 5 + nc + 3, nchar(mname) - 1)
-    if(nchar(eventname) == 0){
-      m.data.tmp <- data.frame(m.data,
-                               as.numeric(m.data[,1L][,1L]))
+    if(nchar(eventname) == 0)
+    {
+      m.data.tmp <- data.frame(m.data, as.numeric(m.data[,1L][,1L]))
       names(m.data.tmp)[c(1L, ncol(m.data)+1)] <- c(mname, mediator)
-    } else {
-      m.data.tmp <- data.frame(m.data,
-                               as.numeric(m.data[,1L][,1L]),
-                               as.numeric(model.m$y[,2]))
+    } 
+    else 
+    {
+      m.data.tmp <- data.frame(m.data, as.numeric(m.data[,1L][,1L]), as.numeric(model.m$y[,2]))
       names(m.data.tmp)[c(1L, ncol(m.data)+(1:2))] <- c(mname, mediator, eventname)
     }
     Call.M$data <- m.data.tmp[index,]
-  } else {
+  } 
+  else 
+  {
     Call.M$data <- m.data[index,]
   }
 
@@ -2559,7 +2625,8 @@ med.fun.ordered <- function(y.data, index, m.data) {
   new.fit.M <- eval.parent(Call.M)
   new.fit.Y <- eval.parent(Call.Y)
 
-  if(isOrdered.m && length(unique(y.data[index,mediator]))!=m){
+  if(isOrdered.m && length(unique(y.data[index,mediator]))!=m)
+  {
     # Modify the coefficients when mediator has empty cells
     coefnames.y <- names(model.y$coefficients)
     coefnames.new.y <- names(new.fit.Y$coefficients)
@@ -2569,75 +2636,100 @@ med.fun.ordered <- function(y.data, index, m.data) {
     new.fit.Y$coefficients <- new.fit.Y.coef
   }
 
-  #####################################
-  # Mediator Predictions
-  #####################################
+  log_info("Calculate mediator predictions") # ====================================================
+
   pred.data.t <- pred.data.c <- m.data
 
-  if(isFactorT){
+  if(isFactorT)
+  {
     pred.data.t[,treat] <- factor(cat.1, levels = t.levels)
     pred.data.c[,treat] <- factor(cat.0, levels = t.levels)
-  } else {
+  } 
+  else 
+  {
     pred.data.t[,treat] <- cat.1
     pred.data.c[,treat] <- cat.0
   }
 
-  if(!is.null(covariates)){
-    for(p in 1:length(covariates)){
+  if(!is.null(covariates))
+  {
+    for(p in 1:length(covariates))
+    {
       vl <- names(covariates[p])
-      if(is.factor(pred.data.t[,vl])){
+      if(is.factor(pred.data.t[,vl]))
+      {
         pred.data.t[,vl] <- pred.data.c[,vl] <- factor(covariates[[p]], levels = levels(m.data[,vl]))
-      } else {
+      } 
+      else 
+      {
         pred.data.t[,vl] <- pred.data.c[,vl] <- covariates[[p]]
       }
     }
   }
 
-  ### Case II-a: GLM Mediator (including GAMs)
-  if(isGlm.m){
+  if(isGlm.m)
+  {
+    log_info("Case II-a: GLM Mediator (including GAMs)") # ========================================
 
     muM1 <- predict(new.fit.M, type="response", newdata=pred.data.t)
     muM0 <- predict(new.fit.M, type="response", newdata=pred.data.c)
 
-    if(FamilyM == "poisson"){
+    if(FamilyM == "poisson")
+    {
       PredictM1 <- rpois(n, lambda = muM1)
       PredictM0 <- rpois(n, lambda = muM0)
-    } else if (FamilyM == "Gamma") {
+    }
+    else if (FamilyM == "Gamma")
+    {
       shape <- gamma.shape(model.m)$alpha
       PredictM1 <- rgamma(n, shape = shape, scale = muM1/shape)
       PredictM0 <- rgamma(n, shape = shape, scale = muM0/shape)
-    } else if (FamilyM == "binomial"){
+    }
+    else if (FamilyM == "binomial")
+    {
       PredictM1 <- rbinom(n, size = 1, prob = muM1)
       PredictM0 <- rbinom(n, size = 1, prob = muM0)
-    } else if (FamilyM == "gaussian"){
+    }
+    else if (FamilyM == "gaussian")
+    {
       sigma <- sqrt(summary(model.m)$dispersion)
       error <- rnorm(n, mean=0, sd=sigma)
       PredictM1 <- muM1 + error
       PredictM0 <- muM0 + error
-    } else if (FamilyM == "inverse.gaussian"){
+    }
+    else if (FamilyM == "inverse.gaussian")
+    {
       disp <- summary(model.m)$dispersion
       PredictM1 <- SuppDists::rinvGauss(n, nu = muM1, lambda = 1/disp)
       PredictM0 <- SuppDists::rinvGauss(n, nu = muM0, lambda = 1/disp)
-    } else {
+    }
+    else
+    {
       stop("unsupported glm family")
     }
 
-    ### Case II-b: Ordered Mediator
-  } else if(isOrdered.m) {
+  }
+  else if(isOrdered.m)
+  {
+    log_info("Case II-b: Ordered Mediator") # =====================================================
+
     probs_m1 <- predict(new.fit.M, type="probs", newdata=pred.data.t)
     probs_m0 <- predict(new.fit.M, type="probs", newdata=pred.data.c)
     draws_m1 <- matrix(NA, n, m)
     draws_m0 <- matrix(NA, n, m)
 
-    for(ii in 1:n){
+    for(ii in 1:n)
+    {
       draws_m1[ii,] <- t(rmultinom(1, 1, prob = probs_m1[ii,]))
       draws_m0[ii,] <- t(rmultinom(1, 1, prob = probs_m0[ii,]))
     }
     PredictM1 <- apply(draws_m1, 1, which.max)
     PredictM0 <- apply(draws_m0, 1, which.max)
+  }
+  else if(isRq.m)
+  {
+    log_info("Case II-c: Quantile Regression for Mediator") # =====================================
 
-    ### Case II-c: Quantile Regression for Mediator
-  } else if(isRq.m){
     # Use inverse transform sampling to predict M
     call.new <- new.fit.M$call
     call.new$tau <- runif(n)
@@ -2652,26 +2744,33 @@ med.fun.ordered <- function(y.data, index, m.data) {
     PredictM0 <- rowSums(X.c * t(newfits$coefficients))
     rm(newfits, X.t, X.c)
 
-    ### Case II-d: Linear
-  } else if(isLm.m){
+  }
+  else if(isLm.m)
+  {
+    log_info("Case II-d: Linear") # ===============================================================
+
     sigma <- summary(new.fit.M)$sigma
     error <- rnorm(n, mean=0, sd=sigma)
-    PredictM1 <- predict(new.fit.M, type="response",
-                         newdata=pred.data.t) + error
-    PredictM0 <- predict(new.fit.M, type="response",
-                         newdata=pred.data.c) + error
+    PredictM1 <- predict(new.fit.M, type="response", newdata=pred.data.t) + error
+    PredictM0 <- predict(new.fit.M, type="response", newdata=pred.data.c) + error
     rm(error)
+  }
+  else if(isSurvreg.m)
+  {
+    log_debug("Case I-2-e: Survreg") # ============================================================
 
-    ### Case I-2-e: Survreg
-  } else if(isSurvreg.m){
     dd <- survival::survreg.distributions[[new.fit.M$dist]]
-    if (is.null(dd$itrans)){
+    if (is.null(dd$itrans))
+    {
       itrans <- function(x) x
-    } else {
+    }
+    else
+    {
       itrans <- dd$itrans
     }
     dname <- dd$dist
-    if(is.null(dname)){
+    if(is.null(dname))
+    {
       dname <- new.fit.M$dist
     }
     scale <- new.fit.M$scale
@@ -2686,24 +2785,31 @@ med.fun.ordered <- function(y.data, index, m.data) {
     PredictM0 <- as.numeric(itrans(lpM0 + scale * error))
     rm(error)
 
-  } else {
+  }
+  else
+  {
     stop("mediator model is not yet implemented")
   }
 
-  #####################################
-  #  Outcome Predictions
-  #####################################
+  log_info("Calculate outcome predictions") # =====================================================
+
   effects.tmp <- array(NA, dim = c(n, n.ycat, 4))
-  for(e in 1:4){
+  for(e in 1:4)
+  {
     tt <- switch(e, c(1,1,1,0), c(0,0,1,0), c(1,0,1,1), c(1,0,0,0))
     pred.data.t <- pred.data.c <- y.data
 
-    if(!is.null(covariates)){
-      for(p in 1:length(covariates)){
+    if(!is.null(covariates))
+    {
+      for(p in 1:length(covariates))
+      {
         vl <- names(covariates[p])
-        if(is.factor(pred.data.t[,vl])){
+        if(is.factor(pred.data.t[,vl]))
+        {
           pred.data.t[,vl] <- pred.data.c[,vl] <- factor(covariates[[p]], levels = levels(y.data[,vl]))
-        } else {
+        }
+        else
+        {
           pred.data.t[,vl] <- pred.data.c[,vl] <- covariates[[p]]
         }
       }
@@ -2714,17 +2820,22 @@ med.fun.ordered <- function(y.data, index, m.data) {
     cat.c <- ifelse(tt[2], cat.1, cat.0)
     cat.t.ctrl <- ifelse(tt[1], cat.0, cat.1)
     cat.c.ctrl <- ifelse(tt[2], cat.0, cat.1)
-    if(isFactorT){
+    if(isFactorT)
+    {
       pred.data.t[,treat] <- factor(cat.t, levels = t.levels)
       pred.data.c[,treat] <- factor(cat.c, levels = t.levels)
-      if(!is.null(control)){
+      if(!is.null(control))
+      {
         pred.data.t[,control] <- factor(cat.t.ctrl, levels = t.levels)
         pred.data.c[,control] <- factor(cat.c.ctrl, levels = t.levels)
       }
-    } else {
+    }
+    else
+    {
       pred.data.t[,treat] <- cat.t
       pred.data.c[,treat] <- cat.c
-      if(!is.null(control)){
+      if(!is.null(control))
+      {
         pred.data.t[,control] <- cat.t.ctrl
         pred.data.c[,control] <- cat.c.ctrl
       }
@@ -2735,10 +2846,13 @@ med.fun.ordered <- function(y.data, index, m.data) {
     PredictM0.tmp <- PredictM0
     PredictMt <- PredictM1 * tt[3] + PredictM0 * (1 - tt[3])
     PredictMc <- PredictM1 * tt[4] + PredictM0 * (1 - tt[4])
-    if(isFactorM) {
+    if(isFactorM)
+    {
       pred.data.t[,mediator] <- factor(PredictMt, levels=1:m, labels=m.levels)
       pred.data.c[,mediator] <- factor(PredictMc, levels=1:m, labels=m.levels)
-    } else {
+    }
+    else
+    {
       pred.data.t[,mediator] <- PredictMt
       pred.data.c[,mediator] <- PredictMc
     }
@@ -3797,7 +3911,8 @@ plot.mediate.mer <- function(x, treatment = NULL, group.plots = FALSE,
       abline(v = 0, lty = 2)
     }
     #########################################################################
-    if(0 %in% treatment){
+    if(0 %in% treatment)
+    {
       y.axis <- c(length(param$coef.vec.0.group[,2]):.5)
       y.axis <- y.axis + 1
 
@@ -3819,7 +3934,8 @@ plot.mediate.mer <- function(x, treatment = NULL, group.plots = FALSE,
       abline(v = 0, lty = 2)
     }
     #########################################################################
-    if(1 %in% treatment){
+    if(1 %in% treatment)
+    {
       y.axis <- c(length(param$coef.vec.1.group[,2]):.5)
       y.axis <- y.axis + 1
 
@@ -3865,7 +3981,8 @@ plot.mediate.mer <- function(x, treatment = NULL, group.plots = FALSE,
 }
 
 #########################################################################
-plot.process.order <- function(model){
+plot.process.order <- function(model)
+{
   length <- length(model$d1)
   coef.vec.1 <- lower.vec.1 <- upper.vec.1 <-
     coef.vec.0 <- lower.vec.0 <- upper.vec.0 <- matrix(NA,ncol=2,nrow=length)
@@ -3994,10 +4111,15 @@ plot.mediate.order <- function(x, treatment = NULL,
   abline(v = 0, lty = 2)
 }
 
-pval <- function(x, xhat){
-  ## Compute p-values
-  if (xhat == 0) out <- 1
-  else {
+# Compute p-values
+pval <- function(x, xhat)
+{
+  if (xhat == 0) 
+  {
+    out <- 1
+  }
+  else 
+  {
     out <- 2 * min(sum(x > 0), sum(x < 0)) / length(x)
   }
   return(min(out, 1))
