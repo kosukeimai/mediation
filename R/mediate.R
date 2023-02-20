@@ -505,6 +505,7 @@ groupData <- function(model_indicator, data, group)
 {
     if (model_indicator)
     {
+        log_debug("Group data")
         return data[,group]
     }
     return NULL
@@ -774,7 +775,8 @@ mediate <- function(model.m, model.y, sims = 1000,
   else # !isMer.m
   {
     if(isMer.y) ### group-level mediator
-    {   
+    {
+      log_debug("Group-level mediator")
       if(!(group.y %in% names(m.data)))
       {
         stop("specify group-level variable in mediator data")
@@ -805,7 +807,7 @@ mediate <- function(model.m, model.y, sims = 1000,
         }
       }
     } 
-    else 
+    else # !isMer.y
     {
       group.id <- NULL
       group.name <- NULL
@@ -816,12 +818,14 @@ mediate <- function(model.m, model.y, sims = 1000,
   # Numbers of observations and categories
   n.m <- nrow(m.data)
   n.y <- nrow(y.data)
-  if(!(isMer.y & !isMer.m)){   ### n.y and n.m are different when group-level mediator is used 
-    if(n.m != n.y){
+  if(!(isMer.y & !isMer.m))
+  {    
+    ### n.y and n.m are different when group-level mediator is used
+    if(n.m != n.y)
+    {
       stop("number of observations do not match between mediator and outcome models")
-    } else{
-      n <- n.m
-    }
+    } 
+    n <- n.m
     m <- length(sort(unique(model.frame(model.m)[,1])))
   }
   
@@ -829,25 +833,32 @@ mediate <- function(model.m, model.y, sims = 1000,
   weights.m <- model.weights(m.data)
   weights.y <- model.weights(y.data)
   
-  if(!is.null(weights.m) && isGlm.m && FamilyM == "binomial"){
+  if(!is.null(weights.m) && isGlm.m && FamilyM == "binomial")
+  {
     message("weights taken as sampling weights, not total number of trials")
   }
-  if(!is.null(weights.m) && isGlmerMod.m && FamilyM == "binomial"){
+  if(!is.null(weights.m) && isGlmerMod.m && FamilyM == "binomial")
+  {
     message("weights taken as sampling weights, not total number of trials")
   }
-  if(is.null(weights.m)){
+  if(is.null(weights.m))
+  {
     weights.m <- rep(1,nrow(m.data))
   }
-  if(is.null(weights.y)){
+  if(is.null(weights.y))
+  {
     weights.y <- rep(1,nrow(y.data))
   }
-  if(!(isMer.y & !isMer.m)){
-    if(!all(weights.m == weights.y)) {
+  if(!(isMer.y & !isMer.m))
+  {
+    if(!all(weights.m == weights.y)) 
+    {
       stop("weights on outcome and mediator models not identical")
-    } else {
-      weights <- weights.m
-    }
-  } else{
+    } 
+    weights <- weights.m
+  } 
+  else
+  {
     weights <- weights.y  ### group-level mediator  
   }
 
