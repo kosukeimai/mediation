@@ -551,6 +551,28 @@ convertCharacterToFactor <- function(data, column)
   return data[,column]
 }
 
+extractVarianceParameters <- function(model, data, cluster, robustSE)
+{
+  if(robustSE)
+  {
+    Model.var.cov <- vcovHC(model, ...) # !isMer
+  }
+  else if(!is.null(cluster))
+  {
+    if(nrow(data)!=length(cluster))
+    {
+        warning("length of cluster vector differs from # of obs for mediator model")
+    }
+    dta <- merge(data, as.data.frame(cluster), sort=FALSE, by="row.names")
+    fm <- update(model, data=dta)
+    Model.var.cov <- sandwich::vcovCL(fm, dta[,ncol(dta)])
+  }
+  else
+  {
+    Model.var.cov <- vcov(model.m)
+  }
+}
+
 mediate <- function(model.m, model.y, sims = 1000,
                     boot = FALSE, boot.ci.type = "perc",
                     treat = "treat.name", mediator = "med.name",
@@ -932,102 +954,104 @@ mediate <- function(model.m, model.y, sims = 1000,
       }
 
       # Get mean and variance parameters for mediator simulations
-      if(isSurvreg.m && is.null(survival::survreg.distributions[[model.m$dist]]$scale))
+      if(isMer.m)
       {
-        MModel.coef <- c(coef(model.m), log(model.m$scale))
-        scalesim.m <- TRUE
-      } 
-      else if(isMer.m)
-      {
+        # Mean parameters
         MModel.fixef <- lme4::fixef(model.m)
         MModel.ranef <- lme4::ranef(model.m)
         scalesim.m <- FALSE
-      } 
-      else 
+
+        # Variance parameters
+        if(robustSE)
+        {
+            MModel.var.cov <- vcov(model.m)
+            warning("robustSE does not support mer class: non-robust SEs are computed for model.m")
+        }
+      }
+      else
       {
-        MModel.coef <- coef(model.m)
-        scalesim.m <- FALSE
+        # Mean parameters
+        if(isSurvreg.m && is.null(survival::survreg.distributions[[model.m$dist]]$scale))
+        {
+          MModel.coef <- c(coef(model.m), log(model.m$scale))
+          scalesim.m <- TRUE
+        }
+        else
+        {
+          MModel.coef <- coef(model.m)
+          scalesim.m <- FALSE
+        }
+
+        # Variance parameters
+        if(isOrdered.m)
+        {
+            if(is.null(model.m$Hess))
+            {
+                log_info("Mediator model object does not contain 'Hessian';")
+            }
+            k <- length(MModel.coef)
+            MModel.var.cov <- vcov(model.m)[(1:k),(1:k)]
+        }
+        else if(isSurvreg.m)
+        {
+            MModel.var.cov <- vcov(model.m)
+        }
+        else
+        {
+            MModel.var.cov = extractVarianceParameters(model.m, m.data, cluster, robustSE)
+        }
       }
 
-      if(isOrdered.m)
-      {
-          if(is.null(model.m$Hess))
-          {
-              log_info("Mediator model object does not contain 'Hessian';")
-          }
-          k <- length(MModel.coef)
-          MModel.var.cov <- vcov(model.m)[(1:k),(1:k)]
-      } 
-      else if(isSurvreg.m)
-      {
-          MModel.var.cov <- vcov(model.m)
-      } 
-      else 
-      {
-          if(robustSE & !isMer.m)
-          {
-              MModel.var.cov <- vcovHC(model.m, ...)
-          } 
-          else if(robustSE & isMer.m)
-          {
-              MModel.var.cov <- vcov(model.m)
-              warning("robustSE does not support mer class: non-robust SEs are computed for model.m")
-          } 
-          else if(!is.null(cluster))
-          {
-              if(nrow(m.data)!=length(cluster))
-              {
-                  warning("length of cluster vector differs from # of obs for mediator model")
-              }
-              dta <- merge(m.data, as.data.frame(cluster), sort=FALSE, by="row.names")
-              fm <- update(model.m, data=dta)
-              MModel.var.cov <- sandwich::vcovCL(fm, dta[,ncol(dta)])
-          } 
-          else 
-          {
-              MModel.var.cov <- vcov(model.m)
-          }
-      }
 
-      # Get mean and variance parameters for outcome simulations
-      if(isSurvreg.y && is.null(survival::survreg.distributions[[model.y$dist]]$scale)){
-        YModel.coef <- c(coef(model.y), log(model.y$scale))
-        scalesim.y <- TRUE  # indicates if survreg scale parameter is simulated
-      } else if(isMer.y){
+
+
+      # Get parameters for outcome simulations
+      if(isMer.y)
+      {
+        # Mean parameters
         YModel.fixef <- lme4::fixef(model.y)
         YModel.ranef <- lme4::ranef(model.y)
         scalesim.y <- FALSE
-      } else {
-        YModel.coef <- coef(model.y)
-        scalesim.y <- FALSE
-      }
 
-      if(isRq.y){
-          YModel.var.cov <- summary(model.y, covariance=TRUE)$cov
-      } else if(isSurvreg.y){
-          YModel.var.cov <- vcov(model.y)
-      } else {
-          if(robustSE & !isMer.y){
-              YModel.var.cov <- vcovHC(model.y, ...)
-          } else if(robustSE & isMer.y){
-              YModel.var.cov <- vcov(model.y)
-              warning("robustSE does not support mer class: non-robust SEs are computed for model.y")
-          } else if(!is.null(cluster)){
-              if(nrow(y.data)!=length(cluster)){
-                  warning("length of cluster vector differs from # of obs for outcome model")
-              }
-              dta <- merge(y.data, as.data.frame(cluster), sort=FALSE,
-                           by="row.names")
-              fm <- update(model.y, data=dta)
-              YModel.var.cov <- sandwich::vcovCL(fm, dta[,ncol(dta)])
-          } else {
-              YModel.var.cov <- vcov(model.y)
-          }
+        # Variance parameters
+        if(robustSE)
+        {
+            YModel.var.cov <- vcov(model.y)
+            warning("robustSE does not support mer class: non-robust SEs are computed for model.y")
+        }
+      }
+      else
+      {
+        # Mean Parameters
+        if(isSurvreg.y && is.null(survival::survreg.distributions[[model.y$dist]]$scale))
+        {
+          YModel.coef <- c(coef(model.y), log(model.y$scale))
+          scalesim.y <- TRUE  # indicates if survreg scale parameter is simulated
+        }
+        else
+        {
+          YModel.coef <- coef(model.y)
+          scalesim.y <- FALSE
+        }
+
+        # Variance parameters
+        if(isRq.y)
+        {
+            YModel.var.cov <- summary(model.y, covariance=TRUE)$cov
+        }
+        else if(isSurvreg.y)
+        {
+            YModel.var.cov <- vcov(model.y)
+        }
+        else
+        {
+            YModel.var.cov <- extractVarianceParameters(model.y, y.data, cluster, robustSE)
+        }
       }
 
       # Draw model coefficients from normal
-
-      se.ranef.new <- function (object) {
+      se.ranef.new <- function (object)
+      {
           se.bygroup <- lme4::ranef(object, condVar = TRUE)
           n.groupings <- length(se.bygroup)
           for (m in 1:n.groupings) {
@@ -1036,25 +1060,30 @@ mediate <- function(model.m, model.y, sims = 1000,
               J <- dim(vars.m)[3]
               names.full <- dimnames(se.bygroup[[m]])
               se.bygroup[[m]] <- array(NA, c(J, K))
-              for (j in 1:J) {
-                  se.bygroup[[m]][j, ] <- sqrt(diag(as.matrix(vars.m[,
-                                                                     , j])))
+              for (j in 1:J)
+              {
+                  se.bygroup[[m]][j, ] <- sqrt(diag(as.matrix(vars.m[,, j])))
               }
               dimnames(se.bygroup[[m]]) <- list(names.full[[1]], names.full[[2]])
           }
           return(se.bygroup)
       }
 
-      if(isMer.m){
+      if(isMer.m)
+      {
           MModel.fixef.vcov <- as.matrix(vcov(model.m))
           MModel.fixef.sim <- rmvnorm(sims,mean=MModel.fixef,sigma=MModel.fixef.vcov)
           Nm.ranef <- ncol(lme4::ranef(model.m)[[1]])
           MModel.ranef.sim <- vector("list",Nm.ranef)
-          for (d in 1:Nm.ranef){
+          for (d in 1:Nm.ranef)
+          {
               MModel.ranef.sim[[d]] <- matrix(rnorm(sims*nrow(lme4::ranef(model.m)[[1]]), mean = lme4::ranef(model.m)[[1]][,d], sd = se.ranef.new(model.m)[[1]][,d]), nrow = sims, byrow = TRUE)
           }
-      } else {
-          if(sum(is.na(MModel.coef)) > 0){
+      }
+      else
+      {
+          if(sum(is.na(MModel.coef)) > 0)
+          {
               stop("NA in model coefficients; rerun models with nonsingular design matrix")
           }
           MModel <- rmvnorm(sims, mean=MModel.coef, sigma=MModel.var.cov)
@@ -1918,8 +1947,8 @@ mediate <- function(model.m, model.y, sims = 1000,
     ### CASE II: ORDERED OUTCOME
     ############################################################################
     ############################################################################
-  } 
-  else 
+  }
+  else
   {
     if(boot != TRUE)
     {
@@ -1991,8 +2020,8 @@ mediate <- function(model.m, model.y, sims = 1000,
         tau.ci <- BC.CI(tau)
         z1.ci <- BC.CI(zeta.1)
         z0.ci <- BC.CI(zeta.0)
-    } 
-    else 
+    }
+    else
     {
         CI <- function(theta){
             return(quantile(theta, c(low, high), na.rm = TRUE))
@@ -2018,7 +2047,7 @@ mediate <- function(model.m, model.y, sims = 1000,
     INT <- paste(treat,mediator,sep=":") %in% attr(model.y$terms,"term.labels") |
       paste(mediator,treat,sep=":") %in% attr(model.y$terms,"term.labels")
 
-    if(long) 
+    if(long)
     {
       out <- list(d0=d0, d1=d1, d0.ci=d0.ci, d1.ci=d1.ci,
                   d0.p=d0.p, d1.p=d1.p,
@@ -2056,7 +2085,7 @@ mediate <- function(model.m, model.y, sims = 1000,
 }
 
 ##################################################################
-med.fun <- function(y.data, index, m.data) 
+med.fun <- function(y.data, index, m.data)
 {
   if(isSurvreg.m){
     mname <- names(m.data)[1]
@@ -2143,8 +2172,8 @@ med.fun <- function(y.data, index, m.data)
   {
     pred.data.t[,treat] <- factor(cat.1, levels = t.levels)
     pred.data.c[,treat] <- factor(cat.0, levels = t.levels)
-  } 
-  else 
+  }
+  else
   {
     pred.data.t[,treat] <- cat.1
     pred.data.c[,treat] <- cat.0
