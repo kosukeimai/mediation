@@ -573,7 +573,7 @@ extractVarianceParameters <- function(model, data, cluster, robustSE)
   }
 }
 
-se.ranef.new <- function (object)
+se.ranef.new <- function(object)
 {
     se.bygroup <- lme4::ranef(object, condVar = TRUE)
     n.groupings <- length(se.bygroup)
@@ -590,6 +590,15 @@ se.ranef.new <- function (object)
         dimnames(se.bygroup[[m]]) <- list(names.full[[1]], names.full[[2]])
     }
     return(se.bygroup)
+}
+
+drawCoefficientsGaussian <- function(num_sims, Model.coef, Model.var.cov)
+{
+    if(sum(is.na(Model.coef)) > 0)
+    {
+        stop("NA in model coefficients; rerun models with nonsingular design matrix")
+    }
+    return rmvnorm(num_sims, mean=Model.coef, sigma=Model.var.cov)
 }
 
 mediate <- function(model.m, model.y, sims = 1000,
@@ -972,7 +981,7 @@ mediate <- function(model.m, model.y, sims = 1000,
         stop("'boot' must be 'TRUE' for models used")
       }
 
-      # Get mean and variance parameters for mediator simulations
+      log_debug("Draw model coefficients from normal - Mediator") # ===============================
       if(isMer.m)
       {
         # Mean parameters
@@ -985,6 +994,16 @@ mediate <- function(model.m, model.y, sims = 1000,
         {
             MModel.var.cov <- vcov(model.m)
             warning("robustSE does not support mer class: non-robust SEs are computed for model.m")
+        }
+
+        # Draw from normal
+        MModel.fixef.vcov <- as.matrix(vcov(model.m))
+        MModel.fixef.sim <- rmvnorm(sims,mean=MModel.fixef,sigma=MModel.fixef.vcov)
+        Nm.ranef <- ncol(lme4::ranef(model.m)[[1]])
+        MModel.ranef.sim <- vector("list",Nm.ranef)
+        for (d in 1:Nm.ranef)
+        {
+            MModel.ranef.sim[[d]] <- matrix(rnorm(sims*nrow(lme4::ranef(model.m)[[1]]), mean = lme4::ranef(model.m)[[1]][,d], sd = se.ranef.new(model.m)[[1]][,d]), nrow = sims, byrow = TRUE)
         }
       }
       else
@@ -1019,9 +1038,11 @@ mediate <- function(model.m, model.y, sims = 1000,
         {
             MModel.var.cov = extractVarianceParameters(model.m, m.data, cluster, robustSE)
         }
+        # Draw from normal
+        MModel <-drawCoefficientsGaussian(sims, MModel.coef, MModel.var.cov)
       }
 
-      # Get parameters for outcome simulations
+      log_debug("Draw model coefficients from normal - Outcome") # ================================
       if(isMer.y)
       {
         # Mean parameters
@@ -1034,6 +1055,16 @@ mediate <- function(model.m, model.y, sims = 1000,
         {
             YModel.var.cov <- vcov(model.y)
             warning("robustSE does not support mer class: non-robust SEs are computed for model.y")
+        }
+
+        # Draw from normal
+        YModel.fixef.vcov <- as.matrix(vcov(model.y))
+        YModel.fixef.sim <- rmvnorm(sims,mean=YModel.fixef,sigma=YModel.fixef.vcov)
+        Ny.ranef <- ncol(lme4::ranef(model.y)[[1]])
+        YModel.ranef.sim <- vector("list",Ny.ranef)
+        for (d in 1:Ny.ranef)
+        {
+            YModel.ranef.sim[[d]] <- matrix(rnorm(sims*nrow(lme4::ranef(model.y)[[1]]), mean = lme4::ranef(model.y)[[1]][,d], sd = se.ranef.new(model.y)[[1]][,d]), nrow = sims, byrow = TRUE)
         }
       }
       else
@@ -1063,54 +1094,24 @@ mediate <- function(model.m, model.y, sims = 1000,
         {
             YModel.var.cov <- extractVarianceParameters(model.y, y.data, cluster, robustSE)
         }
+
+        # Draw from normal
+        YModel <-drawCoefficientsGaussian(sims, YModel.coef, YModel.var.cov)
       }
 
-      # Draw model coefficients from normal
-      if(isMer.m)
+      if(isSurvreg.m | isSurvreg.y)
       {
-          MModel.fixef.vcov <- as.matrix(vcov(model.m))
-          MModel.fixef.sim <- rmvnorm(sims,mean=MModel.fixef,sigma=MModel.fixef.vcov)
-          Nm.ranef <- ncol(lme4::ranef(model.m)[[1]])
-          MModel.ranef.sim <- vector("list",Nm.ranef)
-          for (d in 1:Nm.ranef)
-          {
-              MModel.ranef.sim[[d]] <- matrix(rnorm(sims*nrow(lme4::ranef(model.m)[[1]]), mean = lme4::ranef(model.m)[[1]][,d], sd = se.ranef.new(model.m)[[1]][,d]), nrow = sims, byrow = TRUE)
-          }
-      }
-      else
-      {
-          if(sum(is.na(MModel.coef)) > 0)
-          {
-              stop("NA in model coefficients; rerun models with nonsingular design matrix")
-          }
-          MModel <- rmvnorm(sims, mean=MModel.coef, sigma=MModel.var.cov)
+        if(robustSE)
+        {
+          warning("`robustSE' ignored for survival models; fit the model with `robust' option instead\n")
+        }
+        if(!is.null(cluster))
+        {
+          warning("`cluster' ignored for survival models; fit the model with 'cluster()' term in the formula\n")
+        }
       }
 
-      if(isMer.y){
-          YModel.fixef.vcov <- as.matrix(vcov(model.y))
-          YModel.fixef.sim <- rmvnorm(sims,mean=YModel.fixef,sigma=YModel.fixef.vcov)
-          Ny.ranef <- ncol(lme4::ranef(model.y)[[1]])
-          YModel.ranef.sim <- vector("list",Ny.ranef)
-          for (d in 1:Ny.ranef){
-              YModel.ranef.sim[[d]] <- matrix(rnorm(sims*nrow(lme4::ranef(model.y)[[1]]), mean = lme4::ranef(model.y)[[1]][,d], sd = se.ranef.new(model.y)[[1]][,d]), nrow = sims, byrow = TRUE)
-          }
-      } else {
-          if(sum(is.na(YModel.coef)) > 0){
-              stop("NA in model coefficients; rerun models with nonsingular design matrix")
-          }
-          YModel <- rmvnorm(sims, mean=YModel.coef, sigma=YModel.var.cov)
-      }
-
-      if(robustSE && (isSurvreg.m | isSurvreg.y)){
-        warning("`robustSE' ignored for survival models; fit the model with `robust' option instead\n")
-      }
-      if(!is.null(cluster) && (isSurvreg.m | isSurvreg.y)){
-        warning("`cluster' ignored for survival models; fit the model with 'cluster()' term in the formula\n")
-      }
-
-      #####################################
-      ##  Mediator Predictions
-      #####################################
+      log_info("Calculate Mediator Predictions") # ================================================
       ### number of observations are different when group-level mediator is used
       if(isMer.y & !isMer.m){
         n <- n.m
