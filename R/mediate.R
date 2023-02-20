@@ -1113,26 +1113,34 @@ mediate <- function(model.m, model.y, sims = 1000,
 
       log_info("Calculate Mediator Predictions") # ================================================
       ### number of observations are different when group-level mediator is used
-      if(isMer.y & !isMer.m){
+      if(isMer.y & !isMer.m)
+      {
         n <- n.m
       }
 
       pred.data.t <- pred.data.c <- m.data
 
-      if(isFactorT){
+      if(isFactorT)
+      {
         pred.data.t[,treat] <- factor(cat.1, levels = t.levels)
         pred.data.c[,treat] <- factor(cat.0, levels = t.levels)
-      } else {
+      }
+      else
+      {
         pred.data.t[,treat] <- cat.1
         pred.data.c[,treat] <- cat.0
       }
 
-      if(!is.null(covariates)){
-        for(p in 1:length(covariates)){
+      if(!is.null(covariates))
+      {
+        for(p in 1:length(covariates))
+        {
           vl <- names(covariates[p])
-          if(is.factor(pred.data.t[,vl])){
+          if(is.factor(pred.data.t[,vl]))
+          {
             pred.data.t[,vl] <- pred.data.c[,vl] <- factor(covariates[[p]], levels = levels(m.data[,vl]))
-          } else {
+          }
+          else {
             pred.data.t[,vl] <- pred.data.c[,vl] <- covariates[[p]]
           }
         }
@@ -1141,47 +1149,67 @@ mediate <- function(model.m, model.y, sims = 1000,
       mmat.t <- model.matrix(terms(model.m), data=pred.data.t)
       mmat.c <- model.matrix(terms(model.m), data=pred.data.c)
 
-      ### Case I-1-a: GLM Mediator
-      if(isGlm.m){
+      if(isGlm.m)
+      {
+        log_info("Case I-1-a: GLM Mediator") # ====================================================
+
         muM1 <- model.m$family$linkinv(tcrossprod(MModel, mmat.t))
         muM0 <- model.m$family$linkinv(tcrossprod(MModel, mmat.c))
 
-        if(FamilyM == "poisson"){
+        if(FamilyM == "poisson")
+        {
           PredictM1 <- matrix(rpois(sims*n, lambda = muM1), nrow = sims)
           PredictM0 <- matrix(rpois(sims*n, lambda = muM0), nrow = sims)
-        } else if (FamilyM == "Gamma") {
+        }
+        else if (FamilyM == "Gamma")
+        {
           shape <- gamma.shape(model.m)$alpha
           PredictM1 <- matrix(rgamma(n*sims, shape = shape,
                                      scale = muM1/shape), nrow = sims)
           PredictM0 <- matrix(rgamma(n*sims, shape = shape,
                                      scale = muM0/shape), nrow = sims)
-        } else if (FamilyM == "binomial"){
+        }
+        else if (FamilyM == "binomial")
+        {
           PredictM1 <- matrix(rbinom(n*sims, size = 1,
                                      prob = muM1), nrow = sims)
           PredictM0 <- matrix(rbinom(n*sims, size = 1,
                                      prob = muM0), nrow = sims)
-        } else if (FamilyM == "gaussian"){
+        }
+        else if (FamilyM == "gaussian")
+        {
           sigma <- sqrt(summary(model.m)$dispersion)
           error <- rnorm(sims*n, mean=0, sd=sigma)
           PredictM1 <- muM1 + matrix(error, nrow=sims)
           PredictM0 <- muM0 + matrix(error, nrow=sims)
-        } else if (FamilyM == "inverse.gaussian"){
+        }
+        else if (FamilyM == "inverse.gaussian")
+        {
           disp <- summary(model.m)$dispersion
-          PredictM1 <- matrix(SuppDists::rinvGauss(n*sims, nu = muM1,
-                                                   lambda = 1/disp), nrow = sims)
-          PredictM0 <- matrix(SuppDists::rinvGauss(n*sims, nu = muM0,
-                                                   lambda = 1/disp), nrow = sims)
-        } else {
+          PredictM1 <- matrix(SuppDists::rinvGauss(n*sims, nu = muM1, lambda = 1/disp), nrow = sims)
+          PredictM0 <- matrix(SuppDists::rinvGauss(n*sims, nu = muM0, lambda = 1/disp), nrow = sims)
+        }
+        else
+        {
           stop("unsupported glm family")
         }
 
-        ### Case I-1-b: Ordered mediator
-      } else if(isOrdered.m){
-        if(model.m$method=="logistic"){
+        ###
+      }
+      else if(isOrdered.m)
+      {
+        log_info("Case I-1-b: Ordered mediator") # ================================================
+
+        if(model.m$method=="logistic")
+        {
           linkfn <- plogis
-        } else if(model.m$method=="probit") {
+        }
+        else if(model.m$method=="probit")
+        {
           linkfn <- pnorm
-        } else {
+        }
+        else
+        {
           stop("unsupported polr method; use 'logistic' or 'probit'")
         }
 
@@ -1197,13 +1225,16 @@ mediate <- function(model.m, model.y, sims = 1000,
         PredictM1 <- matrix(,nrow=sims, ncol=n)
         PredictM0 <- matrix(,nrow=sims, ncol=n)
 
-        for(i in 1:sims){
+        for(i in 1:sims)
+        {
           cprobs_m1 <- matrix(NA,n,m)
           cprobs_m0 <- matrix(NA,n,m)
           probs_m1 <- matrix(NA,n,m)
           probs_m0 <- matrix(NA,n,m)
 
-          for (j in 1:(m-1)) {  # loop to get category-specific probabilities
+          # loop to get category-specific probabilities
+          for (j in 1:(m-1))
+          {
             cprobs_m1[,j] <- linkfn(lambda[j]-ystar_m1[i,])
             cprobs_m0[,j] <- linkfn(lambda[j]-ystar_m0[i,])
             # cumulative probabilities
@@ -1213,7 +1244,9 @@ mediate <- function(model.m, model.y, sims = 1000,
             probs_m0[,1] <- cprobs_m0[,1]     # bottom category
           }
 
-          for (j in 2:(m-1)){  # middle categories
+          # middle categories
+          for (j in 2:(m-1))
+          {
             probs_m1[,j] <- cprobs_m1[,j]-cprobs_m1[,j-1]
             probs_m0[,j] <- cprobs_m0[,j]-cprobs_m0[,j-1]
           }
@@ -1221,7 +1254,8 @@ mediate <- function(model.m, model.y, sims = 1000,
           draws_m1 <- matrix(NA, n, m)
           draws_m0 <- matrix(NA, n, m)
 
-          for(ii in 1:n){
+          for(ii in 1:n)
+          {
             draws_m1[ii,] <- t(rmultinom(1, 1, prob = probs_m1[ii,]))
             draws_m0[ii,] <- t(rmultinom(1, 1, prob = probs_m0[ii,]))
           }
@@ -1230,8 +1264,11 @@ mediate <- function(model.m, model.y, sims = 1000,
           PredictM0[i,] <- apply(draws_m0, 1, which.max)
         }
 
-        ### Case I-1-c: Linear
-      } else if(isLm.m){
+      } 
+      else if(isLm.m)
+      {
+        log_debug("Case I-1-c: Linear") # =========================================================
+
         sigma <- summary(model.m)$sigma
         error <- rnorm(sims*n, mean=0, sd=sigma)
         muM1 <- tcrossprod(MModel, mmat.t)
@@ -1239,9 +1276,11 @@ mediate <- function(model.m, model.y, sims = 1000,
         PredictM1 <- muM1 + matrix(error, nrow=sims)
         PredictM0 <- muM0 + matrix(error, nrow=sims)
         rm(error)
+      } 
+      else if(isSurvreg.m)
+      {
+        log_debug("Case I-1-d: Survreg") # ========================================================
 
-        ### Case I-1-d: Survreg
-      } else if(isSurvreg.m){
         dd <- survival::survreg.distributions[[model.m$dist]]
         if (is.null(dd$itrans)){
           itrans <- function(x) x
@@ -1379,11 +1418,10 @@ mediate <- function(model.m, model.y, sims = 1000,
 
       rm(mmat.t, mmat.c)
 
-      #####################################
-      ##  Outcome Predictions
-      #####################################
+      log_debug("Calculate Outcome Predictions") # ================================================
       ### number of observations are different when group-level mediator is used
-      if(isMer.y & !isMer.m){
+      if(isMer.y & !isMer.m)
+      {
         n <- n.y
       }
 
@@ -1529,7 +1567,8 @@ mediate <- function(model.m, model.y, sims = 1000,
           rm(ymat.t, ymat.c, pred.data.t, pred.data.c)
         }
 
-        if(isGlm.y){
+        if(isGlm.y)
+        {
           Pr1 <- apply(Pr1, 2, model.y$family$linkinv)
           Pr0 <- apply(Pr0, 2, model.y$family$linkinv)
         } else if(isSurvreg.y){
