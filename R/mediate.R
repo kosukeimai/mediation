@@ -511,6 +511,37 @@ groupData <- function(model_indicator, data, group)
     return NULL
 }
 
+extractWeights <- function(m.data, y.data, isGlm.m, isGlmer.m, isMer.y, isMer.m, FamilyM)
+{
+  log_debug("Extracting weights")
+  weights.m <- model.weights(m.data)
+  weights.y <- model.weights(y.data)
+
+  if(!is.null(weights.m) && FamilyM == "binomial" && (isGlm.m || isGlmer.m))
+  {
+    message("weights taken as sampling weights, not total number of trials")
+  }
+  if(is.null(weights.m))
+  {
+    log_debug("Null mediator weights. Using 1s")
+    weights.m <- rep(1,nrow(m.data))
+  }
+  if(is.null(weights.y))
+  {
+    log_debug("Null outcome weights. Using 1s")
+    weights.y <- rep(1,nrow(y.data))
+  }
+  if(!(isMer.y & !isMer.m))
+  {
+    if(!all(weights.m == weights.y)) # terminating condition
+    {
+      stop("weights on outcome and mediator models not identical")
+    }
+    return weights.m
+  }
+ return weights.y ### group-level mediator
+}
+
 mediate <- function(model.m, model.y, sims = 1000, 
                     boot = FALSE, boot.ci.type = "perc",
                     treat = "treat.name", mediator = "med.name",
@@ -830,43 +861,15 @@ mediate <- function(model.m, model.y, sims = 1000,
   }
   
   # Extracting weights from models
-  weights.m <- model.weights(m.data)
-  weights.y <- model.weights(y.data)
-  
-  if(!is.null(weights.m) && isGlm.m && FamilyM == "binomial")
-  {
-    message("weights taken as sampling weights, not total number of trials")
-  }
-  if(!is.null(weights.m) && isGlmerMod.m && FamilyM == "binomial")
-  {
-    message("weights taken as sampling weights, not total number of trials")
-  }
-  if(is.null(weights.m))
-  {
-    weights.m <- rep(1,nrow(m.data))
-  }
-  if(is.null(weights.y))
-  {
-    weights.y <- rep(1,nrow(y.data))
-  }
-  if(!(isMer.y & !isMer.m))
-  {
-    if(!all(weights.m == weights.y)) 
-    {
-      stop("weights on outcome and mediator models not identical")
-    } 
-    weights <- weights.m
-  } 
-  else
-  {
-    weights <- weights.y  ### group-level mediator  
-  }
+  weights <- extractWeights(m.data, y.data, isGlm.m, isGlmer.m, isMer.y, isMer.m, FamilyM)
 
   # Convert character treatment to factor
-  if(is.character(m.data[,treat])){
+  if(is.character(m.data[,treat]))
+  {
     m.data[,treat] <- factor(m.data[,treat])
   }
-  if(is.character(y.data[,treat])){
+  if(is.character(y.data[,treat]))
+  {
     y.data[,treat] <- factor(y.data[,treat])
   }
   
