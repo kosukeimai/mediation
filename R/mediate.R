@@ -605,11 +605,24 @@ drawCoefficientsGaussian <- function(num_sims, Model.coef, Model.var.cov)
 # Calls upon the weighted.mean function
 calculateDeltaGroups <- function(group.id, sims, weights, et)
 {
-    G <-length(unique(group.id)) 
+    G <-length(unique(group.id))
     matrix_out <-matrix(NA,G,sims)
     for (g in 1:G)
     {
         matrix_out[g,] <- t(apply(matrix(et[group.id==unique(group.id)[g],], ncol=sims), 2, weighted.mean, w=weights[group.id==unique(group.id)[g]]))
+    }
+}
+
+checkTerminalSurvival function(model, data)
+{
+    if (ncol(model$y) > 2)
+    {
+      stop("unsupported censoring type")
+    }
+    name <- names(data)[1]
+    if (substr(name, 1, 4) != "Surv")
+    {
+      stop("refit the survival model with `Surv' used directly in model formula")
     }
 }
 
@@ -1153,7 +1166,7 @@ mediate <- function(model.m, model.y, sims = 1000,
           {
             pred.data.t[,vl] <- pred.data.c[,vl] <- factor(covariates[[p]], levels = levels(m.data[,vl]))
           }
-          else 
+          else
           {
             pred.data.t[,vl] <- pred.data.c[,vl] <- covariates[[p]]
           }
@@ -1272,7 +1285,7 @@ mediate <- function(model.m, model.y, sims = 1000,
           PredictM0[i,] <- apply(draws_m0, 1, which.max)
         }
 
-      } 
+      }
       else if(isLm.m)
       {
         log_debug("Case I-1-c: Linear") # =========================================================
@@ -1284,7 +1297,7 @@ mediate <- function(model.m, model.y, sims = 1000,
         PredictM1 <- muM1 + matrix(error, nrow=sims)
         PredictM0 <- muM0 + matrix(error, nrow=sims)
         rm(error)
-      } 
+      }
       else if(isSurvreg.m)
       {
         log_debug("Case I-1-d: Survreg") # ========================================================
@@ -1293,8 +1306,8 @@ mediate <- function(model.m, model.y, sims = 1000,
         if (is.null(dd$itrans))
         {
           itrans <- function(x) x
-        } 
-        else 
+        }
+        else
         {
           itrans <- dd$itrans
         }
@@ -1308,8 +1321,8 @@ mediate <- function(model.m, model.y, sims = 1000,
           scale <- exp(MModel[,ncol(MModel)])
           lpM1 <- tcrossprod(MModel[,1:(ncol(MModel)-1)], mmat.t)
           lpM0 <- tcrossprod(MModel[,1:(ncol(MModel)-1)], mmat.c)
-        } 
-        else 
+        }
+        else
         {
           scale <- dd$scale
           lpM1 <- tcrossprod(MModel, mmat.t)
@@ -1324,14 +1337,14 @@ mediate <- function(model.m, model.y, sims = 1000,
         PredictM0 <- itrans(lpM0 + scale * matrix(error, nrow=sims))
         rm(error)
 
-        ### 
-      } 
+        ###
+      }
       else if(isMer.m)
       {
         if(class(model.m)[[1]]=="lmerMod")
         {
           log_info("Case I-1-e: Linear Mixed Effect")
-          
+
           M.RANEF1 <- M.RANEF0 <- 0
           for (d in 1:Nm.ranef)
           {
@@ -1343,7 +1356,7 @@ mediate <- function(model.m, model.y, sims = 1000,
               var1 <- matrix(1,sims,n) ### T = 1
               var0 <- matrix(0,sims,n) ### T = 0
             }
-            else 
+            else
             {
               var1 <- var0 <- matrix(data.matrix(m.data[name]),sims,n,byrow=T) ### RE slope of other variables
             }
@@ -1357,8 +1370,8 @@ mediate <- function(model.m, model.y, sims = 1000,
               {
                 M.ranef[,i]<-Z[,group.id.m[i]==levels(group.id.m)]
               }
-            } 
-            else 
+            }
+            else
             {
               colnames(Z) <- sort(unique(group.id.m))
               for (i in 1:n)
@@ -1427,69 +1440,94 @@ mediate <- function(model.m, model.y, sims = 1000,
         {
           stop("mediator model is not yet implemented")
         }
-      }       
-      else 
+      }
+      else
       {
         stop("mediator model is not yet implemented")
       }
 
       ### group-level mediator : J -> NJ
-      if(isMer.y & !isMer.m){
-          J <- nrow(m.data)
-          if(is.character(m.data[,group.y])){
-              group.id.m <- as.factor(m.data[,group.y])
-          } else {
-              group.id.m <- as.vector(data.matrix(m.data[group.y]))
+      if(!isMer.m)
+      {
+        if(isMer.y)
+        {
+            J <- nrow(m.data)
+            if(is.character(m.data[,group.y]))
+            {
+                group.id.m <- as.factor(m.data[,group.y])
+            }
+            else
+            {
+                group.id.m <- as.vector(data.matrix(m.data[group.y]))
+            }
+          v1 <- v0 <- matrix(NA, sims, length(group.id.y))
+          num.m <- 1:J
+          num.y <- 1:length(group.id.y)
+          for (j in 1:J)
+          {
+            id.y <- unique(group.id.y)[j]
+            NUM.M <- num.m[group.id.m == id.y]
+            NUM.Y <- num.y[group.id.y == id.y]
+            v1[, NUM.Y] <- PredictM1[, NUM.M]
+            v0[, NUM.Y] <- PredictM0[, NUM.M]
           }
-        v1 <- v0 <- matrix(NA, sims, length(group.id.y))
-        num.m <- 1:J
-        num.y <- 1:length(group.id.y)
-        for (j in 1:J){
-          id.y <- unique(group.id.y)[j]
-          NUM.M <- num.m[group.id.m == id.y]
-          NUM.Y <- num.y[group.id.y == id.y]
-          v1[, NUM.Y] <- PredictM1[, NUM.M]
-          v0[, NUM.Y] <- PredictM0[, NUM.M]
+          PredictM1 <- v1
+          PredictM0 <- v0
         }
-        PredictM1 <- v1
-        PredictM0 <- v0
       }
 
       rm(mmat.t, mmat.c)
 
       log_debug("Calculate Outcome Predictions") # ================================================
       ### number of observations are different when group-level mediator is used
-      if(isMer.y & !isMer.m)
+      if(!isMer.m)
       {
-        n <- n.y
+        if(isMer.y)
+        {
+          n <- n.y
+        }
       }
+
 
       effects.tmp <- array(NA, dim = c(n, sims, 4))
 
-      if(isMer.y){
+      if(isMer.y)
+      {
           Y.RANEF1 <- Y.RANEF2 <- Y.RANEF3 <- Y.RANEF4 <- 0
           ### 1=RE for Y(1,M(1)); 2=RE for Y(1,M(0)); 3=RE for Y(0,M(1)); 4=RE for Y(0,M(0))
-          for (d in 1:Ny.ranef){
+          for (d in 1:Ny.ranef)
+          {
               name <- colnames(lme4::ranef(model.y)[[1]])[d]
-              if(name == "(Intercept)"){
+              if(name == "(Intercept)")
+              {
                   var1 <- var2 <- var3 <- var4 <- matrix(1,sims,n)
-              } else if(name == treat){
+              }
+              else if(name == treat)
+              {
                   var1 <- matrix(1,sims,n)
                   var2 <- matrix(1,sims,n)
                   var3 <- matrix(0,sims,n)
                   var4 <- matrix(0,sims,n)
-              } else if(name == mediator){
+              }
+              else if(name == mediator)
+              {
                   var1 <- PredictM1
                   var2 <- PredictM0
                   var3 <- PredictM1
                   var4 <- PredictM0
-              } else {
-                  if(name %in% colnames(y.data)){
+              }
+              else
+              {
+                  if(name %in% colnames(y.data))
+                  {
                       var1 <- var2 <- var3 <- var4 <- matrix(data.matrix(y.data[name]),sims,n,byrow=T)
-                  } else {
+                  }
+                  else
+                  {
                       int.term.name <- strsplit(name, ":")[[1]]
                       int.term <- rep(1, nrow(y.data))
-                      for (p in 1:length(int.term.name)){
+                      for (p in 1:length(int.term.name))
+                      {
                           int.term <- y.data[int.term.name[p]][[1]] * int.term
                       }
                       var1 <- var2 <- var3 <- var4 <- matrix(int.term,sims,n,byrow=T)
@@ -1498,14 +1536,19 @@ mediate <- function(model.m, model.y, sims = 1000,
           Y.ranef<-matrix(NA,sims,n)
           YModel.ranef.sim.d <- YModel.ranef.sim[[d]]
           Z <- data.frame(YModel.ranef.sim.d)
-          if(is.factor(group.id.y)){
+          if(is.factor(group.id.y))
+          {
             colnames(Z) <- levels(group.id.y)
-            for (i in 1:n){
+            for (i in 1:n)
+            {
               Y.ranef[,i]<-Z[,group.id.y[i]==levels(group.id.y)]
             }
-          } else {
+          }
+          else
+          {
             colnames(Z) <- sort(unique(group.id.y))
-            for (i in 1:n){
+            for (i in 1:n)
+            {
               Y.ranef[,i]<-Z[,group.id.y[i]==sort(unique(group.id.y))]
             }
           }
@@ -1516,20 +1559,27 @@ mediate <- function(model.m, model.y, sims = 1000,
         }
       }
 
-      for(e in 1:4){
+      for(e in 1:4)
+      {
         tt <- switch(e, c(1,1,1,0), c(0,0,1,0), c(1,0,1,1), c(1,0,0,0))
         Pr1 <- matrix(, nrow=n, ncol=sims)
         Pr0 <- matrix(, nrow=n, ncol=sims)
 
-        for(j in 1:sims){
+        for(j in 1:sims)
+        {
           pred.data.t <- pred.data.c <- y.data
 
-          if(!is.null(covariates)){
-            for(p in 1:length(covariates)){
+          if(!is.null(covariates))
+          {
+            for(p in 1:length(covariates))
+            {
               vl <- names(covariates[p])
-              if(is.factor(pred.data.t[,vl])){
+              if(is.factor(pred.data.t[,vl]))
+              {
                 pred.data.t[,vl] <- pred.data.c[,vl] <- factor(covariates[[p]], levels = levels(y.data[,vl]))
-              } else {
+              }
+              else
+              {
                 pred.data.t[,vl] <- pred.data.c[,vl] <- covariates[[p]]
               }
             }
@@ -1540,29 +1590,37 @@ mediate <- function(model.m, model.y, sims = 1000,
           cat.c <- ifelse(tt[2], cat.1, cat.0)
           cat.t.ctrl <- ifelse(tt[1], cat.0, cat.1)
           cat.c.ctrl <- ifelse(tt[2], cat.0, cat.1)
-          if(isFactorT){
+          if(isFactorT)
+          {
             pred.data.t[,treat] <- factor(cat.t, levels = t.levels)
             pred.data.c[,treat] <- factor(cat.c, levels = t.levels)
-            if(!is.null(control)){
+            if(!is.null(control))
+            {
               pred.data.t[,control] <- factor(cat.t.ctrl, levels = t.levels)
               pred.data.c[,control] <- factor(cat.c.ctrl, levels = t.levels)
             }
-          } else {
+          }
+          else
+          {
             pred.data.t[,treat] <- cat.t
             pred.data.c[,treat] <- cat.c
-            if(!is.null(control)){
+            if(!is.null(control))
+            {
               pred.data.t[,control] <- cat.t.ctrl
               pred.data.c[,control] <- cat.c.ctrl
             }
           }
 
-          # Set mediator values
+          log_debug("Set mediator values")
           PredictMt <- PredictM1[j,] * tt[3] + PredictM0[j,] * (1 - tt[3])
           PredictMc <- PredictM1[j,] * tt[4] + PredictM0[j,] * (1 - tt[4])
-          if(isFactorM) {
+          if(isFactorM)
+          {
             pred.data.t[,mediator] <- factor(PredictMt, levels=0:(m-1), labels=m.levels)
             pred.data.c[,mediator] <- factor(PredictMc, levels=0:(m-1), labels=m.levels)
-          } else {
+          }
+          else
+          {
             pred.data.t[,mediator] <- PredictMt
             pred.data.c[,mediator] <- PredictMc
           }
@@ -1570,35 +1628,52 @@ mediate <- function(model.m, model.y, sims = 1000,
           ymat.t <- model.matrix(terms(model.y), data=pred.data.t)
           ymat.c <- model.matrix(terms(model.y), data=pred.data.c)
 
-          if(isVglm.y){
-            if(VfamilyY=="tobit") {
+          if(isVglm.y)
+          {
+            if(VfamilyY=="tobit")
+            {
               Pr1.tmp <- ymat.t %*% YModel[j,-2]
               Pr0.tmp <- ymat.c %*% YModel[j,-2]
               Pr1[,j] <- pmin(pmax(Pr1.tmp, model.y@misc$Lower), model.y@misc$Upper)
               Pr0[,j] <- pmin(pmax(Pr0.tmp, model.y@misc$Lower), model.y@misc$Upper)
-            } else {
+            }
+            else
+            {
               stop("outcome model is in unsupported vglm family")
             }
-          } else if(scalesim.y){
+          }
+          else if(scalesim.y)
+          {
             Pr1[,j] <- t(as.matrix(YModel[j,1:(ncol(YModel)-1)])) %*% t(ymat.t)
             Pr0[,j] <- t(as.matrix(YModel[j,1:(ncol(YModel)-1)])) %*% t(ymat.c)
-          } else if(isMer.y){
-            if(e == 1){             ### mediation(1)
+          }
+          else if(isMer.y)
+          {
+            if(e == 1) # mediation(1)
+            {
               Y.RANEF.A <- Y.RANEF1
               Y.RANEF.B <- Y.RANEF2
-            } else if(e == 2){      ### mediation(0)
+            }
+            else if(e == 2) # mediation(0)
+            {
               Y.RANEF.A <- Y.RANEF3
               Y.RANEF.B <- Y.RANEF4
-            } else if(e == 3){      ### direct(1)
+            }
+            else if(e == 3) # direct(1)
+            {
               Y.RANEF.A <- Y.RANEF1
               Y.RANEF.B <- Y.RANEF3
-            } else {                ### direct(0)
+            }
+            else # direct(0)
+            {
               Y.RANEF.A <- Y.RANEF2
               Y.RANEF.B <- Y.RANEF4
             }
             Pr1[,j] <- t(as.matrix(YModel.fixef.sim[j,])) %*% t(ymat.t) + Y.RANEF.A[j,]
             Pr0[,j] <- t(as.matrix(YModel.fixef.sim[j,])) %*% t(ymat.c) + Y.RANEF.B[j,]
-          } else {
+          }
+          else
+          {
             Pr1[,j] <- t(as.matrix(YModel[j,])) %*% t(ymat.t)
             Pr0[,j] <- t(as.matrix(YModel[j,])) %*% t(ymat.c)
           }
@@ -1610,16 +1685,23 @@ mediate <- function(model.m, model.y, sims = 1000,
         {
           Pr1 <- apply(Pr1, 2, model.y$family$linkinv)
           Pr0 <- apply(Pr0, 2, model.y$family$linkinv)
-        } else if(isSurvreg.y){
+        }
+        else if(isSurvreg.y)
+        {
           dd <- survival::survreg.distributions[[model.y$dist]]
-          if (is.null(dd$itrans)){
+          if (is.null(dd$itrans))
+          {
             itrans <- function(x) x
-          } else {
+          }
+          else
+          {
             itrans <- dd$itrans
           }
           Pr1 <- apply(Pr1, 2, itrans)
           Pr0 <- apply(Pr0, 2, itrans)
-        } else if(isGlmerMod.y){
+        }
+        else if(isGlmerMod.y)
+        {
           Pr1 <- apply(Pr1, 2, Y.fun$linkinv)
           Pr0 <- apply(Pr0, 2, Y.fun$linkinv)
         }
@@ -1628,11 +1710,19 @@ mediate <- function(model.m, model.y, sims = 1000,
         rm(Pr1, Pr0)
       }
 
-      if(!isMer.m && !isMer.y){
-        rm(PredictM1, PredictM0, YModel, MModel)
-      } else if(!isMer.m && isMer.y){
-        rm(PredictM1, PredictM0, YModel.ranef.sim)
-      } else {
+      if(!isMer.m)
+      {
+        if(isMer.y)
+        {
+          rm(PredictM1, PredictM0, YModel.ranef.sim)
+        }
+        else # !isMer.y
+        {
+          rm(PredictM1, PredictM0, YModel, MModel)
+        }
+      }
+      else # isMer.m
+      {
         rm(PredictM1, PredictM0, MModel.ranef.sim)
       }
 
@@ -1700,36 +1790,32 @@ mediate <- function(model.m, model.y, sims = 1000,
         z.avg.group <- (z0.group + z1.group)/2
         n.avg.group <- (n0.group + n1.group)/2
       }
-      ########################################################################
-      ## Case I-2: Nonparametric Bootstrap
-      ########################################################################
-    } 
-    else 
+    }
+    else
     {
+      log_info("Case I-2: Nonparametric Bootstrap") # =============================================
+
       # Error if lmer or glmer
-      if(isMer.m | isMer.y){
+      if(isMer.m | isMer.y)
+      {
         stop("'boot' must be 'FALSE' for models used")
       }
 
       Call.M <- getCall(model.m)
       Call.Y <- getCall(model.y)
 
-      if (isSurvreg.m){
-        if (ncol(model.m$y) > 2)
-          stop("unsupported censoring type")
-        mname <- names(m.data)[1]
-        if (substr(mname, 1, 4) != "Surv")
-          stop("refit the survival model with `Surv' used directly in model formula")
+      if (isSurvreg.m)
+      {
+        checkTerminalSurvival(model.m, m.data)
       }
 
-      if (isSurvreg.y){
-        if (ncol(model.y$y) > 2)
-          stop("unsupported censoring type")
-        yname <- names(y.data)[1]
-        if (substr(yname, 1, 4) != "Surv")
-          stop("refit the survival model with `Surv' used directly in model formula")
+      if (isSurvreg.y)
+      {
+        checkTerminalSurvival(model.y, y.data)
         if (is.null(outcome))
+        {
           stop("`outcome' must be supplied for survreg outcome with boot")
+        }
       }
 
       # Bootstrap QoI
