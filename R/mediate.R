@@ -737,9 +737,12 @@ mediate <- function(model.m, model.y, sims = 1000,
         group.out <- group.y
       }
     }
-    group.m <- NULL
-    group.y <- NULL
-    group.out <- NULL
+    else
+    {
+      group.m <- NULL
+      group.y <- NULL
+      group.out <- NULL
+    }
   }
   
   # group data if lmer or glmer 
@@ -747,61 +750,68 @@ mediate <- function(model.m, model.y, sims = 1000,
   group.id.y <- groupData(isMer.y, y.data, group.y)
 
   # group data to be output in summary and plot if lmer or glmer 
-  if(isMer.y && isMer.m)
+  if(isMer.m)
   {
-    if(group.out == group.m)
+    if(isMer.y)
     {
-      group.id <- m.data[,group.m]
+      if(group.out == group.m)
+      {
+        group.id <- m.data[,group.m]
+        group.name <- group.m
+      } 
+      else 
+      {
+        group.id <- y.data[,group.y]     
+        group.name <- group.y
+      }
+    }
+    else # !isMer.y
+    {
+      group.id <- m.data[,group.m]   
       group.name <- group.m
     } 
-    else 
-    {
-      group.id <- y.data[,group.y]     
-      group.name <- group.y
-    }
-  } 
-  else if(!isMer.y && isMer.m)
+  }
+  else # !isMer.m
   {
-    group.id <- m.data[,group.m]   
-    group.name <- group.m
-  } 
-  else if(isMer.y && !isMer.m) ### group-level mediator
-  {   
-    if(!(group.y %in% names(m.data)))
-    {
-      stop("specify group-level variable in mediator data")
+    if(isMer.y) ### group-level mediator
+    {   
+      if(!(group.y %in% names(m.data)))
+      {
+        stop("specify group-level variable in mediator data")
+      } 
+      else 
+      {
+        group.id <- y.data[,group.y]
+        group.name <- group.y
+        Y.ID<- sort(unique(group.id))
+        if(is.character(m.data[,group.y]))
+        {
+            M.ID <- sort(as.factor(m.data[,group.y]))
+        } 
+        else 
+        {
+            M.ID <- sort(as.vector(data.matrix(m.data[group.y])))
+        }
+        if(length(Y.ID) != length(M.ID))
+        {
+          stop("groups do not match between mediator and outcome models")
+        } 
+        else 
+        {
+          if(FALSE %in% unique(Y.ID == M.ID))
+          {
+            stop("groups do not match between mediator and outcome models")
+          }
+        }
+      }
     } 
     else 
     {
-      group.id <- y.data[,group.y]
-      group.name <- group.y
-      Y.ID<- sort(unique(group.id))
-      if(is.character(m.data[,group.y]))
-      {
-          M.ID <- sort(as.factor(m.data[,group.y]))
-      } 
-      else 
-      {
-          M.ID <- sort(as.vector(data.matrix(m.data[group.y])))
-      }
-      if(length(Y.ID) != length(M.ID))
-      {
-        stop("groups do not match between mediator and outcome models")
-      } 
-      else 
-      {
-        if(FALSE %in% unique(Y.ID == M.ID))
-        {
-          stop("groups do not match between mediator and outcome models")
-        }
-      }
+      group.id <- NULL
+      group.name <- NULL
     }
-  } 
-  else 
-  {
-    group.id <- NULL
-    group.name <- NULL
   }
+
   
   # Numbers of observations and categories
   n.m <- nrow(m.data)
