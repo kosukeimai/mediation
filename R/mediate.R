@@ -1,5 +1,3 @@
-library(logger)
-
 #' Causal Mediation Analysis
 #'
 #' 'mediate' is used to estimate various quantities for causal mediation
