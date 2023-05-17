@@ -217,13 +217,13 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
                    parallel = subset(data, data[[experiment]] == 1))
 
     if(is.null(weight)){
-        ETM2 <- mean(data.1[,treat] * data.1[,med.main]^2)
+        ETM2 <- mean(data.1[[treat]] * data.1[[med.main]]^2)
         model.y <- lm(f.y, data=data.1)
-        VY <- var(data.1[,outcome])
+        VY <- var(data.1[[outcome]])
     } else {
-        ETM2 <- weighted.mean(data.1[,treat] * data.1[,med.main]^2, w = data.1[, weight])
-        model.y <- lm(f.y, data=data.1, weights = data.1[, weight])
-        VY <- Hmisc::wtd.var(data.1[, outcome], weights = data.1[, weight])
+        ETM2 <- weighted.mean(data.1[[treat]] * data.1[[med.main]]^2, w = data.1[[weight]])
+        model.y <- lm(f.y, data=data.1, weights = data.1[[weight]])
+        VY <- Hmisc::wtd.var(data.1[[outcome]], weights = data.1[[weight]])
     }
     sigma <- summary(model.y)$sigma * sqrt(R2.s/ETM2)
 
@@ -263,9 +263,9 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
               }
           }
       } else {
-          wgt <- data.b[, weight]
-          wgt1 <- data.b.1[, weight]
-          wgt0 <- data.b.0[, weight]
+          wgt <- data.b[[weight]]
+          wgt1 <- data.b.1[[weight]]
+          wgt0 <- data.b.0[[weight]]
 
           model.y <- lm(f.y, weights = wgt1, data=data.b.1)
           model.ytot <- lm(f.ytot, weights = wgt0, data=data.b.0)
@@ -343,9 +343,9 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
       ACME.0.up.o <- tau.o - ADE.1.lo.o
       
       if(is.null(weight)){
-          P <- mean(data.b[,treat])
+          P <- mean(data.b[[treat]])
       } else { ### data.b -> wgt
-          P <- weighted.mean(data.b[,treat], w = wgt)
+          P <- weighted.mean(data.b[[treat]], w = wgt)
       }
       ACME.ave.lo.o <- P * ACME.1.lo.o + (1-P) * ACME.0.lo.o
       ACME.ave.up.o <- P * ACME.1.up.o + (1-P) * ACME.0.up.o
@@ -369,9 +369,9 @@ multimed <- function(outcome, med.main, med.alt = NULL, treat,
       ACME.0.up[,b] <- tau[b] - ADE.1.lo[,b]
       
       if(is.null(weight)){
-          P <- mean(data.b[,treat])
+          P <- mean(data.b[[treat]])
       } else { ### data.b -> wgt
-          P <- weighted.mean(data.b[,treat], w = wgt)
+          P <- weighted.mean(data.b[[treat]], w = wgt)
       }
       ACME.ave.lo[,b] <- P * ACME.1.lo[,b] + (1-P) * ACME.0.lo[,b]
       ACME.ave.up[,b] <- P * ACME.1.up[,b] + (1-P) * ACME.0.up[,b]
