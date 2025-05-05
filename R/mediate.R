@@ -742,7 +742,7 @@ mediate <- function(model.m, model.y, sims = 1000,
     } else{
       n <- n.m
     }
-    m <- length(sort(unique(model.frame(model.m)[,1])))
+    m <- length(na.omit(unique(model.frame(model.m)[,1])))
   }
   
   # Extracting weights from models
