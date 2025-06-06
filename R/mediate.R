@@ -70,7 +70,7 @@
 #'   variable must be explicitly supplied in the `outcome' argument. This is due
 #'   to the fact that 'survreg' objects do not contain that information in an
 #'   easily extractable form. It should also be noted that for
-#'   \code{\link{survreg}} models, the \code{\link{Surv}} function must be
+#'   \code{\link{survival::survreg}} models, the \code{\link{survival::Surv}} function must be
 #'   directly used in the model formula in the call to the survreg function, and
 #'   that censoring types requiring more than two arguments to Surv (e.g.,
 #'   interval censoring) are not currently supported by 'mediate'.
@@ -85,8 +85,8 @@
 #'   The 'control' argument must be provided when 'gam' is used for the outcome 
 #'   model and user wants to allow ACME and ADE to vary as functions of the 
 #'   treatment (i.e., to relax the "no interaction" assumption). Note that the 
-#'   outcome model must be fitted via package \code{\link{mgcv}} with
-#'   appropriate formula using \code{\link{s}} constructs (see Imai et al. 2009
+#'   outcome model must be fitted via package \code{mgcv} with
+#'   appropriate formula using \code{\link{mgcv::s}} constructs (see Imai et al. 2009
 #'   in the references). For other model types, the interaction can be allowed
 #'   by including an interaction term between \eqn{T} and \eqn{M} in the linear 
 #'   predictor of the outcome model. As of version 3.0, the 'INT' argument is 

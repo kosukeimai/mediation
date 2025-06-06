@@ -28,4 +28,4 @@ version      date  description
 4.4.6    07/09/17  Bug fix for multilevel; Bug fix for mediate-example 2
 4.4.7    03/16/19  Bug fix for parallel design bootstrap
 4.5.0    06/10/19  mediate_tsls for mediation analysis using instrumental variable estimator, speedglm implementation; nonparametric bootstrap using boot; update documentation
-4.5.1    10/27/21  Bug fix for speedglm
+4.5.1    06/06/25  Bug fix for speedglm; CITATION issues fixed

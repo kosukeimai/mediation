@@ -1,15 +1,36 @@
 Package: mediation
-Version: 4.5.0
-Date: 2019-6-10
+Version: 4.5.1
+Date: 2025-6-6
 Title: Causal Mediation Analysis
-Author: Dustin Tingley <dtingley@gov.harvard.edu>,
-        Teppei Yamamoto <teppei@mit.edu>,
-        Kentaro Hirose <hirose@princeton.edu>,
-        Luke Keele <ljk20@psu.edu>,
-        Kosuke Imai <kimai@princeton.edu>,
-        Minh Trinh <mdtrinh@mit.edu>,
-        Weihuang Wong <wwong@mit.edu>
-Maintainer: Teppei Yamamoto <teppei@mit.edu>
+Authors@R: c(person(given = "Dustin",
+                    family = "Tingley",
+                    role = "aut",
+                    email = "dtingley@gov.harvard.edu"),
+             person(given = "Teppei",
+                    family = "Yamamoto",
+                    role = c("aut", "cre"),
+                    email = "tyamam@waseda.jp"),
+             person(given = "Kentaro",
+                    family = "Hirose",
+                    role = "aut",
+                    email = "hirose@princeton.edu"),
+             person(given = "Luke",
+                    family = "Keele",
+                    role = "aut",
+                    email = "ljk20@psu.edu"),
+             person(given = "Kosuke",
+                    family = "Imai",
+                    role = "aut",
+                    email = "imai@harvard.edu"),
+             person(given = "Minh",
+                    family = "Trinh",
+                    role = "aut",
+                    email = "mdtrinh@mit.edu"),
+             person(given = "Weihuang",
+                    family = "Wong",
+                    role = "aut",
+                    email = "wwong@mit.edu"))
+Maintainer: Teppei Yamamoto <tyamam@waseda.jp>
 Depends: R (>= 2.15.1), MASS, Matrix, mvtnorm, sandwich
 Imports: lpSolve, Hmisc, lme4 (>= 1.0), stats, graphics, grDevices, utils, boot
 Suggests: mgcv, quantreg, VGAM, SuppDists, survival, parallel, testthat, speedglm
