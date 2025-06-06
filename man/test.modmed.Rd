@@ -11,8 +11,14 @@
 \usage{
 test.modmed(object, ...)
 
-\method{test.modmed}{mediate}(object, covariates.1, covariates.2,
-  sims = object$sims, conf.level = object$conf.level, ...)
+\method{test.modmed}{mediate}(
+  object,
+  covariates.1,
+  covariates.2,
+  sims = object$sims,
+  conf.level = object$conf.level,
+  ...
+)
 
 \method{print}{test.modmed.mediate}(x, ...)
 }

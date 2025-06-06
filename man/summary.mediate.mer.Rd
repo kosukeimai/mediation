@@ -7,8 +7,7 @@
 \alias{print.summary.mediate.mer.3}
 \title{Summarizing Output from Mediation Analysis of Multilevel Models}
 \usage{
-\method{summary}{mediate.mer}(object, output = c("default", "byeffect",
-  "bygroup"), ...)
+\method{summary}{mediate.mer}(object, output = c("default", "byeffect", "bygroup"), ...)
 
 \method{print}{summary.mediate.mer}(x, ...)
 

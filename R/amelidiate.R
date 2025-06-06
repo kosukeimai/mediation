@@ -1,5 +1,5 @@
 ##takes output of mediations and calculates summary statistics.
-##also sources plot.process
+##also sources plot_process
 
 ##To use mediations, must make list of multiple datasets. Then, must also repeat the treatment assignment list as many times as you have data sets.
 #T12<-T1
@@ -179,7 +179,7 @@ amelidiate<-function(g){
                     d1.sims=d1.sims,z1.sims=z1.sims, z0.sims=z0.sims, tau.sims=tau.sims,n1.sims=n1.sims,n0.sims=n0.sims)
 
 
-        x<-plot.process(out)
+        x<-plot_process(out)
 
         out <- list(d0=d0,d1=d1,z0=z0,z1=z1,n1=n1,n0=n0,tau=tau,d0.ci=d0.ci, d1.ci=d1.ci,z1.ci=z1.ci, z0.ci=z0.ci,n1.ci=n1.ci,n0.ci=n0.ci,
                         tau.ci=tau.ci,d0.sims=d0.sims, d1.sims=d1.sims,

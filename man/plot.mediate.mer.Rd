@@ -5,10 +5,21 @@
 \title{Plotting Indirect, Direct, and Total Effects from Mediation Analysis of 
 Multilevel Models}
 \usage{
-\method{plot}{mediate.mer}(x, treatment = NULL, group.plots = FALSE,
-  ask = prod(par("mfcol")) < nplots, xlim = NULL, ylim = NULL,
-  xlab = "", ylab = "", main = NULL, lwd = 1.5, cex = 0.85,
-  col = "black", ...)
+\method{plot}{mediate.mer}(
+  x,
+  treatment = NULL,
+  group.plots = FALSE,
+  ask = prod(par("mfcol")) < nplots,
+  xlim = NULL,
+  ylim = NULL,
+  xlab = "",
+  ylab = "",
+  main = NULL,
+  lwd = 1.5,
+  cex = 0.85,
+  col = "black",
+  ...
+)
 }
 \arguments{
 \item{x}{object of class 'mediate.mer' produced by 'mediate'.}

@@ -4,11 +4,22 @@
 \alias{ivmediate}
 \title{Causal Mediation Analysis with Treatment Noncompliance}
 \usage{
-ivmediate(model.t, model.m, model.y, ci = TRUE, sims = 1000,
-  boot = TRUE, enc = "enc.name", treat = "treat.name",
-  mediator = "med.name", conf.level = 0.95, long = TRUE,
-  dropobs = FALSE, multicore = FALSE,
-  mc.cores = getOption("mc.cores", 2L))
+ivmediate(
+  model.t,
+  model.m,
+  model.y,
+  ci = TRUE,
+  sims = 1000,
+  boot = TRUE,
+  enc = "enc.name",
+  treat = "treat.name",
+  mediator = "med.name",
+  conf.level = 0.95,
+  long = TRUE,
+  dropobs = FALSE,
+  multicore = FALSE,
+  mc.cores = getOption("mc.cores", 2L)
+)
 }
 \arguments{
 \item{model.t}{a fitted model object for actual treatment. Can be of class 

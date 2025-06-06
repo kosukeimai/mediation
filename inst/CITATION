@@ -1,8 +1,8 @@
 citHeader("To cite 'mediation' in publications use:")
 
-citEntry(entry = "Article",
+bibentry(bibtype = "Article",
   title        = "{mediation}: {R} Package for Causal Mediation Analysis",
-  author       = personList(as.person("Dustin Tingley"),
+  author       = c(as.person("Dustin Tingley"),
                    as.person("Teppei Yamamoto"),
                    as.person("Kentaro Hirose"),
                    as.person("Luke Keele"),
@@ -21,11 +21,11 @@ citEntry(entry = "Article",
         "URL https://www.jstatsoft.org/v59/i05/.")
 )
 
-citEntry(entry = "Article",
+bibentry(bibtype = "Article",
   title        = "Identification, Inference, and Sensitivity Analysis for Causal Mediation Effects",
-  author       = personList(as.person("Kosuke Imai"),
-                            as.person("Luke Keele"),
-                            as.person("Teppei Yamamoto")),
+  author       = c(as.person("Kosuke Imai"),
+                   as.person("Luke Keele"),
+                   as.person("Teppei Yamamoto")),
   journal      = "Statistical Science",
   year         = "2010",
   volume       = "25",
@@ -41,11 +41,11 @@ citEntry(entry = "Article",
   header       = "For the underlying methods please cite the following papers:"
 )
 
-citEntry(entry = "Article",
+bibentry(bibtype = "Article",
   title        = "A General Approach to Causal Mediation Analysis",
-  author       = personList(as.person("Kosuke Imai"),
-                            as.person("Luke Keele"),
-                            as.person("Dustin Tingley")),
+  author       = c(as.person("Kosuke Imai"),
+                   as.person("Luke Keele"),
+                   as.person("Dustin Tingley")),
   journal      = "Psychological Methods",
   year         = "2010",
   volume       = "15",
@@ -59,12 +59,12 @@ citEntry(entry = "Article",
         "Psychological Methods, 15(4), 309-334.")
 )
 
-citEntry(entry = "Article",
+bibentry(bibtype = "Article",
   title        = "Unpacking the Black Box of Causality: Learning about Causal Mechanisms from Experimental and Observational Studies",
-  author       = personList(as.person("Kosuke Imai"),
-                            as.person("Luke Keele"),
-                            as.person("Dustin Tingley"),
-                            as.person("Teppei Yamamoto")),
+  author       = c(as.person("Kosuke Imai"),
+                   as.person("Luke Keele"),
+                   as.person("Dustin Tingley"),
+                   as.person("Teppei Yamamoto")),
   journal      = "American Political Science Review",
   year         = "2011",
   volume       = "105",
@@ -78,10 +78,10 @@ citEntry(entry = "Article",
         "American Political Science Review, 105(4), 765-789.")
 )
 
-citEntry(entry = "Article",
+bibentry(bibtype = "Article",
   title        = "Identification and Sensitivity Analysis for Multiple Causal Mechanisms: Revisiting Evidence from Framing Experiments",
-  author       = personList(as.person("Kosuke Imai"),
-                            as.person("Teppei Yamamoto")),
+  author       = c(as.person("Kosuke Imai"),
+                   as.person("Teppei Yamamoto")),
   journal      = "Political Analysis",
   year         = "2013",
   volume       = "21",
@@ -95,15 +95,15 @@ citEntry(entry = "Article",
         "Political Analysis, 21(2), 141-171.")
 )
 
-citEntry(entry = "InCollection",
+bibentry(bibtype = "InCollection",
   title        = "Causal Mediation Analysis Using R",
-  author       = personList(as.person("Kosuke Imai"),
-                            as.person("Luke Keele"),
-                            as.person("Dustin Tingley"),
-                            as.person("Teppei Yamamoto")),
+  author       = c(as.person("Kosuke Imai"),
+                   as.person("Luke Keele"),
+                   as.person("Dustin Tingley"),
+                   as.person("Teppei Yamamoto")),
   booktitle    = "Advances in Social Science Research Using R",
   year         = "2010",
-  editor       = personList(as.person("H. D. Vinod")),
+  editor       = c(as.person("H. D. Vinod")),
   publisher    = "Springer-Verlag",
   address      = "New York",
   

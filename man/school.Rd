@@ -4,7 +4,8 @@
 \name{school}
 \alias{school}
 \title{School-level data}
-\format{A data matrix with 568 rows and 5 columns, containing no missing 
+\format{
+A data matrix with 568 rows and 5 columns, containing no missing 
   values. The data are provided only for illustrative purposes and not for 
   inference about education effectiveness, for which the original data source
   should be consulted. \describe{ \item{SCH_ID:}{ School indicator.} 
@@ -12,7 +13,8 @@
   \item{smorale:}{ Measure of student morale in the school. 4 levels.} 
   \item{free:}{ Percent of 10th grade students receiving free lunch. 1 to 7 
   levels.} \item{catholic:}{ Indicator variable for catholic school. 1 = 
-  catholic school.} }}
+  catholic school.} }
+}
 \source{
 The complete student-level data is available from the data archives 
   at www.icpsr.umich.edu/

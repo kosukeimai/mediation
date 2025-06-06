@@ -4,7 +4,8 @@
 \name{CEDdata}
 \alias{CEDdata}
 \title{Example Data for the Crossover Encouragement Design}
-\format{A data frame containing the following variables, which are 
+\format{
+A data frame containing the following variables, which are 
   interpreted as results from a hypothetical randomized trial employing the 
   crossover encouragement design. 
 \describe{
@@ -16,7 +17,8 @@
   \item{Z:}{ The binary encouragement indicator for the second stage.}
   \item{M2:}{ The binary mediator recorded in the second stage.}
   \item{Y2:}{ The binary outcome recorded in the second stage.}
-}}
+}
+}
 \source{
 Imai, K., Tingley, D. and Yamamoto, T. (2012) Experimental Designs 
   for Identifying Causal Mechanisms. Journal of the Royal Statistical 

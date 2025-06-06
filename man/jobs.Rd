@@ -4,7 +4,8 @@
 \name{jobs}
 \alias{jobs}
 \title{JOBS II data}
-\format{A data matrix with 899 rows and 17 columns, containing no missing 
+\format{
+A data matrix with 899 rows and 17 columns, containing no missing 
   values. The data are provided only for illustrative purposes and not for 
   inference about program efficacy, for which the original data source should
   be consulted. \describe{ \item{econ_hard:}{ Level of economic hardship 
@@ -28,7 +29,8 @@
   whether participant actually participated in the JOBS II program. 1 = 
   participation.} \item{control:}{ Indicator variable for whether participant
   was randomly selected to not participate in the JOBS II training program. 1
-  = non-participation.} }}
+  = non-participation.} }
+}
 \source{
 The complete JOBS II data is available from the data archives at 
   www.icpsr.umich.edu/

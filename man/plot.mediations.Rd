@@ -5,8 +5,12 @@
 \alias{plot.mediations.order}
 \title{Plotting Indirect, Direct, and Total Effects from Multiple Mediation Analyses}
 \usage{
-\method{plot}{mediations}(x, which = names(x), ask = prod(par("mfcol"))
-  < length(which) && dev.interactive(), ...)
+\method{plot}{mediations}(
+  x,
+  which = names(x),
+  ask = prod(par("mfcol")) < length(which) && dev.interactive(),
+  ...
+)
 }
 \arguments{
 \item{x}{output from the mediations function.}

@@ -2,9 +2,30 @@
 % Please edit documentation in R/mediation.R
 \docType{package}
 \name{mediation}
-\alias{mediation}
 \alias{mediation-package}
+\alias{mediation}
 \title{mediation: Parametric and non parametric mediation analysis.}
 \description{
-mediation: Parametric and non parametric mediation analysis.
+We implement parametric and non parametric mediation analysis. This package performs the methods and suggestions in Imai, Keele and Yamamoto (2010) \doi{10.1214/10-STS321}, Imai, Keele and Tingley (2010) \doi{10.1037/a0020761}, Imai, Tingley and Yamamoto (2013) \doi{10.1111/j.1467-985X.2012.01032.x}, and Imai and Yamamoto (2013) \doi{10.1093/pan/mps040}. In addition to the estimation of causal mediation effects, the software also allows researchers to conduct sensitivity analysis for certain parametric models.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://imai.princeton.edu/projects/mechanisms.html}
+}
+
+}
+\author{
+\strong{Maintainer}: Teppei Yamamoto \email{tyamam@waseda.jp}
+
+Authors:
+\itemize{
+  \item Dustin Tingley \email{dtingley@gov.harvard.edu}
+  \item Kentaro Hirose \email{hirose@princeton.edu}
+  \item Luke Keele \email{ljk20@psu.edu}
+  \item Kosuke Imai \email{imai@harvard.edu}
+  \item Minh Trinh \email{mdtrinh@mit.edu}
+  \item Weihuang Wong \email{wwong@mit.edu}
+}
+
 }

@@ -5,11 +5,22 @@
 \title{Plotting Local Indirect, Direct, and Total Effects from Mediation Analysis 
 with Treatment Noncompliance}
 \usage{
-\method{plot}{ivmediate}(x, treatment = NULL, labels = NULL,
+\method{plot}{ivmediate}(
+  x,
+  treatment = NULL,
+  labels = NULL,
   effect.type = c("indirect", "direct", "total"),
-  conf.level = x$conf.level[1], xlim = NULL, ylim = NULL,
-  xlab = "", ylab = "", main = NULL, lwd = 1.5, cex = 0.85,
-  col = "black", ...)
+  conf.level = x$conf.level[1],
+  xlim = NULL,
+  ylim = NULL,
+  xlab = "",
+  ylab = "",
+  main = NULL,
+  lwd = 1.5,
+  cex = 0.85,
+  col = "black",
+  ...
+)
 }
 \arguments{
 \item{x}{object of class \code{ivmediate} as produced by \code{ivmediate}.}

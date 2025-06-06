@@ -4,7 +4,8 @@
 \name{framing}
 \alias{framing}
 \title{Brader, Valentino and Suhay (2008) Framing Experiment Data}
-\format{A data frame containing the following variables: 
+\format{
+A data frame containing the following variables: 
 \describe{ 
   \item{immigr:}{ A four-point scale measuring subjects' attitudes toward
   increased immigration. Larger values indicate more negative attitudes.} 
@@ -26,7 +27,8 @@
   between 2 and 8.} \item{age:}{ Subjects' age.} \item{educ:}{ Subjects'
   highest educational attainments.} \item{gender:}{ Subjects' gender.} 
   \item{income:}{ Subjects' income, measured as a 19-point scale.} 
-}}
+}
+}
 \source{
 Brader, T., Valentino, N. and Suhay, E. (2008). What triggers public
   opposition to immigration? Anxiety, group cues, and immigration threat.

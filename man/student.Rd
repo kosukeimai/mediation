@@ -4,7 +4,8 @@
 \name{student}
 \alias{student}
 \title{Hypothetical student-level data}
-\format{A data matrix with 9,679 rows and 17 columns, containing no missing 
+\format{
+A data matrix with 9,679 rows and 17 columns, containing no missing 
   values. The data are provided only for illustrative purposes and not for 
   inference about education effectiveness, for which the original data source
   should be consulted. \describe{ \item{SCH_ID:}{ School indicator.} 
@@ -15,11 +16,12 @@
   student was late for school. 5 levels.} \item{coed:}{ Indicator variable 
   for coeducation. 1 = coeducation.} \item{smorale:}{ Measure of student 
   morale in the school. 4 levels.} \item{gender:}{ Indicator variable for 
-  gender. 1 = female.} \item{income:}{ Total family income. 13 levels.} 
+  gender. 1 = female.} \item{income:}{ Total family income. 16 levels.} 
   \item{free:}{ Percent of 10th grade students receiving free lunch. 1 to 7 
   levels.} \item{pared:}{ Parents highest level of education. 8 levels} 
   \item{catholic:}{ Indicator variable for catholic school. 1 = catholic 
-  school.} }}
+  school.} }
+}
 \source{
 The complete student-level data is available from the data archives 
   at www.icpsr.umich.edu/

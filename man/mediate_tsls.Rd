@@ -4,9 +4,18 @@
 \alias{mediate_tsls}
 \title{Two-stage Least Squares Estimation of the Average Causal Mediation Effects}
 \usage{
-mediate_tsls(model.m, model.y, treat = "treat.name", conf.level = 0.95,
-  robustSE = FALSE, cluster = NULL, boot = FALSE, sims = 1000,
-  est_se = TRUE, ...)
+mediate_tsls(
+  model.m,
+  model.y,
+  treat = "treat.name",
+  conf.level = 0.95,
+  robustSE = FALSE,
+  cluster = NULL,
+  boot = FALSE,
+  sims = 1000,
+  est_se = TRUE,
+  ...
+)
 }
 \arguments{
 \item{model.m}{a fitted model object for mediator, of class \code{lm}.}

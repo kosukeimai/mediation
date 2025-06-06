@@ -4,12 +4,24 @@
 \alias{plot.medsens}
 \title{Plotting Results from Sensitivity Analysis for Causal Mediation Effects}
 \usage{
-\method{plot}{medsens}(x, sens.par = c("rho", "R2"),
-  r.type = c("residual", "total"), sign.prod = c("positive",
-  "negative"), pr.plot = FALSE, smooth.effect = FALSE,
-  smooth.ci = FALSE, ask = prod(par("mfcol")) < nplots,
-  levels = NULL, xlab = NULL, ylab = NULL, xlim = NULL,
-  ylim = NULL, main = NULL, lwd = par("lwd"), ...)
+\method{plot}{medsens}(
+  x,
+  sens.par = c("rho", "R2"),
+  r.type = c("residual", "total"),
+  sign.prod = c("positive", "negative"),
+  pr.plot = FALSE,
+  smooth.effect = FALSE,
+  smooth.ci = FALSE,
+  ask = prod(par("mfcol")) < nplots,
+  levels = NULL,
+  xlab = NULL,
+  ylab = NULL,
+  xlim = NULL,
+  ylim = NULL,
+  main = NULL,
+  lwd = par("lwd"),
+  ...
+)
 }
 \arguments{
 \item{x}{'medsens' object, typically output from \code{medsens}.}

@@ -5,10 +5,21 @@
 \alias{plot.mediate.order}
 \title{Plotting Indirect, Direct, and Total Effects from Mediation Analysis}
 \usage{
-\method{plot}{mediate}(x, treatment = NULL, labels = NULL,
-  effect.type = c("indirect", "direct", "total"), xlim = NULL,
-  ylim = NULL, xlab = "", ylab = "", main = NULL, lwd = 1.5,
-  cex = 0.85, col = "black", ...)
+\method{plot}{mediate}(
+  x,
+  treatment = NULL,
+  labels = NULL,
+  effect.type = c("indirect", "direct", "total"),
+  xlim = NULL,
+  ylim = NULL,
+  xlab = "",
+  ylab = "",
+  main = NULL,
+  lwd = 1.5,
+  cex = 0.85,
+  col = "black",
+  ...
+)
 }
 \arguments{
 \item{x}{object of class \code{mediate} or \code{mediate.order} as produced 

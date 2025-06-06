@@ -70,7 +70,7 @@
 #'   variable must be explicitly supplied in the `outcome' argument. This is due
 #'   to the fact that 'survreg' objects do not contain that information in an
 #'   easily extractable form. It should also be noted that for
-#'   \code{\link{survival::survreg}} models, the \code{\link{survival::Surv}} function must be
+#'   \code{\link[survival]{survreg}} models, the \code{\link[survival]{Surv}} function must be
 #'   directly used in the model formula in the call to the survreg function, and
 #'   that censoring types requiring more than two arguments to Surv (e.g.,
 #'   interval censoring) are not currently supported by 'mediate'.
@@ -86,7 +86,7 @@
 #'   model and user wants to allow ACME and ADE to vary as functions of the 
 #'   treatment (i.e., to relax the "no interaction" assumption). Note that the 
 #'   outcome model must be fitted via package \code{mgcv} with
-#'   appropriate formula using \code{\link{mgcv::s}} constructs (see Imai et al. 2009
+#'   appropriate formula using \code{\link[mgcv]{s}} constructs (see Imai et al. 2009
 #'   in the references). For other model types, the interaction can be allowed
 #'   by including an interaction term between \eqn{T} and \eqn{M} in the linear 
 #'   predictor of the outcome model. As of version 3.0, the 'INT' argument is 
@@ -2102,7 +2102,7 @@ med.fun <- function(y.data, index, m.data) {
     
     ### Case I-2-d: Linear
   } else if(isLm.m){
-    if (class(new.fit.M) == "speedlm")
+    if (inherits(new.fit.M,"speedlm"))
       sigma <- sqrt(summary(new.fit.M)$var.res)
     else
       sigma <- summary(new.fit.M)$sigma
@@ -3072,7 +3072,7 @@ print.summary.mediate.order <- function(x, ...){
   invisible(x)
 }
 #########################################################################
-plot.process <- function(model) {
+plot_process <- function(model) {
   coef.vec.1 <- c(model$d1, model$z1)
   lower.vec.1 <- c(model$d1.ci[1], model$z1.ci[1])
   upper.vec.1 <- c(model$d1.ci[2], model$z1.ci[2])
@@ -3181,7 +3181,7 @@ plot.mediate <- function(x, treatment = NULL, labels = NULL,
                         both = c(0,1))
   }
   
-  param <- plot.process(x)
+  param <- plot_process(x)
   
   y.axis <- (IND + DIR + TOT):1
   
@@ -3260,7 +3260,7 @@ plot.mediate <- function(x, treatment = NULL, labels = NULL,
 }
 
 #########################################################################
-plot.process.mer <- function(model) {
+plot_process.mer <- function(model) {
   coef.vec.1 <- c(model$d1, model$z1)
   lower.vec.1 <- c(model$d1.ci[1], model$z1.ci[1])
   upper.vec.1 <- c(model$d1.ci[2], model$z1.ci[2])
@@ -3361,7 +3361,7 @@ plot.mediate.mer <- function(x, treatment = NULL, group.plots = FALSE,
                              main = NULL, lwd = 1.5, cex = .85,
                              col = "black", ...){
   
-  param <- plot.process.mer(x)
+  param <- plot_process.mer(x)
   
   isLinear.y <- (	(class(x$model.y)[1] %in% c("lm", "rq")) || # lm or quantile
                     (inherits(x$model.y, "glm") &&
@@ -3562,7 +3562,7 @@ plot.mediate.mer <- function(x, treatment = NULL, group.plots = FALSE,
 }
 
 #########################################################################
-plot.process.order <- function(model){
+plot_process.order <- function(model){
   length <- length(model$d1)
   coef.vec.1 <- lower.vec.1 <- upper.vec.1 <-
     coef.vec.0 <- lower.vec.0 <- upper.vec.0 <- matrix(NA,ncol=2,nrow=length)
@@ -3613,7 +3613,7 @@ plot.mediate.order <- function(x, treatment = NULL,
                         both = c(0,1))
   }
   
-  param <- plot.process.order(x)
+  param <- plot_process.order(x)
   y.axis <- c(ncol(param$coef.vec.1):.5)
   y.axis <- y.axis + 1
   # create indicator for y.axis, descending so labels go from top to bottom

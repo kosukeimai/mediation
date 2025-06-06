@@ -5,8 +5,16 @@
 \title{Estimating Average Causal Mediation Effects under the Single Experiment 
 Design}
 \usage{
-mediate.sed(outcome, mediator, treat, data, SI = FALSE, sims = 1000,
-  conf.level = 0.95, boot = FALSE)
+mediate.sed(
+  outcome,
+  mediator,
+  treat,
+  data,
+  SI = FALSE,
+  sims = 1000,
+  conf.level = 0.95,
+  boot = FALSE
+)
 }
 \arguments{
 \item{outcome}{name of the outcome variable in 'data'. The variable must be 

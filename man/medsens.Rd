@@ -4,9 +4,13 @@
 \alias{medsens}
 \title{Sensitivity Analysis for Causal Mediation Effects}
 \usage{
-medsens(x, rho.by = 0.1, sims = 1000,
-  eps = sqrt(.Machine$double.eps), effect.type = c("indirect",
-  "direct", "both"))
+medsens(
+  x,
+  rho.by = 0.1,
+  sims = 1000,
+  eps = sqrt(.Machine$double.eps),
+  effect.type = c("indirect", "direct", "both")
+)
 }
 \arguments{
 \item{x}{an object of class 'mediate', typically an output from the 

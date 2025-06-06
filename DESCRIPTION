@@ -2,6 +2,13 @@ Package: mediation
 Version: 4.5.1
 Date: 2025-6-6
 Title: Causal Mediation Analysis
+Author: Dustin Tingley [aut],
+        Teppei Yamamoto [aut, cre],
+        Kentaro Hirose [aut],
+        Luke Keele [aut],
+        Kosuke Imai [aut],
+        Minh Trinh [aut],
+        Weihuang Wong [aut]
 Authors@R: c(person(given = "Dustin",
                     family = "Tingley",
                     role = "aut",
@@ -34,9 +41,10 @@ Maintainer: Teppei Yamamoto <tyamam@waseda.jp>
 Depends: R (>= 2.15.1), MASS, Matrix, mvtnorm, sandwich
 Imports: lpSolve, Hmisc, lme4 (>= 1.0), stats, graphics, grDevices, utils, boot
 Suggests: mgcv, quantreg, VGAM, SuppDists, survival, parallel, testthat, speedglm
-Description: We implement parametric and non parametric mediation analysis. This package performs the methods and suggestions in Imai, Keele and Yamamoto (2010) <DOI:10.1214/10-STS321>, Imai, Keele and Tingley (2010) <DOI:10.1037/a0020761>, Imai, Tingley and Yamamoto (2013) <DOI:10.1111/j.1467-985X.2012.01032.x>, Imai and Yamamoto (2013) <DOI:10.1093/pan/mps040> and Yamamoto (2013) <http://web.mit.edu/teppei/www/research/IVmediate.pdf>. In addition to the estimation of causal mediation effects, the software also allows researchers to conduct sensitivity analysis for certain parametric models.
+Description: We implement parametric and non parametric mediation analysis. This package performs the methods and suggestions in Imai, Keele and Yamamoto (2010) <DOI:10.1214/10-STS321>, Imai, Keele and Tingley (2010) <DOI:10.1037/a0020761>, Imai, Tingley and Yamamoto (2013) <DOI:10.1111/j.1467-985X.2012.01032.x>, and Imai and Yamamoto (2013) <DOI:10.1093/pan/mps040>. In addition to the estimation of causal mediation effects, the software also allows researchers to conduct sensitivity analysis for certain parametric models.
 LazyLoad: yes
 LazyData: yes
 License: GPL (>= 2)
 URL: https://imai.princeton.edu/projects/mechanisms.html
-RoxygenNote: 6.1.1
+Encoding: UTF-8
+RoxygenNote: 7.3.2

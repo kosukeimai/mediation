@@ -4,7 +4,8 @@
 \name{boundsdata}
 \alias{boundsdata}
 \title{Example Data for the Design Functions}
-\format{A data frame containing the following variables, which are 
+\format{
+A data frame containing the following variables, which are 
   interpreted as results from a hypothetical randomized trial. See the source 
   for a full description.
 \describe{
@@ -21,7 +22,8 @@
   encouragement design. Equals 0 if subject received no encouragement; 1 if 
   encouraged for the mediator value of 1; and -1 if encouraged for the 
   mediator value of 0.}
-}}
+}
+}
 \source{
 Imai, K., Tingley, D. and Yamamoto, T. (2012) Experimental Designs 
   for Identifying Causal Mechanisms. Journal of the Royal Statistical 

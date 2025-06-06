@@ -5,8 +5,16 @@
 \title{Estimating Average Causal Mediation Effects under the Crossover Encouragement
 Design}
 \usage{
-mediate.ced(outcome, med.1, med.2, treat, encourage, data, sims = 1000,
-  conf.level = 0.95)
+mediate.ced(
+  outcome,
+  med.1,
+  med.2,
+  treat,
+  encourage,
+  data,
+  sims = 1000,
+  conf.level = 0.95
+)
 }
 \arguments{
 \item{outcome}{variable name in 'data' containing the outcome values observed

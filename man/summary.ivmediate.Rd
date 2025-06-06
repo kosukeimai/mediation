@@ -5,8 +5,7 @@
 \alias{print.summary.ivmediate}
 \title{Summarizing Output from Mediation Analysis with Treatment Noncompliance}
 \usage{
-\method{summary}{ivmediate}(object, conf.level = object$conf.level[1],
-  ...)
+\method{summary}{ivmediate}(object, conf.level = object$conf.level[1], ...)
 
 \method{print}{summary.ivmediate}(x, ...)
 }

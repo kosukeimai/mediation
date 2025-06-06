@@ -5,10 +5,24 @@
 \title{Causal Mediation Analysis for Multiple Outcome/Treatment/Mediator 
 Combinations}
 \usage{
-mediations(datasets, treatment, mediators, outcome, covariates = NULL,
-  families = c("gaussian", "gaussian"), tau.m = 0.5, tau.y = 0.5,
-  LowerY = NULL, UpperY = NULL, interaction = FALSE,
-  conf.level = 0.95, sims = 500, boot = FALSE, weights = NULL, ...)
+mediations(
+  datasets,
+  treatment,
+  mediators,
+  outcome,
+  covariates = NULL,
+  families = c("gaussian", "gaussian"),
+  tau.m = 0.5,
+  tau.y = 0.5,
+  LowerY = NULL,
+  UpperY = NULL,
+  interaction = FALSE,
+  conf.level = 0.95,
+  sims = 500,
+  boot = FALSE,
+  weights = NULL,
+  ...
+)
 }
 \arguments{
 \item{datasets}{a named list of data frames. Each data frame has a separate 

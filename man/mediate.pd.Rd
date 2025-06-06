@@ -4,8 +4,16 @@
 \alias{mediate.pd}
 \title{Estimating Average Causal Mediation Effects under the Parallel Design}
 \usage{
-mediate.pd(outcome, mediator, treat, manipulated, data, NINT = TRUE,
-  sims = 1000, conf.level = 0.95)
+mediate.pd(
+  outcome,
+  mediator,
+  treat,
+  manipulated,
+  data,
+  NINT = TRUE,
+  sims = 1000,
+  conf.level = 0.95
+)
 }
 \arguments{
 \item{outcome}{name of the outcome variable in 'data'.}
