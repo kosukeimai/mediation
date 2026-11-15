@@ -155,8 +155,8 @@ amelidiate<-function(g){
     tau <- cis$tau.sims
     z1 <- cis$z1.sims
     z0 <- cis$z0.sims
-    n1<-cis$n1
-    n0<-cis$n0
+    n1<-cis$n1.sims
+    n0<-cis$n0.sims
 
     d.avg<-cis$d.avg
     z.avg<-cis$z.avg
@@ -175,7 +175,7 @@ amelidiate<-function(g){
 
         n0.p<-n1.p<-d0.p<-d1.p<-z1.p<-z0.p<-tau.p<-d.avg.p<-z.avg.p<-n.avg.p<-1
 
-        out <- list(d0=d0,d1=d1,z0=z1,tau=tau,d0.ci=d0.ci, d1.ci=d1.ci,z1.ci=z1.ci, z0.ci=z0.ci,tau.ci=tau.ci,d0.sims=d0.sims,
+        out <- list(d0=d0,d1=d1,z0=z0,tau=tau,d0.ci=d0.ci, d1.ci=d1.ci,z1.ci=z1.ci, z0.ci=z0.ci,tau.ci=tau.ci,d0.sims=d0.sims,
                     d1.sims=d1.sims,z1.sims=z1.sims, z0.sims=z0.sims, tau.sims=tau.sims,n1.sims=n1.sims,n0.sims=n0.sims)
 
 
