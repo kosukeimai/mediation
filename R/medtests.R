@@ -364,11 +364,11 @@ test.modmed.mediate.order <- function(object, covariates.1, covariates.2,
   
   seed <- .Random.seed
   cl$covariates <- covariates.1
-  out.1 <- eval(cl)
+  out.1 <- eval(cl, envir = parent.frame())
   
   .Random.seed <- seed
   cl$covariates <- covariates.2
-  out.2 <- eval(cl)
+  out.2 <- eval(cl, envir = parent.frame())
   
   d1.diff <- out.1$d1 - out.2$d1
   d1.diff.sims <- out.1$d1.sims - out.2$d1.sims
@@ -415,7 +415,7 @@ test.modmed.mediate.order <- function(object, covariates.1, covariates.2,
      z1.ci.lo[i] <- quantile(z1.diff.sims[,i], (1 - conf.level)/2)
      z1.ci.up[i] <- quantile(z1.diff.sims[,i], (1 + conf.level)/2)
      
-     z0.int.p[i] <- pval(z0.diff.sims[,i], d0.diff[i])
+     z0.int.p[i] <- pval(z0.diff.sims[,i], z0.diff[i])
      z0.ci.lo[i] <- quantile(z0.diff.sims[,i], (1 - conf.level)/2)
      z0.ci.up[i] <- quantile(z0.diff.sims[,i], (1 + conf.level)/2)
      
@@ -459,7 +459,7 @@ test.modmed.mediate.order <- function(object, covariates.1, covariates.2,
      d1.ci.lo[i] <- quantile(d1.diff.sims[,i], (1 - conf.level)/2)
      d1.ci.up[i] <- quantile(d1.diff.sims[,i], (1 + conf.level)/2)
      
-     z0.int.p[i] <- pval(z0.diff.sims[,i], d0.diff[i])
+     z0.int.p[i] <- pval(z0.diff.sims[,i], z0.diff[i])
      z0.ci.lo[i] <- quantile(z0.diff.sims[,i], (1 - conf.level)/2)
      z0.ci.up[i] <- quantile(z0.diff.sims[,i], (1 + conf.level)/2)
     }
