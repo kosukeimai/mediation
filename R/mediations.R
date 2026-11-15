@@ -303,8 +303,8 @@ plot.mediations <- function(x, which = names(x),
         oask <- devAskNewPage(TRUE)
         on.exit(devAskNewPage(oask))
     }
-    for(i in 1:length(which)){
-        plot.mediate(x[[i]], xlab = which[i], ...)
+    for(i in seq_along(which)){
+        plot.mediate(x[[which[i]]], xlab = which[i], ...)
     }
 }
 
@@ -316,8 +316,8 @@ plot.mediations.order <- function(x, which = names(x),
         oask <- devAskNewPage(TRUE)
         on.exit(devAskNewPage(oask))
     }
-    for(i in 1:length(which)){
-        plot.mediate.order(x[[i]], xlab = which[i], ...)
+    for(i in seq_along(which)){
+        plot.mediate.order(x[[which[i]]], xlab = which[i], ...)
     }
 }
 
