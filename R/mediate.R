@@ -1299,7 +1299,19 @@ mediate <- function(model.m, model.y, sims = 1000,
         }       	
       }
 
-      for(e in 1:4){
+      if (is.null(control) && is.null(covariates) &&
+          is.numeric(cat.0) && length(cat.0) == 1L && is.finite(cat.0) &&
+          is.numeric(cat.1) && length(cat.1) == 1L && is.finite(cat.1) &&
+          additive_lm_contrast(model.m, m.data, treat) &&
+          additive_lm_contrast(model.y, y.data, c(treat, mediator))) {
+        # The mediator residual is shared across treatment states. In additive
+        # linear models its contribution and the other covariates cancel.
+        contrast <- cat.1 - cat.0
+        indirect <- (contrast * MModel[, treat]) * YModel[, mediator]
+        direct <- contrast * YModel[, treat]
+        effects.tmp[, , 1] <- effects.tmp[, , 2] <- rep(indirect, each = n)
+        effects.tmp[, , 3] <- effects.tmp[, , 4] <- rep(direct, each = n)
+      } else for(e in 1:4){
         tt <- switch(e, c(1,1,1,0), c(0,0,1,0), c(1,0,1,1), c(1,0,0,0))
         Pr1 <- matrix(, nrow=n, ncol=sims)
         Pr0 <- matrix(, nrow=n, ncol=sims)
@@ -3689,6 +3701,20 @@ plot.mediate.order <- function(x, treatment = NULL,
   y.axis.new <- c(3,2,1)
   axis(2, at = y.axis.new, labels = labels, las = 1, tick = TRUE, ...)
   abline(v = 0, lty = 2)
+}
+
+additive_lm_contrast <- function(model, data, variables) {
+  if (!identical(class(model), "lm") || !is.null(model$offset)) return(FALSE)
+  coefficients <- names(coef(model))
+  if (anyDuplicated(coefficients) || !all(variables %in% coefficients)) return(FALSE)
+  tt <- terms(model)
+  if (any(attr(tt, "order") != 1L) ||
+      !all(vapply(as.list(attr(tt, "variables"))[-1L], is.symbol, logical(1)))) return(FALSE)
+  plain_numeric <- function(x) is.numeric(x) && !is.object(x) && is.null(dim(x))
+  if (!all(vapply(data[variables], plain_numeric, logical(1)))) return(FALSE)
+  # The general prediction code rebuilds this matrix using the current
+  # contrasts. If its column coding changed after fitting, use that path.
+  identical(colnames(model.matrix(tt, data)), coefficients)
 }
 
 pval <- function(x, xhat){
