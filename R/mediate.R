@@ -1299,16 +1299,22 @@ mediate <- function(model.m, model.y, sims = 1000,
         }       	
       }
 
-      if (is.null(control) && is.null(covariates) &&
+      additive <- is.null(control) && is.null(covariates) &&
           is.numeric(cat.0) && length(cat.0) == 1L && is.finite(cat.0) &&
           is.numeric(cat.1) && length(cat.1) == 1L && is.finite(cat.1) &&
           additive_lm_contrast(model.m, m.data, treat) &&
-          additive_lm_contrast(model.y, y.data, c(treat, mediator))) {
+          additive_lm_contrast(model.y, y.data, c(treat, mediator))
+      if (additive) {
         # The mediator residual is shared across treatment states. In additive
         # linear models its contribution and the other covariates cancel.
-        contrast <- cat.1 - cat.0
+        contrast <- as.double(cat.1) - as.double(cat.0)
         indirect <- (contrast * MModel[, treat]) * YModel[, mediator]
         direct <- contrast * YModel[, treat]
+        # At extreme treatment values, separately evaluating the two
+        # predictions can stay finite when the combined contrast overflows.
+        additive <- all(is.finite(indirect)) && all(is.finite(direct))
+      }
+      if (additive) {
         effects.tmp[, , 1] <- effects.tmp[, , 2] <- rep(indirect, each = n)
         effects.tmp[, , 3] <- effects.tmp[, , 4] <- rep(direct, each = n)
       } else for(e in 1:4){

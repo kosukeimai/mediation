@@ -79,3 +79,28 @@ test_that("factor indicators cannot shadow treatment or mediator coefficients", 
   expect_equal(as.numeric(fit$z0.sims), beta[, 3], tolerance = 1e-12)
   expect_equal(as.numeric(fit$d0.sims), alpha[, 3] * beta[, "m"], tolerance = 1e-12)
 })
+
+test_that("large finite treatment values preserve finite contrasts", {
+  set.seed(25)
+  d <- data.frame(t = seq(-1, 1, length.out = 200))
+  error.m <- rnorm(200, sd = .002)
+  error.y <- rnorm(200, sd = 1e-10)
+  B <- 30L
+  # Scaling the slopes first keeps the reference representable for all endpoints.
+  for (endpoint in list(2000000000L, 8e307, 1e308)) {
+    d$m <- (if (endpoint == 1e308) 0.5 else 2) * d$t + error.m
+    d$y <- 2e-7 * d$t + 1e-8 * d$m + error.y
+    m <- lm(m ~ t, d)
+    y <- lm(y ~ t + m, d)
+    set.seed(555)
+    a <- mvtnorm::rmvnorm(B, coef(m), vcov(m))[, "t"]
+    b <- mvtnorm::rmvnorm(B, coef(y), vcov(y))
+    set.seed(555)
+    fit <- mediate(m, y, sims = B, treat = "t", mediator = "m",
+                   control.value = -endpoint, treat.value = endpoint)
+    indirect <- (a * b[, "m"]) * endpoint
+    direct <- b[, "t"] * endpoint
+    expect_equal(as.numeric(fit$d0.sims) / (2 * indirect), rep(1, B), tolerance = 1e-12)
+    expect_equal(as.numeric(fit$z0.sims) / (2 * direct), rep(1, B), tolerance = 1e-12)
+  }
+})
