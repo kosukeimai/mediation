@@ -194,25 +194,39 @@ ivmediate <- function(model.t, model.m, model.y, ci = TRUE, sims = 1000, boot = 
     dc1.sims <- dc0.sims <- zc1.sims <- zc0.sims <- tauc.sims <- NULL
   
   if(ci){
+    # Random draws are made here, in the calling process, and handed to the
+    # workers. Drawing inside mclapply workers ignores set.seed() and makes
+    # results depend on mc.cores.
     if(boot){
+      draws <- lapply(1:sims, function(i) sample(1:n, n, replace=TRUE))
       if(multicore){
-        out.sim.full <- parallel::mclapply(1:sims, ivmediate.fit.b, 
+        out.sim.full <- parallel::mclapply(draws, ivmediate.fit.b, 
                                  model.t = model.t, model.m = model.m, model.y = model.y,
                                  enc = enc, treat = treat, mediator = mediator,
                                  mc.cores = mc.cores)
       } else {
-        out.sim.full <- lapply(1:sims, ivmediate.fit.b, 
+        out.sim.full <- lapply(draws, ivmediate.fit.b, 
                                model.t = model.t, model.m = model.m, model.y = model.y,
                                enc = enc, treat = treat, mediator = mediator)
       }
     } else {
+      coef.t <- as.matrix(coef(model.t))
+      coef.m <- as.matrix(coef(model.m))
+      coef.y <- as.matrix(coef(model.y))
+      vcov.t <- as.matrix(vcov(model.t))
+      vcov.m <- as.matrix(vcov(model.m))
+      vcov.y <- as.matrix(vcov(model.y))
+      draws <- lapply(1:sims, function(i)
+        list(t = t(as.matrix(rmvnorm(1, coef.t, vcov.t))),
+             m = t(as.matrix(rmvnorm(1, coef.m, vcov.m))),
+             y = t(as.matrix(rmvnorm(1, coef.y, vcov.y)))))
       if(multicore){
-        out.sim.full <- parallel::mclapply(1:sims, ivmediate.fit, 
+        out.sim.full <- parallel::mclapply(draws, ivmediate.fit, 
                                  model.t = model.t, model.m = model.m, model.y = model.y,
                                  enc = enc, treat = treat, mediator = mediator, sim = TRUE,
                                  mc.cores = mc.cores)
       } else {
-        out.sim.full <- lapply(1:sims, ivmediate.fit,
+        out.sim.full <- lapply(draws, ivmediate.fit,
                                model.t = model.t, model.m = model.m, model.y = model.y,
                                enc = enc, treat = treat, mediator = mediator, sim = TRUE)
       }
@@ -271,8 +285,7 @@ ivmediate.fit.b <- function(x, model.t, model.m, model.y,
                             enc, treat, mediator){
   
   data <- model.frame(model.y)    
-  sb <- sample(1:nrow(data), nrow(data), replace=TRUE)
-  Data.b <- data[sb,]
+  Data.b <- data[x,]
   
   model.t.b <- update(model.t, data = Data.b)
   model.m.b <- update(model.m, data = Data.b)
@@ -311,12 +324,9 @@ ivmediate.fit <- function(x, model.t, model.m, model.y,
   coef.m <- as.matrix(coef(model.m))
   coef.y <- as.matrix(coef(model.y))
   if(sim){
-    vcov.t <- as.matrix(vcov(model.t))
-    vcov.m <- as.matrix(vcov(model.m))
-    vcov.y <- as.matrix(vcov(model.y))
-    coef.t <- t(as.matrix(rmvnorm(1, coef.t, vcov.t)))
-    coef.m <- t(as.matrix(rmvnorm(1, coef.m, vcov.m)))
-    coef.y <- t(as.matrix(rmvnorm(1, coef.y, vcov.y)))
+    coef.t <- x$t
+    coef.m <- x$m
+    coef.y <- x$y
   }
   
   mf.T.1 <- mf.T.0 <- mf.T <- model.frame(model.t)
