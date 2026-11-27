@@ -1580,8 +1580,8 @@ mediate <- function(model.m, model.y, sims = 1000,
     high <- 1 - low
 
     if (boot & boot.ci.type == "bca"){
-        BC.CI <- function(theta){
-            z.inv <- length(theta[theta < mean(theta)])/sims
+        BC.CI <- function(theta, theta.hat){
+            z.inv <- length(theta[theta < theta.hat])/sims
             z <- qnorm(z.inv)
             U <- (sims - 1) * (mean(theta) - theta)
             top <- sum(U^3)
@@ -1593,16 +1593,16 @@ mediate <- function(model.m, model.y, sims = 1000,
             upper2 <- upper <- quantile(theta, upper.inv)
             return(c(lower, upper))      
         }
-        d0.ci <- BC.CI(delta.0)
-        d1.ci <- BC.CI(delta.1)
-        tau.ci <- BC.CI(tau)
-        z1.ci <- BC.CI(zeta.1)
-        z0.ci <- BC.CI(zeta.0)
-        n0.ci <- BC.CI(nu.0)
-        n1.ci <- BC.CI(nu.1)
-        d.avg.ci <- BC.CI(delta.avg)
-        z.avg.ci <- BC.CI(zeta.avg)
-        n.avg.ci <- BC.CI(nu.avg)
+        d0.ci <- BC.CI(delta.0, d0)
+        d1.ci <- BC.CI(delta.1, d1)
+        tau.ci <- BC.CI(tau, tau.coef)
+        z1.ci <- BC.CI(zeta.1, z1)
+        z0.ci <- BC.CI(zeta.0, z0)
+        n0.ci <- BC.CI(nu.0, n0)
+        n1.ci <- BC.CI(nu.1, n1)
+        d.avg.ci <- BC.CI(delta.avg, d.avg)
+        z.avg.ci <- BC.CI(zeta.avg, z.avg)
+        n.avg.ci <- BC.CI(nu.avg, n.avg)
     } else {
         d0.ci <- quantile(delta.0, c(low,high), na.rm=TRUE)
         d1.ci <- quantile(delta.1, c(low,high), na.rm=TRUE)
@@ -1857,8 +1857,8 @@ mediate <- function(model.m, model.y, sims = 1000,
     high <- 1 - low
 
     if(boot.ci.type == "bca"){
-        BC.CI <- function(theta){
-            z.inv <- length(theta[theta < mean(theta)])/sims
+        BC.CI <- function(theta, theta.hat){
+            z.inv <- length(theta[theta < theta.hat])/sims
             z <- qnorm(z.inv)
             U <- (sims - 1) * (mean(theta) - theta)
             top <- sum(U^3)
@@ -1870,11 +1870,16 @@ mediate <- function(model.m, model.y, sims = 1000,
             upper2 <- upper <- quantile(theta, upper.inv)
             return(c(lower, upper))      
         }
-        d0.ci <- BC.CI(delta.0)
-        d1.ci <- BC.CI(delta.1)
-        tau.ci <- BC.CI(tau)
-        z1.ci <- BC.CI(zeta.1)
-        z0.ci <- BC.CI(zeta.0)
+        BC.CI.cat <- function(theta, theta.hat){
+            ci <- sapply(seq_len(n.ycat), function(i) BC.CI(theta[, i], theta.hat[i]))
+            rownames(ci) <- paste0(100 * c(low, high), "%")
+            ci
+        }
+        d0.ci <- BC.CI.cat(delta.0, d0)
+        d1.ci <- BC.CI.cat(delta.1, d1)
+        tau.ci <- BC.CI.cat(tau, tau.coef)
+        z1.ci <- BC.CI.cat(zeta.1, z1)
+        z0.ci <- BC.CI.cat(zeta.0, z0)
     } else {
         CI <- function(theta){
             return(quantile(theta, c(low, high), na.rm = TRUE))
